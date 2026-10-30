@@ -9,7 +9,7 @@ import { ELEMENTS, type AttackDef, type Shape, type StatusId, type TraitDef, typ
 import { roster, useRoster, validateRoster } from "../store/roster";
 import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas } from "./FieldCanvas";
-import { Checks, defaultEffect, EffectEditor, Num, Pick, Row, Section, SelectorEditor, Text } from "./fields";
+import { Checks, ConfirmButton, defaultEffect, EffectEditor, Num, Pick, Row, Section, SelectorEditor, Text } from "./fields";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { derived } from "./describe";
 
@@ -60,7 +60,7 @@ export function EditorView() {
   const [idDraft, setIdDraft] = useState<string | null>(null);
   const [showJson, setShowJson] = useState(false);
   const [jsonError, setJsonError] = useState<string | null>(null);
-  const fileInput = useRef<HTMLInputElement>(null);
+  const [showRoster, setShowRoster] = useState(false);
   const unit = units.find((u) => u.id === selectedId) ?? units[0];
   const allTags = useMemo(() => [...new Set(units.flatMap((u) => u.tags))].sort(), [units]);
 
@@ -92,29 +92,9 @@ export function EditorView() {
 
   const remove = () => {
     if (!unit || units.length <= 1) return;
-    if (!confirm(`Delete ${unit.name}?`)) return;
     const i = units.indexOf(unit);
     roster.remove(unit.id);
     setSelectedId(units[i === 0 ? 1 : i - 1].id);
-  };
-
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(units, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "muster-roster.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
-
-  const importJson = async (file: File) => {
-    try {
-      const data = validateRoster(JSON.parse(await file.text()));
-      roster.set(data);
-      setSelectedId(data[0].id);
-    } catch (e) {
-      alert(`Import failed: ${(e as Error).message}`);
-    }
   };
 
   if (!unit) return null;
@@ -135,9 +115,7 @@ export function EditorView() {
             + New
           </button>
           <button onClick={duplicate}>Duplicate</button>
-          <button onClick={remove} disabled={units.length <= 1}>
-            Delete
-          </button>
+          <ConfirmButton label="Delete" confirmLabel="Really delete?" onConfirm={remove} disabled={units.length <= 1} />
         </div>
         <div className="list">
           {units.map((u) => (
@@ -149,23 +127,24 @@ export function EditorView() {
           ))}
         </div>
         <div className="list-actions">
-          <button onClick={exportJson}>Export</button>
-          <button onClick={() => fileInput.current?.click()}>Import</button>
-          <button
-            onClick={() => {
-              if (confirm("Reset the roster to the built-in defaults? Your edits will be lost unless exported.")) {
-                roster.reset();
-                setSelectedId(roster.get()[0].id);
-              }
-            }}
-          >
-            Reset
+          <button className={showRoster ? "active" : ""} onClick={() => setShowRoster(!showRoster)}>
+            Export / Import
           </button>
-          <input ref={fileInput} type="file" accept=".json" hidden onChange={(e) => e.target.files?.[0] && importJson(e.target.files[0])} />
+          <ConfirmButton
+            label="Reset"
+            confirmLabel="Reset all units?"
+            onConfirm={() => {
+              roster.reset();
+              setSelectedId(roster.get()[0].id);
+            }}
+          />
         </div>
         <p className="hint">Edits save automatically in this browser. Export to keep them or commit them to the repo.</p>
       </aside>
 
+      {showRoster ? (
+        <RosterPanel units={units} onLoaded={(first) => setSelectedId(first)} onClose={() => setShowRoster(false)} />
+      ) : (
       <div className="form">
         <div className="form-head">
           <Swatch def={unit} size={36} />
@@ -418,6 +397,7 @@ export function EditorView() {
           </>
         )}
       </div>
+      )}
 
       <aside className="panel preview">
         <UnitInfo def={unit} />
@@ -433,6 +413,77 @@ export function EditorView() {
         </div>
         <Sandbox unit={unit} units={units} />
       </aside>
+    </div>
+  );
+}
+
+// The whole roster as JSON: copy it out to keep it, or paste/load one in.
+function RosterPanel({ units, onLoaded, onClose }: { units: UnitDef[]; onLoaded: (firstId: string) => void; onClose: () => void }) {
+  const [text, setText] = useState(() => JSON.stringify(units, null, 2));
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const area = useRef<HTMLTextAreaElement>(null);
+  const canDownload = window.top === window;
+
+  const load = (raw: string) => {
+    try {
+      const data = validateRoster(JSON.parse(raw));
+      roster.set(data);
+      onLoaded(data[0].id);
+      setText(JSON.stringify(data, null, 2));
+      setMsg({ ok: true, text: `Loaded ${data.length} units.` });
+    } catch (e) {
+      setMsg({ ok: false, text: `Could not load: ${(e as Error).message}. Check that it is a JSON array of units.` });
+    }
+  };
+
+  return (
+    <div className="form roster-panel">
+      <div className="form-head">
+        <h2>Roster JSON</h2>
+        <button className="ghost" onClick={onClose}>
+          Back to editor
+        </button>
+      </div>
+      <p className="muted small">
+        Copy this to keep your units, or paste a roster and press Load. To make units part of the game, paste them into{" "}
+        <code>src/data/units.ts</code>.
+      </p>
+      <div className="list-actions">
+        <button
+          className="primary"
+          onClick={() => {
+            navigator.clipboard.writeText(text).then(
+              () => setMsg({ ok: true, text: "Copied to clipboard." }),
+              () => {
+                area.current?.select();
+                setMsg({ ok: true, text: "Text selected. Press Ctrl/Cmd+C to copy." });
+              },
+            );
+          }}
+        >
+          Copy
+        </button>
+        {canDownload && (
+          <button
+            onClick={() => {
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+              a.download = "muster-roster.json";
+              a.click();
+              URL.revokeObjectURL(a.href);
+            }}
+          >
+            Download
+          </button>
+        )}
+        <button onClick={() => load(text)}>Load pasted JSON</button>
+        <button onClick={() => fileInput.current?.click()}>Load file…</button>
+        <button onClick={() => setText(JSON.stringify(roster.get(), null, 2))}>Refresh</button>
+        <input ref={fileInput} type="file" accept=".json,application/json" hidden onChange={async (e) => e.target.files?.[0] && load(await e.target.files[0].text())} />
+      </div>
+      {msg && <p className={msg.ok ? "small" : "error"}>{msg.text}</p>}
+      <textarea ref={area} id="roster-json" className="json" value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} />
     </div>
   );
 }

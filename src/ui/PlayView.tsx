@@ -250,6 +250,20 @@ export function PlayView() {
             <button className="primary big" disabled={!aiPlan} onClick={fight}>
               {aiPlan ? "Fight!" : "Enemy is planning…"}
             </button>
+            {held && (
+              <div className="held">
+                <span className="small">Moving {placingDef?.name}. Click a free spot to drop it.</span>
+                <button
+                  onClick={() => {
+                    const sq = myArmy.find((s) => s.uid === held);
+                    if (sq) sell(sq);
+                    setHeld(null);
+                  }}
+                >
+                  Sell (+{placingDef?.cost})
+                </button>
+              </div>
+            )}
             <p className="muted small">
               {spentThisRound
                 ? `${spentThisRound} new squad${spentThisRound > 1 ? "s" : ""} this round.`
