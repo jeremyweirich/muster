@@ -1,7 +1,7 @@
 import { STATUSES, SURFACES } from "../data/elements";
 import { deployZone, RULES } from "../data/rules";
 import { towerPlacements, TOWER_MAP } from "../data/towers";
-import { footprintOf, formation, type Battle, type Fx, type Model } from "../sim/battle";
+import { footprintOf, formation, type Battle, type Fx, type Model, type Projectile } from "../sim/battle";
 import { SurfaceGrid } from "../sim/surfaces";
 import type { PlacedSquad, Shape, Side, StatusId, UnitDef } from "../sim/types";
 
@@ -135,9 +135,25 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
   shapePath(ctx, def.look.shape, px, py, r, facing);
   ctx.fillStyle = o.flash ? "#ffffff" : def.look.color;
   ctx.fill();
+  if (!o.flash && r >= 4) {
+    // soft top-left highlight and bottom-right shade for a bit of volume
+    const g = ctx.createRadialGradient(px - r * 0.4, py - r * 0.45, r * 0.1, px, py, r * 1.25);
+    g.addColorStop(0, "rgba(255,255,255,0.35)");
+    g.addColorStop(0.55, "rgba(255,255,255,0)");
+    g.addColorStop(1, "rgba(0,0,0,0.35)");
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
   ctx.lineWidth = Math.max(1.5, r * 0.22);
   ctx.strokeStyle = SIDE_COLORS[side];
   ctx.stroke();
+  if (r >= 3.5 && def.speed > 0) {
+    // facing notch in the team color
+    ctx.fillStyle = SIDE_COLORS[side];
+    ctx.beginPath();
+    ctx.arc(px + Math.cos(facing) * r * 0.95, py + Math.sin(facing) * r * 0.95, Math.max(1.4, r * 0.22), 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   const st = o.statuses;
   if (st) {
@@ -214,7 +230,7 @@ interface LiveFx {
   life: number;
 }
 
-const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.18, burst: 0.3, text: 1.1, death: 0.5, heal: 0.6 };
+const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.2, burst: 0.3, text: 1.1, death: 0.5, heal: 0.6, slash: 0.2 };
 const BIG_TEXT_LIFE = 2.5;
 
 export class FxLayer {
@@ -239,22 +255,44 @@ export class FxLayer {
       const k = 1 - age / life;
       ctx.globalAlpha = k;
       switch (fx.kind) {
-        case "beam":
-          ctx.strokeStyle = fx.color;
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.moveTo(fx.x1 * tile, fx.y1 * tile);
-          // jagged line so lightning reads as lightning
-          const segs = 5;
-          for (let s = 1; s < segs; s++) {
-            const t = s / segs;
-            const jx = (Math.sin(s * 12.9 + fx.x1 * 7) * tile) / 5;
-            const jy = (Math.cos(s * 7.3 + fx.y1 * 5) * tile) / 5;
-            ctx.lineTo((fx.x1 + (fx.x2 - fx.x1) * t) * tile + jx, (fx.y1 + (fx.y2 - fx.y1) * t) * tile + jy);
+        case "beam": {
+          const w = fx.width ?? 2.5;
+          const path = () => {
+            ctx.beginPath();
+            ctx.moveTo(fx.x1 * tile, fx.y1 * tile);
+            // jagged line so lightning reads as lightning
+            for (let s = 1; s < 5; s++) {
+              const t = s / 5;
+              const jx = (Math.sin(s * 12.9 + fx.x1 * 7) * tile) / 5;
+              const jy = (Math.cos(s * 7.3 + fx.y1 * 5) * tile) / 5;
+              ctx.lineTo((fx.x1 + (fx.x2 - fx.x1) * t) * tile + jx, (fx.y1 + (fx.y2 - fx.y1) * t) * tile + jy);
+            }
+            ctx.lineTo(fx.x2 * tile, fx.y2 * tile);
+          };
+          // team-colored glow underneath, element-colored core on top
+          if (fx.side !== undefined) {
+            ctx.strokeStyle = SIDE_COLORS[fx.side];
+            ctx.globalAlpha = k * 0.45;
+            ctx.lineWidth = w + 4;
+            path();
+            ctx.stroke();
+            ctx.globalAlpha = k;
           }
-          ctx.lineTo(fx.x2 * tile, fx.y2 * tile);
+          ctx.strokeStyle = fx.color;
+          ctx.lineWidth = w;
+          path();
           ctx.stroke();
           break;
+        }
+        case "slash": {
+          const r = fx.size * tile * (0.8 + (1 - k) * 0.6);
+          ctx.strokeStyle = fx.color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(fx.x * tile, fx.y * tile, r, fx.angle - 1.1, fx.angle + 1.1);
+          ctx.stroke();
+          break;
+        }
         case "burst":
           ctx.strokeStyle = fx.color;
           ctx.lineWidth = 2;
@@ -302,20 +340,48 @@ export class FxLayer {
 export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: number, fx: FxLayer, realTime: number) {
   drawBackground(ctx, tile);
   drawSurfaces(ctx, battle.surfaces, tile, realTime);
-  const draw = (m: Model) =>
-    drawUnit(ctx, m.def, m.side, m.x, m.y, tile, {
+  const draw = (m: Model) => {
+    // melee units lunge toward their target, ranged units recoil slightly
+    const t = m.attackAnim > 0 ? Math.sin((m.attackAnim / 0.18) * Math.PI) : 0;
+    const melee = (m.def.attack?.range ?? 0) <= 1.5;
+    const off = t * (melee ? 0.25 : -0.08);
+    return drawUnit(ctx, m.def, m.side, m.x + Math.cos(m.facing) * off, m.y + Math.sin(m.facing) * off, tile, {
       facing: m.facing,
       hpFrac: m.hp / m.maxHp,
       flash: m.flash > 0,
       statuses: m.statuses,
     });
+  };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);
-  for (const p of battle.projectiles) {
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x * tile, p.y * tile, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-  }
+  for (const p of battle.projectiles) drawProjectile(ctx, p, tile);
   for (const m of battle.models) if (m.alive && m.def.layer === "air") draw(m);
   fx.draw(ctx, tile);
+}
+
+// Projectiles: element-colored core inside a team-colored halo, sized by damage, with a team-colored trail.
+function drawProjectile(ctx: CanvasRenderingContext2D, p: Projectile, tile: number) {
+  const r = Math.min(7, 1.6 + Math.sqrt(p.damage) / 3.2);
+  const x = p.x * tile;
+  const y = p.y * tile;
+  const dx = (p.x - p.px) * tile;
+  const dy = (p.y - p.py) * tile;
+  const team = SIDE_COLORS[p.side];
+  ctx.strokeStyle = team;
+  ctx.globalAlpha = 0.55;
+  ctx.lineWidth = Math.max(1.5, r * 0.9);
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - dx * 2.5, y - dy * 2.5);
+  ctx.stroke();
+  ctx.lineCap = "butt";
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = team;
+  ctx.beginPath();
+  ctx.arc(x, y, r + 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = p.color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  ctx.fill();
 }

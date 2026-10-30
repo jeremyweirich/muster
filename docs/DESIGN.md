@@ -124,7 +124,7 @@ bonuses come later (section 8).
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 60 | 8 physical / 0.8s, range 0.4 | Swarm, Fast, Melee | **Frenzy**: Run 50% faster and attack 25% faster.<br>**Scatter**: Spread out as they charge, so splash hits fewer of them. +20% HP. |
+| Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 35 | 16 physical / 0.8s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 50% faster and attack 25% faster.<br>**Scatter**: Spread out as they charge, so splash hits fewer of them. +20% HP. |
 | Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 260 | 30 physical / 1s, range 0.5 | Fast, Raider, Melee | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers. |
 | Goblin Alchemist | 100 | 50 | 3 (3×1) | 11 | 100 | 12 physical / 2s, range 5, splash 1.2 | Combo, Ranged | **Oil Slick**: Flasks leave oil on the ground. It slows, and fire races through it.<br>**Firebombs**: Flasks burst into flame: fire damage ×2, igniting oiled targets. |
 | War Drummer | 100 | 50 | 1 (1×1) | 12 | 300 | none | Support | **War Chant**: Goblins nearby also deal +25% damage.<br>**Great Drum**: Reaches much farther and rallies every greenskin, ogres included. |
@@ -303,7 +303,7 @@ Because the AI only uses the simulator, it handles any unit you design without n
 
 | Tool | What it's for |
 |---|---|
-| **Unit editor** | Every field, live, including the two upgrades; raw JSON view; Export/Import of the whole roster |
+| **Unit editor** | Every field, live, including the two upgrades; raw JSON view; copy/paste of the whole roster. Session-only |
 | **Sandbox** | Watch a unit fight another at equal supply, with or without its upgrades, or run 10 headless sims |
 | **Balance Lab** | Every unit against every unit at equal supply, in a Web Worker. One-unit-type armies undervalue combo units |
 | **Battle report** | After each battle the field resets to deployment positions. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
@@ -321,6 +321,14 @@ Because the AI only uses the simulator, it handles any unit you design without n
   through" breakdown and in the victim's "extra damage from reactions" breakdown.
 - Damage to your own side counts as friendly fire, never as damage dealt. On the victim's side it is labelled "(ally)".
 
+## 10b. Battle visuals
+
+- Team color (blue = you, red = enemy) marks ownership everywhere: unit outlines, the facing notch, projectile halos and
+  trails, and beam glows.
+- Element color marks *what* is being thrown: projectile cores and beam cores.
+- Size marks *how hard*: projectile radius and beam thickness scale with damage per hit.
+- Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
+
 ## 11. Architecture — Decided
 
 ```
@@ -333,8 +341,9 @@ src/ui/      React views
 
 - **Determinism is load-bearing.** The same armies with the same seed and the same data always produce the same battle.
   Replays, the AI, the lab and tests all depend on this. Playback speed never changes the outcome.
-- The roster is stored in the browser under `localStorage["muster.roster.v3"]`. The key is bumped whenever the default
-  roster changes shape. Commit units by exporting them and
+- The roster lives in `src/data/units.ts`. The in-app editor is a session-only sandbox; edits reset on reload. Unit changes
+  are made in code, by request.
+- The app is fully static (GitHub Pages): no storage, no network calls, no analytics. Commit units by exporting them and
   pasting into `src/data/units.ts`.
 
 ## 12. Roadmap

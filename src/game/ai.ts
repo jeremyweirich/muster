@@ -135,7 +135,25 @@ export function planAiRound(
     };
   };
 
-  if (player.army.length === 0 || units.length === 0) return planOf(candidates[0], 1, null);
+  if (units.length === 0) return planOf(candidates[0], 1, null);
+
+  // Before the player has shown anything (round 1), test plans against a stand-in
+  // army of starter units bought with the same supply.
+  let opponent = player.army;
+  if (opponent.length === 0) {
+    const starters = units.filter((u) => !u.unlockCost);
+    const pool = starters.length ? starters : units;
+    const buy: UnitDef[] = [];
+    let left = me.supply;
+    for (let guard = 0; guard < 10; guard++) {
+      const affordable = pool.filter((u) => u.cost <= left);
+      if (!affordable.length) break;
+      const pick = rng.pick(affordable);
+      buy.push(pick);
+      left -= pick.cost;
+    }
+    opponent = autoPlace(buy, [], 0, defs, round, rng, "center");
+  }
 
   let best = candidates[0];
   let bestScore = -Infinity;
@@ -147,7 +165,7 @@ export function planAiRound(
     for (const u of cand.c.upgrades) myUpgrades[u.unitId] = [...(myUpgrades[u.unitId] ?? []), u.upgradeId];
     const myLevels = [...me.towerLevels];
     for (const i of cand.c.towerUpgrades) myLevels[i]++;
-    const battle = new Battle([playerDefs, upgradedDefs(defs, myUpgrades)], [player.army, [...me.army, ...cand.squads]], {
+    const battle = new Battle([playerDefs, upgradedDefs(defs, myUpgrades)], [opponent, [...me.army, ...cand.squads]], {
       seed: seed + tried,
       towerLevels: [player.towerLevels, myLevels],
     });

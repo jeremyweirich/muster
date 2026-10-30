@@ -1,5 +1,7 @@
 # Muster
 
+**Play it: https://jeremyweirich.github.io/muster/**
+
 A fantasy deploy-then-auto-battle strategy prototype. Each round you recruit squads and place them on your half of the field. Then
 both armies fight on their own. Your army carries over between rounds, and the loser takes damage from the winner's survivors.
 The focus is elemental combos: puddles you can electrify or freeze, oil you can ignite, steam that blinds archers. Units are
@@ -8,7 +10,7 @@ pure data, so the main way to play with the design is the in-app unit editor.
 ## Running
 
 ```bash
-npm install
+npm ci
 npm run dev        # http://localhost:5173
 npm test           # sim tests
 npm run matrix     # unit-vs-unit win-rate matrix in the terminal
@@ -25,9 +27,9 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
   earlier rounds are locked. 🔒 units cost a one-time unlock per match, and every unit has two one-time upgrades. Each
   side has two fragile towers that you can upgrade; when one falls, its owner's army is Dazed (8s, minus 1s per level). After
   each battle there is a battle report: hover a squad to see who it hurt and who hurt it, right on the field. Then a replay.
-- **Units**: the unit editor. Edits save to your browser right away. Includes stats, attack, on-hit effects, traits, tags, a raw
-  JSON view, and a sandbox where you can watch the unit fight another unit or run 10 headless sims. Use **Export** to save the
-  roster as JSON.
+- **Units**: the unit editor, a sandbox for experiments. Edits apply right away and reset on reload; the real roster lives in
+  `src/data/units.ts`. It covers stats, attack, on-hit effects, traits, upgrades and tags, and has a raw JSON view and a
+  sandbox where you can watch the unit fight another unit or run 10 headless sims.
 - **Balance Lab**: every unit against every other unit at equal supply, simulated in a Web Worker.
 - **Codex**: reference tables for statuses, surfaces, reactions, towers and roles.
 
@@ -58,7 +60,7 @@ Main design rules in the current prototype (all open to change):
   round, then keeps the best. It only relies on the simulator, so it understands any unit you design. Difficulty sets how many
   candidates it tries.
 
-## Saving your units
+## Deploying
 
-The roster is stored in browser `localStorage`. To make edits permanent, use **Export** in the Units tab and either import the
-file later or paste it into `src/data/units.ts`.
+Every push to `main` runs `.github/workflows/pages.yml`: it installs, tests, builds and publishes to GitHub Pages. The site is
+fully static, with no storage, network calls or analytics.

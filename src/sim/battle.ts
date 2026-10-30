@@ -42,6 +42,7 @@ export interface Model {
   buffDamage: number;
   facing: number;
   flash: number; // seconds of hit flash, for rendering
+  attackAnim: number; // seconds left of the attack lunge/recoil, for rendering
 }
 
 // Everything the post-battle report shows for one squad.
@@ -90,9 +91,13 @@ interface Source {
   dmgMult: number;
 }
 
-interface Projectile {
+export interface Projectile {
   x: number;
   y: number;
+  px: number; // previous position, for trails
+  py: number;
+  side: Side;
+  damage: number; // for sizing the projectile
   tx: number;
   ty: number;
   targetId: number;
@@ -103,9 +108,10 @@ interface Projectile {
 }
 
 export type Fx =
-  | { kind: "beam"; x1: number; y1: number; x2: number; y2: number; color: string }
+  | { kind: "beam"; x1: number; y1: number; x2: number; y2: number; color: string; side?: Side; width?: number }
   | { kind: "burst"; x: number; y: number; r: number; color: string }
   | { kind: "heal"; x: number; y: number; r: number }
+  | { kind: "slash"; x: number; y: number; angle: number; color: string; size: number }
   | { kind: "text"; x: number; y: number; text: string; color: string; big?: boolean }
   | { kind: "death"; x: number; y: number; color: string; size: number };
 
@@ -259,6 +265,7 @@ export class Battle {
         buffDamage: 1,
         facing: side === 0 ? -Math.PI / 2 : Math.PI / 2,
         flash: 0,
+        attackAnim: 0,
       };
       this.models.push(m);
       this.byId.set(m.id, m);
@@ -346,6 +353,7 @@ export class Battle {
     for (const m of this.models) {
       if (!m.alive) continue;
       if (m.flash > 0) m.flash -= dt;
+      if (m.attackAnim > 0) m.attackAnim -= dt;
       for (const id of STATUS_IDS) {
         const t = m.statuses[id];
         if (t === undefined) continue;
@@ -522,6 +530,7 @@ export class Battle {
 
   private fire(m: Model, target: Model, atk: AttackDef) {
     const src = this.sourceOf(m);
+    m.attackAnim = 0.18;
     if (m.charged) {
       m.charged = false;
       for (const t of m.def.traits ?? []) if (t.type === "charge") src.dmgMult *= t.mult;
@@ -531,6 +540,10 @@ export class Battle {
       this.projectiles.push({
         x: m.x,
         y: m.y,
+        px: m.x,
+        py: m.y,
+        side: m.side,
+        damage: atk.damage * src.dmgMult,
         tx: target.x,
         ty: target.y,
         targetId: target.id,
@@ -541,7 +554,11 @@ export class Battle {
       });
       return;
     }
-    if (atk.delivery === "beam") this.emit({ kind: "beam", x1: m.x, y1: m.y, x2: target.x, y2: target.y, color: ELEMENT_COLORS[atk.element] });
+    if (atk.delivery === "beam") {
+      this.emit({ kind: "beam", x1: m.x, y1: m.y, x2: target.x, y2: target.y, color: ELEMENT_COLORS[atk.element], side: m.side, width: beamWidth(atk.damage * src.dmgMult) });
+    } else {
+      this.emit({ kind: "slash", x: target.x, y: target.y, angle: m.facing, color: ELEMENT_COLORS[atk.element], size: Math.max(0.35, target.def.size + 0.15) });
+    }
     this.impact(src, target, target.x, target.y, target.def.layer, 1);
     if (atk.chain) this.chain(src, target, atk);
   }
@@ -565,7 +582,7 @@ export class Battle {
       if (!next) break;
       scale *= chain.falloff;
       hit.add(next.id);
-      this.emit({ kind: "beam", x1: cur.x, y1: cur.y, x2: next.x, y2: next.y, color: ELEMENT_COLORS[atk.element] });
+      this.emit({ kind: "beam", x1: cur.x, y1: cur.y, x2: next.x, y2: next.y, color: ELEMENT_COLORS[atk.element], side: src.side, width: beamWidth(atk.damage * scale * src.dmgMult) });
       this.impact(src, next, next.x, next.y, next.def.layer, scale);
       cur = next;
     }
@@ -583,6 +600,8 @@ export class Battle {
       const dy = p.ty - p.y;
       const d = Math.sqrt(dx * dx + dy * dy);
       const stepLen = p.speed * dt;
+      p.px = p.x;
+      p.py = p.y;
       if (d <= stepLen) {
         this.projectiles.splice(i, 1);
         this.impact(p.src, t && t.alive ? t : null, p.tx, p.ty, p.layer, 1);
@@ -845,6 +864,11 @@ export class Battle {
   private emit(f: Fx) {
     if (this.recordFx) this.fx.push(f);
   }
+}
+
+// Visual thickness of a beam, by damage per hit.
+function beamWidth(damage: number): number {
+  return Math.min(6, 1.5 + Math.sqrt(damage) / 4);
 }
 
 function dist2(a: { x: number; y: number }, b: { x: number; y: number }) {

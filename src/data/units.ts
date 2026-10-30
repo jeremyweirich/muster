@@ -11,24 +11,24 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "goblin_horde",
     name: "Goblin Horde",
-    description: "A screaming mob. Cheap, fast and great at soaking up big hits.",
+    description: "A screaming mob. Shreds anything it reaches, but dies to a stiff breeze.",
     cost: 100,
     unlockCost: 0,
     squadSize: 16,
     footprint: { w: 4, h: 2 },
     layer: "ground",
-    hp: 60,
+    hp: 35,
     speed: 15,
     size: 0.22,
     attack: {
-      damage: 8, element: "physical", cooldown: 0.8, range: 0.4,
+      damage: 16, element: "physical", cooldown: 0.8, range: 0.4,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
       { id: "frenzy", name: "Frenzy", description: "Run 50% faster and attack 25% faster.", mods: [{ stat: "speed", mult: 1.5 }, { stat: "cooldown", mult: 0.8 }] },
       { id: "scatter", name: "Scatter", description: "Spread out as they charge, so splash hits fewer of them. +20% HP.", mods: [{ stat: "spacing", add: 0.9 }, { stat: "hp", mult: 1.2 }] },
     ],
-    tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:swarm", "role:fast", "role:melee"],
+    tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:swarm", "role:fast", "role:melee", "role:glass"],
     look: { shape: "triangle", color: "#7bbf3a" },
   },
   {

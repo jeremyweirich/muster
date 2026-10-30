@@ -224,3 +224,20 @@ describe("upgrades", () => {
     expect(keep(b2) - keep(b0)).toBe(600);
   });
 });
+
+describe("ai opening", () => {
+  it("round-one plans can actually fight", () => {
+    for (let seed = 1; seed <= 8; seed++) {
+      const plan = planAiRound(
+        DEFAULT_UNITS,
+        defs,
+        { army: [], unlocked: ["goblin_horde", "knights", "longbowmen"], upgrades: {}, towerLevels: [0, 0], supply: 300 },
+        { army: [], upgrades: {}, towerLevels: [0, 0] },
+        1,
+        "normal",
+        seed,
+      );
+      expect(plan.squads.some((s) => defs.get(s.defId)?.attack)).toBe(true);
+    }
+  });
+});

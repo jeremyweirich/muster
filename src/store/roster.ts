@@ -2,40 +2,16 @@ import { useSyncExternalStore } from "react";
 import { DEFAULT_UNITS } from "../data/units";
 import type { UnitDef } from "../sim/types";
 
-// The unit roster lives in the browser while you iterate. Export it as JSON to
-// keep it (or commit it to src/data/units.ts).
-// Bumped whenever the default roster changes shape (v3: factions, upgrades, speed points)
-const KEY = "muster.roster.v3";
-
-function load(): UnitDef[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length) return parsed;
-    }
-  } catch {
-    // storage unavailable or corrupt: fall back to defaults
-  }
-  return structuredClone(DEFAULT_UNITS);
-}
-
-let units: UnitDef[] = load();
+// The roster always starts from src/data/units.ts. Edits in the Units tab are
+// experiments: they apply to Play, the sandbox and the lab until the page reloads.
+// To keep a unit, copy its JSON (Export) or describe the change and commit it to units.ts.
+let units: UnitDef[] = structuredClone(DEFAULT_UNITS);
 const listeners = new Set<() => void>();
-
-function save() {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(units));
-  } catch {
-    // ignore: the roster still works for this session
-  }
-}
 
 export const roster = {
   get: () => units,
   set(next: UnitDef[]) {
     units = next;
-    save();
     listeners.forEach((l) => l());
   },
   upsert(def: UnitDef, previousId?: string) {

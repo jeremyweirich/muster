@@ -146,7 +146,9 @@ export function EditorView() {
             }}
           />
         </div>
-        <p className="hint">Edits save automatically in this browser. Export to keep them or commit them to the repo.</p>
+        <p className="hint">
+          Edits are experiments: they apply to Play, the sandbox and the lab right away, and reset when you reload the page.
+        </p>
       </aside>
 
       {showRoster ? (
@@ -488,8 +490,8 @@ function RosterPanel({ units, onLoaded, onClose }: { units: UnitDef[]; onLoaded:
         </button>
       </div>
       <p className="muted small">
-        Copy this to keep your units, or paste a roster and press Load. To make units part of the game, paste them into{" "}
-        <code>src/data/units.ts</code>.
+        Copy this to share or keep an experiment, or paste a roster and press Load. Nothing here is saved; the built-in roster
+        comes back on reload.
       </p>
       <div className="list-actions">
         <button
