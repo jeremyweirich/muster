@@ -1,0 +1,589 @@
+import { useMemo, useRef, useState } from "react";
+import { STATUSES } from "../data/elements";
+import { defMap } from "../game/army";
+import { massArmy, runArmies } from "../game/lab";
+import { drawBackground } from "../render/draw";
+import { Battle } from "../sim/battle";
+import { Rng } from "../sim/rng";
+import { ELEMENTS, type AttackDef, type Shape, type StatusId, type TraitDef, type UnitDef } from "../sim/types";
+import { roster, useRoster, validateRoster } from "../store/roster";
+import { useBattlePlayer } from "./battlePlayer";
+import { FieldCanvas } from "./FieldCanvas";
+import { Checks, defaultEffect, EffectEditor, Num, Pick, Row, Section, SelectorEditor, Text } from "./fields";
+import { Swatch, UnitInfo } from "./UnitInfo";
+import { derived } from "./describe";
+
+const SHAPES: Shape[] = ["circle", "square", "triangle", "diamond", "hex"];
+const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
+const TRAIT_TYPES = ["aura", "onDeath", "regen", "periodic"] as const;
+
+const DEFAULT_ATTACK: AttackDef = {
+  damage: 20, element: "physical", cooldown: 1, range: 0.5,
+  targets: ["ground"], targeting: "nearest", delivery: "instant",
+};
+
+function blankUnit(units: UnitDef[]): UnitDef {
+  let n = 1;
+  while (units.some((u) => u.id === `new_unit_${n}`)) n++;
+  return {
+    id: `new_unit_${n}`,
+    name: `New Unit ${n}`,
+    cost: 100,
+    squadSize: 4,
+    footprint: { w: 2, h: 2 },
+    layer: "ground",
+    hp: 200,
+    speed: 1.5,
+    size: 0.3,
+    attack: { ...DEFAULT_ATTACK },
+    tags: [],
+    look: { shape: "circle", color: "#d4a5ff" },
+  };
+}
+
+function defaultTrait(type: TraitDef["type"]): TraitDef {
+  switch (type) {
+    case "aura":
+      return { type, radius: 3, selector: { side: "ally" }, attackSpeed: 1.2 };
+    case "onDeath":
+      return { type, effects: [defaultEffect("damage")] };
+    case "regen":
+      return { type, perSecond: 5 };
+    case "periodic":
+      return { type, interval: 3, effects: [defaultEffect("surface")] };
+  }
+}
+
+export function EditorView() {
+  const units = useRoster();
+  const [selectedId, setSelectedId] = useState<string>(units[0]?.id ?? "");
+  const [idDraft, setIdDraft] = useState<string | null>(null);
+  const [showJson, setShowJson] = useState(false);
+  const [jsonError, setJsonError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const unit = units.find((u) => u.id === selectedId) ?? units[0];
+  const allTags = useMemo(() => [...new Set(units.flatMap((u) => u.tags))].sort(), [units]);
+
+  const update = (patch: Partial<UnitDef>) => unit && roster.upsert({ ...unit, ...patch }, unit.id);
+  const updateAttack = (patch: Partial<AttackDef>) => unit?.attack && update({ attack: { ...unit.attack, ...patch } });
+  const setTraits = (traits: TraitDef[]) => update({ traits: traits.length ? traits : undefined });
+
+  const commitId = () => {
+    if (idDraft === null || !unit) return;
+    const id = idDraft.trim().replace(/\s+/g, "_");
+    if (id && id !== unit.id && !units.some((u) => u.id === id)) {
+      roster.upsert({ ...unit, id }, unit.id);
+      setSelectedId(id);
+    }
+    setIdDraft(null);
+  };
+
+  const create = (def: UnitDef) => {
+    roster.set([...units, def]);
+    setSelectedId(def.id);
+  };
+
+  const duplicate = () => {
+    if (!unit) return;
+    let n = 2;
+    while (units.some((u) => u.id === `${unit.id}_${n}`)) n++;
+    create({ ...structuredClone(unit), id: `${unit.id}_${n}`, name: `${unit.name} ${n}` });
+  };
+
+  const remove = () => {
+    if (!unit || units.length <= 1) return;
+    if (!confirm(`Delete ${unit.name}?`)) return;
+    const i = units.indexOf(unit);
+    roster.remove(unit.id);
+    setSelectedId(units[i === 0 ? 1 : i - 1].id);
+  };
+
+  const exportJson = () => {
+    const blob = new Blob([JSON.stringify(units, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "muster-roster.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const importJson = async (file: File) => {
+    try {
+      const data = validateRoster(JSON.parse(await file.text()));
+      roster.set(data);
+      setSelectedId(data[0].id);
+    } catch (e) {
+      alert(`Import failed: ${(e as Error).message}`);
+    }
+  };
+
+  if (!unit) return null;
+  const atk = unit.attack;
+  const d = derived(unit);
+
+  return (
+    <div className="editor">
+      <datalist id="all-tags">
+        {allTags.map((t) => (
+          <option key={t} value={t} />
+        ))}
+      </datalist>
+
+      <aside className="panel unit-list">
+        <div className="list-actions">
+          <button className="primary" onClick={() => create(blankUnit(units))}>
+            + New
+          </button>
+          <button onClick={duplicate}>Duplicate</button>
+          <button onClick={remove} disabled={units.length <= 1}>
+            Delete
+          </button>
+        </div>
+        <div className="list">
+          {units.map((u) => (
+            <button key={u.id} className={`list-item ${u.id === unit.id ? "active" : ""}`} onClick={() => setSelectedId(u.id)}>
+              <Swatch def={u} size={18} />
+              <span>{u.name}</span>
+              <span className="muted">{u.cost}</span>
+            </button>
+          ))}
+        </div>
+        <div className="list-actions">
+          <button onClick={exportJson}>Export</button>
+          <button onClick={() => fileInput.current?.click()}>Import</button>
+          <button
+            onClick={() => {
+              if (confirm("Reset the roster to the built-in defaults? Your edits will be lost unless exported.")) {
+                roster.reset();
+                setSelectedId(roster.get()[0].id);
+              }
+            }}
+          >
+            Reset
+          </button>
+          <input ref={fileInput} type="file" accept=".json" hidden onChange={(e) => e.target.files?.[0] && importJson(e.target.files[0])} />
+        </div>
+        <p className="hint">Edits save automatically in this browser. Export to keep them or commit them to the repo.</p>
+      </aside>
+
+      <div className="form">
+        <div className="form-head">
+          <Swatch def={unit} size={36} />
+          <h2>{unit.name}</h2>
+          <button className="ghost" onClick={() => setShowJson(!showJson)}>
+            {showJson ? "Form" : "JSON"}
+          </button>
+        </div>
+
+        {showJson ? (
+          <div>
+            <textarea
+              className="json"
+              key={unit.id}
+              defaultValue={JSON.stringify(unit, null, 2)}
+              onChange={(e) => {
+                try {
+                  const parsed = JSON.parse(e.target.value) as UnitDef;
+                  validateRoster([parsed]);
+                  if (parsed.id !== unit.id && units.some((u) => u.id === parsed.id)) throw new Error("id already in use");
+                  roster.upsert(parsed, unit.id);
+                  if (parsed.id !== unit.id) setSelectedId(parsed.id);
+                  setJsonError(null);
+                } catch (err) {
+                  setJsonError((err as Error).message);
+                }
+              }}
+            />
+            {jsonError && <p className="error">{jsonError}</p>}
+          </div>
+        ) : (
+          <>
+            <Section title="Identity">
+              <Row label="Name">
+                <Text value={unit.name} onChange={(name) => update({ name })} />
+              </Row>
+              <Row label="Id" hint="Unique key. Saved armies and the roster refer to units by id.">
+                <input
+                  type="text"
+                  value={idDraft ?? unit.id}
+                  onChange={(e) => setIdDraft(e.target.value)}
+                  onBlur={commitId}
+                  onKeyDown={(e) => e.key === "Enter" && commitId()}
+                />
+              </Row>
+              <Row label="Description">
+                <Text value={unit.description} onChange={(description) => update({ description })} />
+              </Row>
+              <Row label="Look">
+                <input type="color" value={unit.look.color} onChange={(e) => update({ look: { ...unit.look, color: e.target.value } })} />
+                <Pick value={unit.look.shape} options={SHAPES} onChange={(shape) => update({ look: { ...unit.look, shape } })} />
+                <input
+                  type="text"
+                  className="glyph"
+                  value={unit.look.glyph ?? ""}
+                  placeholder="glyph"
+                  onChange={(e) => update({ look: { ...unit.look, glyph: e.target.value || undefined } })}
+                />
+              </Row>
+            </Section>
+
+            <Section title="Squad">
+              <Row label="Cost">
+                <Num value={unit.cost} step={25} onChange={(cost) => update({ cost })} />
+              </Row>
+              <Row label="Squad size" hint="Models per purchase">
+                <Num value={unit.squadSize} min={1} onChange={(squadSize) => update({ squadSize: Math.max(1, Math.round(squadSize)) })} />
+              </Row>
+              <Row label="Footprint" hint="Deployment tiles (w × h)">
+                <Num value={unit.footprint.w} min={1} onChange={(w) => update({ footprint: { ...unit.footprint, w: Math.max(1, Math.round(w)) } })} />
+                ×
+                <Num value={unit.footprint.h} min={1} onChange={(h) => update({ footprint: { ...unit.footprint, h: Math.max(1, Math.round(h)) } })} />
+              </Row>
+              <Row label="Layer" hint="Air units ignore ground surfaces and can only be hit by attacks that target air">
+                <Pick value={unit.layer} options={["ground", "air"] as const} onChange={(layer) => update({ layer })} />
+              </Row>
+            </Section>
+
+            <Section title="Body">
+              <Row label="HP (per model)">
+                <Num value={unit.hp} step={10} onChange={(hp) => update({ hp })} />
+              </Row>
+              <Row label="Speed" hint="Tiles per second">
+                <Num value={unit.speed} step={0.1} onChange={(speed) => update({ speed })} />
+              </Row>
+              <Row label="Size" hint="Model radius in tiles">
+                <Num value={unit.size} step={0.05} onChange={(size) => update({ size })} />
+              </Row>
+              <Row label="Resist %" hint="Positive = takes less damage, negative = weakness. 100 = immune.">
+                <span className="resists">
+                  {ELEMENTS.map((el) => (
+                    <span key={el} className="resist">
+                      <span className={`el el-${el}`}>{el}</span>
+                      <Num
+                        value={Math.round((unit.resist?.[el] ?? 0) * 100)}
+                        step={10}
+                        onChange={(v) => {
+                          const resist = { ...unit.resist, [el]: v / 100 };
+                          if (!v) delete resist[el];
+                          update({ resist: Object.keys(resist).length ? resist : undefined });
+                        }}
+                      />
+                    </span>
+                  ))}
+                </span>
+              </Row>
+              <Row label="Immune to">
+                <Checks
+                  value={unit.immuneStatuses ?? []}
+                  options={STATUS_IDS}
+                  onChange={(v) => update({ immuneStatuses: v.length ? v : undefined })}
+                />
+              </Row>
+            </Section>
+
+            <Section
+              title="Attack"
+              right={
+                <label className="check">
+                  <input type="checkbox" checked={!!atk} onChange={(e) => update({ attack: e.target.checked ? { ...DEFAULT_ATTACK } : undefined })} />
+                  has attack
+                </label>
+              }
+            >
+              {atk && (
+                <>
+                  <Row label="Damage">
+                    <Num value={atk.damage} step={5} onChange={(damage) => updateAttack({ damage })} />
+                    <Pick value={atk.element} options={ELEMENTS} onChange={(element) => updateAttack({ element })} />
+                  </Row>
+                  <Row label="Cooldown (s)">
+                    <Num value={atk.cooldown} step={0.1} onChange={(cooldown) => updateAttack({ cooldown })} />
+                  </Row>
+                  <Row label="Range" hint="Gap between model edges, in tiles. Melee is ~0.5">
+                    <Num value={atk.range} step={0.5} onChange={(range) => updateAttack({ range })} />
+                  </Row>
+                  <Row label="Can hit">
+                    <Checks value={atk.targets} options={["ground", "air"] as const} onChange={(targets) => updateAttack({ targets })} />
+                  </Row>
+                  <Row label="Targeting">
+                    <Pick value={atk.targeting} options={["nearest", "highestHp", "lowestHp"] as const} onChange={(targeting) => updateAttack({ targeting })} />
+                  </Row>
+                  <Row label="Delivery">
+                    <Pick value={atk.delivery} options={["instant", "projectile", "beam"] as const} onChange={(delivery) => updateAttack({ delivery })} />
+                    {atk.delivery === "projectile" && (
+                      <>
+                        <span className="mini">speed</span>
+                        <Num value={atk.projectileSpeed ?? 10} onChange={(projectileSpeed) => updateAttack({ projectileSpeed })} />
+                      </>
+                    )}
+                  </Row>
+                  <Row label="Splash radius" hint="Main damage hits all enemies in this radius. 0 = single target">
+                    <Num value={atk.splash ?? 0} step={0.1} onChange={(splash) => updateAttack({ splash: splash || undefined })} />
+                  </Row>
+                  <Row label="Chain">
+                    <label className="check">
+                      <input
+                        type="checkbox"
+                        checked={!!atk.chain}
+                        onChange={(e) => updateAttack({ chain: e.target.checked ? { count: 2, range: 2.5, falloff: 0.8 } : undefined })}
+                      />
+                    </label>
+                    {atk.chain && (
+                      <>
+                        <span className="mini">jumps</span>
+                        <Num value={atk.chain.count} onChange={(count) => updateAttack({ chain: { ...atk.chain!, count } })} />
+                        <span className="mini">range</span>
+                        <Num value={atk.chain.range} step={0.5} onChange={(range) => updateAttack({ chain: { ...atk.chain!, range } })} />
+                        <span className="mini">falloff</span>
+                        <Num value={atk.chain.falloff} step={0.05} onChange={(falloff) => updateAttack({ chain: { ...atk.chain!, falloff } })} />
+                      </>
+                    )}
+                  </Row>
+                  <div className="sub">
+                    <div className="sub-head">
+                      <span>Bonus damage vs</span>
+                      <button
+                        className="small-btn"
+                        onClick={() => updateAttack({ bonusVs: [...(atk.bonusVs ?? []), { selector: { hasTag: "size:large" }, mult: 1.5 }] })}
+                      >
+                        + add
+                      </button>
+                    </div>
+                    {atk.bonusVs?.map((b, i) => (
+                      <div key={i} className="sub-item">
+                        <SelectorEditor
+                          sel={b.selector}
+                          onChange={(selector) => updateAttack({ bonusVs: atk.bonusVs!.map((x, j) => (j === i ? { ...x, selector } : x)) })}
+                        />
+                        <span className="mini">×</span>
+                        <Num value={b.mult} step={0.1} onChange={(mult) => updateAttack({ bonusVs: atk.bonusVs!.map((x, j) => (j === i ? { ...x, mult } : x)) })} />
+                        <button className="icon" onClick={() => updateAttack({ bonusVs: atk.bonusVs!.filter((_, j) => j !== i) })}>
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="sub">
+                    <div className="sub-head">
+                      <span>On-hit effects</span>
+                      <span className="muted small">statuses & surfaces affect both sides</span>
+                      <button className="small-btn" onClick={() => updateAttack({ onHit: [...(atk.onHit ?? []), defaultEffect("status")] })}>
+                        + add
+                      </button>
+                    </div>
+                    {atk.onHit?.map((e, i) => (
+                      <EffectEditor
+                        key={i}
+                        effect={e}
+                        onChange={(ne) => updateAttack({ onHit: atk.onHit!.map((x, j) => (j === i ? ne : x)) })}
+                        onRemove={() => updateAttack({ onHit: atk.onHit!.filter((_, j) => j !== i) || undefined })}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </Section>
+
+            <Section
+              title="Traits"
+              right={
+                <select value="" onChange={(e) => e.target.value && setTraits([...(unit.traits ?? []), defaultTrait(e.target.value as TraitDef["type"])])}>
+                  <option value="">+ add trait…</option>
+                  {TRAIT_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              }
+            >
+              {(unit.traits ?? []).map((t, i) => (
+                <TraitEditor
+                  key={i}
+                  trait={t}
+                  onChange={(nt) => setTraits(unit.traits!.map((x, j) => (j === i ? nt : x)))}
+                  onRemove={() => setTraits(unit.traits!.filter((_, j) => j !== i))}
+                />
+              ))}
+              {!unit.traits?.length && <p className="muted small">No traits.</p>}
+            </Section>
+
+            <Section title="Tags">
+              <TagEditor tags={unit.tags} onChange={(tags) => update({ tags })} />
+              <p className="muted small">
+                Use <code>category:value</code> — e.g. <code>faction:greenskin</code>, <code>race:goblin</code>, <code>size:large</code>. Auras,
+                bonus damage and (later) faction bonuses select units by tag.
+              </p>
+            </Section>
+          </>
+        )}
+      </div>
+
+      <aside className="panel preview">
+        <UnitInfo def={unit} />
+        <div className="derived">
+          <div>
+            <b>{d.hpPerCost.toFixed(1)}</b>
+            <span>hp / supply</span>
+          </div>
+          <div>
+            <b>{d.dpsPerCost.toFixed(1)}</b>
+            <span>dps / 100 supply</span>
+          </div>
+        </div>
+        <Sandbox unit={unit} units={units} />
+      </aside>
+    </div>
+  );
+}
+
+function TraitEditor({ trait, onChange, onRemove }: { trait: TraitDef; onChange: (t: TraitDef) => void; onRemove: () => void }) {
+  return (
+    <div className="sub">
+      <div className="sub-head">
+        <b>{trait.type}</b>
+        <button className="icon" onClick={onRemove}>
+          ✕
+        </button>
+      </div>
+      {trait.type === "aura" && (
+        <>
+          <Row label="Radius">
+            <Num value={trait.radius} step={0.5} onChange={(radius) => onChange({ ...trait, radius })} />
+          </Row>
+          <Row label="Affects">
+            <SelectorEditor sel={trait.selector} onChange={(selector) => onChange({ ...trait, selector })} />
+          </Row>
+          <Row label="Attack speed ×">
+            <Num value={trait.attackSpeed ?? 1} step={0.05} onChange={(attackSpeed) => onChange({ ...trait, attackSpeed })} />
+          </Row>
+          <Row label="Move speed ×">
+            <Num value={trait.moveSpeed ?? 1} step={0.05} onChange={(moveSpeed) => onChange({ ...trait, moveSpeed })} />
+          </Row>
+          <Row label="Damage ×">
+            <Num value={trait.damage ?? 1} step={0.05} onChange={(damage) => onChange({ ...trait, damage })} />
+          </Row>
+        </>
+      )}
+      {trait.type === "regen" && (
+        <Row label="HP / second">
+          <Num value={trait.perSecond} onChange={(perSecond) => onChange({ ...trait, perSecond })} />
+        </Row>
+      )}
+      {(trait.type === "onDeath" || trait.type === "periodic") && (
+        <>
+          {trait.type === "periodic" && (
+            <Row label="Interval (s)">
+              <Num value={trait.interval} step={0.5} onChange={(interval) => onChange({ ...trait, interval })} />
+            </Row>
+          )}
+          {trait.effects.map((e, i) => (
+            <EffectEditor
+              key={i}
+              effect={e}
+              onChange={(ne) => onChange({ ...trait, effects: trait.effects.map((x, j) => (j === i ? ne : x)) })}
+              onRemove={() => onChange({ ...trait, effects: trait.effects.filter((_, j) => j !== i) })}
+            />
+          ))}
+          <button className="small-btn" onClick={() => onChange({ ...trait, effects: [...trait.effects, defaultEffect("damage")] })}>
+            + effect
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+function TagEditor({ tags, onChange }: { tags: string[]; onChange: (t: string[]) => void }) {
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    const t = draft.trim();
+    if (t && !tags.includes(t)) onChange([...tags, t]);
+    setDraft("");
+  };
+  return (
+    <div className="tag-editor">
+      {tags.map((t) => (
+        <span key={t} className="tag">
+          {t}
+          <button onClick={() => onChange(tags.filter((x) => x !== t))}>✕</button>
+        </span>
+      ))}
+      <input
+        type="text"
+        list="all-tags"
+        placeholder="add tag…"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") add();
+        }}
+        onBlur={add}
+      />
+    </div>
+  );
+}
+
+// Watch the unit fight, or run a quick batch of headless sims.
+function Sandbox({ unit, units }: { unit: UnitDef; units: UnitDef[] }) {
+  const [opponent, setOpponent] = useState(units.find((u) => u.id !== unit.id)?.id ?? unit.id);
+  const [budget, setBudget] = useState(800);
+  const [speed, setSpeed] = useState(1);
+  const [stats, setStats] = useState<string | null>(null);
+  const battle = useRef<Battle | null>(null);
+  const player = useBattlePlayer();
+  const opp = units.find((u) => u.id === opponent) ?? units[0];
+
+  const run = () => {
+    const defs = defMap(units);
+    const rng = new Rng(Date.now() & 0xffff);
+    battle.current = new Battle(defs, [massArmy(unit, budget, 0, defs, rng), massArmy(opp, budget, 1, defs, rng)], {
+      seed: rng.int(1e6),
+      recordFx: true,
+    });
+    player.reset();
+    setStats(null);
+  };
+
+  const batch = () => {
+    const defs = defMap(units);
+    const r = runArmies(defs, (sideA, rng) => [massArmy(unit, budget, sideA, defs, rng), massArmy(opp, budget, sideA === 0 ? 1 : 0, defs, rng)], 10);
+    setStats(
+      `${unit.name} wins ${Math.round(r.winRate * 100)}% · keeps ${Math.round(r.remain[0] * 100)}% of its value vs ${Math.round(r.remain[1] * 100)}% · ~${r.time.toFixed(0)}s`,
+    );
+  };
+
+  return (
+    <div className="sandbox">
+      <h4>Sandbox</h4>
+      <div className="sandbox-controls">
+        <Pick value={opponent} options={units.map((u) => u.id)} onChange={setOpponent} />
+        <span className="mini">supply</span>
+        <Num value={budget} step={100} onChange={setBudget} />
+      </div>
+      <div className="sandbox-controls">
+        <button className="primary" onClick={run}>
+          Watch
+        </button>
+        <button onClick={batch}>Sim ×10</button>
+        {[0.5, 1, 2, 4].map((s) => (
+          <button key={s} className={`small-btn ${speed === s ? "active" : ""}`} onClick={() => setSpeed(s)}>
+            {s}×
+          </button>
+        ))}
+      </div>
+      {stats && <p className="small">{stats}</p>}
+      <FieldCanvas
+        tile={12}
+        className="field small-field"
+        draw={(ctx, dt, t) => {
+          if (battle.current) player.frame(ctx, battle.current, 12, dt, t, speed);
+          else drawBackground(ctx, 12, { zones: true });
+        }}
+      />
+      <p className="muted small">
+        Your unit (blue, bottom) vs {opp.name} (red), equal supply. Edits apply to the next run.
+      </p>
+    </div>
+  );
+}
