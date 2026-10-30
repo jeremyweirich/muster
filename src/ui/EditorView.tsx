@@ -5,7 +5,8 @@ import { massArmy, runArmies } from "../game/lab";
 import { drawBackground } from "../render/draw";
 import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
-import { ELEMENTS, type AttackDef, type Shape, type StatusId, type TraitDef, type UnitDef } from "../sim/types";
+import { ELEMENTS, type AttackDef, type Element, type Layer, type ModStat, type Shape, type StatusId, type Targeting, type TraitDef, type UnitDef, type UpgradeDef } from "../sim/types";
+import { applyUpgrades } from "../sim/upgrades";
 import { roster, useRoster, validateRoster } from "../store/roster";
 import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas } from "./FieldCanvas";
@@ -15,7 +16,9 @@ import { derived } from "./describe";
 
 const SHAPES: Shape[] = ["circle", "square", "triangle", "diamond", "hex"];
 const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
-const TRAIT_TYPES = ["aura", "onDeath", "regen", "periodic"] as const;
+const TRAIT_TYPES = ["aura", "onDeath", "regen", "periodic", "retaliate", "charge"] as const;
+const MOD_STATS: ModStat[] = ["hp", "speed", "size", "spacing", "squadSize", "damage", "cooldown", "range", "splash", "chainCount"];
+const TARGETINGS = ["nearest", "highestHp", "lowestHp", "towers"] as const;
 
 const DEFAULT_ATTACK: AttackDef = {
   damage: 20, element: "physical", cooldown: 1, range: 0.5,
@@ -33,7 +36,7 @@ function blankUnit(units: UnitDef[]): UnitDef {
     footprint: { w: 2, h: 2 },
     layer: "ground",
     hp: 200,
-    speed: 1.5,
+    speed: 10,
     size: 0.3,
     attack: { ...DEFAULT_ATTACK },
     tags: [],
@@ -51,6 +54,10 @@ function defaultTrait(type: TraitDef["type"]): TraitDef {
       return { type, perSecond: 5 };
     case "periodic":
       return { type, interval: 3, effects: [defaultEffect("surface")] };
+    case "retaliate":
+      return { type, effects: [{ type: "status", status: "chilled" }] };
+    case "charge":
+      return { type, mult: 3 };
   }
 }
 
@@ -213,6 +220,9 @@ export function EditorView() {
               <Row label="Unlock cost" hint="Paid once per match before the first purchase. 0 = available from the start">
                 <Num value={unit.unlockCost ?? 0} step={25} onChange={(unlockCost) => update({ unlockCost: unlockCost || undefined })} />
               </Row>
+              <Row label="Upgrade cost" hint="Price of the first upgrade bought; the second costs double. Blank = unit cost">
+                <Num value={unit.upgradeCost} step={25} onChange={(upgradeCost) => update({ upgradeCost: upgradeCost || undefined })} />
+              </Row>
               <Row label="Squad size" hint="Models per purchase">
                 <Num value={unit.squadSize} min={1} onChange={(squadSize) => update({ squadSize: Math.max(1, Math.round(squadSize)) })} />
               </Row>
@@ -230,8 +240,11 @@ export function EditorView() {
               <Row label="HP (per model)">
                 <Num value={unit.hp} step={10} onChange={(hp) => update({ hp })} />
               </Row>
-              <Row label="Speed" hint="Tiles per second">
-                <Num value={unit.speed} step={0.1} onChange={(speed) => update({ speed })} />
+              <Row label="Speed" hint="Speed points: 10 ≈ 1.5 tiles per second">
+                <Num value={unit.speed} step={1} onChange={(speed) => update({ speed })} />
+              </Row>
+              <Row label="Spacing" hint="Extra distance kept from allies while moving (tiles). Spreads the squad out against splash">
+                <Num value={unit.spacing ?? 0} step={0.1} onChange={(spacing) => update({ spacing: spacing || undefined })} />
               </Row>
               <Row label="Size" hint="Model radius in tiles">
                 <Num value={unit.size} step={0.05} onChange={(size) => update({ size })} />
@@ -288,7 +301,7 @@ export function EditorView() {
                     <Checks value={atk.targets} options={["ground", "air"] as const} onChange={(targets) => updateAttack({ targets })} />
                   </Row>
                   <Row label="Targeting">
-                    <Pick value={atk.targeting} options={["nearest", "highestHp", "lowestHp"] as const} onChange={(targeting) => updateAttack({ targeting })} />
+                    <Pick value={atk.targeting} options={TARGETINGS} onChange={(targeting) => updateAttack({ targeting })} />
                   </Row>
                   <Row label="Delivery">
                     <Pick value={atk.delivery} options={["instant", "projectile", "beam"] as const} onChange={(delivery) => updateAttack({ delivery })} />
@@ -390,11 +403,37 @@ export function EditorView() {
               {!unit.traits?.length && <p className="muted small">No traits.</p>}
             </Section>
 
+            <Section
+              title="Upgrades"
+              right={
+                <button
+                  className="small-btn"
+                  onClick={() => update({ upgrades: [...(unit.upgrades ?? []), { id: `upgrade_${(unit.upgrades?.length ?? 0) + 1}`, name: "New Upgrade", mods: [{ stat: "hp", mult: 1.25 }] }] })}
+                >
+                  + add
+                </button>
+              }
+            >
+              <p className="muted small">
+                One-time purchases per match that change every squad of this unit. The first one bought costs the upgrade cost, the second
+                double. Aim for two with different personalities.
+              </p>
+              {(unit.upgrades ?? []).map((u, i) => (
+                <UpgradeEditor
+                  key={i}
+                  up={u}
+                  onChange={(nu) => update({ upgrades: unit.upgrades!.map((x, j) => (j === i ? nu : x)) })}
+                  onRemove={() => update({ upgrades: unit.upgrades!.filter((_, j) => j !== i) })}
+                />
+              ))}
+            </Section>
+
             <Section title="Tags">
               <TagEditor tags={unit.tags} onChange={(tags) => update({ tags })} />
               <p className="muted small">
-                Use <code>category:value</code> — e.g. <code>faction:greenskin</code>, <code>race:goblin</code>, <code>size:large</code>. Auras,
-                bonus damage and (later) faction bonuses select units by tag.
+                Use <code>category:value</code>: <code>faction:greenskin</code>, <code>race:goblin</code>, <code>size:large</code>. Role tags like{" "}
+                <code>role:sturdy</code> describe what the unit is for and show up on hover in the recruit list (see the Codex for the list).
+                Auras, bonus damage and (later) faction bonuses select units by tag.
               </p>
             </Section>
           </>
@@ -524,7 +563,17 @@ function TraitEditor({ trait, onChange, onRemove }: { trait: TraitDef; onChange:
           <Num value={trait.perSecond} onChange={(perSecond) => onChange({ ...trait, perSecond })} />
         </Row>
       )}
-      {(trait.type === "onDeath" || trait.type === "periodic") && (
+      {trait.type === "charge" && (
+        <Row label="First hit ×">
+          <Num value={trait.mult} step={0.5} onChange={(mult) => onChange({ ...trait, mult })} />
+        </Row>
+      )}
+      {trait.type === "retaliate" && (
+        <Row label="Max range" hint="Only attackers within this distance are affected. Blank = any">
+          <Num value={trait.maxRange} step={0.5} onChange={(maxRange) => onChange({ ...trait, maxRange: maxRange || undefined })} />
+        </Row>
+      )}
+      {(trait.type === "onDeath" || trait.type === "periodic" || trait.type === "retaliate") && (
         <>
           {trait.type === "periodic" && (
             <Row label="Interval (s)">
@@ -579,14 +628,16 @@ function TagEditor({ tags, onChange }: { tags: string[]; onChange: (t: string[])
 }
 
 // Watch the unit fight, or run a quick batch of headless sims.
-function Sandbox({ unit, units }: { unit: UnitDef; units: UnitDef[] }) {
-  const [opponent, setOpponent] = useState(units.find((u) => u.id !== unit.id)?.id ?? unit.id);
+function Sandbox({ unit: base, units }: { unit: UnitDef; units: UnitDef[] }) {
+  const [opponent, setOpponent] = useState(units.find((u) => u.id !== base.id)?.id ?? base.id);
   const [budget, setBudget] = useState(800);
   const [speed, setSpeed] = useState(1);
   const [stats, setStats] = useState<string | null>(null);
+  const [ups, setUps] = useState<string[]>([]);
   const battle = useRef<Battle | null>(null);
   const player = useBattlePlayer();
   const opp = units.find((u) => u.id === opponent) ?? units[0];
+  const unit = applyUpgrades(base, ups.filter((id) => base.upgrades?.some((u) => u.id === id)));
 
   const run = () => {
     const defs = defMap(units);
@@ -616,6 +667,16 @@ function Sandbox({ unit, units }: { unit: UnitDef; units: UnitDef[] }) {
         <span className="mini">supply</span>
         <Num value={budget} step={100} onChange={setBudget} />
       </div>
+      {base.upgrades?.length ? (
+        <div className="sandbox-controls">
+          <span className="mini">with</span>
+          <Checks
+            value={ups}
+            options={base.upgrades.map((u) => u.id)}
+            onChange={setUps}
+          />
+        </div>
+      ) : null}
       <div className="sandbox-controls">
         <button className="primary" onClick={run}>
           Watch
@@ -639,6 +700,130 @@ function Sandbox({ unit, units }: { unit: UnitDef; units: UnitDef[] }) {
       <p className="muted small">
         Your unit (blue, bottom) vs {opp.name} (red), equal supply. Edits apply to the next run.
       </p>
+    </div>
+  );
+}
+
+function UpgradeEditor({ up, onChange, onRemove }: { up: UpgradeDef; onChange: (u: UpgradeDef) => void; onRemove: () => void }) {
+  const setMods = (mods: UpgradeDef["mods"]) => onChange({ ...up, mods: mods?.length ? mods : undefined });
+  return (
+    <div className="sub upgrade-editor">
+      <div className="sub-head">
+        <b>{up.name}</b>
+        <button className="icon" onClick={onRemove} title="Remove upgrade">
+          ✕
+        </button>
+      </div>
+      <Row label="Name">
+        <Text value={up.name} onChange={(name) => onChange({ ...up, name })} />
+      </Row>
+      <Row label="Id">
+        <Text value={up.id} onChange={(id) => onChange({ ...up, id: id.replace(/\s+/g, "_") })} />
+      </Row>
+      <Row label="Description">
+        <Text value={up.description} onChange={(description) => onChange({ ...up, description: description || undefined })} />
+      </Row>
+      <div className="sub-head">
+        <span>Stat changes</span>
+        <span className="muted small">value × mult + add</span>
+        <button className="small-btn" onClick={() => setMods([...(up.mods ?? []), { stat: "damage", mult: 1.25 }])}>
+          + add
+        </button>
+      </div>
+      {(up.mods ?? []).map((m, i) => (
+        <div key={i} className="sub-item">
+          <Pick value={m.stat} options={MOD_STATS} onChange={(stat) => setMods(up.mods!.map((x, j) => (j === i ? { ...x, stat } : x)))} />
+          <span className="mini">×</span>
+          <Num value={m.mult ?? 1} step={0.05} onChange={(mult) => setMods(up.mods!.map((x, j) => (j === i ? { ...x, mult: mult === 1 ? undefined : mult } : x)))} />
+          <span className="mini">+</span>
+          <Num value={m.add ?? 0} step={0.1} onChange={(add) => setMods(up.mods!.map((x, j) => (j === i ? { ...x, add: add || undefined } : x)))} />
+          <button className="icon" onClick={() => setMods(up.mods!.filter((_, j) => j !== i))}>
+            ✕
+          </button>
+        </div>
+      ))}
+      <Row label="Attack element">
+        <select value={up.element ?? ""} onChange={(e) => onChange({ ...up, element: (e.target.value || undefined) as Element | undefined })}>
+          <option value="">unchanged</option>
+          {ELEMENTS.map((el) => (
+            <option key={el} value={el}>
+              {el}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <Row label="Targeting">
+        <select value={up.targeting ?? ""} onChange={(e) => onChange({ ...up, targeting: (e.target.value || undefined) as Targeting | undefined })}>
+          <option value="">unchanged</option>
+          {TARGETINGS.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <Row label="Can hit">
+        <label className="check">
+          <input type="checkbox" checked={!!up.targets} onChange={(e) => onChange({ ...up, targets: e.target.checked ? ["ground", "air"] : undefined })} />
+          override
+        </label>
+        {up.targets && <Checks value={up.targets} options={["ground", "air"] as Layer[]} onChange={(targets) => onChange({ ...up, targets })} />}
+      </Row>
+      <Row label="Resist % added">
+        <span className="resists">
+          {ELEMENTS.map((el) => (
+            <span key={el} className="resist">
+              <span className={`el el-${el}`}>{el}</span>
+              <Num
+                value={Math.round((up.resist?.[el] ?? 0) * 100)}
+                step={10}
+                onChange={(v) => {
+                  const resist = { ...up.resist, [el]: v / 100 };
+                  if (!v) delete resist[el];
+                  onChange({ ...up, resist: Object.keys(resist).length ? resist : undefined });
+                }}
+              />
+            </span>
+          ))}
+        </span>
+      </Row>
+      <div className="sub-head">
+        <span>Extra on-hit effects</span>
+        <button className="small-btn" onClick={() => onChange({ ...up, onHit: [...(up.onHit ?? []), defaultEffect("surface")] })}>
+          + add
+        </button>
+      </div>
+      {(up.onHit ?? []).map((e, i) => (
+        <EffectEditor
+          key={i}
+          effect={e}
+          onChange={(ne) => onChange({ ...up, onHit: up.onHit!.map((x, j) => (j === i ? ne : x)) })}
+          onRemove={() => onChange({ ...up, onHit: up.onHit!.filter((_, j) => j !== i) })}
+        />
+      ))}
+      <div className="sub-head">
+        <span>Traits</span>
+        <label className="check" title="Replace the unit's traits instead of adding to them">
+          <input type="checkbox" checked={!!up.replaceTraits} onChange={(e) => onChange({ ...up, replaceTraits: e.target.checked || undefined })} />
+          replace existing
+        </label>
+        <select value="" onChange={(e) => e.target.value && onChange({ ...up, traits: [...(up.traits ?? []), defaultTrait(e.target.value as TraitDef["type"])] })}>
+          <option value="">+ add trait…</option>
+          {TRAIT_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </div>
+      {(up.traits ?? []).map((t, i) => (
+        <TraitEditor
+          key={i}
+          trait={t}
+          onChange={(nt) => onChange({ ...up, traits: up.traits!.map((x, j) => (j === i ? nt : x)) })}
+          onRemove={() => onChange({ ...up, traits: up.traits!.filter((_, j) => j !== i) })}
+        />
+      ))}
     </div>
   );
 }

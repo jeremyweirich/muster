@@ -1,6 +1,7 @@
 import { ELEMENT_COLORS, STATUSES, SURFACES, SURFACE_REACTIONS, UNIT_REACTIONS } from "../data/elements";
 import { RULES } from "../data/rules";
-import { TOWER_DEFS } from "../data/towers";
+import { ROLES } from "../data/roles";
+import { TOWER_DEFS, towerDaze } from "../data/towers";
 import { UnitInfo } from "./UnitInfo";
 import type { Element } from "../sim/types";
 import { describeEffect } from "./describe";
@@ -104,14 +105,38 @@ export function CodexView() {
         <section>
           <h3>Towers</h3>
           <p className="muted small">
-            Each side has a Keep and a Sky Spire at the back of its zone. Towers don&apos;t count toward winning the round, but when one
-            falls its whole army is Dazed: 10% damage dealt, double damage taken, for 5 seconds.
+            Each side has a Keep and a Sky Spire at the back of its zone. They fall fast unless upgraded. Towers don&apos;t count toward
+            winning the round, but when one falls its owner&apos;s whole army is Dazed (10% damage dealt, double damage taken) for{" "}
+            {towerDaze(0)}s, minus 1s per tower level (minimum {RULES.towerDazeMin}s). Each level costs{" "}
+            {RULES.towerUpgradeCosts.join(" / ")} and adds {RULES.towerHpPerLevel} HP.
           </p>
           <div className="tower-cards">
             {TOWER_DEFS.map((d) => (
               <UnitInfo key={d.id} def={d} />
             ))}
           </div>
+        </section>
+
+        <section>
+          <h3>Roles</h3>
+          <p className="muted small">
+            Role tags (<code>role:*</code>) describe what a unit is for. They show when you hover a unit in the recruit list.
+          </p>
+          <table className="ref">
+            <tbody>
+              {Object.entries(ROLES).map(([id, r]) => (
+                <tr key={id}>
+                  <td>
+                    <span className="role">{r.name}</span>
+                  </td>
+                  <td className="muted">{r.description}</td>
+                  <td>
+                    <code>role:{id}</code>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </section>
 
         <section>

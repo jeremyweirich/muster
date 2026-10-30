@@ -18,6 +18,12 @@ export const RULES: Rules = {
     { defId: "tower_keep", x: 7 },
     { defId: "tower_spire", x: 23 },
   ],
+  speedScale: 0.15,
+  upgradeCostMult: [1, 2],
+  towerUpgradeCosts: [100, 200, 400, 800],
+  towerHpPerLevel: 300,
+  towerDazeBase: 8,
+  towerDazeMin: 4,
 };
 
 // Deployment zone rows (inclusive start, exclusive end) for each side.

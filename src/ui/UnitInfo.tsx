@@ -1,6 +1,9 @@
+import type { ReactNode } from "react";
 import { ELEMENT_COLORS } from "../data/elements";
+import { RULES } from "../data/rules";
+import { rolesOf } from "../data/roles";
 import type { Element, UnitDef } from "../sim/types";
-import { derived, describeEffect, describeTrait } from "./describe";
+import { derived, describeEffect, describeTrait, describeUpgrade } from "./describe";
 
 export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
   return (
@@ -13,7 +16,42 @@ export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
   );
 }
 
-export function UnitInfo({ def }: { def: UnitDef }) {
+export function RoleChips({ tags, detailed }: { tags: string[]; detailed?: boolean }) {
+  const roles = rolesOf(tags);
+  if (!roles.length) return null;
+  if (detailed) {
+    return (
+      <ul className="roles-detailed">
+        {roles.map((r) => (
+          <li key={r.id}>
+            <span className="role">{r.name}</span> <span className="muted small">{r.description}</span>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+  return (
+    <div className="roles">
+      {roles.map((r) => (
+        <span key={r.id} className="role" title={r.description}>
+          {r.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+export function UnitInfo({
+  def,
+  owned,
+  detailedRoles,
+  upgradeAction,
+}: {
+  def: UnitDef;
+  owned?: string[];
+  detailedRoles?: boolean;
+  upgradeAction?: (upgradeId: string) => ReactNode;
+}) {
   const d = derived(def);
   const entries = Object.entries(def.resist ?? {}) as [Element, number][];
   const resists = entries.filter(([, v]) => v > 0);
@@ -31,22 +69,25 @@ export function UnitInfo({ def }: { def: UnitDef }) {
           </div>
         </div>
       </div>
+      <RoleChips tags={def.tags} detailed={detailedRoles} />
       {def.description && <p className="muted small">{def.description}</p>}
       <dl className="stats">
         <dt>HP</dt>
         <dd>
-          {def.hp} <span className="muted">({d.squadHp} squad)</span>
+          {Math.round(def.hp)} <span className="muted">({Math.round(d.squadHp)} squad)</span>
         </dd>
         <dt>Speed</dt>
-        <dd>{def.speed}</dd>
+        <dd>
+          {Math.round(def.speed)} <span className="muted">({(def.speed * RULES.speedScale).toFixed(1)} tiles/s)</span>
+        </dd>
         {atk ? (
           <>
             <dt>Attack</dt>
             <dd>
               <span style={{ color: ELEMENT_COLORS[atk.element] }}>
-                {atk.damage} {atk.element}
+                {Math.round(atk.damage)} {atk.element}
               </span>{" "}
-              / {atk.cooldown}s
+              / {+atk.cooldown.toFixed(2)}s
             </dd>
             <dt>DPS</dt>
             <dd>
@@ -54,12 +95,12 @@ export function UnitInfo({ def }: { def: UnitDef }) {
             </dd>
             <dt>Range</dt>
             <dd>
-              {atk.range} · hits {atk.targets.join(" + ")}
+              {+atk.range.toFixed(1)} · hits {atk.targets.join(" + ")}
             </dd>
             {atk.splash ? (
               <>
                 <dt>Splash</dt>
-                <dd>{atk.splash}</dd>
+                <dd>{+atk.splash.toFixed(1)}</dd>
               </>
             ) : null}
             {atk.chain ? (
@@ -110,16 +151,37 @@ export function UnitInfo({ def }: { def: UnitDef }) {
               ×{b.mult} damage vs {[b.selector.hasTag, ...(b.selector.hasAnyTag ?? [])].filter(Boolean).join(" / ")}
             </li>
           ))}
+          {atk?.targeting === "towers" && <li>Hunts towers first</li>}
           {def.traits?.map((t, i) => <li key={`t${i}`}>{describeTrait(t)}</li>)}
           {def.immuneStatuses?.length ? <li>Immune to {def.immuneStatuses.join(", ")}</li> : null}
         </ul>
       )}
+      {def.upgrades?.length ? (
+        <div className="upgrade-list">
+          <div className="muted small">Upgrades</div>
+          {def.upgrades.map((u) => (
+            <div key={u.id} className={`upgrade-preview ${owned?.includes(u.id) ? "owned" : ""}`}>
+              <div className="upgrade-head">
+                <b>
+                  {owned?.includes(u.id) ? "✓ " : ""}
+                  {u.name}
+                </b>
+                {upgradeAction?.(u.id)}
+              </div>
+              <span className="small">{u.description}</span>
+              <div className="muted small">{describeUpgrade(u).join(" · ")}</div>
+            </div>
+          ))}
+        </div>
+      ) : null}
       <div className="tags">
-        {def.tags.map((t) => (
-          <span key={t} className="tag">
-            {t}
-          </span>
-        ))}
+        {def.tags
+          .filter((t) => !t.startsWith("role:"))
+          .map((t) => (
+            <span key={t} className="tag">
+              {t}
+            </span>
+          ))}
       </div>
     </div>
   );

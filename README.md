@@ -20,15 +20,16 @@ See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
 
 ## Tabs
 
-- **Play**: you against the AI. Click a unit, then click your (blue) zone to place it; **R** rotates. Click a squad you placed
-  this round to move it; right-click it to sell it. Squads from earlier rounds are locked. 🔒 units cost a one-time unlock
-  per match. You see the enemy army as it stood last round. Each side has two towers; when one falls, its owner's army is
-  Dazed for 5s. After each battle there is a battle report with per-squad damage breakdowns, and a replay.
+- **Play**: you against the AI. Click a unit, then click your (blue) zone to place it; right-click or **R** rotates. Click a
+  squad you placed this round to move it, and press **Delete** to sell it. **Ctrl+Z** undoes your last purchase. Squads from
+  earlier rounds are locked. 🔒 units cost a one-time unlock per match, and every unit has two one-time upgrades. Each
+  side has two fragile towers that you can upgrade; when one falls, its owner's army is Dazed (8s, minus 1s per level). After
+  each battle there is a battle report: hover a squad to see who it hurt and who hurt it, right on the field. Then a replay.
 - **Units**: the unit editor. Edits save to your browser right away. Includes stats, attack, on-hit effects, traits, tags, a raw
   JSON view, and a sandbox where you can watch the unit fight another unit or run 10 headless sims. Use **Export** to save the
   roster as JSON.
 - **Balance Lab**: every unit against every other unit at equal supply, simulated in a Web Worker.
-- **Codex**: reference tables for statuses, surfaces and reactions.
+- **Codex**: reference tables for statuses, surfaces, reactions, towers and roles.
 
 ## How it fits together
 

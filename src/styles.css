@@ -930,3 +930,103 @@ code {
   margin-left: 6px;
 }
 .tower-cards { display: grid; gap: 8px; }
+
+/* ------------------------------------------------- factions, roles, upgrades */
+
+.shop-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.shop-faction {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin: 6px 0 1px;
+}
+.pips {
+  color: var(--accent);
+  font-size: 10px;
+  margin-left: 4px;
+  letter-spacing: -1px;
+}
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 6px 0 2px;
+}
+.role {
+  font-size: 11px;
+  font-weight: 600;
+  color: #12161b;
+  background: #c9b27c;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.roles-detailed {
+  list-style: none;
+  margin: 6px 0 2px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.upgrade-preview {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.upgrade-preview.owned {
+  border-color: var(--accent);
+}
+.upgrade-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+.owned-tag {
+  font-size: 11px;
+  color: var(--accent);
+}
+.towers {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.tower-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+button.primary.warn-btn {
+  background: #ff9f43;
+  border-color: #ff9f43;
+}
+.key-dealt {
+  color: var(--accent);
+  font-weight: 600;
+}
+.key-taken {
+  color: var(--red);
+  font-weight: 600;
+}
+.upgrade-editor {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  margin-top: 8px;
+}

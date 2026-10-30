@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_UNITS } from "../src/data/units";
-import { autoPlace, canPlace, defMap, priceOf } from "../src/game/army";
+import { autoPlace, canPlace, defMap, priceOf, upgradePrice } from "../src/game/army";
+import { applyUpgrades, upgradedDefs } from "../src/sim/upgrades";
 import { towerPlacements } from "../src/data/towers";
 import { planAiRound } from "../src/game/ai";
 import { runMatchup } from "../src/game/lab";
@@ -17,7 +18,7 @@ function army(side: 0 | 1, ids: string[], seed = 1) {
 
 describe("battle", () => {
   it("is deterministic for the same seed", () => {
-    const a = army(0, ["knights", "longbowmen", "fire_mage"]);
+    const a = army(0, ["knights", "longbowmen", "fire_elemental"]);
     const b = army(1, ["goblin_horde", "goblin_horde", "ogre_brute"]);
     const r1 = new Battle(defs, [a, b], { seed: 5 }).run();
     const r2 = new Battle(defs, [a, b], { seed: 5 }).run();
@@ -60,31 +61,39 @@ describe("surfaces", () => {
 });
 
 describe("combos", () => {
-  it("tidecaller + stormcaller beats stormcaller alone against the same army", () => {
+  it("air elementals deal more lightning damage when a water elemental soaks the enemy", () => {
     const enemy = (s: number) => army(1, ["knights", "knights", "goblin_horde"], s);
-    let combo = 0;
-    let solo = 0;
-    for (let s = 0; s < 4; s++) {
-      const r1 = new Battle(defs, [army(0, ["tidecaller", "stormcaller", "stormcaller"], s), enemy(s)], { seed: s }).run();
-      const r2 = new Battle(defs, [army(0, ["stormcaller", "stormcaller"], s), enemy(s)], { seed: s }).run();
-      combo += r1.survivors[1].reduce((t, q) => t + q.alive, 0);
-      solo += r2.survivors[1].reduce((t, q) => t + q.alive, 0);
-    }
-    expect(combo).toBeLessThan(solo);
+    const airDamage = (support: string) => {
+      let total = 0;
+      for (let s = 0; s < 4; s++) {
+        const r = new Battle(defs, [army(0, [support, "air_elemental", "air_elemental"], s), enemy(s)], { seed: s, towers: false }).run();
+        for (const st of Object.values(r.stats)) if (st.defId === "air_elemental") total += st.dealt / Math.max(1, r.time);
+      }
+      return total;
+    };
+    expect(airDamage("water_elemental")).toBeGreaterThan(airDamage("fire_elemental"));
   });
 });
 
 describe("ai and lab", () => {
   it("ai spends within budget", () => {
     const player = army(0, ["knights", "longbowmen"]);
-    const plan = planAiRound(DEFAULT_UNITS, defs, [], ["knights", "longbowmen", "goblin_horde"], player, 500, 1, "easy", 3);
+    const plan = planAiRound(
+      DEFAULT_UNITS,
+      defs,
+      { army: [], unlocked: ["knights", "longbowmen", "goblin_horde"], upgrades: {}, towerLevels: [0, 0], supply: 500 },
+      { army: player, upgrades: {}, towerLevels: [0, 0] },
+      1,
+      "easy",
+      3,
+    );
     expect(plan.spent).toBeLessThanOrEqual(500);
     expect(plan.squads.length).toBeGreaterThan(0);
   });
 
   it("matchup runs quickly", () => {
     const t = performance.now();
-    const r = runMatchup(DEFAULT_UNITS, "goblin_horde", "fire_mage", 1000, 2);
+    const r = runMatchup(DEFAULT_UNITS, "goblin_horde", "fire_elemental", 1000, 2);
     expect(r.winRate).toBeGreaterThanOrEqual(0);
     expect(performance.now() - t).toBeLessThan(5000);
   });
@@ -128,31 +137,90 @@ describe("rotation and unlocks", () => {
   });
 
   it("price includes the unlock cost until unlocked", () => {
-    const f = byId("fire_mage");
+    const f = byId("fire_elemental");
     expect(priceOf(f, new Set())).toBe(f.cost + (f.unlockCost ?? 0));
-    expect(priceOf(f, new Set(["fire_mage"]))).toBe(f.cost);
+    expect(priceOf(f, new Set(["fire_elemental"]))).toBe(f.cost);
   });
 
   it("ai pays for unlocks within its budget", () => {
     for (let seed = 1; seed < 6; seed++) {
-      const plan = planAiRound(DEFAULT_UNITS, defs, [], ["goblin_horde"], army(0, ["knights"]), 400, 2, "normal", seed);
+      const mine = army(1, ["goblin_horde"]);
+      const plan = planAiRound(
+        DEFAULT_UNITS,
+        defs,
+        { army: mine, unlocked: ["goblin_horde"], upgrades: {}, towerLevels: [0, 0], supply: 400 },
+        { army: army(0, ["knights"]), upgrades: {}, towerLevels: [0, 0] },
+        2,
+        "normal",
+        seed,
+      );
       expect(plan.spent).toBeLessThanOrEqual(400);
       for (const sq of plan.squads) expect(["goblin_horde", ...plan.unlocks]).toContain(sq.defId);
+      for (const u of plan.upgrades) expect(u.unitId).toBe("goblin_horde");
     }
   });
 });
 
 describe("battle report stats", () => {
   it("credits reactions and tracks friendly fire", () => {
-    const a = army(0, ["tidecaller", "stormcaller", "stormcaller", "knights"]);
+    const a = army(0, ["water_elemental", "air_elemental", "air_elemental", "knights"]);
     const b = army(1, ["knights", "knights", "goblin_horde"]);
     const r = new Battle(defs, [a, b], { seed: 4, towers: false }).run();
-    const storm = Object.values(r.stats).filter((s) => s.defId === "stormcaller");
+    const storm = Object.values(r.stats).filter((s) => s.defId === "air_elemental");
     const conduct = storm.reduce((t, s) => t + (s.dealtBy["Conduct"] ?? 0), 0);
     expect(conduct).toBeGreaterThan(0);
     const total = Object.values(r.stats).reduce((t, s) => t + s.taken, 0);
     const dealt = Object.values(r.stats).reduce((t, s) => t + s.dealt + s.friendly, 0);
     // everything dealt by a squad shows up as taken by someone
     expect(dealt).toBeLessThanOrEqual(total + 1e-6);
+  });
+});
+
+describe("upgrades", () => {
+  it("apply stat mods, effects and traits", () => {
+    const fire = byId("fire_elemental");
+    const up = applyUpgrades(fire, ["scorched_earth", "magma_core"]);
+    expect(up.hp).toBe(Math.round(fire.hp * 1.5));
+    expect(up.attack!.onHit!.some((e) => e.type === "surface" && e.surface === "fire")).toBe(true);
+    expect(up.traits!.some((t) => t.type === "onDeath")).toBe(true);
+    expect(fire.attack!.onHit!.some((e) => e.type === "surface")).toBe(false); // base def untouched
+  });
+
+  it("first upgrade costs the unit price, the second double", () => {
+    const g = byId("goblin_horde");
+    expect(upgradePrice(g, 0)).toBe(g.cost);
+    expect(upgradePrice(g, 1)).toBe(g.cost * 2);
+    expect(upgradePrice(g, 2)).toBeNull();
+  });
+
+  it("each side fights with its own upgrades", () => {
+    const a = army(0, ["goblin_horde", "goblin_horde"]);
+    const b = army(1, ["goblin_horde", "goblin_horde"]);
+    let wins = 0;
+    for (let s = 0; s < 6; s++) {
+      const r = new Battle([upgradedDefs(defs, { goblin_horde: ["frenzy", "scatter"] }), defs], [a, b], { seed: s, towers: false }).run();
+      if (r.winner === 0) wins++;
+    }
+    expect(wins).toBeGreaterThanOrEqual(5);
+  });
+
+  it("retaliation chills attackers", () => {
+    const water = applyUpgrades(byId("water_elemental"), ["glacial_heart"]);
+    const map = new Map(defs);
+    map.set("water_elemental", water);
+    const b = new Battle([map, defs], [army(0, ["water_elemental"]), army(1, ["knights"])], { seed: 1, towers: false });
+    let chilledOrFrozen = false;
+    for (let i = 0; i < 600 && !b.over; i++) {
+      b.step();
+      if (b.models.some((m) => m.side === 1 && (m.statuses.chilled !== undefined || m.statuses.frozen !== undefined))) chilledOrFrozen = true;
+    }
+    expect(chilledOrFrozen).toBe(true);
+  });
+
+  it("tower levels add hp", () => {
+    const b0 = new Battle(defs, [army(0, ["knights"]), army(1, ["knights"])], { towerLevels: [[0, 0], [0, 0]] });
+    const b2 = new Battle(defs, [army(0, ["knights"]), army(1, ["knights"])], { towerLevels: [[2, 0], [0, 0]] });
+    const keep = (b: Battle) => b.models.find((m) => m.squadUid === "tower-0-0")!.maxHp;
+    expect(keep(b2) - keep(b0)).toBe(600);
   });
 });

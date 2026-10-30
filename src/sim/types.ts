@@ -40,7 +40,7 @@ export type Effect =
   | { type: "surface"; surface: SurfaceId; radius: number; duration?: number }
   | { type: "heal"; amount: number; radius: number };
 
-export type Targeting = "nearest" | "highestHp" | "lowestHp";
+export type Targeting = "nearest" | "highestHp" | "lowestHp" | "towers"; // towers: hunt towers first
 export type Delivery = "instant" | "projectile" | "beam";
 
 export interface AttackDef {
@@ -69,7 +69,45 @@ export type TraitDef =
       moveSpeed?: number;
       damage?: number;
     }
-  | { type: "periodic"; interval: number; effects: Effect[] };
+  | { type: "periodic"; interval: number; effects: Effect[] }
+  // effects applied to an enemy that hits this unit with an attack
+  | { type: "retaliate"; effects: Effect[]; maxRange?: number }
+  // the first attack of the battle deals extra damage
+  | { type: "charge"; mult: number };
+
+// Upgrades: one-time purchases per match that change every squad of a unit.
+export type ModStat =
+  | "hp"
+  | "speed"
+  | "size"
+  | "spacing"
+  | "squadSize"
+  | "damage"
+  | "cooldown"
+  | "range"
+  | "splash"
+  | "chainCount";
+
+export interface StatMod {
+  stat: ModStat;
+  mult?: number;
+  add?: number;
+}
+
+export interface UpgradeDef {
+  id: string;
+  name: string;
+  description?: string;
+  mods?: StatMod[];
+  element?: Element; // replaces the attack's element
+  targets?: Layer[]; // replaces what the attack can hit
+  targeting?: Targeting; // replaces the attack's targeting
+  onHit?: Effect[]; // appended to the attack's on-hit effects
+  traits?: TraitDef[]; // appended (or replace existing ones with replaceTraits)
+  replaceTraits?: boolean;
+  resist?: Partial<Record<Element, number>>; // added to existing resistances
+  tags?: string[]; // added
+}
 
 export type Shape = "circle" | "square" | "triangle" | "diamond" | "hex";
 
@@ -83,7 +121,8 @@ export interface UnitDef {
   footprint: { w: number; h: number }; // in deployment tiles
   layer: Layer;
   hp: number;
-  speed: number; // tiles per second
+  speed: number; // speed points; tiles per second = speed × RULES.speedScale
+  spacing?: number; // extra distance kept from allies (tiles); spreads squads out
   size: number; // model radius in tiles
   resist?: Partial<Record<Element, number>>; // 0.3 = takes 30% less, -0.5 = takes 50% more
   immuneStatuses?: StatusId[];
@@ -92,6 +131,8 @@ export interface UnitDef {
   tags: string[];
   look: { shape: Shape; color: string; glyph?: string };
   structure?: boolean; // towers: never move, don't count toward winning the battle
+  upgrades?: UpgradeDef[];
+  upgradeCost?: number; // price of the first upgrade bought (default: unit cost); the second costs double
 }
 
 // ---------------------------------------------------------------------------
@@ -172,4 +213,10 @@ export interface Rules {
   lockPlacedSquads: boolean;
   unlocks: boolean;
   towers: { defId: string; x: number }[]; // per side, x for the bottom side (mirrored for the top)
+  speedScale: number; // tiles per second per speed point
+  upgradeCostMult: number[]; // price multiplier for the 1st, 2nd... upgrade bought for a unit
+  towerUpgradeCosts: number[]; // price of each tower level
+  towerHpPerLevel: number;
+  towerDazeBase: number; // seconds of Daze when a level-0 tower falls
+  towerDazeMin: number;
 }

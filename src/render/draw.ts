@@ -214,7 +214,7 @@ interface LiveFx {
   life: number;
 }
 
-const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.18, burst: 0.3, text: 1.1, death: 0.5 };
+const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.18, burst: 0.3, text: 1.1, death: 0.5, heal: 0.6 };
 const BIG_TEXT_LIFE = 2.5;
 
 export class FxLayer {
@@ -264,6 +264,13 @@ export class FxLayer {
           ctx.globalAlpha = k * 0.25;
           ctx.fillStyle = fx.color;
           ctx.fill();
+          break;
+        case "heal":
+          ctx.strokeStyle = "#7dffa0";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(fx.x * tile, fx.y * tile, fx.r * tile * (0.3 + 0.7 * (1 - k)), 0, Math.PI * 2);
+          ctx.stroke();
           break;
         case "text":
           ctx.font = fx.big ? "bold 18px system-ui, sans-serif" : "bold 12px system-ui, sans-serif";

@@ -1,6 +1,6 @@
 import { STATUSES, SURFACES } from "../data/elements";
 import { describeSelector } from "../sim/selectors";
-import type { Effect, TraitDef, UnitDef } from "../sim/types";
+import type { Effect, StatMod, TraitDef, UnitDef, UpgradeDef } from "../sim/types";
 
 export function describeEffect(e: Effect): string {
   const area = "radius" in e && e.radius ? ` (radius ${e.radius})` : "";
@@ -27,6 +27,10 @@ export function describeTrait(t: TraitDef): string {
       return `Regenerates ${t.perSecond} hp/s`;
     case "periodic":
       return `Every ${t.interval}s: ${t.effects.map(describeEffect).join(", ")}`;
+    case "retaliate":
+      return `When hit: ${t.effects.map(describeEffect).join(", ")} on the attacker${t.maxRange !== undefined ? ` (within ${t.maxRange})` : ""}`;
+    case "charge":
+      return `First strike deals ×${t.mult} damage`;
     case "aura": {
       const bits: string[] = [];
       if (t.attackSpeed) bits.push(`+${Math.round((t.attackSpeed - 1) * 100)}% attack speed`);
@@ -56,4 +60,37 @@ export function derived(def: UnitDef): DerivedStats {
     hpPerCost: def.cost ? squadHp / def.cost : 0,
     dpsPerCost: def.cost ? (squadDps / def.cost) * 100 : 0,
   };
+}
+
+const STAT_NAMES: Record<StatMod["stat"], string> = {
+  hp: "HP",
+  speed: "speed",
+  size: "size",
+  spacing: "spacing",
+  squadSize: "squad size",
+  damage: "damage",
+  cooldown: "cooldown",
+  range: "range",
+  splash: "splash",
+  chainCount: "chain jumps",
+};
+
+function describeMod(m: StatMod): string {
+  const parts: string[] = [];
+  if (m.mult !== undefined && m.mult !== 1) parts.push(`${m.mult > 1 ? "+" : "−"}${Math.round(Math.abs(m.mult - 1) * 100)}%`);
+  if (m.add) parts.push(`${m.add > 0 ? "+" : "−"}${Math.abs(m.add)}`);
+  return `${parts.join(" ")} ${STAT_NAMES[m.stat]}`;
+}
+
+// A mechanical summary of what an upgrade changes (the description is the flavor).
+export function describeUpgrade(u: UpgradeDef): string[] {
+  const out: string[] = [];
+  for (const m of u.mods ?? []) out.push(describeMod(m));
+  if (u.element) out.push(`attacks become ${u.element}`);
+  if (u.targets) out.push(`hits ${u.targets.join(" + ")}`);
+  if (u.targeting) out.push(u.targeting === "towers" ? "hunts towers first" : `targets ${u.targeting}`);
+  for (const e of u.onHit ?? []) out.push(`on hit: ${describeEffect(e)}`);
+  for (const t of u.traits ?? []) out.push((u.replaceTraits ? "becomes: " : "") + describeTrait(t));
+  for (const [el, v] of Object.entries(u.resist ?? {})) out.push(`${v! > 0 ? "+" : "−"}${Math.abs(Math.round(v! * 100))}% ${el} resistance`);
+  return out;
 }

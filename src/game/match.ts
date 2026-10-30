@@ -1,5 +1,6 @@
 import { RULES } from "../data/rules";
 import type { BattleResult } from "../sim/battle";
+import type { UpgradeState } from "../sim/upgrades";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { startingUnlocks, type DefMap } from "./army";
 
@@ -18,6 +19,8 @@ export interface MatchState {
   supply: [number, number];
   armies: [PlacedSquad[], PlacedSquad[]];
   unlocked: [string[], string[]];
+  upgrades: [UpgradeState, UpgradeState];
+  towerLevels: [number[], number[]];
   phase: Phase;
   history: RoundReport[];
 }
@@ -31,6 +34,8 @@ export function newMatch(units: UnitDef[]): MatchState {
     supply: [income, income],
     armies: [[], []],
     unlocked: [start, [...start]],
+    upgrades: [{}, {}],
+    towerLevels: [RULES.towers.map(() => 0), RULES.towers.map(() => 0)],
     phase: "deploy",
     history: [],
   };

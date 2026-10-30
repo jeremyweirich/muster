@@ -116,3 +116,14 @@ export function priceOf(def: UnitDef, unlocked: Set<string>): number {
 export function startingUnlocks(units: UnitDef[]): string[] {
   return units.filter((u) => !RULES.unlocks || !u.unlockCost).map((u) => u.id);
 }
+
+// Price of the next upgrade for a unit: the first costs its upgradeCost (default: unit cost), the second double.
+export function upgradePrice(def: UnitDef, alreadyBought: number): number | null {
+  const mult = RULES.upgradeCostMult[alreadyBought];
+  if (mult === undefined) return null;
+  return Math.round((def.upgradeCost ?? def.cost) * mult);
+}
+
+export function towerUpgradePrice(level: number): number | null {
+  return RULES.towerUpgradeCosts[level] ?? null;
+}
