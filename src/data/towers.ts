@@ -1,7 +1,7 @@
 import { RULES } from "./rules";
 import type { PlacedSquad, Rules, Side, UnitDef } from "../sim/types";
 
-// Each side gets one of each tower, placed at the back of its zone (see RULES.towers).
+// Each side gets one of each tower, placed near the back of its zone (see RULES.towers).
 // Unupgraded towers die in a second or two. When a tower falls, its owner's whole
 // army is Dazed (10% damage dealt, double damage taken). Levels bought between rounds
 // add HP and shorten the Daze. A strong central army has to protect its flanks.
@@ -67,7 +67,7 @@ export function towerDef(id: string, level: number, rules: Rules = RULES): UnitD
   };
 }
 
-// Where each side's towers stand: the back row, mirrored through the center for the top side.
+// Where each side's towers stand: towerInset rows in from the back edge, mirrored through the center for the top side.
 export function towerPlacements(side: Side, rules: Rules = RULES): PlacedSquad[] {
   return rules.towers.flatMap((t, i) => {
     const def = TOWER_MAP.get(t.defId);
@@ -78,7 +78,7 @@ export function towerPlacements(side: Side, rules: Rules = RULES): PlacedSquad[]
         uid: `tower-${side}-${i}`,
         defId: def.id,
         x: side === 0 ? t.x : rules.fieldW - t.x - w,
-        y: side === 0 ? rules.fieldH - h : 0,
+        y: side === 0 ? rules.fieldH - h - rules.towerInset : rules.towerInset,
         round: 0,
       },
     ];

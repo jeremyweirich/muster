@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import { STATUSES } from "../data/elements";
+import { RULES } from "../data/rules";
 import { defMap } from "../game/army";
 import { massArmy, runArmies } from "../game/lab";
 import { drawBackground } from "../render/draw";
@@ -242,7 +243,7 @@ export function EditorView() {
               <Row label="HP (per model)">
                 <Num value={unit.hp} step={10} onChange={(hp) => update({ hp })} />
               </Row>
-              <Row label="Speed" hint="Speed points: 10 ≈ 1.5 tiles per second">
+              <Row label="Speed" hint={`Speed points: 10 = ${10 * RULES.speedScale} tiles per second`}>
                 <Num value={unit.speed} step={1} onChange={(speed) => update({ speed })} />
               </Row>
               <Row label="Spacing" hint="Extra distance kept from allies while moving (tiles). Spreads the squad out against splash">
@@ -561,9 +562,24 @@ function TraitEditor({ trait, onChange, onRemove }: { trait: TraitDef; onChange:
         </>
       )}
       {trait.type === "regen" && (
-        <Row label="HP / second">
-          <Num value={trait.perSecond} onChange={(perSecond) => onChange({ ...trait, perSecond })} />
-        </Row>
+        <>
+          <Row label="HP / second">
+            <Num value={trait.perSecond} onChange={(perSecond) => onChange({ ...trait, perSecond })} />
+          </Row>
+          <Row label="Stopped by" hint="No regeneration while this status is on the unit">
+            <select
+              value={trait.suppressedBy ?? ""}
+              onChange={(e) => onChange({ ...trait, suppressedBy: (e.target.value || undefined) as StatusId | undefined })}
+            >
+              <option value="">nothing</option>
+              {STATUS_IDS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </Row>
+        </>
       )}
       {trait.type === "charge" && (
         <Row label="First hit ×">

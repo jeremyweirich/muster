@@ -396,7 +396,9 @@ export class Battle {
     for (const m of this.models) {
       if (!m.alive || !m.def.traits) continue;
       m.def.traits.forEach((t, i) => {
-        if (t.type === "regen") m.hp = Math.min(m.maxHp, m.hp + t.perSecond * dt);
+        if (t.type === "regen") {
+          if (t.suppressedBy === undefined || m.statuses[t.suppressedBy] === undefined) m.hp = Math.min(m.maxHp, m.hp + t.perSecond * dt);
+        }
         else if (t.type === "periodic") {
           m.periodic[i] -= dt;
           if (m.periodic[i] <= 0) {

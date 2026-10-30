@@ -15,7 +15,7 @@ import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
 import { Swatch, UnitInfo } from "./UnitInfo";
 
-const TILE = 22;
+const TILE = 24;
 
 // Everything needed to show (and replay) the last battle.
 interface FoughtBattle {
@@ -63,6 +63,7 @@ export function PlayView() {
   const [hoverSquad, setHoverSquad] = useState<string | null>(null);
   const [actions, setActions] = useState<Action[]>([]);
   const [fightArmed, setFightArmed] = useState(false);
+  const [portraitOk, setPortraitOk] = useState(false);
   const battleRef = useRef<Battle | null>(null);
   const hover = useRef<{ x: number; y: number } | null>(null);
   const player = useBattlePlayer();
@@ -496,85 +497,57 @@ export function PlayView() {
     );
   };
 
-  return (
-    <div className="play">
-      <aside className="panel shop">
-        <h3>Recruit</h3>
-        <div className="supply">
-          <span className="supply-num">{match.supply[0]}</span> supply
-        </div>
-        <div className="shop-list">
-          {FACTIONS.map((f) => {
-            const list = units.filter((u) => factionOf(u.tags) === f.id);
-            if (!list.length) return null;
-            return (
-              <div key={f.id} className="shop-group">
-                <div className="shop-faction">{f.name}</div>
-                {list.map((u) => {
-                  const locked = RULES.unlocks && !unlocked.has(u.id);
-                  const affordable = locked ? (u.unlockCost ?? 0) <= match.supply[0] : u.cost <= match.supply[0];
-                  const ups = match.upgrades[0][u.id]?.length ?? 0;
-                  return (
-                    <button
-                      key={u.id}
-                      className={`shop-item ${selected === u.id ? "active" : ""} ${locked ? "locked" : ""}`}
-                      disabled={!deploying || (!affordable && !(selected === u.id))}
-                      onClick={() => clickShop(u)}
-                      onMouseEnter={() => setHoverInfo({ def: myDefs.get(u.id) ?? u, side: 0, fromShop: true })}
-                      onMouseLeave={() => setHoverInfo(null)}
-                    >
-                      <Swatch def={u} />
-                      <span className="shop-name">
-                        {u.name}
-                        {ups > 0 && <span className="pips">{"★".repeat(ups)}</span>}
-                      </span>
-                      {locked ? (
-                        <span className="shop-cost lock" title={`Unlock ${u.unlockCost}, then ${u.cost} per squad`}>
-                          🔒 {u.unlockCost}
-                        </span>
-                      ) : (
-                        <span className="shop-cost">{u.cost}</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
-        <p className="hint">
-          Click a unit, then click your (blue) zone to place it. <b>Right-click</b> or <b>R</b> rotates. Click a green-outlined squad to move
-          it; <b>Delete</b> sells it. <b>Ctrl+Z</b> undoes your last purchase. 🔒 units cost a one-time unlock per match.
-        </p>
-      </aside>
+  const unitCard = card && (
+    <UnitInfo
+      def={card.def}
+      owned={card.def.structure ? undefined : match.upgrades[card.side][card.def.id] ?? []}
+      detailedRoles={card.fromShop}
+      upgradeAction={upgradeAction(card.def)}
+    />
+  );
 
+  return (
+    <div className={`play ${portraitOk ? "portrait-ok" : ""}`}>
       <main className="board">
         <div className="hud">
           <HpBar label="You" hp={match.hp[0]} side={0} />
           <div className="round">Round {match.round}</div>
           <HpBar label="Enemy" hp={match.hp[1]} side={1} />
         </div>
-        <FieldCanvas tile={TILE} draw={draw} onPointer={onPointer} />
+        <div className="field-wrap" style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
+          <FieldCanvas tile={TILE} draw={draw} onPointer={onPointer} />
+        </div>
       </main>
 
       <aside className="panel side">
         {deploying && (
           <>
-            <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={!aiPlan} onClick={fight}>
-              {!aiPlan ? "Enemy is planning…" : fightArmed ? `Fight without spending ${match.supply[0]}?` : "Fight!"}
-            </button>
-            <div className="list-actions">
-              <button disabled={!lastAction} onClick={undo} title="Ctrl+Z">
-                ↶ Undo{lastAction ? ` ${actionLabel(lastAction, defs)} (+${lastAction.cost})` : ""}
+            <div className="deploy-bar">
+              <div className="supply-row">
+                <div className="supply">
+                  <span className="supply-num">{match.supply[0]}</span> supply
+                </div>
+                <button
+                  className="small-btn"
+                  disabled={!lastAction}
+                  onClick={undo}
+                  title={lastAction ? `Undo ${actionLabel(lastAction, defs)} (+${lastAction.cost}) · Ctrl+Z` : "Ctrl+Z"}
+                >
+                  ↶ Undo{lastAction ? ` +${lastAction.cost}` : ""}
+                </button>
+              </div>
+              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={!aiPlan} onClick={fight}>
+                {!aiPlan ? "Enemy is planning…" : fightArmed ? `Fight without spending ${match.supply[0]}?` : "Fight!"}
               </button>
             </div>
             {(placingDef || held) && (
               <div className="held">
                 <span className="small">{held ? `Moving ${placingDef?.name}. Click a free spot to drop it.` : `Placing ${placingDef?.name}.`}</span>
                 <div className="list-actions">
-                  <button onClick={() => setRot(!rot)}>Rotate</button>
+                  <button className="small-btn" onClick={() => setRot(!rot)}>Rotate</button>
                   {heldSquad && (
                     <button
+                      className="small-btn"
                       onClick={() => {
                         sell(heldSquad);
                         setHeld(null);
@@ -586,6 +559,52 @@ export function PlayView() {
                 </div>
               </div>
             )}
+            <div className="recruit">
+              <div className="shop-list">
+                {FACTIONS.map((f) => {
+                  const list = units.filter((u) => factionOf(u.tags) === f.id);
+                  if (!list.length) return null;
+                  return (
+                    <div key={f.id} className="shop-group">
+                      <div className="shop-faction">{f.name}</div>
+                      <div className="shop-items">
+                        {list.map((u) => {
+                          const locked = RULES.unlocks && !unlocked.has(u.id);
+                          const affordable = locked ? (u.unlockCost ?? 0) <= match.supply[0] : u.cost <= match.supply[0];
+                          const ups = match.upgrades[0][u.id]?.length ?? 0;
+                          return (
+                            <button
+                              key={u.id}
+                              className={`shop-item ${selected === u.id ? "active" : ""} ${locked ? "locked" : ""}`}
+                              disabled={!affordable && !(selected === u.id)}
+                              onClick={() => clickShop(u)}
+                              onMouseEnter={() => setHoverInfo({ def: myDefs.get(u.id) ?? u, side: 0, fromShop: true })}
+                              onMouseLeave={() => setHoverInfo(null)}
+                            >
+                              <Swatch def={u} size={16} />
+                              <span className="shop-name">
+                                {u.name}
+                                {ups > 0 && <span className="pips">{"★".repeat(ups)}</span>}
+                              </span>
+                              {locked ? (
+                                <span className="shop-cost lock" title={`Unlock ${u.unlockCost}, then ${u.cost} per squad`}>
+                                  🔒 {u.unlockCost}
+                                </span>
+                              ) : (
+                                <span className="shop-cost">{u.cost}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="recruit-detail">
+                {unitCard ?? <p className="muted small">Hover a unit to see what it does.</p>}
+              </div>
+            </div>
             <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />
             <div className="enemy-unlocks">
               <div className="muted small">Enemy has unlocked</div>
@@ -667,15 +686,14 @@ export function PlayView() {
             />
           </>
         )}
-        {!reporting && card && (
-          <UnitInfo
-            def={card.def}
-            owned={card.def.structure ? undefined : match.upgrades[card.side][card.def.id] ?? []}
-            detailedRoles={card.fromShop}
-            upgradeAction={upgradeAction(card.def)}
-          />
-        )}
+        {!reporting && !deploying && (unitCard ?? <p className="muted small">Hover a unit on the field to see its stats.</p>)}
         <div className="spacer" />
+        {deploying && (
+          <p className="hint">
+            Click a unit, then click your (blue) zone to place it. <b>Right-click</b> or <b>R</b> rotates. Click a green-outlined squad to move
+            it; <b>Delete</b> sells it. <b>Ctrl+Z</b> undoes your last purchase. 🔒 units cost a one-time unlock per match.
+          </p>
+        )}
         <div className="game-opts">
           <label>
             AI{" "}
@@ -689,8 +707,27 @@ export function PlayView() {
         </div>
         {aiPlan && deploying && <p className="muted small">AI tested {aiPlan.candidatesTried} plans against your last army.</p>}
       </aside>
+
+      <div className="rotate-hint">
+        <div className="rotate-icon">📱↻</div>
+        <p>Turn your phone sideways to play.</p>
+        {canLockLandscape && <button className="primary" onClick={goLandscape}>Full screen, landscape</button>}
+        <button onClick={() => setPortraitOk(true)}>Play in portrait anyway</button>
+      </div>
     </div>
   );
+}
+
+// Fullscreen plus an orientation lock works on Android browsers; iOS has neither, so the button is hidden there.
+const canLockLandscape = typeof document !== "undefined" && !!document.fullscreenEnabled && typeof screen !== "undefined" && "orientation" in screen;
+
+async function goLandscape() {
+  try {
+    await document.documentElement.requestFullscreen();
+    await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("landscape");
+  } catch {
+    // not supported here; the player can still rotate by hand
+  }
 }
 
 function TowerPanel({ levels, supply, onBuy }: { levels: [number[], number[]]; supply: number; onBuy: (i: number) => void }) {

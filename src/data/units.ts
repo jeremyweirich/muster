@@ -3,7 +3,7 @@ import type { UnitDef } from "../sim/types";
 // The starting roster. Edits made in the Unit Editor are saved in the browser;
 // export them as JSON and paste here (or into a roster file) to make them stick.
 //
-// Speed is in points: tiles per second = speed × RULES.speedScale (0.15), so 10 ≈ 1.5 tiles/s.
+// Speed is in points: tiles per second = speed × RULES.speedScale (0.2), so 10 = 2 tiles/s.
 // Upgrades: the first one bought for a unit costs its upgradeCost (default: unit cost),
 // the second costs double (RULES.upgradeCostMult).
 export const DEFAULT_UNITS: UnitDef[] = [
@@ -23,6 +23,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
     attack: {
       damage: 16, element: "physical", cooldown: 0.8, range: 0.4,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
+      // they gang up on anything bigger than a goblin
+      bonusVs: [{ selector: { hasAnyTag: ["size:medium", "size:large", "size:huge"] }, mult: 1.5 }],
     },
     upgrades: [
       { id: "frenzy", name: "Frenzy", description: "Run 50% faster and attack 25% faster.", mods: [{ stat: "speed", mult: 1.5 }, { stat: "cooldown", mult: 0.8 }] },
@@ -40,11 +42,11 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 4,
     footprint: { w: 2, h: 2 },
     layer: "ground",
-    hp: 260,
+    hp: 320,
     speed: 20,
     size: 0.38,
     attack: {
-      damage: 30, element: "physical", cooldown: 1, range: 0.5,
+      damage: 35, element: "physical", cooldown: 1, range: 0.5,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     traits: [{ type: "charge", mult: 3 }],
@@ -146,19 +148,19 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "knights",
     name: "Knights",
-    description: "Armored frontline. Shrugs off arrows and swords.",
+    description: "An armored wall. Shrugs off arrows and swords but hits softly, so swarms and fire wear it down.",
     cost: 200,
     unlockCost: 0,
     squadSize: 4,
     footprint: { w: 4, h: 1 },
     layer: "ground",
-    hp: 750,
-    speed: 9,
+    hp: 1200,
+    speed: 10,
     size: 0.42,
     resist: { physical: 0.3 },
     attack: {
-      damage: 60, element: "physical", cooldown: 1.2, range: 0.6,
-      targets: ["ground"], targeting: "nearest", delivery: "instant", splash: 0.6,
+      damage: 22, element: "physical", cooldown: 1, range: 0.6,
+      targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
       { id: "shield_wall", name: "Shield Wall", description: "+25% HP and +20% physical resistance.", mods: [{ stat: "hp", mult: 1.25 }], resist: { physical: 0.2 } },
@@ -170,18 +172,19 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "longbowmen",
     name: "Longbowmen",
-    description: "Long-range volleys. Can shoot down fliers.",
+    description: "Arrow volleys that shred swarms and fliers, but bounce off heavy armor.",
     cost: 100,
     unlockCost: 0,
     squadSize: 6,
     footprint: { w: 3, h: 2 },
     layer: "ground",
-    hp: 120,
+    hp: 90,
     speed: 8,
     size: 0.28,
     attack: {
-      damage: 24, element: "physical", cooldown: 1.5, range: 8,
-      targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
+      damage: 14, element: "physical", cooldown: 1.5, range: 8,
+      targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14, splash: 0.5,
+      bonusVs: [{ selector: { layer: "air" }, mult: 1.5 }],
     },
     upgrades: [
       { id: "longshot", name: "Longshot", description: "+3 range.", mods: [{ stat: "range", add: 3 }] },
@@ -223,11 +226,11 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 3,
     footprint: { w: 3, h: 2 },
     layer: "air",
-    hp: 450,
+    hp: 400,
     speed: 18,
     size: 0.45,
     attack: {
-      damage: 50, element: "physical", cooldown: 1, range: 0.8,
+      damage: 42, element: "physical", cooldown: 1, range: 0.8,
       targets: ["ground", "air"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
@@ -274,13 +277,13 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 1,
     footprint: { w: 2, h: 2 },
     layer: "ground",
-    hp: 900,
+    hp: 1100,
     speed: 7,
     size: 0.6,
     resist: { fire: 1, water: -0.3 },
     immuneStatuses: ["burning"],
     attack: {
-      damage: 90, element: "fire", cooldown: 3, range: 7,
+      damage: 110, element: "fire", cooldown: 2.5, range: 7,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 7, splash: 2,
       onHit: [{ type: "status", status: "burning", radius: 2 }],
     },
@@ -415,24 +418,24 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "troll",
     name: "Troll",
-    description: "Regenerates quickly unless you burn it down.",
+    description: "Regenerates fast, but not while it burns. Bring fire.",
     cost: 200,
     unlockCost: 75,
     squadSize: 2,
     footprint: { w: 2, h: 1 },
     layer: "ground",
-    hp: 900,
+    hp: 1000,
     speed: 10,
     size: 0.5,
     resist: { fire: -0.5 },
     attack: {
-      damage: 55, element: "physical", cooldown: 1.3, range: 0.6,
+      damage: 70, element: "physical", cooldown: 1.3, range: 0.6,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
-    traits: [{ type: "regen", perSecond: 25 }],
+    traits: [{ type: "regen", perSecond: 40, suppressedBy: "burning" }],
     upgrades: [
       { id: "rock_skin", name: "Rock Skin", description: "+30% physical resistance, and fire only hurts it a little extra.", resist: { physical: 0.3, fire: 0.3 } },
-      { id: "berserk", name: "Berserk", description: "Attacks 65% faster and regenerates even quicker.", mods: [{ stat: "cooldown", mult: 0.6 }], traits: [{ type: "regen", perSecond: 15 }] },
+      { id: "berserk", name: "Berserk", description: "Attacks 65% faster and regenerates even quicker.", mods: [{ stat: "cooldown", mult: 0.6 }], traits: [{ type: "regen", perSecond: 15, suppressedBy: "burning" }] },
     ],
     tags: ["faction:independent", "race:troll", "size:large", "role:sturdy", "role:regen", "role:melee"],
     look: { shape: "square", color: "#5e7d6a", glyph: "👹" },
@@ -450,7 +453,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 5,
     size: 1,
     attack: {
-      damage: 120, element: "physical", cooldown: 3.2, range: 6,
+      damage: 150, element: "physical", cooldown: 3.2, range: 6,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 8, splash: 1.8,
     },
     upgrades: [

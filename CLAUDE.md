@@ -29,7 +29,7 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
 - **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed) and do
   **not** create surfaces. Surfaces come only from specific upgrades. Don't add new statuses, surfaces or elements
   without the owner agreeing.
-- Speed is in points: 10 ≈ 1.5 tiles/s; the range is about 5 (siege) to 20 (wolves).
+- Speed is in points: 10 = 2 tiles/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
 - After changing units:
   - `npm test`
   - `npm run matrix` for a balance sanity check. One-unit-type lab fights over-reward fliers, so read it with that in
@@ -77,7 +77,10 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 See DESIGN.md §12 for the roadmap. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
-- Balance has not been tuned seriously. Fliers dominate one-unit-type lab fights. Goblins were just made glass cannons
-  (35 HP, 16 damage).
+- Balance: one rock-paper-scissors pass is done (DESIGN.md §4, counter web). The owner wants clear counters, not
+  generic units that are good at everything. Fliers still dominate one-unit-type lab fights. Upgrades haven't been
+  retuned since the pass.
+- Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
+  sideways (about 844 × 390).
 - Faction bonuses are designed but not built (DESIGN.md §8).
 - Ideas not yet built: reaction editor, lab with upgrades and mixed armies, reinforcement cards, spells, pathfinding.

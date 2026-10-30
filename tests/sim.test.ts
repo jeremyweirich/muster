@@ -3,6 +3,7 @@ import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, canPlace, defMap, priceOf, upgradePrice } from "../src/game/army";
 import { applyUpgrades, upgradedDefs } from "../src/sim/upgrades";
 import { towerPlacements } from "../src/data/towers";
+import { deployZone, RULES } from "../src/data/rules";
 import { planAiRound } from "../src/game/ai";
 import { runMatchup } from "../src/game/lab";
 import { Battle } from "../src/sim/battle";
@@ -126,14 +127,44 @@ describe("towers", () => {
     const t = towerPlacements(0)[0];
     expect(canPlace(byId("knights"), t.x, t.y, 0, [], defs)).toBe(false);
   });
+
+  it("towers stand towerInset rows in from each side's back edge", () => {
+    for (const side of [0, 1] as const) {
+      for (const t of towerPlacements(side)) {
+        const gap = side === 0 ? RULES.fieldH - (t.y + 2) : t.y;
+        expect(gap).toBe(RULES.towerInset);
+      }
+    }
+  });
+
+  it("burning stops a troll from regenerating", () => {
+    // an unarmed troll at the back, with distant knights so the battle doesn't end
+    const troll = { ...byId("troll"), attack: undefined };
+    const t = new Battle(
+      defMap([...DEFAULT_UNITS.filter((u) => u.id !== "troll"), troll]),
+      [[{ uid: "t", defId: "troll", x: 10, y: RULES.fieldH - 1, round: 1 }], army(1, ["knights"])],
+      { towers: false },
+    );
+    const m = t.models.find((x) => x.def.id === "troll")!;
+    m.hp = 100;
+    m.statuses.burning = 10;
+    for (let i = 0; i < 20; i++) t.step();
+    const burningHp = m.hp;
+    delete m.statuses.burning;
+    m.hp = 100;
+    for (let i = 0; i < 20; i++) t.step();
+    expect(burningHp).toBeLessThan(100);
+    expect(m.hp).toBeGreaterThan(100);
+  });
 });
 
 describe("rotation and unlocks", () => {
   it("rotation swaps the footprint", () => {
     const k = byId("knights"); // 4x1
-    expect(canPlace(k, 0, 22, 0, [], defs, undefined, true)).toBe(true);
-    expect(canPlace(k, 30, 22, 0, [], defs)).toBe(false); // 4 wide doesn't fit at x=30
-    expect(canPlace(k, 31, 22, 0, [], defs, undefined, true)).toBe(true); // 1 wide does
+    const y = deployZone(0).y0;
+    expect(canPlace(k, 0, y, 0, [], defs, undefined, true)).toBe(true);
+    expect(canPlace(k, RULES.fieldW - 2, y, 0, [], defs)).toBe(false); // 4 wide doesn't fit 2 from the edge
+    expect(canPlace(k, RULES.fieldW - 1, y, 0, [], defs, undefined, true)).toBe(true); // 1 wide does
   });
 
   it("price includes the unlock cost until unlocked", () => {

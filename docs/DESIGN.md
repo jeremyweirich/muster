@@ -55,7 +55,9 @@ and towers.
 
 ## 3. Battlefield — Decided
 
-- **32 × 32 tiles.** Each side deploys in its back 10 rows. The 12 rows in the middle are no-man's-land.
+- **48 × 27 tiles**, a 16:9 field shaped like a landscape screen. Armies face each other across the short axis, so
+  the front is wide and there's room to flank. Each side deploys in its back 9 rows. The 9 rows in the middle are
+  no-man's-land.
 - **Grid placement.** Each squad has a rectangular footprint in tiles. Footprints can't overlap each other or a tower.
 - **Rotation.** Right-click or press **R** to swap a footprint's width and height when placing. You can also right-click
   a squad placed this round to rotate it in place. This only changes how the squad is laid out, for example goblins in a
@@ -65,9 +67,19 @@ and towers.
 - **Two layers: ground and air.** Fliers ignore ground surfaces and don't collide with ground units. Only attacks that
   target air can hit them.
 
+### Screen layout — Decided
+
+- **Landscape everywhere.** The Play screen is one sidebar (supply, Fight, the recruit list with the unit details
+  directly under it, towers, enemy unlocks) beside the field, about 1 : 3. The field keeps its 16:9 shape and fits
+  whichever of width or height runs out first.
+- **Phones play sideways.** On short landscape screens the header and padding shrink so the field gets the height. In
+  portrait, touch devices get a "turn your phone sideways" screen with a full-screen + landscape-lock button (works on
+  Android; iOS has to rotate by hand) and a "play in portrait anyway" escape, which stacks the field above the sidebar.
+
 ### Towers — Decided (values open)
 
-Each side has two towers at the back of its zone, spaced apart horizontally and mirrored for the opponent:
+Each side has two towers near the back of its zone, 2 rows in from the back edge (`RULES.towerInset`), spaced apart
+horizontally and mirrored for the opponent. Squads can stand behind them:
 
 | Tower | Layer | Base HP | Weapon |
 |---|---|---|---|
@@ -97,7 +109,7 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `footprint` | deployment tiles, w × h (rotatable) |
 | `layer` | ground or air |
 | `hp`, `size` | per model; size is the collision radius in tiles |
-| `speed` | speed points, mostly between 5 and 20; tiles/s = points × 0.15, so 10 ≈ 1.5 tiles/s |
+| `speed` | speed points, mostly between 5 and 20; tiles/s = points × 0.2 (`RULES.speedScale`), so 10 = 2 tiles/s |
 | `spacing` | extra distance kept from allies **while advancing**; ranks close once fighting. Reduces splash damage taken |
 | `resist` | per element: 0.3 = takes 30% less, -0.35 = takes 35% more, 1 = immune |
 | `immuneStatuses` | statuses that never apply |
@@ -125,7 +137,7 @@ bonuses come later (section 8).
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 35 | 16 physical / 0.8s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 50% faster and attack 25% faster.<br>**Scatter**: Spread out as they charge, so splash hits fewer of them. +20% HP. |
-| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 260 | 30 physical / 1s, range 0.5 | Fast, Raider, Melee | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers. |
+| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 35 physical / 1s, range 0.5 | Fast, Raider, Melee | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers. |
 | Goblin Alchemist | 100 | 50 | 3 (3×1) | 11 | 100 | 12 physical / 2s, range 5, splash 1.2 | Combo, Ranged | **Oil Slick**: Flasks leave oil on the ground. It slows, and fire races through it.<br>**Firebombs**: Flasks burst into flame: fire damage ×2, igniting oiled targets. |
 | War Drummer | 100 | 50 | 1 (1×1) | 12 | 300 | none | Support | **War Chant**: Goblins nearby also deal +25% damage.<br>**Great Drum**: Reaches much farther and rallies every greenskin, ogres included. |
 | Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 150 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness.<br>**Rampage**: Swings 50% faster and moves 30% faster. |
@@ -134,17 +146,17 @@ bonuses come later (section 8).
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Knights | 200 | 0 | 4 (4×1) | 9 | 750 | 60 physical / 1.2s, range 0.6, splash 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage. |
-| Longbowmen | 100 | 0 | 6 (3×2) | 8 | 120 | 24 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice. |
+| Knights | 200 | 0 | 4 (4×1) | 10 | 1200 | 22 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage. |
+| Longbowmen | 100 | 0 | 6 (3×2) | 8 | 90 | 14 physical / 1.5s, range 8, splash 0.5 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice. |
 | Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 260 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +40% damage, and bolts splash.<br>**Repeater**: Fires twice as fast for 60% damage per bolt. |
-| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 450 | 50 physical / 1s, range 0.8 | Flier, Fast, Raider | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance. |
+| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 42 physical / 1s, range 0.8 | Flier, Fast, Raider | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance. |
 | Cleric | 150 | 75 | 2 (2×1) | 8 | 220 | none | Healer, Support | **Sanctuary**: Heals 70 in a wider circle.<br>**Blessing**: Allies nearby deal +20% damage. |
 
 #### Elementals
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Fire Elemental | 250 | 100 | 1 (2×2) | 7 | 900 | 90 fire / 3s, range 7, splash 2 | Splash, Ranged, Slow | **Scorched Earth**: Fireballs leave burning ground. Mind your own troops.<br>**Magma Core**: +50% HP, and it erupts when destroyed. |
+| Fire Elemental | 250 | 100 | 1 (2×2) | 7 | 1100 | 110 fire / 2.5s, range 7, splash 2 | Splash, Ranged, Slow | **Scorched Earth**: Fireballs leave burning ground. Mind your own troops.<br>**Magma Core**: +50% HP, and it erupts when destroyed. |
 | Water Elemental | 250 | 100 | 1 (2×2) | 6 | 1800 | 45 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles. |
 | Air Elemental | 200 | 100 | 2 (2×1, air) | 14 | 350 | 35 lightning / 2s, range 5, chain ×2 | Flier, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster. |
 | Wisps | 100 | 50 | 10 (3×2, air) | 16 | 45 | 6 lightning / 1s, range 2 | Swarm, Flier, Fast | **Kindling**: Each wisp bursts into flame when destroyed.<br>**Brighter Swarm**: +6 wisps per squad. |
@@ -154,16 +166,30 @@ bonuses come later (section 8).
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Dragon | 600 | 200 | 1 (4×4, air) | 9 | 4200 | 80 fire / 1.6s, range 3, splash 1.8 | Flier, Splash, Sturdy | **Inferno**: +25% damage, and its breath leaves burning ground.<br>**Ancient Scales**: +40% HP and +30% physical resistance. |
-| Troll | 200 | 75 | 2 (2×1) | 10 | 900 | 55 physical / 1.3s, range 0.6 | Sturdy, Regenerates, Melee | **Rock Skin**: +30% physical resistance, and fire only hurts it a little extra.<br>**Berserk**: Attacks 65% faster and regenerates even quicker. |
-| Giant | 350 | 150 | 1 (3×3) | 5 | 3000 | 120 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance. |
+| Troll | 200 | 75 | 2 (2×1) | 10 | 1000 | 70 physical / 1.3s, range 0.6 | Sturdy, Regenerates, Melee | **Rock Skin**: +30% physical resistance, and fire only hurts it a little extra.<br>**Berserk**: Attacks 65% faster and regenerates even quicker. |
+| Giant | 350 | 150 | 1 (3×3) | 5 | 3000 | 150 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance. |
 
-Intended counter web, which the lab should confirm:
-- Chaff (Goblin Horde, Wisps) soaks big single hits (Ballista, Ogre, Giant).
-- Splash (Fire Elemental, Giant, Ogre, Dragon) shreds chaff.
-- Ballistae hunt large units.
-- Anti-air (Longbowmen, Ballista, Air Elemental) answers fliers and the Sky Spire.
-- Fast raiders (Wolf Riders, Griffons) threaten towers.
+### Counter web — Decided (direction), Open (numbers)
+
+Rock-paper-scissors is the main balance goal. Generic units should be strong against some things and clearly weak
+against others, and no unit should be a safe default. The starter units form a triangle:
+
+- **Goblin Horde beats Knights.** Swarms gang up on bigger foes (+50% damage vs medium and larger), and Knights hit
+  too softly to thin a swarm fast.
+- **Knights beat Longbowmen.** Armor shrugs off arrows, and Knights close the distance.
+- **Longbowmen beat Goblin Horde.** Volleys splash a little, and goblins die in three arrows.
+
+The rest of the roster hangs off that triangle:
+- Splash (Ogre, Fire Elemental, Giant, Alchemist) shreds swarms.
+- Fire beats armor and regeneration: it ignores physical resistance, and Burning stops the Troll's regeneration.
+- The Ballista hunts large units (Ogre, Giant, elementals, Dragon) but dies to swarms, Knights and Wolf Riders.
+- Wolf Riders charge into archers and other backliners (the ×3 first bite one-shots a Longbowman) but lose to Goblins,
+  Knights and anything sturdy.
+- Big melee (Ogre, Troll) beats Knights, and the Ogre walks through arrows. The Ballista and fire answer them.
+- Anti-air (Longbowmen with ×1.5 vs fliers, Air Elemental, Ballista) answers fliers and the Sky Spire.
 - Water and Air Elementals are a combo pair: Wet targets take double lightning damage.
+
+One-unit-type lab fights still over-reward fliers, because most ground units can't hit them at all.
 
 ### Roles
 
@@ -258,7 +284,7 @@ decision.
 - **Traits:**
   - `aura`: buffs units that match a selector within a radius
   - `onDeath`: effects when a model dies
-  - `regen`
+  - `regen`, optionally stopped while a status is on the unit (`suppressedBy`; Burning stops the Troll)
   - `periodic`: effects every N seconds (the Cleric's heal)
   - `retaliate`: effects applied to an enemy that hits this unit (Glacial Heart)
   - `charge`: the first attack of the battle deals ×N damage (Wolf Riders, Lance Charge, Dive Attack)
@@ -350,8 +376,10 @@ src/ui/      React views
 
 Rough priority order. Everything is open to reshuffling.
 
-1. **Balance pass** using the lab and battle reports. In one-unit-type lab fights, fliers (Griffons, Wisps, Air
-   Elementals) dominate because most ground units can't hit them. Decide whether that's a lab artifact or a real problem.
+1. **Balance pass** using the lab and battle reports. A first rock-paper-scissors pass is done (section 4, counter
+   web): Knights became low-damage tanks, Longbowmen became anti-swarm and anti-air volleys, and all units move a third
+   faster. Still open: in one-unit-type lab fights, fliers (Griffons, Wisps, Air Elementals) dominate because most
+   ground units can't hit them. Decide whether that's a lab artifact or a real problem. Upgrades haven't been retuned.
 2. **Faction bonuses** (section 8).
 3. **Reaction editor** in-app, so statuses, surfaces and reactions can be iterated like units.
 4. **Lab with upgrades and mixed armies**, to compare upgrade A vs B and test combo pairs.

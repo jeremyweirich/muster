@@ -82,7 +82,8 @@ export function autoPlace(
   const placed: PlacedSquad[] = [];
   const order = [...toPlace].sort((a, b) => preferredDepth(a) - preferredDepth(b));
   const mid = RULES.fieldW / 2;
-  const styleBias = style === "left" ? -8 : style === "right" ? 8 : 0;
+  const flank = RULES.fieldW / 4;
+  const styleBias = style === "left" ? -flank : style === "right" ? flank : 0;
   for (const def of order) {
     const pref = preferredDepth(def);
     let best: { x: number; y: number; rot: boolean; score: number } | null = null;
@@ -94,7 +95,7 @@ export function autoPlace(
         for (let x = 0; x + w <= RULES.fieldW; x++) {
           if (!canPlace(def, x, y, side, [...existing, ...placed], defs, undefined, rot)) continue;
           const cx = x + w / 2 - (mid + styleBias);
-          const lateral = style === "spread" ? Math.abs(Math.abs(cx) - 8) : Math.abs(cx);
+          const lateral = style === "spread" ? Math.abs(Math.abs(cx) - flank) : Math.abs(cx);
           const tall = h > w ? 1.5 : 0;
           const score = Math.abs(depth - pref) * 3 + lateral * 0.3 + tall + rng.next() * 2;
           if (!best || score < best.score) best = { x, y, rot, score };

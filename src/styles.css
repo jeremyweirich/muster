@@ -200,33 +200,47 @@ code {
 
 /* ----------------------------------------------------------------- play */
 
+/* Landscape everywhere: one sidebar (shop, unit details, controls) beside the field, 1 : 3. */
 .play {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(270px, 1fr) minmax(0, 3fr);
+  grid-template-areas: "side board";
   gap: 12px;
   padding: 12px;
 }
+.play > .side {
+  grid-area: side;
+}
 .board {
+  grid-area: board;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   min-height: 0;
 }
-.board .field {
+/* The field keeps its aspect ratio and fits whichever of width or height runs out first. */
+.field-wrap {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  container-type: size;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.field-wrap .field {
+  width: min(100cqw, 100cqh * var(--field-ratio));
   height: auto;
-  width: auto;
 }
 .hud {
   display: flex;
   align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 640px;
+  max-width: 720px;
 }
 .round {
   font-weight: 700;
@@ -269,19 +283,47 @@ code {
   font-weight: 700;
   color: var(--accent);
 }
+.deploy-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.supply-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.recruit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .shop-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
+}
+.shop-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 3px;
 }
 .shop-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   text-align: left;
+  padding: 4px 7px;
+  font-size: 13px;
+  min-width: 0;
 }
 .shop-name {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .shop-cost {
   color: var(--accent);
@@ -321,9 +363,11 @@ code {
 }
 .held {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
   gap: 6px;
-  padding: 8px;
+  padding: 5px 8px;
   border: 1px dashed var(--border);
   border-radius: 8px;
 }
@@ -750,23 +794,92 @@ code {
 }
 
 @media (max-width: 1100px) {
-  .play,
   .editor {
     grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
     overflow: auto;
   }
   .row {
     grid-template-columns: 100px minmax(0, 1fr);
   }
-  .play,
-  .editor {
+}
+
+/* Short landscape screens (phones held sideways): squeeze the chrome so the field gets the height. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .top {
+    gap: 10px;
+    padding: 3px 10px;
+  }
+  .logo {
+    font-size: 15px;
+  }
+  .top nav button {
+    padding: 2px 8px;
+  }
+  .version {
+    display: none;
+  }
+  .play {
+    gap: 6px;
+    padding: 6px;
+    grid-template-columns: minmax(250px, 1fr) minmax(0, 3fr);
+  }
+  .board {
+    gap: 4px;
+  }
+  .panel {
+    padding: 8px;
+    gap: 8px;
+  }
+  .supply-num {
+    font-size: 20px;
+  }
+  button.primary.big {
+    padding: 6px;
+    font-size: 15px;
+  }
+}
+
+/* Portrait: the game is meant to be played sideways. Touch devices get a prompt to rotate;
+   anyone who stays in portrait (or a narrow desktop window) gets a stacked layout. */
+.rotate-hint {
+  display: none;
+}
+@media (orientation: portrait) and (max-width: 900px) {
+  .play {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "board" "side";
     grid-auto-rows: max-content;
+    overflow: auto;
   }
-  .board .field {
+  .field-wrap {
+    container-type: inline-size;
+  }
+  .field-wrap .field {
     width: 100%;
-    height: auto;
-    flex: none;
   }
+}
+@media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
+  .play:not(.portrait-ok) .rotate-hint {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px;
+    background: var(--bg);
+    text-align: center;
+  }
+}
+.rotate-icon {
+  font-size: 48px;
+}
+.rotate-hint p {
+  margin: 0;
+  font-size: 18px;
 }
 
 /* --------------------------------------------------------- unlocks etc */

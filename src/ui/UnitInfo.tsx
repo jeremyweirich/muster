@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ELEMENT_COLORS } from "../data/elements";
 import { RULES } from "../data/rules";
 import { rolesOf } from "../data/roles";
+import { describeSelector } from "../sim/selectors";
 import type { Element, UnitDef } from "../sim/types";
 import { derived, describeEffect, describeTrait, describeUpgrade } from "./describe";
 
@@ -148,7 +149,7 @@ export function UnitInfo({
           {atk?.onHit?.map((e, i) => <li key={`h${i}`}>On hit: {describeEffect(e)}</li>)}
           {atk?.bonusVs?.map((b, i) => (
             <li key={`b${i}`}>
-              ×{b.mult} damage vs {[b.selector.hasTag, ...(b.selector.hasAnyTag ?? [])].filter(Boolean).join(" / ")}
+              ×{b.mult} damage vs {describeSelector(b.selector)}
             </li>
           ))}
           {atk?.targeting === "towers" && <li>Hunts towers first</li>}

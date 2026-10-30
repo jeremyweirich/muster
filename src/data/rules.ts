@@ -1,9 +1,9 @@
 import type { Rules } from "../sim/types";
 
 export const RULES: Rules = {
-  fieldW: 32,
-  fieldH: 32,
-  deployDepth: 10,
+  fieldW: 48,
+  fieldH: 27,
+  deployDepth: 9,
   surfaceRes: 2,
   tick: 0.05,
   battleTimeLimit: 90,
@@ -15,10 +15,11 @@ export const RULES: Rules = {
   lockPlacedSquads: true,
   unlocks: true,
   towers: [
-    { defId: "tower_keep", x: 7 },
-    { defId: "tower_spire", x: 23 },
+    { defId: "tower_keep", x: 11 },
+    { defId: "tower_spire", x: 35 },
   ],
-  speedScale: 0.15,
+  towerInset: 2,
+  speedScale: 0.2,
   upgradeCostMult: [1, 2],
   towerUpgradeCosts: [100, 200, 400, 800],
   towerHpPerLevel: 300,

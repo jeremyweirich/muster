@@ -24,7 +24,7 @@ export function describeTrait(t: TraitDef): string {
     case "onDeath":
       return `On death: ${t.effects.map(describeEffect).join(", ")}`;
     case "regen":
-      return `Regenerates ${t.perSecond} hp/s`;
+      return `Regenerates ${t.perSecond} hp/s${t.suppressedBy ? ` (not while ${STATUSES[t.suppressedBy].name})` : ""}`;
     case "periodic":
       return `Every ${t.interval}s: ${t.effects.map(describeEffect).join(", ")}`;
     case "retaliate":
