@@ -172,6 +172,11 @@ code {
   margin-left: auto;
   font-size: 12px;
 }
+.version .build {
+  font-size: 0.85em;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
 
 .panel {
   background: var(--panel);
@@ -817,7 +822,7 @@ code {
     padding: 2px 8px;
   }
   .version {
-    display: none;
+    font-size: 10px;
   }
   .play {
     gap: 6px;

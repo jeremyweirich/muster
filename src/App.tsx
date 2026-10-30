@@ -42,7 +42,9 @@ export function App() {
             </button>
           ))}
         </nav>
-        <div className="version muted">prototype</div>
+        <div className="version muted" title={`Built ${new Date(__BUILD_TIME__).toLocaleString()}`}>
+          prototype <span className="build">{__APP_VERSION__}</span>
+        </div>
       </header>
       {/* Play stays mounted so switching to the editor mid-game doesn't lose the match */}
       <div style={{ display: tab === "play" ? "contents" : "none" }}>
