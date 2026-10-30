@@ -1,7 +1,7 @@
 import type { Rules } from "../sim/types";
 
 export const RULES: Rules = {
-  fieldW: 24,
+  fieldW: 32,
   fieldH: 32,
   deployDepth: 10,
   surfaceRes: 2,
@@ -13,6 +13,11 @@ export const RULES: Rules = {
   damagePerSquad: 4,
   elementalFriendlyFire: true,
   lockPlacedSquads: true,
+  unlocks: true,
+  towers: [
+    { defId: "tower_keep", x: 7 },
+    { defId: "tower_spire", x: 23 },
+  ],
 };
 
 // Deployment zone rows (inclusive start, exclusive end) for each side.

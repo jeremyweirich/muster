@@ -98,6 +98,20 @@ export function EffectEditor({ effect, onChange, onRemove }: { effect: Effect; o
           <Pick value={effect.status} options={STATUS_IDS} onChange={(status) => onChange({ ...effect, status })} />
           <span className="mini">dur</span>
           <Num value={effect.duration} step={0.5} onChange={(duration) => onChange({ ...effect, duration: duration || undefined })} />
+          <select
+            value={effect.affects ?? ""}
+            title="Who it applies to, relative to the source"
+            onChange={(e) => onChange({ ...effect, affects: (e.target.value || undefined) as typeof effect.affects })}
+          >
+            <option value="">default (all)</option>
+            <option value="enemies">enemies</option>
+            <option value="allies">allies</option>
+            <option value="all">all</option>
+          </select>
+          <label className="check" title="Applies to every unit on the field, ignoring radius">
+            <input type="checkbox" checked={!!effect.global} onChange={(e) => onChange({ ...effect, global: e.target.checked || undefined })} />
+            global
+          </label>
         </>
       )}
       {effect.type === "surface" && (

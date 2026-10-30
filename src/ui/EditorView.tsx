@@ -210,10 +210,13 @@ export function EditorView() {
               <Row label="Cost">
                 <Num value={unit.cost} step={25} onChange={(cost) => update({ cost })} />
               </Row>
+              <Row label="Unlock cost" hint="Paid once per match before the first purchase. 0 = available from the start">
+                <Num value={unit.unlockCost ?? 0} step={25} onChange={(unlockCost) => update({ unlockCost: unlockCost || undefined })} />
+              </Row>
               <Row label="Squad size" hint="Models per purchase">
                 <Num value={unit.squadSize} min={1} onChange={(squadSize) => update({ squadSize: Math.max(1, Math.round(squadSize)) })} />
               </Row>
-              <Row label="Footprint" hint="Deployment tiles (w × h)">
+              <Row label="Footprint" hint="Deployment tiles (w × h). Players can rotate it when placing">
                 <Num value={unit.footprint.w} min={1} onChange={(w) => update({ footprint: { ...unit.footprint, w: Math.max(1, Math.round(w)) } })} />
                 ×
                 <Num value={unit.footprint.h} min={1} onChange={(h) => update({ footprint: { ...unit.footprint, h: Math.max(1, Math.round(h)) } })} />
@@ -591,6 +594,7 @@ function Sandbox({ unit, units }: { unit: UnitDef; units: UnitDef[] }) {
     battle.current = new Battle(defs, [massArmy(unit, budget, 0, defs, rng), massArmy(opp, budget, 1, defs, rng)], {
       seed: rng.int(1e6),
       recordFx: true,
+      towers: false,
     });
     player.reset();
     setStats(null);

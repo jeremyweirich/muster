@@ -7,8 +7,11 @@ export function describeEffect(e: Effect): string {
   switch (e.type) {
     case "damage":
       return `${e.amount} ${e.element} damage${area}`;
-    case "status":
-      return `applies ${STATUSES[e.status].name}${e.duration ? ` for ${e.duration}s` : ""}${area}`;
+    case "status": {
+      const who = e.affects && e.affects !== "all" ? ` to ${e.affects}` : "";
+      const where = e.global ? " (whole field)" : area;
+      return `applies ${STATUSES[e.status].name}${who}${e.duration ? ` for ${e.duration}s` : ""}${where}`;
+    }
     case "surface":
       return `creates ${SURFACES[e.surface].name}${area}`;
     case "heal":

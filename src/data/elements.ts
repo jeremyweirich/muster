@@ -38,6 +38,15 @@ export const STATUSES: Record<StatusId, StatusDef> = {
   frozen: { id: "frozen", name: "Frozen", element: "frost", duration: 2, color: "#dff7ff", stun: true },
   shocked: { id: "shocked", name: "Shocked", element: "lightning", duration: 0.4, color: "#ffe14a", stun: true },
   oiled: { id: "oiled", name: "Oiled", element: null, duration: 5, color: "#8a6d3b", moveMult: 0.8 },
+  dazed: {
+    id: "dazed",
+    name: "Dazed",
+    element: null,
+    duration: 4,
+    color: "#c77dff",
+    damageDealtMult: 0.1,
+    damageTakenMult: 2,
+  },
 };
 
 export const SURFACES: Record<SurfaceId, SurfaceDef> = {

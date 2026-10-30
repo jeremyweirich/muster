@@ -1,5 +1,6 @@
 import { ELEMENT_COLORS, STATUSES, SURFACES, UNIT_REACTIONS } from "../data/elements";
 import { RULES } from "../data/rules";
+import { TOWER_MAP, towerPlacements } from "../data/towers";
 import { Rng } from "./rng";
 import { matches } from "./selectors";
 import { SurfaceGrid } from "./surfaces";
@@ -11,6 +12,7 @@ import type {
   PlacedSquad,
   Rules,
   Side,
+  StatusDef,
   StatusId,
   UnitDef,
   UnitReaction,
@@ -18,6 +20,7 @@ import type {
 
 export interface Model {
   id: number;
+  squad: number; // index into Battle.squads
   squadUid: string;
   side: Side;
   def: UnitDef;
@@ -30,6 +33,7 @@ export interface Model {
   targetId: number;
   retarget: number;
   statuses: Partial<Record<StatusId, number>>;
+  statusOwner: Partial<Record<StatusId, number>>; // squad credited for each status
   periodic: number[];
   buffAttack: number;
   buffMove: number;
@@ -38,10 +42,45 @@ export interface Model {
   flash: number; // seconds of hit flash, for rendering
 }
 
+// Everything the post-battle report shows for one squad.
+export interface SquadStats {
+  uid: string;
+  defId: string;
+  name: string;
+  side: Side;
+  structure: boolean;
+  total: number;
+  alive: number;
+  dealt: number; // to enemies
+  friendly: number; // to own side (elemental friendly fire)
+  taken: number;
+  kills: number;
+  teamKills: number;
+  lost: number;
+  dealtBy: Record<string, number>; // mechanism: Attack, Burning, Fire (surface), Conduct...
+  takenBySource: Record<string, number>; // unit name, status or surface
+  takenByElement: Record<string, number>;
+  takenByReaction: Record<string, number>; // extra damage caused by reactions
+}
+
+interface SquadInfo {
+  uid: string;
+  def: UnitDef;
+  side: Side;
+  stats: SquadStats;
+}
+
+// Who gets credit for a piece of damage, and how it shows up in reports.
+interface Attr {
+  squad: number; // -1 = nobody
+  label: string; // as seen by the victim ("Fire Mage", "Burning", "Electrified Water")
+  mech: string; // as seen by the dealer ("Attack", "Burning", ...)
+}
+
 interface Source {
   side: Side;
   def: UnitDef;
-  squadUid: string;
+  squad: number;
   dmgMult: number;
 }
 
@@ -60,7 +99,7 @@ interface Projectile {
 export type Fx =
   | { kind: "beam"; x1: number; y1: number; x2: number; y2: number; color: string }
   | { kind: "burst"; x: number; y: number; r: number; color: string }
-  | { kind: "text"; x: number; y: number; text: string; color: string }
+  | { kind: "text"; x: number; y: number; text: string; color: string; big?: boolean }
   | { kind: "death"; x: number; y: number; color: string; size: number };
 
 export interface SquadSurvival {
@@ -74,14 +113,15 @@ export interface BattleResult {
   winner: Side | null;
   timedOut: boolean;
   time: number;
-  survivors: [SquadSurvival[], SquadSurvival[]];
-  damageBySquad: Record<string, number>;
+  survivors: [SquadSurvival[], SquadSurvival[]]; // excludes towers
+  stats: Record<string, SquadStats>;
 }
 
 export interface BattleOptions {
   seed?: number;
   rules?: Rules;
   recordFx?: boolean;
+  towers?: boolean; // default true; the lab and sandbox turn them off
 }
 
 const UNIT_REACTION_MAP = new Map<string, UnitReaction>();
@@ -91,9 +131,57 @@ const RANGED = 2.5; // attacks longer than this count as ranged (blocked by stea
 const SURFACE_TICK = 0.5;
 const AURA_TICK = 0.25;
 
+export function footprintOf(def: UnitDef, rot?: boolean): { w: number; h: number } {
+  return rot ? { w: def.footprint.h, h: def.footprint.w } : def.footprint;
+}
+
+// Lay out a squad's models inside its (possibly rotated) footprint.
+export function formation(def: UnitDef, sx: number, sy: number, rot?: boolean): [number, number][] {
+  const { w, h } = footprintOf(def, rot);
+  const n = Math.max(1, def.squadSize);
+  const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt((n * w) / h))));
+  const rows = Math.ceil(n / cols);
+  const out: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const c = i % cols;
+    const r = Math.floor(i / cols);
+    const inRow = r === rows - 1 ? n - cols * (rows - 1) : cols;
+    const offset = (cols - inRow) / 2;
+    out.push([sx + ((c + offset + 0.5) * w) / cols, sy + ((r + 0.5) * h) / rows]);
+  }
+  return out;
+}
+
+function emptyStats(uid: string, def: UnitDef, side: Side): SquadStats {
+  return {
+    uid,
+    defId: def.id,
+    name: def.name,
+    side,
+    structure: !!def.structure,
+    total: def.squadSize,
+    alive: def.squadSize,
+    dealt: 0,
+    friendly: 0,
+    taken: 0,
+    kills: 0,
+    teamKills: 0,
+    lost: 0,
+    dealtBy: {},
+    takenBySource: {},
+    takenByElement: {},
+    takenByReaction: {},
+  };
+}
+
+function add(rec: Record<string, number>, key: string, v: number) {
+  if (v > 0) rec[key] = (rec[key] ?? 0) + v;
+}
+
 export class Battle {
   readonly rules: Rules;
   readonly models: Model[] = [];
+  readonly squads: SquadInfo[] = [];
   readonly projectiles: Projectile[] = [];
   readonly surfaces: SurfaceGrid;
   readonly fx: Fx[] = [];
@@ -102,54 +190,60 @@ export class Battle {
   over = false;
   winner: Side | null = null;
   timedOut = false;
-  damageBySquad: Record<string, number> = {};
 
   private rng: Rng;
   private byId = new Map<number, Model>();
   private surfaceTimer = 0;
   private auraTimer = 0;
   private deathQueue: Model[] = [];
-  private squadSizes = new Map<string, { defId: string; side: Side; total: number }>();
 
   constructor(defs: Map<string, UnitDef>, armies: [PlacedSquad[], PlacedSquad[]], opts: BattleOptions = {}) {
     this.rules = opts.rules ?? RULES;
     this.recordFx = opts.recordFx ?? false;
     this.rng = new Rng(opts.seed ?? 1);
     this.surfaces = new SurfaceGrid(this.rules.fieldW, this.rules.fieldH, this.rules.surfaceRes);
-    let nextId = 1;
     for (const side of [0, 1] as Side[]) {
       for (const sq of armies[side]) {
         const def = defs.get(sq.defId);
-        if (!def) continue;
-        this.squadSizes.set(sq.uid, { defId: def.id, side, total: def.squadSize });
-        for (const [x, y] of formation(def, sq.x, sq.y)) {
-          const m: Model = {
-            id: nextId++,
-            squadUid: sq.uid,
-            side,
-            def,
-            x,
-            y,
-            hp: def.hp,
-            maxHp: def.hp,
-            alive: true,
-            cooldown: def.attack ? this.rng.range(0, def.attack.cooldown * 0.3) : 0,
-            targetId: -1,
-            retarget: this.rng.range(0, 0.3),
-            statuses: {},
-            periodic: (def.traits ?? []).map((t) => (t.type === "periodic" ? t.interval : 0)),
-            buffAttack: 1,
-            buffMove: 1,
-            buffDamage: 1,
-            facing: side === 0 ? -Math.PI / 2 : Math.PI / 2,
-            flash: 0,
-          };
-          this.models.push(m);
-          this.byId.set(m.id, m);
-        }
+        if (def) this.addSquad(sq, def, side);
+      }
+      if (opts.towers ?? true) {
+        for (const t of towerPlacements(side, this.rules)) this.addSquad(t, TOWER_MAP.get(t.defId)!, side);
       }
     }
-    if (!this.models.some((m) => m.side === 0) || !this.models.some((m) => m.side === 1)) this.finish();
+    if (!this.armyAlive(0) || !this.armyAlive(1)) this.finish();
+  }
+
+  private addSquad(sq: PlacedSquad, def: UnitDef, side: Side) {
+    const squad = this.squads.length;
+    this.squads.push({ uid: sq.uid, def, side, stats: emptyStats(sq.uid, def, side) });
+    for (const [x, y] of formation(def, sq.x, sq.y, sq.rot)) {
+      const m: Model = {
+        id: this.models.length + 1,
+        squad,
+        squadUid: sq.uid,
+        side,
+        def,
+        x,
+        y,
+        hp: def.hp,
+        maxHp: def.hp,
+        alive: true,
+        cooldown: def.attack ? this.rng.range(0, def.attack.cooldown * 0.3) : 0,
+        targetId: -1,
+        retarget: this.rng.range(0, 0.3),
+        statuses: {},
+        statusOwner: {},
+        periodic: (def.traits ?? []).map((t) => (t.type === "periodic" ? t.interval : 0)),
+        buffAttack: 1,
+        buffMove: 1,
+        buffDamage: 1,
+        facing: side === 0 ? -Math.PI / 2 : Math.PI / 2,
+        flash: 0,
+      };
+      this.models.push(m);
+      this.byId.set(m.id, m);
+    }
   }
 
   // ------------------------------------------------------------------ public
@@ -180,9 +274,7 @@ export class Battle {
     this.processDeaths();
     this.flushSurfaceEvents();
 
-    const alive0 = this.models.some((m) => m.alive && m.side === 0);
-    const alive1 = this.models.some((m) => m.alive && m.side === 1);
-    if (!alive0 || !alive1) this.finish();
+    if (!this.armyAlive(0) || !this.armyAlive(1)) this.finish();
     else if (this.time >= this.rules.battleTimeLimit) {
       this.timedOut = true;
       this.finish();
@@ -196,19 +288,17 @@ export class Battle {
 
   result(): BattleResult {
     const survivors: [SquadSurvival[], SquadSurvival[]] = [[], []];
-    const alive = new Map<string, number>();
-    for (const m of this.models) if (m.alive) alive.set(m.squadUid, (alive.get(m.squadUid) ?? 0) + 1);
-    for (const [uid, info] of this.squadSizes) {
-      const n = alive.get(uid) ?? 0;
-      if (n > 0) survivors[info.side].push({ uid, defId: info.defId, alive: n, total: info.total });
-    }
-    return {
-      winner: this.winner,
-      timedOut: this.timedOut,
-      time: this.time,
-      survivors,
-      damageBySquad: this.damageBySquad,
-    };
+    const alive = new Array(this.squads.length).fill(0);
+    for (const m of this.models) if (m.alive) alive[m.squad]++;
+    const stats: Record<string, SquadStats> = {};
+    this.squads.forEach((sq, i) => {
+      sq.stats.alive = alive[i];
+      stats[sq.uid] = sq.stats;
+      if (alive[i] > 0 && !sq.def.structure) {
+        survivors[sq.side].push({ uid: sq.uid, defId: sq.def.id, alive: alive[i], total: sq.def.squadSize });
+      }
+    });
+    return { winner: this.winner, timedOut: this.timedOut, time: this.time, survivors, stats };
   }
 
   get(id: number): Model | undefined {
@@ -217,11 +307,20 @@ export class Battle {
 
   // ------------------------------------------------------------------ update
 
+  // Towers don't count: a side is beaten when its army is gone.
+  private armyAlive(side: Side): boolean {
+    return this.models.some((m) => m.alive && m.side === side && !m.def.structure);
+  }
+
   private finish() {
     this.over = true;
-    const alive0 = this.models.some((m) => m.alive && m.side === 0);
-    const alive1 = this.models.some((m) => m.alive && m.side === 1);
+    const alive0 = this.armyAlive(0);
+    const alive1 = this.armyAlive(1);
     this.winner = this.timedOut ? null : alive0 && !alive1 ? 0 : alive1 && !alive0 ? 1 : null;
+  }
+
+  private attrFor(squad: number, mech: string): Attr {
+    return { squad, label: squad >= 0 ? this.squads[squad].def.name : mech, mech };
   }
 
   private updateStatuses(dt: number) {
@@ -232,10 +331,14 @@ export class Battle {
         const t = m.statuses[id];
         if (t === undefined) continue;
         const def = STATUSES[id];
-        if (def.dps) this.rawDamage(m, def.dps.amount * dt, def.dps.element, null);
+        if (def.dps) {
+          this.rawDamage(m, def.dps.amount * dt, def.dps.element, { squad: m.statusOwner[id] ?? -1, label: def.name, mech: def.name });
+        }
         const left = t - dt;
-        if (left <= 0) delete m.statuses[id];
-        else m.statuses[id] = left;
+        if (left <= 0) {
+          delete m.statuses[id];
+          delete m.statusOwner[id];
+        } else m.statuses[id] = left;
       }
     }
   }
@@ -271,7 +374,7 @@ export class Battle {
           m.periodic[i] -= dt;
           if (m.periodic[i] <= 0) {
             m.periodic[i] += t.interval;
-            for (const e of t.effects) this.applyEffect(e, m.x, m.y, m.def.layer, m.side, null, this.sourceOf(m));
+            for (const e of t.effects) this.applyEffect(e, m.x, m.y, m.def.layer, m.side, null, this.attrFor(m.squad, "Periodic"));
           }
         }
       });
@@ -283,10 +386,10 @@ export class Battle {
       if (!m.alive || m.def.layer !== "ground") continue;
       const s = this.surfaces.at(m.x, m.y);
       if (!s) continue;
-      for (const e of SURFACES[s].onTick ?? []) {
-        // Surfaces are neutral: no source side, so they hit everyone.
-        this.applyEffect(e, m.x, m.y, "ground", null, m, null);
-      }
+      const name = SURFACES[s].name;
+      const attr = { squad: this.surfaces.ownerAt(m.x, m.y), label: name, mech: name };
+      // Surfaces are neutral: no source side, so they hit everyone standing in them.
+      for (const e of SURFACES[s].onTick ?? []) this.applyEffect(e, m.x, m.y, "ground", null, m, attr);
     }
   }
 
@@ -295,7 +398,7 @@ export class Battle {
     return false;
   }
 
-  private statusMult(m: Model, key: "moveMult" | "attackMult"): number {
+  private statusMult(m: Model, key: keyof Pick<StatusDef, "moveMult" | "attackMult" | "damageDealtMult" | "damageTakenMult">): number {
     let mult = 1;
     for (const id of STATUS_IDS) {
       if (m.statuses[id] === undefined) continue;
@@ -338,7 +441,7 @@ export class Battle {
     let best: Model | undefined;
     let bestD = Infinity;
     for (const t of this.models) {
-      if (t.side !== m.side || t === m || !t.alive || !t.def.attack) continue;
+      if (t.side !== m.side || t === m || !t.alive || !t.def.attack || t.def.structure) continue;
       const d = dist2(m, t);
       if (d < bestD) {
         bestD = d;
@@ -350,6 +453,8 @@ export class Battle {
 
   private updateModel(m: Model, dt: number) {
     const atk = m.def.attack;
+    const anchored = m.def.speed <= 0;
+    if (!atk && anchored) return;
     const attackRate = this.statusMult(m, "attackMult") * m.buffAttack;
     if (m.cooldown > 0) m.cooldown -= dt * attackRate;
     if (this.isStunned(m)) return;
@@ -370,7 +475,7 @@ export class Battle {
     const d = Math.sqrt(dx * dx + dy * dy);
     const gap = d - m.def.size - target.def.size;
     const range = atk ? atk.range : 1;
-    m.facing = Math.atan2(dy, dx);
+    if (!anchored) m.facing = Math.atan2(dy, dx);
 
     if (gap <= range) {
       if (atk && m.cooldown <= 0) {
@@ -379,6 +484,7 @@ export class Battle {
       }
       return;
     }
+    if (anchored) return;
     let speed = m.def.speed * this.statusMult(m, "moveMult") * m.buffMove;
     if (m.def.layer === "ground") {
       const s = this.surfaces.at(m.x, m.y);
@@ -390,7 +496,7 @@ export class Battle {
   }
 
   private sourceOf(m: Model): Source {
-    return { side: m.side, def: m.def, squadUid: m.squadUid, dmgMult: m.buffDamage };
+    return { side: m.side, def: m.def, squad: m.squad, dmgMult: m.buffDamage * this.statusMult(m, "damageDealtMult") };
   }
 
   private fire(m: Model, target: Model, atk: AttackDef) {
@@ -467,34 +573,39 @@ export class Battle {
     const atk = src.def.attack;
     if (!atk) return;
     const dmg = atk.damage * scale * src.dmgMult;
+    const attr = this.attrFor(src.squad, "Attack");
     if (atk.splash) {
       this.emit({ kind: "burst", x, y, r: atk.splash, color: ELEMENT_COLORS[atk.element] });
       for (const m of this.inRadius(x, y, atk.splash, layer)) {
-        if (m.side !== src.side) this.hit(m, dmg, atk.element, src);
+        if (m.side !== src.side) this.hit(m, dmg, atk.element, attr, src);
       }
     } else if (target && target.alive) {
-      this.hit(target, dmg, atk.element, src);
+      this.hit(target, dmg, atk.element, attr, src);
     }
-    if (layer === "ground") this.surfaces.element(x, y, Math.max(0.5, atk.splash ?? 0), atk.element);
-    for (const e of atk.onHit ?? []) this.applyEffect(e, x, y, layer, src.side, target, src);
+    if (layer === "ground") this.surfaces.element(x, y, Math.max(0.5, atk.splash ?? 0), atk.element, src.squad);
+    for (const e of atk.onHit ?? []) this.applyEffect(e, x, y, layer, src.side, target, attr);
   }
 
-  private applyEffect(e: Effect, x: number, y: number, layer: Layer, side: Side | null, direct: Model | null, src: Source | null) {
-    const ff = side === null || this.rules.elementalFriendlyFire;
+  private applyEffect(e: Effect, x: number, y: number, layer: Layer, side: Side | null, direct: Model | null, attr: Attr) {
     switch (e.type) {
       case "damage":
         if (e.radius) {
-          for (const m of this.inRadius(x, y, e.radius, layer)) if (side === null || m.side !== side) this.hit(m, e.amount, e.element, src);
-          if (layer === "ground") this.surfaces.element(x, y, e.radius, e.element);
-        } else if (direct) this.hit(direct, e.amount, e.element, src);
+          for (const m of this.inRadius(x, y, e.radius, layer)) if (side === null || m.side !== side) this.hit(m, e.amount, e.element, attr, null);
+          if (layer === "ground") this.surfaces.element(x, y, e.radius, e.element, attr.squad);
+        } else if (direct) this.hit(direct, e.amount, e.element, attr, null);
         break;
-      case "status":
-        if (e.radius) {
-          for (const m of this.inRadius(x, y, e.radius, layer)) if (ff || m.side !== side) this.applyStatus(m, e.status, e.duration);
-        } else if (direct && direct.alive) this.applyStatus(direct, e.status, e.duration);
+      case "status": {
+        const mode = e.affects ?? (side === null || this.rules.elementalFriendlyFire ? "all" : "enemies");
+        const ok = (m: Model) => side === null || mode === "all" || (mode === "enemies" ? m.side !== side : m.side === side);
+        let targets: Model[];
+        if (e.global) targets = this.models.filter((m) => m.alive);
+        else if (e.radius) targets = this.inRadius(x, y, e.radius, layer);
+        else targets = direct && direct.alive ? [direct] : [];
+        for (const m of targets) if (ok(m)) this.applyStatus(m, e.status, e.duration, attr);
         break;
+      }
       case "surface":
-        if (layer === "ground") this.surfaces.create(x, y, e.radius, e.surface, e.duration);
+        if (layer === "ground") this.surfaces.create(x, y, e.radius, e.surface, e.duration, attr.squad);
         break;
       case "heal":
         for (const m of this.inRadius(x, y, e.radius, layer)) if (side === null || m.side === side) m.hp = Math.min(m.maxHp, m.hp + e.amount);
@@ -515,32 +626,43 @@ export class Battle {
   }
 
   // Elemental damage hitting a unit: check reactions with its statuses first.
-  private hit(m: Model, amount: number, element: Element, src: Source | null) {
+  private hit(m: Model, amount: number, element: Element, attr: Attr, src: Source | null) {
     if (!m.alive) return;
-    let mult = 1;
+    let rmult = 1;
+    const reacted: string[] = [];
     for (const id of STATUS_IDS) {
       if (m.statuses[id] === undefined) continue;
       const r = UNIT_REACTION_MAP.get(`${id}|${element}`);
       if (!r) continue;
-      mult *= this.react(m, id, r);
+      const k = this.react(m, id, r, attr);
+      if (k !== 1) {
+        rmult *= k;
+        if (r.name) reacted.push(r.name);
+      }
     }
+    let bonus = 1;
     if (src?.def.attack?.bonusVs) {
-      for (const b of src.def.attack.bonusVs) if (matches(b.selector, m.def, m.side, src.side)) mult *= b.mult;
+      for (const b of src.def.attack.bonusVs) if (matches(b.selector, m.def, m.side, src.side)) bonus *= b.mult;
     }
-    this.rawDamage(m, amount * mult, element, src);
+    const share = rmult > 1 && reacted.length ? { names: reacted, share: 1 - 1 / rmult } : undefined;
+    this.rawDamage(m, amount * bonus * rmult, element, attr, share);
   }
 
-  private react(m: Model, status: StatusId, r: UnitReaction): number {
-    if (r.removeStatus) delete m.statuses[status];
+  private react(m: Model, status: StatusId, r: UnitReaction, attr: Attr): number {
+    if (r.removeStatus) {
+      delete m.statuses[status];
+      delete m.statusOwner[status];
+    }
     if (r.addStatus && !m.def.immuneStatuses?.includes(r.addStatus.status)) {
       m.statuses[r.addStatus.status] = r.addStatus.duration ?? STATUSES[r.addStatus.status].duration;
+      m.statusOwner[r.addStatus.status] = attr.squad;
     }
-    if (r.bonusDamage) this.rawDamage(m, r.bonusDamage.amount, r.bonusDamage.element, null);
+    if (r.bonusDamage) this.rawDamage(m, r.bonusDamage.amount, r.bonusDamage.element, { squad: attr.squad, label: r.name, mech: r.name });
     if (r.name) this.emit({ kind: "text", x: m.x, y: m.y - 0.6, text: r.name, color: STATUSES[status].color });
     return r.damageMult ?? 1;
   }
 
-  private applyStatus(m: Model, id: StatusId, duration?: number) {
+  private applyStatus(m: Model, id: StatusId, duration: number | undefined, attr: Attr) {
     if (!m.alive || m.def.immuneStatuses?.includes(id)) return;
     const def = STATUSES[id];
     let consumed = false;
@@ -550,24 +672,49 @@ export class Battle {
         const r = UNIT_REACTION_MAP.get(`${cur}|${def.element}`);
         if (!r) continue;
         if (r.consumeIncoming) consumed = true;
-        this.react(m, cur, r);
+        this.react(m, cur, r, attr);
       }
     }
-    if (!consumed) m.statuses[id] = Math.max(m.statuses[id] ?? 0, duration ?? def.duration);
+    if (!consumed) {
+      m.statuses[id] = Math.max(m.statuses[id] ?? 0, duration ?? def.duration);
+      m.statusOwner[id] = attr.squad;
+    }
   }
 
-  private rawDamage(m: Model, amount: number, element: Element, src: Source | null) {
+  private rawDamage(m: Model, amount: number, element: Element, attr: Attr, reaction?: { names: string[]; share: number }) {
     if (!m.alive) return;
     const resist = m.def.resist?.[element] ?? 0;
-    const dmg = amount * (1 - resist);
+    const dmg = amount * (1 - resist) * this.statusMult(m, "damageTakenMult");
     if (dmg <= 0) return;
+    const applied = Math.min(dmg, m.hp);
     m.hp -= dmg;
     m.flash = 0.1;
-    if (src) this.damageBySquad[src.squadUid] = (this.damageBySquad[src.squadUid] ?? 0) + Math.min(dmg, m.hp + dmg);
+
+    const dealer = attr.squad >= 0 ? this.squads[attr.squad] : null;
+    const friendly = dealer !== null && dealer.side === m.side;
+    const victim = this.squads[m.squad].stats;
+    victim.taken += applied;
+    add(victim.takenBySource, friendly ? `${attr.label} (ally)` : attr.label, applied);
+    add(victim.takenByElement, element, applied);
+    const extra = reaction ? applied * reaction.share : 0;
+    if (reaction) for (const n of reaction.names) add(victim.takenByReaction, n, extra / reaction.names.length);
+
+    if (dealer) {
+      if (friendly) dealer.stats.friendly += applied;
+      else {
+        dealer.stats.dealt += applied;
+        add(dealer.stats.dealtBy, attr.mech, applied - extra);
+        if (reaction) for (const n of reaction.names) add(dealer.stats.dealtBy, n, extra / reaction.names.length);
+      }
+    }
+
     if (m.hp <= 0) {
       m.alive = false;
+      victim.lost++;
+      if (dealer) friendly ? dealer.stats.teamKills++ : dealer.stats.kills++;
       this.deathQueue.push(m);
       this.emit({ kind: "death", x: m.x, y: m.y, color: m.def.look.color, size: m.def.size });
+      if (m.def.structure) this.emit({ kind: "text", x: m.x, y: m.y - 1.2, text: `${m.def.name} falls!`, color: "#c77dff", big: true });
     }
   }
 
@@ -577,12 +724,13 @@ export class Battle {
       const m = this.deathQueue.shift()!;
       for (const t of m.def.traits ?? []) {
         if (t.type !== "onDeath") continue;
-        for (const e of t.effects) this.applyEffect(e, m.x, m.y, m.def.layer, m.side, null, this.sourceOf(m));
+        for (const e of t.effects) this.applyEffect(e, m.x, m.y, m.def.layer, m.side, null, this.attrFor(m.squad, "On death"));
       }
     }
   }
 
   // Simple circle separation using a spatial hash; ground and air don't collide.
+  // Anchored units (towers) never get pushed.
   private separate() {
     const cell = 1;
     const grid = new Map<number, Model[]>();
@@ -598,13 +746,16 @@ export class Battle {
       if (!m.alive) continue;
       const cx = Math.floor(m.x / cell);
       const cy = Math.floor(m.y / cell);
-      const reach = Math.ceil((m.def.size + 1.1) / cell);
+      const reach = Math.ceil((m.def.size + 1.7) / cell);
+      const am = m.def.speed <= 0;
       for (let oy = -reach; oy <= reach; oy++) {
         for (let ox = -reach; ox <= reach; ox++) {
           const b = grid.get(key(cx + ox, cy + oy, m.def.layer));
           if (!b) continue;
           for (const o of b) {
             if (o.id <= m.id) continue;
+            const ao = o.def.speed <= 0;
+            if (am && ao) continue;
             const dx = o.x - m.x;
             const dy = o.y - m.y;
             const min = m.def.size + o.def.size;
@@ -614,8 +765,9 @@ export class Battle {
             const overlap = (min - d) * 0.5;
             const wm = m.def.size * m.def.size;
             const wo = o.def.size * o.def.size;
-            const fm = wo / (wm + wo);
-            const fo = wm / (wm + wo);
+            // heavier models get pushed less
+            const fm = am ? 0 : ao ? 1 : wo / (wm + wo);
+            const fo = 1 - fm;
             const nx = d2 === 0 ? 1 : dx / d;
             const ny = d2 === 0 ? 0 : dy / d;
             m.x -= nx * overlap * fm;
@@ -625,8 +777,10 @@ export class Battle {
           }
         }
       }
-      m.x = clamp(m.x, m.def.size, this.rules.fieldW - m.def.size);
-      m.y = clamp(m.y, m.def.size, this.rules.fieldH - m.def.size);
+      if (!am) {
+        m.x = clamp(m.x, m.def.size, this.rules.fieldW - m.def.size);
+        m.y = clamp(m.y, m.def.size, this.rules.fieldH - m.def.size);
+      }
     }
   }
 
@@ -638,23 +792,6 @@ export class Battle {
   private emit(f: Fx) {
     if (this.recordFx) this.fx.push(f);
   }
-}
-
-// Lay out a squad's models inside its footprint.
-export function formation(def: UnitDef, sx: number, sy: number): [number, number][] {
-  const { w, h } = def.footprint;
-  const n = Math.max(1, def.squadSize);
-  const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt((n * w) / h))));
-  const rows = Math.ceil(n / cols);
-  const out: [number, number][] = [];
-  for (let i = 0; i < n; i++) {
-    const c = i % cols;
-    const r = Math.floor(i / cols);
-    const inRow = r === rows - 1 ? n - cols * (rows - 1) : cols;
-    const offset = (cols - inRow) / 2;
-    out.push([sx + ((c + offset + 0.5) * w) / cols, sy + ((r + 0.5) * h) / rows]);
-  }
-  return out;
 }
 
 function dist2(a: { x: number; y: number }, b: { x: number; y: number }) {

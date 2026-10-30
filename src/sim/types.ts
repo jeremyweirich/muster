@@ -8,7 +8,7 @@ export const ELEMENTS: Element[] = ["physical", "fire", "water", "frost", "light
 export type Layer = "ground" | "air";
 export type Side = 0 | 1; // 0 = player (bottom), 1 = enemy (top)
 
-export type StatusId = "wet" | "burning" | "chilled" | "frozen" | "shocked" | "oiled";
+export type StatusId = "wet" | "burning" | "chilled" | "frozen" | "shocked" | "oiled" | "dazed";
 export type SurfaceId = "puddle" | "fire" | "ice" | "shockwater" | "steam" | "oil";
 
 // ---------------------------------------------------------------------------
@@ -29,7 +29,14 @@ export interface Selector {
 
 export type Effect =
   | { type: "damage"; amount: number; element: Element; radius?: number }
-  | { type: "status"; status: StatusId; duration?: number; radius?: number }
+  | {
+      type: "status";
+      status: StatusId;
+      duration?: number;
+      radius?: number;
+      global?: boolean; // every unit on the field (filtered by affects), ignoring radius
+      affects?: "all" | "enemies" | "allies"; // relative to the source; default follows the friendly-fire rule
+    }
   | { type: "surface"; surface: SurfaceId; radius: number; duration?: number }
   | { type: "heal"; amount: number; radius: number };
 
@@ -71,6 +78,7 @@ export interface UnitDef {
   name: string;
   description?: string;
   cost: number;
+  unlockCost?: number; // one-time cost per match before the first purchase; 0 = available from the start
   squadSize: number;
   footprint: { w: number; h: number }; // in deployment tiles
   layer: Layer;
@@ -83,6 +91,7 @@ export interface UnitDef {
   traits?: TraitDef[];
   tags: string[];
   look: { shape: Shape; color: string; glyph?: string };
+  structure?: boolean; // towers: never move, don't count toward winning the battle
 }
 
 // ---------------------------------------------------------------------------
@@ -98,6 +107,8 @@ export interface StatusDef {
   attackMult?: number; // multiplier on attack rate
   stun?: boolean;
   dps?: { amount: number; element: Element };
+  damageDealtMult?: number; // multiplies the unit's outgoing attack damage
+  damageTakenMult?: number;
 }
 
 export interface SurfaceDef {
@@ -142,6 +153,7 @@ export interface PlacedSquad {
   defId: string;
   x: number; // tile coords of footprint top-left, in absolute field coords
   y: number;
+  rot?: boolean; // rotated 90°: footprint w and h swap
   round: number; // round it was placed in
 }
 
@@ -158,4 +170,6 @@ export interface Rules {
   damagePerSquad: number;
   elementalFriendlyFire: boolean;
   lockPlacedSquads: boolean;
+  unlocks: boolean;
+  towers: { defId: string; x: number }[]; // per side, x for the bottom side (mirrored for the top)
 }

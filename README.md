@@ -12,13 +12,18 @@ npm install
 npm run dev        # http://localhost:5173
 npm test           # sim tests
 npm run matrix     # unit-vs-unit win-rate matrix in the terminal
+npm run roster-table  # default roster as a Markdown table
 npm run build      # static build in dist/
 ```
 
+See [docs/DESIGN.md](docs/DESIGN.md) for the full design.
+
 ## Tabs
 
-- **Play**: you against the AI. Click a unit, then click your (blue) zone to place it. Click a squad you placed this round to move
-  it; right-click it to sell it. Squads from earlier rounds are locked. You see the enemy army as it stood last round.
+- **Play**: you against the AI. Click a unit, then click your (blue) zone to place it; **R** rotates. Click a squad you placed
+  this round to move it; right-click it to sell it. Squads from earlier rounds are locked. 🔒 units cost a one-time unlock
+  per match. You see the enemy army as it stood last round. Each side has two towers; when one falls, its owner's army is
+  Dazed for 5s. After each battle there is a battle report with per-squad damage breakdowns, and a replay.
 - **Units**: the unit editor. Edits save to your browser right away. Includes stats, attack, on-hit effects, traits, tags, a raw
   JSON view, and a sandbox where you can watch the unit fight another unit or run 10 headless sims. Use **Export** to save the
   roster as JSON.

@@ -31,7 +31,7 @@ export function runArmies(
     const swap = s % 2 === 1;
     const rng = new Rng(1000 + s);
     const [a, b] = build(swap ? 1 : 0, rng);
-    const battle = new Battle(defs, swap ? [b, a] : [a, b], { seed: 77 + s });
+    const battle = new Battle(defs, swap ? [b, a] : [a, b], { seed: 77 + s, towers: false });
     const r = battle.run();
     const sideA = swap ? 1 : 0;
     const sideB = swap ? 0 : 1;

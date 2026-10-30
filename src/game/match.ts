@@ -1,7 +1,7 @@
 import { RULES } from "../data/rules";
 import type { BattleResult } from "../sim/battle";
-import type { PlacedSquad, Side } from "../sim/types";
-import type { DefMap } from "./army";
+import type { PlacedSquad, Side, UnitDef } from "../sim/types";
+import { startingUnlocks, type DefMap } from "./army";
 
 export type Phase = "deploy" | "battle" | "result" | "over";
 
@@ -17,17 +17,20 @@ export interface MatchState {
   hp: [number, number];
   supply: [number, number];
   armies: [PlacedSquad[], PlacedSquad[]];
+  unlocked: [string[], string[]];
   phase: Phase;
   history: RoundReport[];
 }
 
-export function newMatch(): MatchState {
+export function newMatch(units: UnitDef[]): MatchState {
   const income = RULES.income(1);
+  const start = startingUnlocks(units);
   return {
     round: 1,
     hp: [RULES.startHp, RULES.startHp],
     supply: [income, income],
     armies: [[], []],
+    unlocked: [start, [...start]],
     phase: "deploy",
     history: [],
   };

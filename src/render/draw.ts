@@ -1,6 +1,7 @@
 import { STATUSES, SURFACES } from "../data/elements";
 import { deployZone, RULES } from "../data/rules";
-import { formation, type Battle, type Fx, type Model } from "../sim/battle";
+import { towerPlacements, TOWER_MAP } from "../data/towers";
+import { footprintOf, formation, type Battle, type Fx, type Model } from "../sim/battle";
 import { SurfaceGrid } from "../sim/surfaces";
 import type { PlacedSquad, Shape, Side, StatusId, UnitDef } from "../sim/types";
 
@@ -179,16 +180,30 @@ export function drawSquad(
   def: UnitDef,
   side: Side,
   tile: number,
-  o: { alpha?: number; outline?: string; dashed?: boolean } = {},
+  o: { alpha?: number; outline?: string; dashed?: boolean; alive?: number; fill?: string } = {},
 ) {
+  const { w, h } = footprintOf(def, sq.rot);
+  if (o.fill) {
+    ctx.fillStyle = o.fill;
+    ctx.fillRect(sq.x * tile, sq.y * tile, w * tile, h * tile);
+  }
   if (o.outline) {
     ctx.strokeStyle = o.outline;
     ctx.lineWidth = 1.5;
     if (o.dashed) ctx.setLineDash([3, 3]);
-    ctx.strokeRect(sq.x * tile + 1, sq.y * tile + 1, def.footprint.w * tile - 2, def.footprint.h * tile - 2);
+    ctx.strokeRect(sq.x * tile + 1, sq.y * tile + 1, w * tile - 2, h * tile - 2);
     ctx.setLineDash([]);
   }
-  for (const [x, y] of formation(def, sq.x, sq.y)) drawUnit(ctx, def, side, x, y, tile, { alpha: o.alpha });
+  formation(def, sq.x, sq.y, sq.rot).forEach(([x, y], i) => {
+    const dead = o.alive !== undefined && i >= o.alive;
+    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha });
+  });
+}
+
+export function drawTowers(ctx: CanvasRenderingContext2D, tile: number, alpha = 1) {
+  for (const side of [0, 1] as Side[]) {
+    for (const t of towerPlacements(side)) drawSquad(ctx, t, TOWER_MAP.get(t.defId)!, side, tile, { alpha });
+  }
 }
 
 // ------------------------------------------------------------------- battle
@@ -200,6 +215,7 @@ interface LiveFx {
 }
 
 const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.18, burst: 0.3, text: 1.1, death: 0.5 };
+const BIG_TEXT_LIFE = 2.5;
 
 export class FxLayer {
   items: LiveFx[] = [];
@@ -207,7 +223,7 @@ export class FxLayer {
     for (const fx of battle.fx) {
       // keep reaction labels from piling up on top of each other
       if (fx.kind === "text" && this.items.some((i) => i.fx.kind === "text" && i.fx.text === fx.text && i.age < 0.3 && Math.hypot((i.fx as typeof fx).x - fx.x, (i.fx as typeof fx).y - fx.y) < 2)) continue;
-      this.items.push({ fx, age: 0, life: FX_LIFE[fx.kind] });
+      this.items.push({ fx, age: 0, life: fx.kind === "text" && fx.big ? BIG_TEXT_LIFE : FX_LIFE[fx.kind] });
     }
     battle.fx.length = 0;
   }
@@ -250,7 +266,7 @@ export class FxLayer {
           ctx.fill();
           break;
         case "text":
-          ctx.font = "bold 12px system-ui, sans-serif";
+          ctx.font = fx.big ? "bold 18px system-ui, sans-serif" : "bold 12px system-ui, sans-serif";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.lineWidth = 3;

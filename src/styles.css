@@ -768,3 +768,165 @@ code {
     flex: none;
   }
 }
+
+/* --------------------------------------------------------- unlocks etc */
+
+.shop-item.locked .shop-name {
+  color: var(--muted);
+}
+.shop-item.armed {
+  border-color: var(--accent);
+}
+.shop-item.armed .shop-cost {
+  color: var(--accent);
+  font-weight: 600;
+}
+.shop-cost.lock {
+  color: var(--muted);
+  font-size: 12px;
+}
+.enemy-unlocks .swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* -------------------------------------------------------- battle report */
+
+.squad-detail {
+  background: var(--panel-2);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.squad-detail h5 {
+  margin: 6px 0 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.stat-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.stat-tiles div {
+  background: #151b21;
+  border-radius: 6px;
+  padding: 5px 8px;
+  display: flex;
+  flex-direction: column;
+}
+.stat-tiles b {
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+}
+.stat-tiles span {
+  font-size: 11px;
+  color: var(--muted);
+}
+.stat-tiles .warn b {
+  color: #ff9f43;
+}
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bar-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 46px;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bar-track {
+  height: 8px;
+  background: #0f1317;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.bar-fill {
+  display: block;
+  height: 100%;
+}
+.bar-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.squad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.seg {
+  display: flex;
+  gap: 4px;
+}
+.seg button {
+  flex: 1;
+  font-size: 12px;
+}
+.squad-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.squad-row {
+  display: grid;
+  grid-template-columns: auto 1fr 80px;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border-color: transparent;
+  padding: 3px 6px;
+  text-align: left;
+  font-size: 12px;
+}
+.squad-row.active,
+.squad-row:hover {
+  background: var(--panel-2);
+}
+.mini-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mini-bar {
+  display: block;
+  height: 4px;
+  border-radius: 2px;
+  min-width: 1px;
+}
+.mini-bar.dealt,
+.dot.dealt {
+  background: var(--accent);
+}
+.mini-bar.taken,
+.dot.taken {
+  background: var(--red);
+}
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  margin-left: 6px;
+}
+.tower-cards { display: grid; gap: 8px; }

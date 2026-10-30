@@ -21,6 +21,7 @@ export class SurfaceGrid {
   readonly res: number;
   readonly type: Int8Array;
   readonly time: Float32Array;
+  readonly owner: Int16Array; // squad index credited for this cell's effects, -1 = none
   events: SurfaceEvent[] = [];
 
   constructor(fieldW: number, fieldH: number, res: number) {
@@ -29,6 +30,14 @@ export class SurfaceGrid {
     this.h = fieldH * res;
     this.type = new Int8Array(this.w * this.h).fill(-1);
     this.time = new Float32Array(this.w * this.h);
+    this.owner = new Int16Array(this.w * this.h).fill(-1);
+  }
+
+  ownerAt(x: number, y: number): number {
+    const cx = Math.floor(x * this.res);
+    const cy = Math.floor(y * this.res);
+    if (cx < 0 || cy < 0 || cx >= this.w || cy >= this.h) return -1;
+    return this.owner[cy * this.w + cx];
   }
 
   at(x: number, y: number): SurfaceId | null {
@@ -39,13 +48,15 @@ export class SurfaceGrid {
     return t < 0 ? null : IDS[t];
   }
 
-  private set(i: number, id: SurfaceId | null, duration?: number) {
+  private set(i: number, id: SurfaceId | null, duration?: number, owner?: number) {
     if (id === null) {
       this.type[i] = -1;
       this.time[i] = 0;
+      this.owner[i] = -1;
     } else {
       this.type[i] = IDS.indexOf(id);
       this.time[i] = duration ?? SURFACES[id].duration;
+      if (owner !== undefined) this.owner[i] = owner;
     }
   }
 
@@ -69,24 +80,24 @@ export class SurfaceGrid {
 
   // Place a surface. Where it lands on an existing surface that reacts with
   // its element (puddle onto fire, fire onto oil...), the reaction wins.
-  create(x: number, y: number, r: number, id: SurfaceId, duration?: number) {
+  create(x: number, y: number, r: number, id: SurfaceId, duration?: number, owner = -1) {
     const el = SURFACES[id].element;
     const seen = new Set<string>();
     for (const i of this.cellsInRadius(x, y, r)) {
       const cur = this.type[i];
       const reaction = cur >= 0 && el ? REACTIONS.get(`${IDS[cur]}|${el}`) : undefined;
       if (reaction) {
-        this.react(i, reaction);
+        this.react(i, reaction, owner);
         seen.add(reaction.name);
       } else {
-        this.set(i, id, duration);
+        this.set(i, id, duration, owner);
       }
     }
     for (const name of seen) this.events.push({ name, x, y });
   }
 
   // An element touching the ground (a fireball landing, a lightning strike).
-  element(x: number, y: number, r: number, el: Element) {
+  element(x: number, y: number, r: number, el: Element, owner = -1) {
     if (el === "physical") return;
     const seen = new Set<string>();
     for (const i of this.cellsInRadius(x, y, r)) {
@@ -94,16 +105,16 @@ export class SurfaceGrid {
       if (cur < 0) continue;
       const reaction = REACTIONS.get(`${IDS[cur]}|${el}`);
       if (reaction) {
-        this.react(i, reaction);
+        this.react(i, reaction, owner);
         seen.add(reaction.name);
       }
     }
     for (const name of seen) this.events.push({ name, x, y });
   }
 
-  private react(start: number, reaction: SurfaceReaction) {
+  private react(start: number, reaction: SurfaceReaction, owner: number) {
     if (!reaction.spread) {
-      this.set(start, reaction.becomes);
+      this.set(start, reaction.becomes, undefined, owner);
       return;
     }
     // Flood through connected cells of the same surface type.
@@ -113,7 +124,7 @@ export class SurfaceGrid {
     let count = 0;
     while (queue.length && count < SPREAD_CAP) {
       const i = queue.shift()!;
-      this.set(i, reaction.becomes);
+      this.set(i, reaction.becomes, undefined, owner);
       count++;
       const cx = i % this.w;
       const cy = (i / this.w) | 0;

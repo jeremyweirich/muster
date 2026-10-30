@@ -1,5 +1,7 @@
 import { ELEMENT_COLORS, STATUSES, SURFACES, SURFACE_REACTIONS, UNIT_REACTIONS } from "../data/elements";
 import { RULES } from "../data/rules";
+import { TOWER_DEFS } from "../data/towers";
+import { UnitInfo } from "./UnitInfo";
 import type { Element } from "../sim/types";
 import { describeEffect } from "./describe";
 
@@ -100,6 +102,19 @@ export function CodexView() {
         </section>
 
         <section>
+          <h3>Towers</h3>
+          <p className="muted small">
+            Each side has a Keep and a Sky Spire at the back of its zone. Towers don&apos;t count toward winning the round, but when one
+            falls its whole army is Dazed: 10% damage dealt, double damage taken, for 5 seconds.
+          </p>
+          <div className="tower-cards">
+            {TOWER_DEFS.map((d) => (
+              <UnitInfo key={d.id} def={d} />
+            ))}
+          </div>
+        </section>
+
+        <section>
           <h3>Statuses</h3>
           <table className="ref">
             <tbody>
@@ -118,6 +133,8 @@ export function CodexView() {
                       s.moveMult && `move ×${s.moveMult}`,
                       s.attackMult && `attack rate ×${s.attackMult}`,
                       s.dps && `${s.dps.amount} ${s.dps.element}/s`,
+                      s.damageDealtMult !== undefined && `deals ×${s.damageDealtMult}`,
+                      s.damageTakenMult !== undefined && `takes ×${s.damageTakenMult}`,
                     ]
                       .filter(Boolean)
                       .join(" · ")}

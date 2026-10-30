@@ -4,7 +4,8 @@ import type { UnitDef } from "../sim/types";
 
 // The unit roster lives in the browser while you iterate. Export it as JSON to
 // keep it (or commit it to src/data/units.ts).
-const KEY = "muster.roster.v1";
+// v2: footprints, unlock costs and the bigger dragon changed the defaults
+const KEY = "muster.roster.v2";
 
 function load(): UnitDef[] {
   try {

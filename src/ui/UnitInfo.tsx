@@ -1,5 +1,5 @@
 import { ELEMENT_COLORS } from "../data/elements";
-import type { UnitDef } from "../sim/types";
+import type { Element, UnitDef } from "../sim/types";
 import { derived, describeEffect, describeTrait } from "./describe";
 
 export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
@@ -15,6 +15,9 @@ export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
 
 export function UnitInfo({ def }: { def: UnitDef }) {
   const d = derived(def);
+  const entries = Object.entries(def.resist ?? {}) as [Element, number][];
+  const resists = entries.filter(([, v]) => v > 0);
+  const weaknesses = entries.filter(([, v]) => v < 0);
   const atk = def.attack;
   return (
     <div className="unit-info">
@@ -23,7 +26,8 @@ export function UnitInfo({ def }: { def: UnitDef }) {
         <div>
           <div className="unit-name">{def.name}</div>
           <div className="muted">
-            {def.cost} supply · {def.squadSize} × {def.layer}
+            {def.structure ? "tower" : `${def.cost} supply`} · {def.squadSize} × {def.layer}
+            {def.unlockCost ? ` · unlock ${def.unlockCost}` : ""}
           </div>
         </div>
       </div>
@@ -73,14 +77,25 @@ export function UnitInfo({ def }: { def: UnitDef }) {
             <dd className="muted">none</dd>
           </>
         )}
-        {def.resist && Object.keys(def.resist).length > 0 && (
+        {resists.length > 0 && (
           <>
-            <dt>Resist</dt>
+            <dt>Resists</dt>
             <dd>
-              {Object.entries(def.resist).map(([el, v]) => (
-                <span key={el} style={{ color: ELEMENT_COLORS[el as keyof typeof ELEMENT_COLORS], marginRight: 6 }}>
-                  {el} {v! > 0 ? "-" : "+"}
-                  {Math.abs(Math.round(v! * 100))}%
+              {resists.map(([el, v]) => (
+                <span key={el} style={{ color: ELEMENT_COLORS[el], marginRight: 6 }}>
+                  {el} {v >= 1 ? "(immune)" : `${Math.round(v * 100)}%`}
+                </span>
+              ))}
+            </dd>
+          </>
+        )}
+        {weaknesses.length > 0 && (
+          <>
+            <dt>Weak to</dt>
+            <dd>
+              {weaknesses.map(([el, v]) => (
+                <span key={el} style={{ color: ELEMENT_COLORS[el], marginRight: 6 }}>
+                  {el} (+{Math.round(-v * 100)}% taken)
                 </span>
               ))}
             </dd>
