@@ -8,7 +8,7 @@ export const RULES: Rules = {
   tick: 0.05,
   battleTimeLimit: 90,
   startHp: 400,
-  income: (round) => 200 + 100 * round,
+  income: (round) => (round === 1 ? 400 : 200 + 100 * round), // round 1 starts a little richer
   damagePerSupply: 0.08,
   damagePerSquad: 4,
   elementalFriendlyFire: true,

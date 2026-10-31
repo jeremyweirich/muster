@@ -10,7 +10,7 @@ import { Battle, footprintOf, type BattleResult } from "../sim/battle";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { upgradedDefs } from "../sim/upgrades";
 import { useRoster } from "../store/roster";
-import { SquadDetail, SquadList } from "./BattleReport";
+import { MEDAL_COLORS, MvpBoard, SquadDetail, SquadList, topSquads } from "./BattleReport";
 import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
 import { Swatch, UnitInfo } from "./UnitInfo";
@@ -64,6 +64,7 @@ export function PlayView() {
   const [actions, setActions] = useState<Action[]>([]);
   const [fightArmed, setFightArmed] = useState(false);
   const [portraitOk, setPortraitOk] = useState(false);
+  const [sideTab, setSideTab] = useState<"recruit" | "upgrades">("recruit");
   const battleRef = useRef<Battle | null>(null);
   const hover = useRef<{ x: number; y: number } | null>(null);
   const player = useBattlePlayer();
@@ -379,17 +380,26 @@ export function PlayView() {
     const focusStats = focus ? stats[focus] : undefined;
     const squads = reportSquads();
     const defOf = (sq: PlacedSquad, side: Side) => (sq.uid.startsWith("tower-") ? towerInfo(sq.uid, f.towerLevels) : f.defs[side].get(sq.defId));
+    const medals = new Map<string, number>();
+    for (const side of [0, 1] as Side[]) topSquads(f.result!, side).forEach((s, i) => medals.set(s.uid, i));
     for (const sq of squads) {
       const st = stats[sq.uid];
       const def = st && defOf(sq, st.side);
       if (!def || !st) continue;
       const isFocus = sq.uid === focus;
       const involved = focusStats && (focusStats.dealtTo[sq.uid] || focusStats.takenFrom[sq.uid]);
+      const medal = medals.get(sq.uid);
       drawSquad(ctx, sq, def, st.side, TILE, {
         alive: st.alive,
         alpha: focusStats && !isFocus && !involved ? 0.45 : undefined,
-        outline: isFocus ? "#ffffff" : st.alive === 0 ? "rgba(255,255,255,0.08)" : undefined,
-        fill: isFocus ? "rgba(255,255,255,0.08)" : undefined,
+        outline: isFocus
+          ? "#ffffff"
+          : medal !== undefined && !focusStats
+            ? MEDAL_COLORS[medal]
+            : st.alive === 0
+              ? "rgba(255,255,255,0.08)"
+              : undefined,
+        fill: isFocus ? "rgba(255,255,255,0.08)" : medal !== undefined && !focusStats ? "rgba(245,197,66,0.06)" : undefined,
       });
       if (st.alive === 0) {
         const r = squadRect(sq, def);
@@ -425,6 +435,32 @@ export function PlayView() {
         }
       }
     }
+    // MVP medals: the top three damage dealers on each side, with what they dealt
+    for (const sq of squads) {
+      const medal = medals.get(sq.uid);
+      const st = stats[sq.uid];
+      const def = st && defOf(sq, st.side);
+      if (medal === undefined || !def) continue;
+      const r = squadRect(sq, def);
+      const mx = (r.x + r.w) * TILE - 2;
+      const my = r.y * TILE + 2;
+      ctx.beginPath();
+      ctx.arc(mx, my, 9, 0, Math.PI * 2);
+      ctx.fillStyle = MEDAL_COLORS[medal];
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(10,14,18,0.9)";
+      ctx.stroke();
+      ctx.fillStyle = "#14110a";
+      ctx.font = "bold 11px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(medal + 1), mx, my + 0.5);
+      if (!focusStats) {
+        const below = (r.y + r.h) * TILE + 16;
+        pill(ctx, `${Math.round(st.dealt).toLocaleString()} dmg`, (r.x + r.w / 2) * TILE, below > RULES.fieldH * TILE - 2 ? r.y * TILE - 4 : below, MEDAL_COLORS[medal]);
+      }
+    }
   };
 
   const draw = (ctx: CanvasRenderingContext2D, dt: number, time: number) => {
@@ -448,16 +484,16 @@ export function PlayView() {
     }
     for (const sq of match.armies[1]) {
       const d = enemyDefs.get(sq.defId);
-      if (d) drawSquad(ctx, sq, d, 1, TILE, { alpha: 0.75 });
+      if (d) drawSquad(ctx, sq, d, 1, TILE, { alpha: 0.75, time });
     }
     for (const sq of myArmy) {
       const d = myDefs.get(sq.defId);
       if (!d) continue;
       if (sq.uid === held) {
-        drawSquad(ctx, sq, d, 0, TILE, { alpha: 0.25, outline: "#ffffff", dashed: true });
+        drawSquad(ctx, sq, d, 0, TILE, { alpha: 0.25, outline: "#ffffff", dashed: true, time });
         continue;
       }
-      drawSquad(ctx, sq, d, 0, TILE, { outline: isNew(sq) ? "rgba(140,220,140,0.8)" : "rgba(255,255,255,0.15)" });
+      drawSquad(ctx, sq, d, 0, TILE, { outline: isNew(sq) ? "rgba(140,220,140,0.8)" : "rgba(255,255,255,0.15)", time });
     }
     const h = hover.current;
     if (h && placingDef) {
@@ -466,7 +502,7 @@ export function PlayView() {
       const ok = canPlace(placingDef, x, y, 0, myArmy, defs, held ?? undefined, rot) && (held || placingDef.cost <= match.supply[0]);
       ctx.fillStyle = ok ? "rgba(120,230,120,0.18)" : "rgba(255,80,80,0.22)";
       ctx.fillRect(x * TILE, y * TILE, w * TILE, fh * TILE);
-      drawSquad(ctx, { uid: "ghost", defId: placingDef.id, x, y, rot, round: 0 }, placingDef, 0, TILE, { alpha: 0.55 });
+      drawSquad(ctx, { uid: "ghost", defId: placingDef.id, x, y, rot, round: 0 }, placingDef, 0, TILE, { alpha: 0.55, time });
       if (placingDef.attack) {
         ctx.strokeStyle = "rgba(255,255,255,0.25)";
         ctx.setLineDash([4, 4]);
@@ -484,6 +520,14 @@ export function PlayView() {
   const selectedDef = selected ? myDefs.get(selected) : undefined;
   const card = hoverInfo ?? (selectedDef ? { def: selectedDef, side: 0 as Side, fromShop: true } : null);
   const lastAction = actions[actions.length - 1];
+  // how many upgrades (unit or tower) the player can buy right now, shown on the Upgrades tab
+  const affordableUpgrades =
+    units.reduce((n, u) => {
+      if (!unlocked.has(u.id) || !u.upgrades?.length) return n;
+      const bought = match.upgrades[0][u.id] ?? [];
+      const price = upgradePrice(u, bought.length);
+      return price !== null && price <= match.supply[0] ? n + u.upgrades.filter((up) => !bought.includes(up.id)).length : n;
+    }, 0) + match.towerLevels[0].filter((l) => (towerUpgradePrice(l) ?? Infinity) <= match.supply[0]).length;
 
   const upgradeAction = (def: UnitDef) => (upId: string) => {
     if (card?.side !== 0 || !deploying || def.structure) return null;
@@ -561,6 +605,26 @@ export function PlayView() {
                 </div>
               </div>
             )}
+            <div className="side-tabs">
+              <button className={sideTab === "recruit" ? "active" : ""} onClick={() => setSideTab("recruit")}>
+                Recruit
+              </button>
+              <button className={sideTab === "upgrades" ? "active" : ""} onClick={() => setSideTab("upgrades")}>
+                Upgrades{affordableUpgrades > 0 && <span className="tab-badge">{affordableUpgrades}</span>}
+              </button>
+            </div>
+            {sideTab === "upgrades" && (
+              <>
+                <UpgradePanel
+                  units={units.filter((u) => unlocked.has(u.id) && u.upgrades?.length)}
+                  owned={match.upgrades[0]}
+                  supply={match.supply[0]}
+                  onBuy={buyUpgrade}
+                />
+                <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />
+              </>
+            )}
+            {sideTab === "recruit" && (
             <div className="recruit">
               <div className="shop-list">
                 {FACTIONS.map((f) => {
@@ -607,7 +671,7 @@ export function PlayView() {
                 {unitCard ?? <p className="muted small">Hover a unit to see what it does.</p>}
               </div>
             </div>
-            <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />
+            )}
             <div className="enemy-unlocks">
               <div className="muted small">Enemy has unlocked</div>
               <div className="swatches">
@@ -644,6 +708,9 @@ export function PlayView() {
             <p>
               You took <b>{report.damage[0]}</b> · Enemy took <b>{report.damage[1]}</b>
             </p>
+            {fought?.result && view === "report" && (
+              <MvpBoard result={fought.result} defs={defs} selected={pinned} onSelect={setPinned} onHover={setHoverSquad} />
+            )}
             {match.phase === "over" ? (
               <>
                 <h2>{match.hp[0] > 0 ? "You win the war!" : match.hp[1] > 0 ? "You have been defeated." : "Mutual ruin."}</h2>
@@ -730,6 +797,59 @@ async function goLandscape() {
   } catch {
     // not supported here; the player can still rotate by hand
   }
+}
+
+// Every unlocked unit with both of its upgrades as big buy buttons, so buying one is a single click.
+function UpgradePanel({
+  units,
+  owned,
+  supply,
+  onBuy,
+}: {
+  units: UnitDef[];
+  owned: Record<string, string[]>;
+  supply: number;
+  onBuy: (unitId: string, upgradeId: string) => void;
+}) {
+  if (!units.length) return <p className="muted small">Unlock units to upgrade them.</p>;
+  return (
+    <div className="upgrade-panel">
+      <p className="muted small">An upgrade changes every squad of that unit, including ones already placed. The first costs the unit's price, the second double.</p>
+      {units.map((u) => {
+        const bought = owned[u.id] ?? [];
+        const price = upgradePrice(u, bought.length);
+        return (
+          <div key={u.id} className="up-unit">
+            <div className="up-unit-head">
+              <Swatch def={u} size={18} />
+              <b>{u.name}</b>
+              {bought.length > 0 && <span className="pips">{"★".repeat(bought.length)}</span>}
+            </div>
+            <div className="up-buttons">
+              {u.upgrades!.map((up) => {
+                const has = bought.includes(up.id);
+                const canBuy = !has && price !== null && price <= supply;
+                return (
+                  <button
+                    key={up.id}
+                    className={`up-btn ${has ? "owned" : canBuy ? "can-buy" : ""}`}
+                    disabled={has || !canBuy}
+                    onClick={() => onBuy(u.id, up.id)}
+                  >
+                    <span className="up-btn-head">
+                      <span className="up-name">{up.name}</span>
+                      <span className="up-price">{has ? "★ Owned" : price === null ? "—" : `Buy · ${price}`}</span>
+                    </span>
+                    {up.description && <span className="up-desc">{up.description}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function TowerPanel({ levels, supply, onBuy }: { levels: [number[], number[]]; supply: number; onBuy: (i: number) => void }) {

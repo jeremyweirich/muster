@@ -90,6 +90,7 @@ export function describeUpgrade(u: UpgradeDef): string[] {
   if (u.targets) out.push(`hits ${u.targets.join(" + ")}`);
   if (u.targeting) out.push(u.targeting === "towers" ? "hunts towers first" : `targets ${u.targeting}`);
   for (const e of u.onHit ?? []) out.push(`on hit: ${describeEffect(e)}`);
+  if (u.onHitAffects) out.push(`on-hit statuses only land on ${u.onHitAffects === "all" ? "anyone" : u.onHitAffects}`);
   for (const t of u.traits ?? []) out.push((u.replaceTraits ? "becomes: " : "") + describeTrait(t));
   for (const [el, v] of Object.entries(u.resist ?? {})) out.push(`${v! > 0 ? "+" : "−"}${Math.abs(Math.round(v! * 100))}% ${el} resistance`);
   return out;

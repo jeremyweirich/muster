@@ -32,7 +32,7 @@ on.
 
 ```
 Round N
- ├─ Income: supply += 200 + 100·N (unspent supply carries over)
+ ├─ Income: supply += 200 + 100·N, except round 1 which starts at 400 (unspent supply carries over)
  ├─ Deployment (simultaneous, blind)
  │    ├─ see the enemy army as it stood last round, plus their unlocks, upgrades and tower levels
  │    ├─ unlock units (one-time cost per match)
@@ -157,7 +157,7 @@ bonuses come later (section 8).
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Fire Elemental | 250 | 100 | 1 (2×2) | 7 | 1100 | 145 fire / 2.5s, range 7, splash 2 | Splash, Ranged, Slow | **Scorched Earth**: Fireballs leave burning ground. Mind your own troops.<br>**Magma Core**: +50% HP, and it erupts when destroyed. |
+| Fire Elemental | 250 | 100 | 1 (2×2) | 7 | 1100 | 145 fire / 2.5s, range 7, splash 2 | Splash, Ranged, Slow | **Controlled Burn**: Its flames only catch on enemies, so it can fight right beside your army. +20% damage.<br>**Meteor**: Artillery: +4 range, +50% damage and a wider blast, but fires 30% slower. |
 | Water Elemental | 250 | 100 | 1 (2×2) | 6 | 1800 | 60 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles. |
 | Air Elemental | 200 | 100 | 2 (2×1, air) | 14 | 350 | 45 lightning / 2s, range 5, chain ×2 | Flier, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster. |
 | Wisps | 100 | 50 | 10 (3×2, air) | 16 | 45 | 12 lightning / 1.4s, range 2 | Swarm, Flier, Fast | **Kindling**: Each wisp bursts into flame when destroyed.<br>**Brighter Swarm**: +6 wisps per squad. |
@@ -233,13 +233,16 @@ whether unlock costs should scale with the round.
   - Goblins *Bigger Mob* (more bodies) or *Frenzy* (much faster)
   - Water Elemental *Glacial Heart* (freeze whoever hits it) or *Tidal Surge* (more damage and range, plus puddles)
   - Wolf Riders *Tower Raiders* (ignore the army and go for towers)
-- **Surfaces come from upgrades.** Scorched Earth, Inferno, Oil Slick and Tidal Surge are the only things that put
+- **Surfaces come from upgrades.** Inferno, Oil Slick and Tidal Surge are the only things that put
   surfaces on the field. Everything else uses statuses.
 - Data: an upgrade can apply stat mods (`value × mult + add` to hp, speed, size, spacing, squadSize, damage, cooldown,
-  range, splash or chainCount). It can replace the attack's element, targets or targeting; add on-hit effects; add or
+  range, splash or chainCount). It can replace the attack's element, targets or targeting; add on-hit effects; limit
+  who its on-hit statuses land on (`onHitAffects`, e.g. Controlled Burn: enemies only, so no friendly fire); add or
   replace traits; add resistances; and add tags. Upgraded units are computed per side, so each army fights with its own
   upgrades.
 - Bought upgrades show as ★ next to the unit in the shop. The enemy's upgrades are visible too.
+- **Buying:** the sidebar's Upgrades tab lists every unlocked unit with both upgrades as one-click buttons (name, price,
+  what it does), plus tower levels. The tab shows how many upgrades you can afford right now.
 
 ## 6. The elemental system — Decided (structure), Open (tables)
 
@@ -346,7 +349,7 @@ Because the AI only uses the simulator, it handles any unit you design without n
 | **Unit editor** | Every field, live, including the two upgrades; raw JSON view; copy/paste of the whole roster. Session-only |
 | **Sandbox** | Watch a unit fight another at equal supply, with or without its upgrades, or run 10 headless sims |
 | **Balance Lab** | Every unit against every unit at equal supply, in a Web Worker. One-unit-type armies undervalue combo units |
-| **Battle report** | After each battle the field resets to deployment positions. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
+| **Battle report** | After each battle the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
 | **Codex** | Elemental rules and towers |
 | `npm run matrix` | The lab's win-rate matrix in the terminal |
@@ -368,6 +371,9 @@ Because the AI only uses the simulator, it handles any unit you design without n
 - Element color marks *what* is being thrown: projectile cores and beam cores.
 - Size marks *how hard*: projectile radius and beam thickness scale with damage per hit.
 - Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
+- Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
+  wings; elemental fliers (Wisps, Air Elemental) and the Sky Spire glow instead.
+- Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.
 
 ## 11. Architecture — Decided
 

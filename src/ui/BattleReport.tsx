@@ -81,6 +81,61 @@ export function SquadDetail({ stats, def }: { stats: SquadStats; def?: UnitDef }
   );
 }
 
+export const MEDAL_COLORS = ["#f5c542", "#c9d1d9", "#cd7f32"] as const;
+
+// The top squads on one side by damage dealt (towers excluded), best first.
+export function topSquads(result: BattleResult, side: Side, n = 3): SquadStats[] {
+  return Object.values(result.stats)
+    .filter((s) => s.side === side && !s.structure && s.dealt >= 1)
+    .sort((a, b) => b.dealt - a.dealt)
+    .slice(0, n);
+}
+
+// At-a-glance impact: the three biggest damage dealers on each side.
+export function MvpBoard({
+  result,
+  defs,
+  selected,
+  onSelect,
+  onHover,
+}: {
+  result: BattleResult;
+  defs: Map<string, UnitDef>;
+  selected: string | null;
+  onSelect: (uid: string | null) => void;
+  onHover: (uid: string | null) => void;
+}) {
+  return (
+    <div className="mvp-board">
+      {([0, 1] as Side[]).map((side) => (
+        <div key={side} className={`mvp-col mvp-${side}`}>
+          <div className="mvp-head">{side === 0 ? "Your MVPs" : "Enemy MVPs"}</div>
+          {topSquads(result, side).map((s, i) => {
+            const def = defs.get(s.defId);
+            return (
+              <button
+                key={s.uid}
+                className={`mvp-row ${selected === s.uid ? "active" : ""}`}
+                onClick={() => onSelect(selected === s.uid ? null : s.uid)}
+                onMouseEnter={() => onHover(s.uid)}
+                onMouseLeave={() => onHover(null)}
+              >
+                <span className="medal" style={{ background: MEDAL_COLORS[i] }}>
+                  {i + 1}
+                </span>
+                {def && <Swatch def={def} size={16} />}
+                <span className="mvp-name">{s.name}</span>
+                <span className="mvp-dmg">{fmt(s.dealt)}</span>
+              </button>
+            );
+          })}
+          {topSquads(result, side).length === 0 && <span className="muted small">No damage dealt.</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function SquadList({
   result,
   defs,

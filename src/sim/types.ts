@@ -105,6 +105,7 @@ export interface UpgradeDef {
   targets?: Layer[]; // replaces what the attack can hit
   targeting?: Targeting; // replaces the attack's targeting
   onHit?: Effect[]; // appended to the attack's on-hit effects
+  onHitAffects?: "enemies" | "allies" | "all"; // who the attack's on-hit statuses can land on (enemies = no friendly fire)
   traits?: TraitDef[]; // appended (or replace existing ones with replaceTraits)
   replaceTraits?: boolean;
   resist?: Partial<Record<Element, number>>; // added to existing resistances

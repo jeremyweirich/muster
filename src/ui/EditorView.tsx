@@ -784,6 +784,17 @@ function UpgradeEditor({ up, onChange, onRemove }: { up: UpgradeDef; onChange: (
           </button>
         </div>
       ))}
+      <Row label="On-hit statuses hit" hint="Restrict who the attack's on-hit statuses land on. Enemies = no friendly fire">
+        <select
+          value={up.onHitAffects ?? ""}
+          onChange={(e) => onChange({ ...up, onHitAffects: (e.target.value || undefined) as UpgradeDef["onHitAffects"] })}
+        >
+          <option value="">unchanged</option>
+          <option value="enemies">enemies</option>
+          <option value="allies">allies</option>
+          <option value="all">all</option>
+        </select>
+      </Row>
       <Row label="Attack element">
         <select value={up.element ?? ""} onChange={(e) => onChange({ ...up, element: (e.target.value || undefined) as Element | undefined })}>
           <option value="">unchanged</option>

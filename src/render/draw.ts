@@ -174,7 +174,55 @@ function shapePath(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: nu
 // How big an icon fits inside each token shape, as a multiple of the token radius.
 const ICON_FIT: Record<Shape, number> = { circle: 1.5, square: 1.5, hex: 1.45, diamond: 1.15, triangle: 1.05 };
 
+// Two flapping wings, perpendicular to the facing, drawn behind a winged flier's token.
+function drawWings(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, facing: number, color: string, side: Side, time: number, phase: number) {
+  const flap = 0.5 + 0.5 * Math.sin(time * 9 + phase); // 0 = folded in, 1 = spread
+  const fx = Math.cos(facing);
+  const fy = Math.sin(facing);
+  for (const s of [-1, 1]) {
+    const ox = -fy * s; // outward, perpendicular to facing
+    const oy = fx * s;
+    const reach = r * (1.05 + 0.75 * flap);
+    const at = (out: number, fwd: number) => [px + ox * out + fx * fwd, py + oy * out + fy * fwd] as const;
+    const [ax, ay] = at(r * 0.55, r * 0.35);
+    const [cx, cy] = at(r * 1.3, r * 0.75);
+    const [tx, ty] = at(reach, -r * 0.35);
+    const [bx, by] = at(r * 0.55, -r * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.quadraticCurveTo(cx, cy, tx, ty);
+    ctx.lineTo(bx, by);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fill();
+    ctx.strokeStyle = SIDE_COLORS[side];
+    ctx.lineWidth = Math.max(1, r * 0.1);
+    ctx.stroke();
+  }
+}
+
+// A soft, flickering halo for elemental fliers (wisps, air elementals).
+function drawGlow(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, color: string, time: number, phase: number) {
+  const pulse = 0.75 + 0.25 * Math.sin(time * 7 + phase);
+  const g = ctx.createRadialGradient(px, py, r * 0.4, px, py, r * 2.6);
+  g.addColorStop(0, hexAlpha(color, 0.55 * pulse));
+  g.addColorStop(1, hexAlpha(color, 0));
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(px, py, r * 2.6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function hexAlpha(hex: string, a: number): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
 export interface UnitDrawOpts {
+  time?: number; // seconds, for idle animation (wings, bobbing, glow)
+  phase?: number; // per-model offset so a squad doesn't move in lockstep
   alpha?: number;
   facing?: number;
   hpFrac?: number;
@@ -185,14 +233,23 @@ export interface UnitDrawOpts {
 export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side, x: number, y: number, tile: number, o: UnitDrawOpts = {}) {
   const r = Math.max(2.5, def.size * tile);
   const px = x * tile;
-  const py = y * tile;
+  const gy = y * tile; // ground position
   const facing = o.facing ?? (side === 0 ? -Math.PI / 2 : Math.PI / 2);
+  const time = o.time ?? 0;
+  const phase = o.phase ?? 0;
+  const air = def.layer === "air";
+  // fliers hover above their ground position and bob gently
+  const lift = air ? Math.max(5, r * 0.9) + Math.sin(time * 2.4 + phase) * r * 0.14 : 0;
+  const py = gy - lift;
   ctx.globalAlpha = o.alpha ?? 1;
-  if (def.layer === "air") {
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+  if (air) {
+    // shadow on the ground, where the flier really is; fainter the higher it hovers
+    ctx.fillStyle = `rgba(0,0,0,${0.32 - Math.min(0.12, lift / 120)})`;
     ctx.beginPath();
-    ctx.ellipse(px + r * 0.4, py + r * 0.9, r * 0.9, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(px + lift * 0.25, gy + r * 0.25, r * 0.8, r * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (def.structure || def.tags.includes("race:elemental")) drawGlow(ctx, px, py, r, def.look.color, time, phase);
+    else drawWings(ctx, px, py, r, facing, def.look.color, side, time, phase);
   } else if (r >= 4) {
     // contact shadow so ground units sit on the grass
     ctx.fillStyle = "rgba(0,0,0,0.28)";
@@ -267,7 +324,7 @@ export function drawSquad(
   def: UnitDef,
   side: Side,
   tile: number,
-  o: { alpha?: number; outline?: string; dashed?: boolean; alive?: number; fill?: string } = {},
+  o: { alpha?: number; outline?: string; dashed?: boolean; alive?: number; fill?: string; time?: number } = {},
 ) {
   const { w, h } = footprintOf(def, sq.rot);
   if (o.fill) {
@@ -283,7 +340,7 @@ export function drawSquad(
   }
   formation(def, sq.x, sq.y, sq.rot).forEach(([x, y], i) => {
     const dead = o.alive !== undefined && i >= o.alive;
-    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha });
+    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3 });
   });
 }
 
@@ -421,6 +478,8 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
       hpFrac: m.hp / m.maxHp,
       flash: m.flash > 0,
       statuses: m.statuses,
+      time: realTime,
+      phase: m.id * 1.618,
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);

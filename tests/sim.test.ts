@@ -158,6 +158,23 @@ describe("towers", () => {
   });
 });
 
+describe("fire elemental upgrades", () => {
+  it("Controlled Burn stops its flames from burning allies", () => {
+    const friendly = (ups: string[]) => {
+      let total = 0;
+      for (let s = 0; s < 4; s++) {
+        const a = army(0, ["fire_elemental", "knights", "knights"], s);
+        const b = army(1, ["troll", "troll", "goblin_horde"], s);
+        const r = new Battle([upgradedDefs(defs, { fire_elemental: ups }), defs], [a, b], { seed: s, towers: false }).run();
+        total += Object.values(r.stats).reduce((t, st) => t + (st.side === 0 && st.defId === "fire_elemental" ? st.friendly : 0), 0);
+      }
+      return total;
+    };
+    expect(friendly([])).toBeGreaterThan(0);
+    expect(friendly(["controlled_burn"])).toBe(0);
+  });
+});
+
 describe("targeting and self-destruct", () => {
   it("sappers die after their first blast", () => {
     const b = new Battle(defs, [army(0, ["goblin_sappers"]), army(1, ["knights"])], { seed: 1, towers: false });
@@ -227,12 +244,15 @@ describe("battle report stats", () => {
 
 describe("upgrades", () => {
   it("apply stat mods, effects and traits", () => {
-    const fire = byId("fire_elemental");
-    const up = applyUpgrades(fire, ["scorched_earth", "magma_core"]);
-    expect(up.hp).toBe(Math.round(fire.hp * 1.5));
+    const dragon = byId("dragon");
+    const up = applyUpgrades(dragon, ["inferno", "ancient_scales"]);
+    expect(up.hp).toBe(Math.round(dragon.hp * 1.4));
     expect(up.attack!.onHit!.some((e) => e.type === "surface" && e.surface === "fire")).toBe(true);
-    expect(up.traits!.some((t) => t.type === "onDeath")).toBe(true);
-    expect(fire.attack!.onHit!.some((e) => e.type === "surface")).toBe(false); // base def untouched
+    expect(dragon.attack!.onHit!.some((e) => e.type === "surface")).toBe(false); // base def untouched
+    expect(applyUpgrades(byId("wisps"), ["kindling"]).traits!.some((t) => t.type === "onDeath")).toBe(true);
+    const fire = applyUpgrades(byId("fire_elemental"), ["controlled_burn", "meteor"]);
+    expect(fire.attack!.onHit!.every((e) => e.type !== "status" || e.affects === "enemies")).toBe(true);
+    expect(fire.attack!.range).toBe(byId("fire_elemental").attack!.range + 4);
   });
 
   it("first upgrade costs the unit price, the second double", () => {
