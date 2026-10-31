@@ -68,7 +68,7 @@ export function Checks<T extends string>({ value, options, onChange }: { value: 
 
 const STATUS_IDS = Object.keys(STATUSES) as (keyof typeof STATUSES)[];
 const SURFACE_IDS = Object.keys(SURFACES) as (keyof typeof SURFACES)[];
-const EFFECT_TYPES = ["damage", "status", "surface", "heal"] as const;
+const EFFECT_TYPES = ["damage", "status", "surface", "heal", "cleanse"] as const;
 
 export function defaultEffect(type: Effect["type"]): Effect {
   switch (type) {
@@ -80,6 +80,8 @@ export function defaultEffect(type: Effect["type"]): Effect {
       return { type, surface: "puddle", radius: 1.5 };
     case "heal":
       return { type, amount: 30, radius: 2 };
+    case "cleanse":
+      return { type, radius: 3 };
   }
 }
 

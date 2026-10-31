@@ -81,6 +81,7 @@ interface Attr {
   squad: number; // -1 = nobody
   label: string; // as seen by the victim ("Fire Mage", "Burning", "Electrified Water")
   mech: string; // as seen by the dealer ("Attack", "Burning", ...)
+  model?: number; // the attacking model, when it was an attack (for onKill traits)
 }
 
 interface Source {
@@ -622,7 +623,7 @@ export class Battle {
     const atk = src.def.attack;
     if (!atk) return;
     const dmg = atk.damage * scale * src.dmgMult;
-    const attr = this.attrFor(src.squad, "Attack");
+    const attr: Attr = { ...this.attrFor(src.squad, "Attack"), model: src.model };
     if (atk.splash) {
       this.emit({ kind: "burst", x, y, r: atk.splash, color: ELEMENT_COLORS[atk.element] });
       for (const m of this.inRadius(x, y, atk.splash, layer)) {
@@ -668,6 +669,22 @@ export class Battle {
         }
         if (attr.squad >= 0) this.squads[attr.squad].stats.healed += healed;
         if (healed > 0) this.emit({ kind: "heal", x, y, r: e.radius });
+        break;
+      }
+      case "cleanse": {
+        let any = false;
+        for (const layerOf of ["ground", "air"] as Layer[]) {
+          for (const m of this.inRadius(x, y, e.radius, layerOf)) {
+            if (side !== null && m.side !== side) continue;
+            for (const id of STATUS_IDS) {
+              if (m.statuses[id] === undefined) continue;
+              delete m.statuses[id];
+              delete m.statusOwner[id];
+              any = true;
+            }
+          }
+        }
+        if (any) this.emit({ kind: "heal", x, y, r: e.radius });
         break;
       }
     }
@@ -785,6 +802,17 @@ export class Battle {
     if (m.hp <= 0) {
       if (dealer) friendly ? dealer.stats.teamKills++ : dealer.stats.kills++;
       this.die(m);
+      if (!friendly && attr.model !== undefined) this.onKill(attr.model);
+    }
+  }
+
+  private onKill(killerId: number) {
+    const k = this.byId.get(killerId);
+    if (!k || !k.alive || !k.def.traits) return;
+    for (const t of k.def.traits) {
+      if (t.type !== "onKill") continue;
+      if (t.recharge && !k.charged) k.charged = k.def.traits.some((c) => c.type === "charge");
+      for (const e of t.effects) this.applyEffect(e, k.x, k.y, k.def.layer, k.side, k, this.attrFor(k.squad, "On kill"));
     }
   }
 

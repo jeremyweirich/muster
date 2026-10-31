@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, canPlace, defMap, priceOf, upgradePrice } from "../src/game/army";
+import { chooseOpening, newMatch, openingPool, unlockDiscounts } from "../src/game/match";
+import { ROLES } from "../src/data/roles";
 import { applyUpgrades, upgradedDefs } from "../src/sim/upgrades";
 import { towerPlacements } from "../src/data/towers";
 import { deployZone, RULES } from "../src/data/rules";
@@ -238,6 +240,17 @@ describe("rotation and unlocks", () => {
 });
 
 describe("battle report stats", () => {
+  it("lightning sparks oiled targets", () => {
+    const b = new Battle(defs, [army(0, ["air_elemental"]), army(1, ["knights"])], { seed: 1, towers: false });
+    for (const m of b.models) if (m.side === 1) m.statuses.oiled = 60;
+    let lit = false;
+    for (let i = 0; i < 400 && !b.over && !lit; i++) {
+      b.step();
+      lit = b.models.some((m) => m.side === 1 && m.statuses.burning !== undefined);
+    }
+    expect(lit).toBe(true);
+  });
+
   it("credits reactions and tracks friendly fire", () => {
     const a = army(0, ["water_elemental", "air_elemental", "air_elemental", "knights"]);
     const b = army(1, ["knights", "knights", "goblin_horde"]);
@@ -265,11 +278,61 @@ describe("upgrades", () => {
     expect(fire.attack!.range).toBe(byId("fire_elemental").attack!.range + 4);
   });
 
-  it("first upgrade costs the unit price, the second double", () => {
-    const g = byId("goblin_horde");
-    expect(upgradePrice(g, 0)).toBe(g.cost);
-    expect(upgradePrice(g, 1)).toBe(g.cost * 2);
-    expect(upgradePrice(g, 2)).toBeNull();
+  it("cost 200 / 400 / 600 / 800 in buy order, whatever the unit", () => {
+    for (const id of ["goblin_horde", "dragon"]) {
+      const u = byId(id);
+      expect([0, 1, 2, 3].map((n) => upgradePrice(u, n))).toEqual([200, 400, 600, 800]);
+      expect(upgradePrice(u, 4)).toBeNull();
+    }
+  });
+
+  it("every unit has four described upgrades and the required tags", () => {
+    for (const u of DEFAULT_UNITS) {
+      expect(u.upgrades?.length, u.id).toBe(4);
+      expect(new Set(u.upgrades!.map((x) => x.id)).size, u.id).toBe(4);
+      for (const up of u.upgrades!) expect(up.description, `${u.id}.${up.id}`).toBeTruthy();
+      for (const cat of ["faction:", "race:", "size:"]) expect(u.tags.some((t) => t.startsWith(cat)), `${u.id} ${cat}`).toBe(true);
+      const roles = u.tags.filter((t) => t.startsWith("role:"));
+      expect(roles.length, u.id).toBeGreaterThanOrEqual(2);
+      for (const r of roles) expect(ROLES[r.slice(5)], `${u.id} ${r}`).toBeDefined();
+    }
+  });
+
+  it("the ballista has no splash, even fully upgraded", () => {
+    const b = byId("ballista");
+    expect(applyUpgrades(b, b.upgrades!.map((u) => u.id)).attack!.splash).toBeUndefined();
+  });
+
+  it("upgrades can add bonus damage, preferred targets and immunities", () => {
+    const w = applyUpgrades(byId("wolf_riders"), ["flankers"]);
+    expect(w.attack!.prefers).toBeDefined();
+    expect(w.attack!.bonusVs!.length).toBe(1);
+    const k = applyUpgrades(byId("knights"), ["warded_plate"]);
+    expect(k.resist!.fire).toBeCloseTo(0.4);
+  });
+
+  it("Bloodthirst re-arms the wolves' charge after a kill", () => {
+    const wolves = applyUpgrades(byId("wolf_riders"), ["bloodthirst"]);
+    const b = new Battle([new Map(defs).set("wolf_riders", wolves), defs], [army(0, ["wolf_riders"]), army(1, ["longbowmen", "longbowmen"])], { seed: 1, towers: false });
+    let recharged = false;
+    let sawKill = false;
+    while (!b.over && b.time < 30) {
+      const before = b.models.filter((m) => m.side === 1 && m.alive).length;
+      b.step();
+      const after = b.models.filter((m) => m.side === 1 && m.alive).length;
+      if (after < before) sawKill = true;
+      if (sawKill && b.models.some((m) => m.def.id === "wolf_riders" && m.alive && m.charged)) recharged = true;
+    }
+    expect(recharged).toBe(true);
+  });
+
+  it("Purify washes statuses off allies", () => {
+    const cleric = applyUpgrades(byId("cleric"), ["purify"]);
+    const b = new Battle([new Map(defs).set("cleric", cleric), defs], [army(0, ["cleric", "knights"]), army(1, ["knights"])], { towers: false });
+    const k = b.models.find((m) => m.side === 0 && m.def.id === "knights")!;
+    k.statuses.wet = 30;
+    for (let i = 0; i < 80; i++) b.step();
+    expect(k.statuses.wet).toBeUndefined();
   });
 
   it("each side fights with its own upgrades", () => {
@@ -301,6 +364,24 @@ describe("upgrades", () => {
     const b2 = new Battle(defs, [army(0, ["knights"]), army(1, ["knights"])], { towerLevels: [[2, 0], [0, 0]] });
     const keep = (b: Battle) => b.models.find((m) => m.squadUid === "tower-0-0")!.maxHp;
     expect(keep(b2) - keep(b0)).toBe(600);
+  });
+});
+
+describe("match opening", () => {
+  it("offers a random unit with a real unlock, or bonus supply", () => {
+    const pool = openingPool(DEFAULT_UNITS).map((u) => u.id);
+    for (let seed = 1; seed < 20; seed++) {
+      const m = newMatch(DEFAULT_UNITS, seed);
+      expect(pool).toContain(m.openings[0].unitId);
+      expect(m.openings[0].choice).toBeNull();
+      expect(m.openings[1].choice).not.toBeNull(); // the AI picks at once
+      const bonus = chooseOpening(m, 0, "bonus");
+      expect(bonus.supply[0]).toBe(m.supply[0] + RULES.openingBonus);
+      expect(chooseOpening(bonus, 0, "discount")).toBe(bonus); // one choice only
+      const disc = chooseOpening(m, 0, "discount");
+      const unit = byId(m.openings[0].unitId!);
+      expect(priceOf(unit, new Set(), unlockDiscounts(disc, 0))).toBe(unit.cost + (unit.unlockCost ?? 0) - RULES.openingDiscount);
+    }
   });
 });
 

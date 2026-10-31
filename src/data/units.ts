@@ -4,8 +4,12 @@ import type { UnitDef } from "../sim/types";
 // export them as JSON and paste here (or into a roster file) to make them stick.
 //
 // Speed is in points: tiles per second = speed × RULES.speedScale (0.2), so 10 = 2 tiles/s.
-// Upgrades: the first one bought for a unit costs its upgradeCost (default: unit cost),
-// the second costs double (RULES.upgradeCostMult).
+// Upgrades: every unit has four. They cost RULES.upgradeCosts (200 / 400 / 600 / 800) in the
+// order they're bought, whatever the unit, so each one makes the unit more of a specialist.
+// Roughly: two set the unit's main paths, one deepens a path, one opens a new direction,
+// and pairs are meant to multiply each other.
+const BACKLINE = ["class:ranged", "class:caster", "class:siege"];
+
 export const DEFAULT_UNITS: UnitDef[] = [
   // ------------------------------------------------------------ Greenskins
   {
@@ -26,8 +30,20 @@ export const DEFAULT_UNITS: UnitDef[] = [
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
-      { id: "frenzy", name: "Frenzy", description: "Run 30% faster and stab 40% faster.", mods: [{ stat: "speed", mult: 1.3 }, { stat: "cooldown", mult: 0.6 }] },
+      { id: "frenzy", name: "Frenzy", description: "Run 30% faster and stab 40% faster.", mods: [{ stat: "speed", mult: 1.3 }, { stat: "cooldown", mult: 0.7 }] },
       { id: "mob", name: "Bigger Mob", description: "+8 goblins per squad: more bodies to soak the hits, more knives in the fight.", mods: [{ stat: "squadSize", add: 8 }] },
+      {
+        id: "war_drums",
+        name: "War Drums",
+        description: "Every goblin near a horde attacks 25% faster, wolves and bats included. Stacks with Frenzy.",
+        traits: [{ type: "aura", radius: 3, selector: { side: "ally", hasTag: "race:goblin" }, attackSpeed: 1.25 }],
+      },
+      {
+        id: "scrap_armor",
+        name: "Scrap Armor",
+        description: "Pots and planks: +15 HP, so a goblin lives through one arrow. 15% slower.",
+        mods: [{ stat: "hp", add: 15 }, { stat: "speed", mult: 0.85 }],
+      },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:swarm", "role:fast", "role:melee", "role:glass"],
     look: { shape: "triangle", color: "#7bbf3a", icon: "dagger" },
@@ -58,6 +74,19 @@ export const DEFAULT_UNITS: UnitDef[] = [
         targeting: "towers",
         mods: [{ stat: "speed", mult: 1.15 }],
       },
+      {
+        id: "flankers",
+        name: "Flankers",
+        description: "Circle the line and run down archers, casters and siege first, with ×1.5 damage to them.",
+        prefers: { hasAnyTag: BACKLINE },
+        bonusVs: [{ selector: { hasAnyTag: BACKLINE }, mult: 1.5 }],
+      },
+      {
+        id: "bloodthirst",
+        name: "Bloodthirst",
+        description: "Every kill readies another ×3 charge bite. Deadly with Flankers against soft targets.",
+        traits: [{ type: "onKill", effects: [], recharge: true }],
+      },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:fast", "role:raider", "role:melee"],
     look: { shape: "circle", color: "#a8743a", icon: "paw" },
@@ -65,7 +94,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "goblin_alchemist",
     name: "Goblin Alchemist",
-    description: "Hurls flasks of oil. Oiled enemies are slowed and burn hard when fire touches them.",
+    description: "Hurls flasks of oil. Oiled enemies are slowed, and fire or lightning sets them ablaze.",
     cost: 100,
     unlockCost: 50,
     squadSize: 3,
@@ -80,8 +109,20 @@ export const DEFAULT_UNITS: UnitDef[] = [
       onHit: [{ type: "status", status: "oiled", radius: 1.2 }],
     },
     upgrades: [
-      { id: "oil_slick", name: "Oil Slick", description: "Flasks leave oil on the ground. It slows, and fire races through it.", onHit: [{ type: "surface", surface: "oil", radius: 1.5 }] },
+      { id: "oil_slick", name: "Oil Slick", description: "Flasks leave oil on the ground. It slows, and fire or lightning sets it all ablaze.", onHit: [{ type: "surface", surface: "oil", radius: 1.5 }] },
       { id: "firebombs", name: "Firebombs", description: "Flasks burst into flame: fire damage ×2, igniting oiled targets.", element: "fire", mods: [{ stat: "damage", mult: 2 }] },
+      {
+        id: "acid",
+        name: "Acid Flasks",
+        description: "×2.5 damage to sturdy units: knights, ogres, trolls, golems. Stacks with Firebombs.",
+        bonusVs: [{ selector: { hasTag: "role:sturdy" }, mult: 2.5 }],
+      },
+      {
+        id: "mad_batch",
+        name: "Mad Batch",
+        description: "Brews faster: throws 40% faster, and flasks splash wider.",
+        mods: [{ stat: "cooldown", mult: 0.7 }, { stat: "splash", add: 0.5 }],
+      },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:caster", "size:small", "role:combo", "role:ranged"],
     look: { shape: "circle", color: "#b08d4f", icon: "flask" },
@@ -99,7 +140,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 16,
     size: 0.24,
     attack: {
-      damage: 140, element: "fire", cooldown: 1, range: 0.3,
+      damage: 125, element: "fire", cooldown: 1, range: 0.3,
       targets: ["ground"], targeting: "nearest", delivery: "instant", splash: 1.4, selfDestruct: true,
     },
     upgrades: [
@@ -110,6 +151,18 @@ export const DEFAULT_UNITS: UnitDef[] = [
         traits: [{ type: "onDeath", effects: [{ type: "damage", amount: 100, element: "fire", radius: 1.4 }] }],
       },
       { id: "big_kegs", name: "Big Kegs", description: "+50% blast damage and a wider blast.", mods: [{ stat: "damage", mult: 1.5 }, { stat: "splash", add: 0.6 }] },
+      {
+        id: "thunder_kegs",
+        name: "Thunder Kegs",
+        description: "Survivors of a blast are Dazed for 2s: they deal 10% damage and take double.",
+        onHit: [{ type: "status", status: "dazed", duration: 2, radius: 1.6, affects: "enemies" }],
+      },
+      {
+        id: "napalm",
+        name: "Napalm",
+        description: "Blasts leave burning ground. It burns whoever walks in, your own troops too.",
+        onHit: [{ type: "surface", surface: "fire", radius: 1.6 }],
+      },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:splash", "role:fast", "role:glass"],
     look: { shape: "circle", color: "#d0602e", icon: "bomb" },
@@ -123,14 +176,14 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 4,
     footprint: { w: 2, h: 2 },
     layer: "air",
-    hp: 240,
+    hp: 220,
     speed: 20,
     size: 0.4,
     attack: {
       damage: 45, element: "physical", cooldown: 1, range: 0.6,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
-      prefers: { hasAnyTag: ["class:ranged", "class:caster", "class:siege"] },
-      bonusVs: [{ selector: { hasAnyTag: ["class:ranged", "class:caster", "class:siege"] }, mult: 2 }],
+      prefers: { hasAnyTag: BACKLINE },
+      bonusVs: [{ selector: { hasAnyTag: BACKLINE }, mult: 2 }],
     },
     upgrades: [
       {
@@ -140,6 +193,18 @@ export const DEFAULT_UNITS: UnitDef[] = [
         onHit: [{ type: "status", status: "dazed", duration: 2 }],
       },
       { id: "colony", name: "Colony", description: "+2 bats per squad.", mods: [{ stat: "squadSize", add: 2 }] },
+      {
+        id: "torch_riders",
+        name: "Torch Riders",
+        description: "Riders drop torches: every hit sets the target Burning, and Ignites oiled ones.",
+        onHit: [{ type: "status", status: "burning" }],
+      },
+      {
+        id: "bloodsuckers",
+        name: "Bloodsuckers",
+        description: "The bats feed as they fight: regenerate 15 HP/s.",
+        traits: [{ type: "regen", perSecond: 15 }],
+      },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:raider"],
     look: { shape: "diamond", color: "#8a6aa0", icon: "bat" },
@@ -164,12 +229,25 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "thick_skull", name: "Thick Skull", description: "+40% HP and no more fire weakness.", mods: [{ stat: "hp", mult: 1.4 }], resist: { fire: 0.35 } },
       { id: "rampage", name: "Rampage", description: "Swings 50% faster and moves 30% faster.", mods: [{ stat: "cooldown", mult: 0.65 }, { stat: "speed", mult: 1.3 }] },
+      {
+        id: "wrecking_swing",
+        name: "Wrecking Swing",
+        description: "A wider swing: +0.8 splash radius and +20% damage. Swarms melt.",
+        mods: [{ stat: "splash", add: 0.8 }, { stat: "damage", mult: 1.2 }],
+      },
+      {
+        id: "warboss",
+        name: "Warboss",
+        description: "Goblins near the ogre fight harder: +25% damage. Hordes one-stab other goblins.",
+        traits: [{ type: "aura", radius: 3.5, selector: { side: "ally", hasTag: "race:goblin" }, damage: 1.25 }],
+      },
     ],
     tags: ["faction:greenskin", "race:ogre", "class:infantry", "size:large", "role:sturdy", "role:splash", "role:slow", "role:melee"],
     look: { shape: "square", color: "#8f7a4f", icon: "club" },
   },
 
   // --------------------------------------------------------------- Kingdom
+  // The most straightforward faction: solid baselines and upgrades that do one clear thing.
   {
     id: "knights",
     name: "Knights",
@@ -179,17 +257,24 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 4,
     footprint: { w: 4, h: 1 },
     layer: "ground",
-    hp: 700,
+    hp: 760,
     speed: 10,
     size: 0.42,
     resist: { physical: 0.3 },
     attack: {
-      damage: 55, element: "physical", cooldown: 1, range: 0.6,
+      damage: 60, element: "physical", cooldown: 1, range: 0.6,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
       { id: "shield_wall", name: "Shield Wall", description: "+25% HP and +20% physical resistance.", mods: [{ stat: "hp", mult: 1.25 }], resist: { physical: 0.2 } },
       { id: "lance_charge", name: "Lance Charge", description: "30% faster, and the first strike deals ×4 damage.", mods: [{ stat: "speed", mult: 1.3 }], traits: [{ type: "charge", mult: 4 }] },
+      {
+        id: "warded_plate",
+        name: "Warded Plate",
+        description: "+40% resistance to fire, frost, lightning and water. The answer to elementals.",
+        resist: { fire: 0.4, frost: 0.4, lightning: 0.4, water: 0.4 },
+      },
+      { id: "veterans", name: "Veterans", description: "+50% damage. With Lance Charge, the opening strike is brutal.", mods: [{ stat: "damage", mult: 1.5 }] },
     ],
     tags: ["faction:kingdom", "race:human", "class:infantry", "size:medium", "role:sturdy", "role:melee"],
     look: { shape: "square", color: "#c0c8d8", icon: "shield" },
@@ -207,12 +292,14 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 8,
     size: 0.28,
     attack: {
-      damage: 20, element: "physical", cooldown: 1.5, range: 8,
+      damage: 22, element: "physical", cooldown: 1.5, range: 8,
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
     upgrades: [
       { id: "longshot", name: "Longshot", description: "+3 range.", mods: [{ stat: "range", add: 3 }] },
       { id: "fire_arrows", name: "Fire Arrows", description: "Arrows burn: fire damage +25%, ignites oiled targets, melts ice.", element: "fire", mods: [{ stat: "damage", mult: 1.25 }] },
+      { id: "volley", name: "Volley", description: "Shoot 40% faster.", mods: [{ stat: "cooldown", mult: 0.7 }] },
+      { id: "skyhunters", name: "Skyhunters", description: "×2 damage to fliers.", bonusVs: [{ selector: { layer: "air" }, mult: 2 }] },
     ],
     tags: ["faction:kingdom", "race:human", "class:ranged", "size:small", "role:ranged", "role:antiair"],
     look: { shape: "circle", color: "#a7d07a", icon: "bow" },
@@ -220,7 +307,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "ballista",
     name: "Ballista",
-    description: "Huge bolts that seek out the biggest target. Weak to swarms.",
+    description: "Huge single bolts that seek out the biggest target. Weak to swarms.",
     cost: 150,
     unlockCost: 75,
     squadSize: 1,
@@ -235,10 +322,23 @@ export const DEFAULT_UNITS: UnitDef[] = [
       bonusVs: [{ selector: { hasAnyTag: ["size:large", "size:huge"] }, mult: 1.6 }],
     },
     upgrades: [
-      { id: "heavy_bolts", name: "Heavy Bolts", description: "+40% damage, and bolts splash.", mods: [{ stat: "damage", mult: 1.4 }, { stat: "splash", add: 0.8 }] },
+      { id: "heavy_bolts", name: "Heavy Bolts", description: "+50% damage. Still one target at a time.", mods: [{ stat: "damage", mult: 1.5 }] },
       { id: "repeater", name: "Repeater", description: "Fires twice as fast for 60% damage per bolt.", mods: [{ stat: "cooldown", mult: 0.5 }, { stat: "damage", mult: 0.6 }] },
+      {
+        id: "harpoons",
+        name: "Chain Harpoons",
+        description: "Bolts Chill the target. Hit it again and it freezes; the bolt after that shatters it for double. Pairs with Repeater.",
+        onHit: [{ type: "status", status: "chilled" }],
+      },
+      {
+        id: "reinforced_frame",
+        name: "Reinforced Frame",
+        description: "+100% HP and +30% physical resistance, so raiders can't just walk over it.",
+        mods: [{ stat: "hp", mult: 2 }],
+        resist: { physical: 0.3 },
+      },
     ],
-    tags: ["faction:kingdom", "class:siege", "size:medium", "role:sniper", "role:antilarge", "role:antiair", "role:slow"],
+    tags: ["faction:kingdom", "race:human", "class:siege", "size:medium", "role:sniper", "role:antilarge", "role:antiair", "role:slow"],
     look: { shape: "diamond", color: "#b08a5a", icon: "crossbow" },
   },
   {
@@ -260,6 +360,14 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "dive", name: "Dive Attack", description: "The first strike deals ×4 damage.", traits: [{ type: "charge", mult: 4 }] },
       { id: "armored_saddles", name: "Armored Saddles", description: "+40% HP and +20% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.2 } },
+      {
+        id: "sky_patrol",
+        name: "Sky Patrol",
+        description: "Hunt fliers first, with ×1.75 damage to them.",
+        prefers: { layer: "air" },
+        bonusVs: [{ selector: { layer: "air" }, mult: 1.75 }],
+      },
+      { id: "pride", name: "Pride", description: "+1 griffon per squad.", mods: [{ stat: "squadSize", add: 1 }] },
     ],
     tags: ["faction:kingdom", "race:beast", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:raider"],
     look: { shape: "diamond", color: "#e0b34a", icon: "wing" },
@@ -276,22 +384,34 @@ export const DEFAULT_UNITS: UnitDef[] = [
     hp: 220,
     speed: 8,
     size: 0.3,
-    traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 40, radius: 3 }] }],
+    traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 45, radius: 3 }] }],
     upgrades: [
       {
         id: "sanctuary",
         name: "Sanctuary",
-        description: "Heals 70 in a wider circle.",
-        replaceTraits: true,
-        traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 70, radius: 4 }] }],
+        description: "A second prayer heals 30 more, in a wider circle.",
+        traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 30, radius: 4.5 }] }],
       },
       { id: "blessing", name: "Blessing", description: "Allies nearby deal +20% damage.", traits: [{ type: "aura", radius: 3, selector: { side: "ally" }, damage: 1.2 }] },
+      {
+        id: "purify",
+        name: "Purify",
+        description: "Every 2.5s, washes every status off nearby allies: Burning, Frozen, Wet, Oiled, Dazed.",
+        traits: [{ type: "periodic", interval: 2.5, effects: [{ type: "cleanse", radius: 3 }] }],
+      },
+      {
+        id: "battle_hymn",
+        name: "Battle Hymn",
+        description: "Allies nearby attack 25% faster. With Blessing, the line hits much harder.",
+        traits: [{ type: "aura", radius: 3, selector: { side: "ally" }, attackSpeed: 1.25 }],
+      },
     ],
     tags: ["faction:kingdom", "race:human", "class:support", "size:small", "role:healer", "role:support"],
     look: { shape: "circle", color: "#f4e7b0", icon: "cross" },
   },
 
   // ------------------------------------------------------------- Elementals
+  // Harder to use: strong combos, hard weaknesses, and some total counters.
   {
     id: "fire_elemental",
     name: "Fire Elemental",
@@ -324,6 +444,21 @@ export const DEFAULT_UNITS: UnitDef[] = [
         name: "Meteor",
         description: "Artillery: +4 range, +50% damage and a wider blast, but fires 30% slower.",
         mods: [{ stat: "range", add: 4 }, { stat: "damage", mult: 1.5 }, { stat: "splash", add: 0.5 }, { stat: "cooldown", mult: 1.3 }],
+      },
+      {
+        id: "wildfire",
+        name: "Wildfire",
+        description: "Fireballs leave burning ground. Controlled Burn can't tame it, so keep your army out.",
+        onHit: [{ type: "surface", surface: "fire", radius: 1.5 }],
+      },
+      {
+        id: "living_inferno",
+        name: "Living Inferno",
+        description: "Scorches enemies within 2 tiles (20 fire per second), and melee attackers catch fire.",
+        traits: [
+          { type: "periodic", interval: 1, effects: [{ type: "damage", amount: 20, element: "fire", radius: 2 }] },
+          { type: "retaliate", effects: [{ type: "status", status: "burning" }], maxRange: 1 },
+        ],
       },
     ],
     tags: ["faction:elemental", "race:elemental", "element:fire", "size:large", "role:splash", "role:ranged", "role:slow"],
@@ -362,6 +497,18 @@ export const DEFAULT_UNITS: UnitDef[] = [
         mods: [{ stat: "damage", mult: 1.6 }, { stat: "range", add: 3 }],
         onHit: [{ type: "surface", surface: "puddle", radius: 1.5 }],
       },
+      {
+        id: "wellspring",
+        name: "Wellspring",
+        description: "Heals nearby allies 40 every 2s. The only healing the elementals have.",
+        traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 40, radius: 3 }] }],
+      },
+      {
+        id: "tsunami",
+        name: "Tsunami",
+        description: "Waves crash wider: +1 splash radius and +25% damage. Soaks whole formations for lightning.",
+        mods: [{ stat: "splash", add: 1 }, { stat: "damage", mult: 1.25 }],
+      },
     ],
     tags: ["faction:elemental", "race:elemental", "element:water", "size:large", "role:sturdy", "role:combo"],
     look: { shape: "hex", color: "#3d8bff", icon: "drop" },
@@ -378,7 +525,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     hp: 350,
     speed: 14,
     size: 0.45,
-    resist: { lightning: 1 },
+    resist: { lightning: 0.6 }, // not immune, so Air mirrors still end
     attack: {
       damage: 45, element: "lightning", cooldown: 2, range: 5,
       targets: ["ground", "air"], targeting: "nearest", delivery: "beam",
@@ -389,6 +536,19 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "thunderhead", name: "Thunderhead", description: "Lightning jumps 3 more times and hits 20% harder.", mods: [{ stat: "chainCount", add: 3 }, { stat: "damage", mult: 1.2 }] },
       { id: "tempest", name: "Tempest", description: "+40% HP and attacks 40% faster.", mods: [{ stat: "hp", mult: 1.4 }, { stat: "cooldown", mult: 0.7 }] },
+      {
+        id: "eye_of_the_storm",
+        name: "Eye of the Storm",
+        description: "Hunts fliers first, with ×2 more damage to them (×3 in all). Nothing in the sky survives.",
+        prefers: { layer: "air" },
+        bonusVs: [{ selector: { layer: "air" }, mult: 2 }],
+      },
+      {
+        id: "overcharge",
+        name: "Overcharge",
+        description: "Each bolt stuns for 1s instead of a flicker. With Thunderhead, whole lines lock up.",
+        onHit: [{ type: "status", status: "shocked", duration: 1 }],
+      },
     ],
     tags: ["faction:elemental", "race:elemental", "element:lightning", "size:medium", "role:flier", "role:antiair", "role:combo"],
     look: { shape: "diamond", color: "#d6e4ff", icon: "wind" },
@@ -413,9 +573,100 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "kindling", name: "Kindling", description: "Each wisp bursts into flame when destroyed.", traits: [{ type: "onDeath", effects: [{ type: "damage", amount: 30, element: "fire", radius: 1 }] }] },
       { id: "swarm", name: "Brighter Swarm", description: "+6 wisps per squad.", mods: [{ stat: "squadSize", add: 6 }] },
+      {
+        id: "static",
+        name: "Static Sparks",
+        description: "Each zap stuns for a flicker. A big swarm keeps a lone giant locked down.",
+        onHit: [{ type: "status", status: "shocked" }],
+      },
+      { id: "flicker", name: "Flicker", description: "Hard to hit with steel: +50% physical resistance. Arrows and swords barely touch them.", resist: { physical: 0.5 } },
     ],
     tags: ["faction:elemental", "race:elemental", "element:lightning", "size:small", "role:swarm", "role:flier", "role:fast"],
     look: { shape: "circle", color: "#fff3a0", icon: "sparkle" },
+  },
+  {
+    id: "frost_elemental",
+    name: "Frost Elemental",
+    description: "A walking glacier. Its beam chills a target, then freezes it solid; physical hits shatter frozen enemies for double. Melts fast to fire.",
+    cost: 200,
+    unlockCost: 100,
+    squadSize: 1,
+    footprint: { w: 2, h: 2 },
+    layer: "ground",
+    hp: 1500,
+    speed: 7,
+    size: 0.6,
+    resist: { frost: 1, fire: -0.6 },
+    immuneStatuses: ["chilled", "frozen"],
+    attack: {
+      damage: 65, element: "frost", cooldown: 1.6, range: 5,
+      targets: ["ground", "air"], targeting: "nearest", delivery: "beam",
+      onHit: [{ type: "status", status: "chilled" }],
+    },
+    upgrades: [
+      {
+        id: "blizzard",
+        name: "Blizzard",
+        description: "The beam bursts: frost hits and chills everything within 1.4 tiles, for 30% less damage.",
+        mods: [{ stat: "splash", add: 1.4 }, { stat: "damage", mult: 0.7 }],
+        onHit: [{ type: "status", status: "chilled", radius: 1.4, affects: "enemies" }],
+      },
+      {
+        id: "permafrost",
+        name: "Permafrost",
+        description: "Hits leave ice on the ground that chills anyone standing in it. Fire melts it to water.",
+        onHit: [{ type: "surface", surface: "ice", radius: 1.2 }],
+      },
+      { id: "cold_snap", name: "Cold Snap", description: "Attacks 50% faster: chill, freeze, chill, freeze.", mods: [{ stat: "cooldown", mult: 0.65 }] },
+      { id: "glacier", name: "Glacier", description: "+50% HP and +30% physical resistance.", mods: [{ stat: "hp", mult: 1.5 }], resist: { physical: 0.3 } },
+    ],
+    tags: ["faction:elemental", "race:elemental", "element:frost", "size:large", "role:combo", "role:ranged", "role:slow"],
+    look: { shape: "hex", color: "#9be7ff", icon: "snowflake" },
+  },
+  {
+    id: "stone_golem",
+    name: "Stone Golem",
+    description: "Living rock. Slow and heavy, immune to lightning and hard to burn, but water wears it away.",
+    cost: 200,
+    unlockCost: 75,
+    squadSize: 2,
+    footprint: { w: 2, h: 1 },
+    layer: "ground",
+    hp: 1000,
+    speed: 7,
+    size: 0.5,
+    resist: { lightning: 1, fire: 0.5, physical: 0.2, water: -0.5 },
+    immuneStatuses: ["shocked", "burning"],
+    attack: {
+      damage: 110, element: "physical", cooldown: 1.8, range: 0.6,
+      targets: ["ground"], targeting: "nearest", delivery: "instant",
+    },
+    upgrades: [
+      { id: "granite", name: "Granite", description: "+40% HP and +20% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.2 } },
+      {
+        id: "quake",
+        name: "Quake",
+        description: "Slams shake the ground: they splash, and stun everything around for 0.5s.",
+        mods: [{ stat: "splash", add: 1.2 }],
+        onHit: [{ type: "status", status: "shocked", duration: 0.5, radius: 1.2, affects: "enemies" }],
+      },
+      {
+        id: "magma_core",
+        name: "Magma Core",
+        description: "Fists turn molten: fire damage that sets enemies Burning. Melts armor and stops trolls healing.",
+        element: "fire",
+        onHit: [{ type: "status", status: "burning" }],
+      },
+      {
+        id: "landslide",
+        name: "Landslide",
+        description: "Rolls into battle 60% faster, and its first slam deals ×3.",
+        mods: [{ stat: "speed", mult: 1.6 }],
+        traits: [{ type: "charge", mult: 3 }],
+      },
+    ],
+    tags: ["faction:elemental", "race:elemental", "size:large", "role:sturdy", "role:melee", "role:slow"],
+    look: { shape: "square", color: "#8d8579", icon: "golem" },
   },
 
   // ------------------------------------------------------------ Independents
@@ -441,6 +692,18 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "inferno", name: "Inferno", description: "+25% damage, and its breath leaves burning ground.", mods: [{ stat: "damage", mult: 1.25 }], onHit: [{ type: "surface", surface: "fire", radius: 1.2 }] },
       { id: "ancient_scales", name: "Ancient Scales", description: "+40% HP and +30% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.3 } },
+      {
+        id: "elder_blood",
+        name: "Elder Blood",
+        description: "Regenerates 40 HP/s, except while Chilled.",
+        traits: [{ type: "regen", perSecond: 40, suppressedBy: "chilled" }],
+      },
+      {
+        id: "dread",
+        name: "Dread",
+        description: "Its breath terrifies: everything it scorches is Dazed for 1.5s (deals 10%, takes double).",
+        onHit: [{ type: "status", status: "dazed", duration: 1.5, radius: 1.8, affects: "enemies" }],
+      },
     ],
     tags: ["faction:independent", "race:dragon", "element:fire", "size:huge", "role:flier", "role:splash", "role:sturdy"],
     look: { shape: "hex", color: "#c0392b", icon: "claws" },
@@ -466,6 +729,13 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "rock_skin", name: "Rock Skin", description: "+30% physical resistance, and fire only hurts it a little extra.", resist: { physical: 0.3, fire: 0.3 } },
       { id: "berserk", name: "Berserk", description: "Attacks 65% faster and regenerates even quicker.", mods: [{ stat: "cooldown", mult: 0.6 }], traits: [{ type: "regen", perSecond: 15, suppressedBy: "burning" }] },
+      { id: "devour", name: "Devour", description: "Eats what it kills: each kill heals it 250.", traits: [{ type: "onKill", effects: [{ type: "heal", amount: 250, radius: 0.1 }] }] },
+      {
+        id: "thick_blood",
+        name: "Thick Blood",
+        description: "Regenerates 20 HP/s even while Burning. Fire alone won't stop it any more.",
+        traits: [{ type: "regen", perSecond: 20 }],
+      },
     ],
     tags: ["faction:independent", "race:troll", "size:large", "role:sturdy", "role:regen", "role:melee"],
     look: { shape: "square", color: "#5e7d6a", icon: "fangs" },
@@ -489,6 +759,14 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "earthshaker", name: "Earthshaker", description: "Boulders briefly stun everything they land on.", onHit: [{ type: "status", status: "shocked", duration: 0.8, radius: 1.8, affects: "enemies" }] },
       { id: "thick_hide", name: "Thick Hide", description: "+40% HP and +25% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.25 } },
+      { id: "rockslide", name: "Rockslide", description: "Bigger rocks, thrown farther: +3 range and a wider blast.", mods: [{ stat: "range", add: 3 }, { stat: "splash", add: 0.6 }] },
+      {
+        id: "frost_giant",
+        name: "Frost Giant",
+        description: "Boulders of ice: frost damage that Chills where they land and freezes anything Wet or already chilled.",
+        element: "frost",
+        onHit: [{ type: "status", status: "chilled", duration: 3.5, radius: 1.8, affects: "enemies" }],
+      },
     ],
     tags: ["faction:independent", "race:giant", "size:huge", "role:splash", "role:sturdy", "role:slow", "role:ranged"],
     look: { shape: "square", color: "#9c8b72", icon: "boulder" },

@@ -18,7 +18,7 @@ import { derived } from "./describe";
 
 const SHAPES: Shape[] = ["circle", "square", "triangle", "diamond", "hex"];
 const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
-const TRAIT_TYPES = ["aura", "onDeath", "regen", "periodic", "retaliate", "charge"] as const;
+const TRAIT_TYPES = ["aura", "onDeath", "regen", "periodic", "retaliate", "charge", "onKill"] as const;
 const MOD_STATS: ModStat[] = ["hp", "speed", "size", "spacing", "squadSize", "damage", "cooldown", "range", "splash", "chainCount"];
 const TARGETINGS = ["nearest", "highestHp", "lowestHp", "towers"] as const;
 
@@ -60,6 +60,8 @@ function defaultTrait(type: TraitDef["type"]): TraitDef {
       return { type, effects: [{ type: "status", status: "chilled" }] };
     case "charge":
       return { type, mult: 3 };
+    case "onKill":
+      return { type, effects: [{ type: "heal", amount: 100, radius: 0.5 }] };
   }
 }
 
@@ -231,9 +233,6 @@ export function EditorView() {
               </Row>
               <Row label="Unlock cost" hint="Paid once per match before the first purchase. 0 = available from the start">
                 <Num value={unit.unlockCost ?? 0} step={25} onChange={(unlockCost) => update({ unlockCost: unlockCost || undefined })} />
-              </Row>
-              <Row label="Upgrade cost" hint="Price of the first upgrade bought; the second costs double. Blank = unit cost">
-                <Num value={unit.upgradeCost} step={25} onChange={(upgradeCost) => update({ upgradeCost: upgradeCost || undefined })} />
               </Row>
               <Row label="Squad size" hint="Models per purchase">
                 <Num value={unit.squadSize} min={1} onChange={(squadSize) => update({ squadSize: Math.max(1, Math.round(squadSize)) })} />
@@ -442,8 +441,8 @@ export function EditorView() {
               }
             >
               <p className="muted small">
-                One-time purchases per match that change every squad of this unit. The first one bought costs the upgrade cost, the second
-                double. Aim for two with different personalities.
+                One-time purchases per match that change every squad of this unit. They cost {RULES.upgradeCosts.join(" / ")} in the order
+                they're bought, whatever the unit. Aim for four specialist paths that combine in tempting ways.
               </p>
               {(unit.upgrades ?? []).map((u, i) => (
                 <UpgradeEditor
@@ -615,7 +614,14 @@ function TraitEditor({ trait, onChange, onRemove }: { trait: TraitDef; onChange:
           <Num value={trait.maxRange} step={0.5} onChange={(maxRange) => onChange({ ...trait, maxRange: maxRange || undefined })} />
         </Row>
       )}
-      {(trait.type === "onDeath" || trait.type === "periodic" || trait.type === "retaliate") && (
+      {trait.type === "onKill" && (
+        <Row label="Recharge" hint="Each kill readies the unit's charge (first-strike bonus) again">
+          <label className="check">
+            <input type="checkbox" checked={!!trait.recharge} onChange={(e) => onChange({ ...trait, recharge: e.target.checked || undefined })} />
+          </label>
+        </Row>
+      )}
+      {(trait.type === "onDeath" || trait.type === "periodic" || trait.type === "retaliate" || trait.type === "onKill") && (
         <>
           {trait.type === "periodic" && (
             <Row label="Interval (s)">
@@ -822,6 +828,34 @@ function UpgradeEditor({ up, onChange, onRemove }: { up: UpgradeDef; onChange: (
         </label>
         {up.targets && <Checks value={up.targets} options={["ground", "air"] as Layer[]} onChange={(targets) => onChange({ ...up, targets })} />}
       </Row>
+      <Row label="Prefers" hint="Replaces who the attack hunts first, anywhere on the field">
+        <label className="check">
+          <input type="checkbox" checked={!!up.prefers} onChange={(e) => onChange({ ...up, prefers: e.target.checked ? { layer: "air" } : undefined })} />
+          override
+        </label>
+        {up.prefers && <SelectorEditor sel={up.prefers} onChange={(prefers) => onChange({ ...up, prefers })} />}
+      </Row>
+      <Row label="Immune to (added)">
+        <Checks value={up.immuneStatuses ?? []} options={STATUS_IDS} onChange={(v) => onChange({ ...up, immuneStatuses: v.length ? v : undefined })} />
+      </Row>
+      <div className="sub">
+        <div className="sub-head">
+          <span>Bonus damage vs (added)</span>
+          <button className="small-btn" onClick={() => onChange({ ...up, bonusVs: [...(up.bonusVs ?? []), { selector: { hasTag: "size:large" }, mult: 1.5 }] })}>
+            + add
+          </button>
+        </div>
+        {up.bonusVs?.map((b, i) => (
+          <div key={i} className="sub-item">
+            <SelectorEditor sel={b.selector} onChange={(selector) => onChange({ ...up, bonusVs: up.bonusVs!.map((x, j) => (j === i ? { ...x, selector } : x)) })} />
+            <span className="mini">×</span>
+            <Num value={b.mult} step={0.1} onChange={(mult) => onChange({ ...up, bonusVs: up.bonusVs!.map((x, j) => (j === i ? { ...x, mult } : x)) })} />
+            <button className="icon" onClick={() => onChange({ ...up, bonusVs: up.bonusVs!.length > 1 ? up.bonusVs!.filter((_, j) => j !== i) : undefined })}>
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
       <Row label="Resist % added">
         <span className="resists">
           {ELEMENTS.map((el) => (

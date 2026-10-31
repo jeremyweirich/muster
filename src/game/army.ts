@@ -109,20 +109,26 @@ export function autoPlace(
   return placed;
 }
 
+// unit id -> supply knocked off its unlock (the opening offer)
+export type UnlockDiscounts = Record<string, number>;
+
+export function unlockPrice(def: UnitDef, discounts?: UnlockDiscounts): number {
+  return Math.max(0, (def.unlockCost ?? 0) - (discounts?.[def.id] ?? 0));
+}
+
 // Total cost of buying `def` given what's already unlocked.
-export function priceOf(def: UnitDef, unlocked: Set<string>): number {
-  return def.cost + (RULES.unlocks && !unlocked.has(def.id) ? def.unlockCost ?? 0 : 0);
+export function priceOf(def: UnitDef, unlocked: Set<string>, discounts?: UnlockDiscounts): number {
+  return def.cost + (RULES.unlocks && !unlocked.has(def.id) ? unlockPrice(def, discounts) : 0);
 }
 
 export function startingUnlocks(units: UnitDef[]): string[] {
   return units.filter((u) => !RULES.unlocks || !u.unlockCost).map((u) => u.id);
 }
 
-// Price of the next upgrade for a unit: the first costs its upgradeCost (default: unit cost), the second double.
+// Price of the next upgrade for a unit: flat by how many it already has (200 / 400 / 600 / 800), whatever the unit.
 export function upgradePrice(def: UnitDef, alreadyBought: number): number | null {
-  const mult = RULES.upgradeCostMult[alreadyBought];
-  if (mult === undefined) return null;
-  return Math.round((def.upgradeCost ?? def.cost) * mult);
+  if (alreadyBought >= (def.upgrades?.length ?? 0)) return null;
+  return RULES.upgradeCosts[alreadyBought] ?? null;
 }
 
 export function towerUpgradePrice(level: number): number | null {

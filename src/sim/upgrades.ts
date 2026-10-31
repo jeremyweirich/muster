@@ -30,6 +30,8 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
       if (up.targeting) a.targeting = up.targeting;
       if (up.onHit?.length) a.onHit = [...(a.onHit ?? []), ...structuredClone(up.onHit)];
       if (up.onHitAffects) a.onHit = a.onHit?.map((e) => (e.type === "status" ? { ...e, affects: up.onHitAffects } : e));
+      if (up.bonusVs?.length) a.bonusVs = [...(a.bonusVs ?? []), ...structuredClone(up.bonusVs)];
+      if (up.prefers) a.prefers = structuredClone(up.prefers);
     }
     if (up.traits?.length || up.replaceTraits) {
       const added = structuredClone(up.traits ?? []);
@@ -40,6 +42,7 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
       for (const [el, v] of Object.entries(up.resist)) r[el as keyof typeof r] = (r[el as keyof typeof r] ?? 0) + (v ?? 0);
       out.resist = r;
     }
+    if (up.immuneStatuses?.length) out.immuneStatuses = [...new Set([...(out.immuneStatuses ?? []), ...up.immuneStatuses])];
     if (up.tags) out.tags = [...new Set([...out.tags, ...up.tags])];
   }
   return out;

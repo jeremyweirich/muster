@@ -16,6 +16,8 @@ export function describeEffect(e: Effect): string {
       return `creates ${SURFACES[e.surface].name}${area}`;
     case "heal":
       return `heals allies ${e.amount}${area}`;
+    case "cleanse":
+      return `clears every status off allies${area}`;
   }
 }
 
@@ -31,6 +33,11 @@ export function describeTrait(t: TraitDef): string {
       return `When hit: ${t.effects.map(describeEffect).join(", ")} on the attacker${t.maxRange !== undefined ? ` (within ${t.maxRange})` : ""}`;
     case "charge":
       return `First strike deals ×${t.mult} damage`;
+    case "onKill": {
+      const bits = t.effects.map(describeEffect);
+      if (t.recharge) bits.push("its charge is ready again");
+      return `On kill: ${bits.join(", ")}`;
+    }
     case "aura": {
       const bits: string[] = [];
       if (t.attackSpeed) bits.push(`+${Math.round((t.attackSpeed - 1) * 100)}% attack speed`);
@@ -90,6 +97,9 @@ export function describeUpgrade(u: UpgradeDef): string[] {
   if (u.targets) out.push(`hits ${u.targets.join(" + ")}`);
   if (u.targeting) out.push(u.targeting === "towers" ? "hunts towers first" : `targets ${u.targeting}`);
   for (const e of u.onHit ?? []) out.push(`on hit: ${describeEffect(e)}`);
+  for (const b of u.bonusVs ?? []) out.push(`×${b.mult} damage vs ${describeSelector(b.selector)}`);
+  if (u.prefers) out.push(`hunts ${describeSelector(u.prefers)} first`);
+  if (u.immuneStatuses?.length) out.push(`immune to ${u.immuneStatuses.map((s) => STATUSES[s].name).join(", ")}`);
   if (u.onHitAffects) out.push(`on-hit statuses only land on ${u.onHitAffects === "all" ? "anyone" : u.onHitAffects}`);
   for (const t of u.traits ?? []) out.push((u.replaceTraits ? "becomes: " : "") + describeTrait(t));
   for (const [el, v] of Object.entries(u.resist ?? {})) out.push(`${v! > 0 ? "+" : "−"}${Math.abs(Math.round(v! * 100))}% ${el} resistance`);

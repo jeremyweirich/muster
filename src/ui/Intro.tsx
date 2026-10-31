@@ -87,7 +87,8 @@ export function Intro({ onClose }: { onClose: () => void }) {
       body: (
         <>
           <p>
-            The <b>Upgrades</b> tab improves <b>every</b> squad of a unit, including ones already on the field.
+            The <b>Upgrades</b> tab improves <b>every</b> squad of a unit, including ones already on the field. Each unit has
+            four, and each one you buy for it costs more, so pick a specialty.
           </p>
           <p>
             Each side has two <b>Keeps</b>. If one falls, its owner&apos;s whole army is <b>Dazed</b> for a few seconds and fights

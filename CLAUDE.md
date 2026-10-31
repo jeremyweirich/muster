@@ -24,8 +24,12 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
     `src/data/roles.ts`
   - a one-line description
   - an unlock cost: 0 for starter units only
-  - **two upgrades with distinct personalities**. Whichever is bought first costs the unit's price (`upgradeCost`), the
-    second double. Each upgrade has a short player-facing `description`.
+  - **four upgrades** that make the unit an increasingly expensive specialist, not a jack of all trades. About one should
+    deepen an existing path, and pairs should combine in tempting ways. Prices are global and flat by buy order
+    (`RULES.upgradeCosts`: 200 / 400 / 600 / 800). Each upgrade has a short player-facing `description`. A test checks
+    the count, descriptions and tags.
+- Faction feel: the **Kingdom** is the strongest and most straightforward faction (plain stat upgrades). **Elementals**
+  can be harder to use and may have total counters. Greenskins sit between them.
 - **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed) and do
   **not** create surfaces. Surfaces come only from specific upgrades. Don't add new statuses, surfaces or elements
   without the owner agreeing.
@@ -77,6 +81,10 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 See DESIGN.md §12 for the roadmap. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
+- **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
+  new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction. The owner said not to worry much
+  about balance for now, because a lot will change for a while. Keep the punch/counterpunch feel of each round
+  above all.
 - Balance: two rock-paper-scissors passes are done (DESIGN.md §4, counter web, including army-vs-army results). The
   owner wants clear counters, short lethal fights, and no Knight + Longbow default. Goblins are 10 HP (one-hit by any
   non-goblin) with very fast stabs; keep every non-goblin attack ≥ 10 damage. The one-unit matrix misses army-level

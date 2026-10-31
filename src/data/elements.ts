@@ -102,6 +102,7 @@ export const SURFACES: Record<SurfaceId, SurfaceDef> = {
     color: "#e6e6e6",
     alpha: 0.45,
     blocksRanged: true,
+    onTick: [{ type: "damage", amount: 6, element: "fire" }], // scalding: boiling a puddle under someone hurts
   },
   oil: {
     id: "oil",
@@ -125,6 +126,7 @@ export const SURFACE_REACTIONS: SurfaceReaction[] = [
   { surface: "fire", element: "water", becomes: "steam", name: "Douse" },
   { surface: "fire", element: "frost", becomes: null, name: "Snuff" },
   { surface: "oil", element: "fire", becomes: "fire", spread: true, name: "Ignite" },
+  { surface: "oil", element: "lightning", becomes: "fire", spread: true, name: "Ignite" }, // sparks light oil too
 ];
 
 export const UNIT_REACTIONS: UnitReaction[] = [
@@ -134,9 +136,11 @@ export const UNIT_REACTIONS: UnitReaction[] = [
   { status: "chilled", element: "frost", name: "Freeze", removeStatus: true, consumeIncoming: true, addStatus: { status: "frozen" } },
   { status: "chilled", element: "fire", name: "Thaw", removeStatus: true, consumeIncoming: true },
   { status: "frozen", element: "physical", name: "Shatter", removeStatus: true, damageMult: 2 },
+  { status: "frozen", element: "lightning", name: "Shatter", removeStatus: true, damageMult: 2 },
   { status: "frozen", element: "fire", name: "Thaw", removeStatus: true, consumeIncoming: true, addStatus: { status: "wet" } },
   { status: "frozen", element: "frost", name: "", consumeIncoming: true },
   { status: "burning", element: "water", name: "Douse", removeStatus: true },
   { status: "burning", element: "frost", name: "Snuff", removeStatus: true, consumeIncoming: true },
-  { status: "oiled", element: "fire", name: "Ignite", removeStatus: true, bonusDamage: { amount: 60, element: "fire" } },
+  { status: "oiled", element: "fire", name: "Ignite", removeStatus: true, bonusDamage: { amount: 60, element: "fire" }, addStatus: { status: "burning" } },
+  { status: "oiled", element: "lightning", name: "Ignite", removeStatus: true, bonusDamage: { amount: 60, element: "fire" }, addStatus: { status: "burning" } },
 ];

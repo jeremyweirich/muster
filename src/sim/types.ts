@@ -38,7 +38,8 @@ export type Effect =
       affects?: "all" | "enemies" | "allies"; // relative to the source; default follows the friendly-fire rule
     }
   | { type: "surface"; surface: SurfaceId; radius: number; duration?: number }
-  | { type: "heal"; amount: number; radius: number };
+  | { type: "heal"; amount: number; radius: number }
+  | { type: "cleanse"; radius: number }; // removes every status from allies in the radius
 
 export type Targeting = "nearest" | "highestHp" | "lowestHp" | "towers"; // towers: hunt towers first
 export type Delivery = "instant" | "projectile" | "beam";
@@ -75,7 +76,9 @@ export type TraitDef =
   // effects applied to an enemy that hits this unit with an attack
   | { type: "retaliate"; effects: Effect[]; maxRange?: number }
   // the first attack of the battle deals extra damage
-  | { type: "charge"; mult: number };
+  | { type: "charge"; mult: number }
+  // when one of its attacks kills an enemy: effects at its position, and optionally a fresh charge
+  | { type: "onKill"; effects: Effect[]; recharge?: boolean };
 
 // Upgrades: one-time purchases per match that change every squad of a unit.
 export type ModStat =
@@ -106,6 +109,9 @@ export interface UpgradeDef {
   targeting?: Targeting; // replaces the attack's targeting
   onHit?: Effect[]; // appended to the attack's on-hit effects
   onHitAffects?: "enemies" | "allies" | "all"; // who the attack's on-hit statuses can land on (enemies = no friendly fire)
+  bonusVs?: { selector: Selector; mult: number }[]; // appended to the attack's bonus damage
+  prefers?: Selector; // replaces who the attack hunts first
+  immuneStatuses?: StatusId[]; // added
   traits?: TraitDef[]; // appended (or replace existing ones with replaceTraits)
   replaceTraits?: boolean;
   resist?: Partial<Record<Element, number>>; // added to existing resistances
@@ -134,8 +140,7 @@ export interface UnitDef {
   tags: string[];
   look: { shape: Shape; color: string; icon?: string; glyph?: string }; // icon: an id from src/render/icons.ts; glyph: emoji fallback
   structure?: boolean; // towers: never move, don't count toward winning the battle
-  upgrades?: UpgradeDef[];
-  upgradeCost?: number; // price of the first upgrade bought (default: unit cost); the second costs double
+  upgrades?: UpgradeDef[]; // four per unit; prices come from RULES.upgradeCosts, in buy order
 }
 
 // ---------------------------------------------------------------------------
@@ -219,7 +224,10 @@ export interface Rules {
   towerInset: number; // rows between a tower and its side's back edge
   speedScale: number; // tiles per second per speed point
   allyPush: number; // how hard allies push each other apart, 0..1 (enemies always fully block each other)
-  upgradeCostMult: number[]; // price multiplier for the 1st, 2nd... upgrade bought for a unit
+  upgradeCosts: number[]; // price of the 1st, 2nd... upgrade bought for a unit, whatever the unit
+  openingDiscount: number; // opening offer: this much off one random unit's unlock...
+  openingBonus: number; // ...or this much extra supply in round 1
+  openingMinUnlock: number; // only units whose unlock costs at least this are offered
   towerUpgradeCosts: number[]; // price of each tower level
   towerHpPerLevel: number;
   towerDazeBase: number; // seconds of Daze when a level-0 tower falls

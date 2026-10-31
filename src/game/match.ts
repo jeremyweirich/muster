@@ -1,8 +1,9 @@
 import { RULES } from "../data/rules";
 import type { BattleResult } from "../sim/battle";
 import type { UpgradeState } from "../sim/upgrades";
+import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
-import { startingUnlocks, type DefMap } from "./army";
+import { startingUnlocks, type DefMap, type UnlockDiscounts } from "./army";
 
 export type Phase = "deploy" | "battle" | "result" | "over";
 
@@ -13,6 +14,13 @@ export interface RoundReport {
   damage: [number, number]; // damage taken by [player, ai]
 }
 
+// A small, fair bit of variety at the start of each match: each side is offered a
+// random unit with RULES.openingDiscount off its unlock, or RULES.openingBonus supply.
+export interface Opening {
+  unitId: string | null; // the unit offered a cheaper unlock (null if no unit qualifies)
+  choice: "discount" | "bonus" | null;
+}
+
 export interface MatchState {
   round: number;
   hp: [number, number];
@@ -21,14 +29,23 @@ export interface MatchState {
   unlocked: [string[], string[]];
   upgrades: [UpgradeState, UpgradeState];
   towerLevels: [number[], number[]];
+  openings: [Opening, Opening];
   phase: Phase;
   history: RoundReport[];
 }
 
-export function newMatch(units: UnitDef[]): MatchState {
+export function openingPool(units: UnitDef[]): UnitDef[] {
+  return units.filter((u) => (u.unlockCost ?? 0) >= RULES.openingMinUnlock);
+}
+
+// The AI (side 1) takes its opening straight away; the player chooses during round 1.
+export function newMatch(units: UnitDef[], seed = 1): MatchState {
   const income = RULES.income(1);
   const start = startingUnlocks(units);
-  return {
+  const rng = new Rng(seed);
+  const pool = openingPool(units);
+  const offer = (): Opening => ({ unitId: pool.length ? rng.pick(pool).id : null, choice: null });
+  let state: MatchState = {
     round: 1,
     hp: [RULES.startHp, RULES.startHp],
     supply: [income, income],
@@ -36,9 +53,27 @@ export function newMatch(units: UnitDef[]): MatchState {
     unlocked: [start, [...start]],
     upgrades: [{}, {}],
     towerLevels: [RULES.towers.map(() => 0), RULES.towers.map(() => 0)],
+    openings: [offer(), offer()],
     phase: "deploy",
     history: [],
   };
+  state = chooseOpening(state, 1, state.openings[1].unitId && rng.next() < 0.5 ? "discount" : "bonus");
+  return state;
+}
+
+export function chooseOpening(state: MatchState, side: Side, choice: "discount" | "bonus"): MatchState {
+  const cur = state.openings[side];
+  if (cur.choice || (choice === "discount" && !cur.unitId)) return state;
+  const openings: [Opening, Opening] = [...state.openings];
+  openings[side] = { ...cur, choice };
+  const supply: [number, number] = [...state.supply];
+  if (choice === "bonus") supply[side] += RULES.openingBonus;
+  return { ...state, openings, supply };
+}
+
+export function unlockDiscounts(state: MatchState, side: Side): UnlockDiscounts {
+  const o = state.openings[side];
+  return o.choice === "discount" && o.unitId ? { [o.unitId]: RULES.openingDiscount } : {};
 }
 
 // Damage each side takes from the other's survivors.

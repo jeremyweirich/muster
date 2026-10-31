@@ -126,6 +126,24 @@ export const ICONS = {
   crystal: {
     fill: ["M12 1.5 L18.5 9 L12 22.5 L5.5 9 Z M12 4.6 L8.2 9 L12 18.2 Z"],
   },
+  snowflake: {
+    stroke: [
+      { d: "M12 2 V22", w: 2 },
+      { d: "M3.3 7 L20.7 17", w: 2 },
+      { d: "M3.3 17 L20.7 7", w: 2 },
+      { d: "M9.4 3.6 L12 6.2 L14.6 3.6", w: 1.5 },
+      { d: "M9.4 20.4 L12 17.8 L14.6 20.4", w: 1.5 },
+      { d: "M3.6 10.6 L7 9.4 L6.3 5.8", w: 1.5 },
+      { d: "M20.4 13.4 L17 14.6 L17.7 18.2", w: 1.5 },
+      { d: "M3.6 13.4 L7 14.6 L6.3 18.2", w: 1.5 },
+      { d: "M20.4 10.6 L17 9.4 L17.7 5.8", w: 1.5 },
+    ],
+  },
+  golem: {
+    fill: [
+      "M8 2.5 H16 V7.5 H20.5 L21.5 15 H18 V12 H17 V21.5 H13.2 V16.5 H10.8 V21.5 H7 V12 H6 V15 H2.5 L3.5 7.5 H8 Z M9.6 4.4 H11.2 V6 H9.6 Z M12.8 4.4 H14.4 V6 H12.8 Z",
+    ],
+  },
 } satisfies Record<string, IconDef>;
 
 export type IconId = keyof typeof ICONS;
