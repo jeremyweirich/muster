@@ -1,7 +1,6 @@
 import type { UnitDef } from "../sim/types";
 
-// The starting roster. Edits made in the Unit Editor are saved in the browser;
-// export them as JSON and paste here (or into a roster file) to make them stick.
+// The roster. Units are pure data and are changed here, by request; there is no in-app editor.
 //
 // Speed is in points: tiles per second = speed × RULES.speedScale (0.2), so 10 = 2 tiles/s.
 // Upgrades: every unit has four. They cost RULES.upgradeCosts (200 / 400 / 600 / 800) in the
@@ -246,7 +245,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     look: { shape: "square", color: "#8f7a4f", icon: "club" },
   },
 
-  // --------------------------------------------------------------- Kingdom
+  // --------------------------------------------------------------- Wardens
   // The most straightforward faction: solid baselines and upgrades that do one clear thing.
   {
     id: "knights",
@@ -276,7 +275,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
       { id: "veterans", name: "Veterans", description: "+50% damage. With Lance Charge, the opening strike is brutal.", mods: [{ stat: "damage", mult: 1.5 }] },
     ],
-    tags: ["faction:kingdom", "race:human", "class:infantry", "size:medium", "role:sturdy", "role:melee"],
+    tags: ["faction:warden", "race:human", "class:infantry", "size:medium", "role:sturdy", "role:melee"],
     look: { shape: "square", color: "#c0c8d8", icon: "shield" },
   },
   {
@@ -306,7 +305,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         rangeVs: [{ selector: { layer: "air" }, add: 3 }],
       },
     ],
-    tags: ["faction:kingdom", "race:human", "class:ranged", "size:small", "role:ranged", "role:antiair"],
+    tags: ["faction:warden", "race:human", "class:ranged", "size:small", "role:ranged", "role:antiair"],
     look: { shape: "circle", color: "#a7d07a", icon: "bow" },
   },
   {
@@ -343,7 +342,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         resist: { physical: 0.3 },
       },
     ],
-    tags: ["faction:kingdom", "race:human", "class:siege", "size:medium", "role:sniper", "role:antilarge", "role:antiair", "role:slow"],
+    tags: ["faction:warden", "race:human", "class:siege", "size:medium", "role:sniper", "role:antilarge", "role:antiair", "role:slow"],
     look: { shape: "diamond", color: "#b08a5a", icon: "crossbow" },
   },
   {
@@ -374,7 +373,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
       { id: "pride", name: "Pride", description: "+1 griffon per squad.", mods: [{ stat: "squadSize", add: 1 }] },
     ],
-    tags: ["faction:kingdom", "race:beast", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:skirmisher"],
+    tags: ["faction:warden", "race:beast", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:skirmisher"],
     look: { shape: "diamond", color: "#e0b34a", icon: "wing" },
   },
   {
@@ -411,7 +410,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         traits: [{ type: "aura", radius: 3, selector: { side: "ally" }, attackSpeed: 1.25 }],
       },
     ],
-    tags: ["faction:kingdom", "race:human", "class:support", "size:small", "role:healer", "role:support"],
+    tags: ["faction:warden", "race:human", "class:support", "size:small", "role:healer", "role:support"],
     look: { shape: "circle", color: "#f4e7b0", icon: "cross" },
   },
   {
@@ -448,7 +447,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
       { id: "drilled_ranks", name: "Drilled Ranks", description: "+2 halberdiers per squad.", mods: [{ stat: "squadSize", add: 2 }] },
     ],
-    tags: ["faction:kingdom", "race:human", "class:infantry", "size:small", "role:antilarge", "role:splash", "role:melee"],
+    tags: ["faction:warden", "race:human", "class:infantry", "size:small", "role:antilarge", "role:splash", "role:melee"],
     look: { shape: "triangle", color: "#9fb3c8", icon: "halberd" },
   },
 

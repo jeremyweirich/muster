@@ -155,7 +155,6 @@ export const ICONS = {
 } satisfies Record<string, IconDef>;
 
 export type IconId = keyof typeof ICONS;
-export const ICON_IDS = Object.keys(ICONS) as IconId[];
 
 const pathCache = new Map<string, { fill: Path2D[]; stroke: { p: Path2D; w: number }[] }>();
 function paths(id: IconId) {

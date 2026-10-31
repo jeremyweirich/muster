@@ -1,4 +1,4 @@
-// Headless Muster: play a full match against the real AI from the command line, one round per call.
+// Headless Common Ground: play a full match against the real AI from the command line, one round per call.
 // The AI plans with the same call PlayView uses, so this is the real game minus the canvas.
 // Usage:
 //   npm run playtest -- new <name> [seed] [easy|normal|hard] [discount|bonus]

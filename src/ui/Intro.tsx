@@ -1,8 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { RULES } from "../data/rules";
 import { TOWER_MAP } from "../data/towers";
+import { DEFAULT_UNITS } from "../data/units";
 import type { UnitDef } from "../sim/types";
-import { useRoster } from "../store/roster";
 import { Swatch } from "./UnitInfo";
 
 // A short walkthrough for players who have never played a deploy-then-autobattle game.
@@ -16,13 +16,13 @@ interface Step {
 }
 
 export function Intro({ onClose }: { onClose: () => void }) {
-  const units = useRoster();
+  const units = DEFAULT_UNITS;
   const u = (id: string) => units.find((x) => x.id === id);
   const [i, setI] = useState(0);
 
   const steps: Step[] = [
     {
-      title: "Welcome to Muster",
+      title: "Welcome to Common Ground",
       art: <Icons defs={[u("knights"), u("goblin_horde"), u("fire_elemental"), u("bat_riders")]} />,
       body: (
         <>
@@ -77,7 +77,10 @@ export function Intro({ onClose }: { onClose: () => void }) {
             Goblins swarm Knights · Knights shrug off arrows · Longbowmen pick off Goblins. Fire melts armor, Bat Riders hunt
             archers, and Air Elementals swat fliers.
           </p>
-          <p>Hover any unit to see what it&apos;s good and bad against.</p>
+          <p>
+            Hover any unit to see what it does. The <b>Counters</b> tab shows what beats any unit, and the <b>Codex</b> explains every
+            rule; underlined words link straight to it.
+          </p>
         </>
       ),
     },

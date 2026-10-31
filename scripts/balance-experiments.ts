@@ -48,7 +48,7 @@ function fight(a: Army, b: Army, seeds = 8, towers = false) {
 }
 
 const REFS: Record<string, Army> = {
-  kingdom: { ids: ["knights", "knights", "longbowmen", "longbowmen", "longbowmen", "ballista", "halberdiers"] },
+  wardens: { ids: ["knights", "knights", "longbowmen", "longbowmen", "longbowmen", "ballista", "halberdiers"] },
   greenskin: { ids: ["goblin_horde", "goblin_horde", "goblin_horde", "wolf_riders", "goblin_sappers", "goblin_sappers", "bat_riders", "goblin_alchemist"] },
   elemental: { ids: ["water_elemental", "air_elemental", "stone_golem", "wisps", "frost_elemental"] },
   independent: { ids: ["troll", "giant", "troll", "longbowmen", "longbowmen"] },

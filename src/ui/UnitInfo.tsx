@@ -5,6 +5,7 @@ import { rolesOf } from "../data/roles";
 import { ICONS, type IconDef, type IconId } from "../render/icons";
 import { describeSelector } from "../sim/selectors";
 import type { Element, UnitDef } from "../sim/types";
+import { CodexLink, Linked } from "./codexLinks";
 import { derived, describeEffect, describeTrait, describeUpgrade } from "./describe";
 
 export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
@@ -32,40 +33,36 @@ function IconSvg({ icon, size, nudge }: { icon: IconDef; size: number; nudge: nu
   );
 }
 
-export function RoleChips({ tags, detailed }: { tags: string[]; detailed?: boolean }) {
+// Role chips link to their Codex entry, which explains what the role means.
+export function RoleChips({ tags }: { tags: string[] }) {
   const roles = rolesOf(tags);
   if (!roles.length) return null;
-  if (detailed) {
-    return (
-      <ul className="roles-detailed">
-        {roles.map((r) => (
-          <li key={r.id}>
-            <span className="role">{r.name}</span> <span className="muted small">{r.description}</span>
-          </li>
-        ))}
-      </ul>
-    );
-  }
   return (
     <div className="roles">
       {roles.map((r) => (
-        <span key={r.id} className="role" title={r.description}>
+        <CodexLink key={r.id} topic={`role-${r.id}`} className="role">
           {r.name}
-        </span>
+        </CodexLink>
       ))}
     </div>
+  );
+}
+
+function El({ e, children }: { e: Element; children: ReactNode }) {
+  return (
+    <CodexLink topic={`element-${e}`} className="kw el-link">
+      <span style={{ color: ELEMENT_COLORS[e] }}>{children}</span>
+    </CodexLink>
   );
 }
 
 export function UnitInfo({
   def,
   owned,
-  detailedRoles,
   upgradeAction,
 }: {
   def: UnitDef;
   owned?: string[];
-  detailedRoles?: boolean;
   upgradeAction?: (upgradeId: string) => ReactNode;
 }) {
   const d = derived(def);
@@ -80,14 +77,18 @@ export function UnitInfo({
         <div>
           <div className="unit-name">{def.name}</div>
           <div className="muted">
-            {def.structure ? "tower" : `${def.cost} supply`} · {def.squadSize} × {def.layer}
+            {def.structure ? "tower" : `${def.cost} supply`} · {def.squadSize} × <CodexLink topic="layers">{def.layer}</CodexLink>
             {def.unlockCost ? ` · unlock ${def.unlockCost}` : ""}
             {(def.level ?? 1) > 1 && <span className="vet-level"> · level {def.level}</span>}
           </div>
         </div>
       </div>
-      <RoleChips tags={def.tags} detailed={detailedRoles} />
-      {def.description && <p className="muted small">{def.description}</p>}
+      <RoleChips tags={def.tags} />
+      {def.description && (
+        <p className="muted small">
+          <Linked text={def.description} />
+        </p>
+      )}
       <dl className="stats">
         <dt>HP</dt>
         <dd>
@@ -101,9 +102,9 @@ export function UnitInfo({
           <>
             <dt>Attack</dt>
             <dd>
-              <span style={{ color: ELEMENT_COLORS[atk.element] }}>
+              <El e={atk.element}>
                 {Math.round(atk.damage)} {atk.element}
-              </span>{" "}
+              </El>{" "}
               / {+atk.cooldown.toFixed(2)}s
             </dd>
             <dt>DPS</dt>
@@ -112,11 +113,13 @@ export function UnitInfo({
             </dd>
             <dt>Range</dt>
             <dd>
-              {+atk.range.toFixed(1)} · hits {atk.targets.join(" + ")}
+              {+atk.range.toFixed(1)} · hits <CodexLink topic="layers">{atk.targets.join(" + ")}</CodexLink>
             </dd>
             {atk.splash ? (
               <>
-                <dt>Splash</dt>
+                <dt>
+                  <CodexLink topic="role-splash">Splash</CodexLink>
+                </dt>
                 <dd>{+atk.splash.toFixed(1)}</dd>
               </>
             ) : null}
@@ -137,11 +140,13 @@ export function UnitInfo({
         )}
         {resists.length > 0 && (
           <>
-            <dt>Resists</dt>
+            <dt>
+              <CodexLink topic="resistance">Resists</CodexLink>
+            </dt>
             <dd>
               {resists.map(([el, v]) => (
-                <span key={el} style={{ color: ELEMENT_COLORS[el], marginRight: 6 }}>
-                  {el} {v >= 1 ? "(immune)" : `${Math.round(v * 100)}%`}
+                <span key={el} className="el-item">
+                  <El e={el}>{el}</El> {v >= 1 ? "(immune)" : `${Math.round(v * 100)}%`}
                 </span>
               ))}
             </dd>
@@ -152,8 +157,8 @@ export function UnitInfo({
             <dt>Weak to</dt>
             <dd>
               {weaknesses.map(([el, v]) => (
-                <span key={el} style={{ color: ELEMENT_COLORS[el], marginRight: 6 }}>
-                  {el} (+{Math.round(-v * 100)}% taken)
+                <span key={el} className="el-item">
+                  <El e={el}>{el}</El> (+{Math.round(-v * 100)}% taken)
                 </span>
               ))}
             </dd>
@@ -162,7 +167,9 @@ export function UnitInfo({
       </dl>
       {(atk?.onHit?.length || atk?.bonusVs?.length || atk?.rangeVs?.length || atk?.prefers || atk?.selfDestruct || atk?.targeting === "towers" || def.traits?.length || def.immuneStatuses?.length) && (
         <ul className="effects">
-          {atk?.onHit?.map((e, i) => <li key={`h${i}`}>On hit: {describeEffect(e)}</li>)}
+          {atk?.onHit?.map((e, i) => <li key={`h${i}`}>
+              On hit: <Linked text={describeEffect(e)} />
+            </li>)}
           {atk?.bonusVs?.map((b, i) => (
             <li key={`b${i}`}>
               ×{b.mult} damage vs {describeSelector(b.selector)}
@@ -176,7 +183,9 @@ export function UnitInfo({
           {atk?.targeting === "towers" && <li>Hunts towers first</li>}
           {atk?.prefers && <li>Hunts {describeSelector(atk.prefers)} first</li>}
           {atk?.selfDestruct && <li>Blows itself up on its first attack</li>}
-          {def.traits?.map((t, i) => <li key={`t${i}`}>{describeTrait(t)}</li>)}
+          {def.traits?.map((t, i) => <li key={`t${i}`}>
+              <Linked text={describeTrait(t)} />
+            </li>)}
           {def.immuneStatuses?.length ? <li>Immune to {def.immuneStatuses.join(", ")}</li> : null}
         </ul>
       )}
@@ -192,7 +201,9 @@ export function UnitInfo({
                 </b>
                 {upgradeAction?.(u.id)}
               </div>
-              <span className="small">{u.description}</span>
+              <span className="small">
+                <Linked text={u.description ?? ""} />
+              </span>
               <div className="muted small">{describeUpgrade(u).join(" · ")}</div>
             </div>
           ))}

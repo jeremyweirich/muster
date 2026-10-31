@@ -1,6 +1,6 @@
-# Muster: notes for Claude
+# Common Ground: notes for Claude
 
-Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (TypeScript, Vite, React and Canvas).
+Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and package keep its working title, `muster`. It's a browser app (TypeScript, Vite, React and Canvas).
 - **Live site:** https://jeremyweirich.github.io/muster/. It deploys automatically on every push to `main`.
 - **Design:** `docs/DESIGN.md` is the source of truth for the design. Read it before making design changes and keep it
   up to date.
@@ -8,19 +8,22 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
 ## How the owner works
 
 - They playtest, then come back with revision notes. **Unit and balance changes are requested verbally.** Claude edits
-  `src/data/units.ts` (and `elements.ts`, `towers.ts`, `rules.ts`). There is no local roster JSON to sync. The in-app
-  Units tab is a session-only sandbox: edits reset on reload.
-- They value: clear unit identities, upgrades with personality, readable battles, and good tools (editor, sandbox,
-  Balance Lab, battle report, Codex). Keep all of those working.
+  `src/data/units.ts` (and `elements.ts`, `towers.ts`, `rules.ts`). There is no in-app unit editor, by choice.
+- They value: clear unit identities, upgrades with personality, readable battles, and good player-facing tools (battle
+  report, Codex, Counters). Keep all of those working.
+- Tabs: **Play** (default, the full game), **Story** (campaigns, coming soon; `docs/CAMPAIGN.md`), **Codex** (the
+  rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades). Game screens
+  don't explain rules: keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 
 ## Designing units (checklist)
 
 - Units are pure data (`UnitDef` in `src/sim/types.ts`). Prefer composing existing effects, traits and selectors. Add a
-  new trait or effect type only when a design really needs it, then expose it in the editor (`EditorView.tsx`,
-  `fields.tsx`) and in `describe.ts`.
+  new trait or effect type only when a design really needs it, then describe it in `describe.ts` (and in
+  `src/game/counters.ts` if it changes who beats whom). New statuses, surfaces, roles or rules need a Codex entry
+  (`CodexView.tsx`, or `detail` in `roles.ts`); a test checks that every Codex link has a target.
 - Every unit needs:
-  - tags: `faction:*` (greenskin, kingdom, elemental, independent), `race:*`, `size:*`, and 2–4 `role:*` tags from
+  - tags: `faction:*` (greenskin, warden, elemental, independent), `race:*`, `size:*`, and 2–4 `role:*` tags from
     `src/data/roles.ts`
   - a one-line description
   - an unlock cost: 0 for starter units only
@@ -28,7 +31,7 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
     deepen an existing path, and pairs should combine in tempting ways. Prices are global and flat by buy order
     (`RULES.upgradeCosts`: 200 / 400 / 600 / 800). Each upgrade has a short player-facing `description`. A test checks
     the count, descriptions and tags.
-- Faction feel: the **Kingdom** is the strongest and most straightforward faction (plain stat upgrades). **Elementals**
+- Faction feel: the **Wardens** (formerly the Kingdom) are the strongest and most straightforward faction (plain stat upgrades). **Elementals**
   can be harder to use and may have total counters. Greenskins sit between them.
 - **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed) and do
   **not** create surfaces. Surfaces come only from specific upgrades. Don't add new statuses, surfaces or elements
@@ -36,7 +39,7 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
 - Speed is in points: 10 = 2 tiles/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
 - After changing units:
   - `npm test`
-  - `npm run matrix` for a balance sanity check. One-unit-type lab fights over-reward fliers, so read it with that in
+  - `npm run matrix` for a balance sanity check. One-unit-type fights over-reward fliers, so read it with that in
     mind.
   - `npm run roster-table`, then paste the output into DESIGN.md §4.
   - If behavior changed, update DESIGN.md.
@@ -44,7 +47,7 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
 ## Invariants
 
 - `src/sim` is deterministic and DOM-free: fixed 50 ms tick, seeded `Rng`, no `Math.random`, no wall-clock time.
-  Replays, the AI, the lab and the tests depend on this.
+  Replays, the AI, the Counters tab and the tests depend on this.
 - Main attack damage only hits enemies. Statuses, surfaces and reactions are neutral, so friendly fire is on.
 - Each side fights with its own upgraded unit definitions (`upgradedDefs`, `new Battle([defsA, defsB], …)`).
 - The AI only uses the simulator, so new units must work with it without special-casing.
@@ -56,7 +59,7 @@ Muster is a fantasy deploy-then-autobattle strategy game. It's a browser app (Ty
 ```bash
 npm install           # see the npm note below
 npm run dev           # http://localhost:5173
-npm test              # vitest (sim, upgrades, towers, AI)
+npm test              # vitest (sim, upgrades, towers, AI, Codex links, counter reasons)
 npm run build         # typecheck + static build in dist/
 npm run matrix        # unit-vs-unit win-rate matrix
 npm run roster-table  # roster tables for DESIGN.md
@@ -70,8 +73,9 @@ npm run experiments   # balance experiments in mixed armies (modes listed in scr
 
 ## Verifying UI changes
 
-Playwright and Chromium are available in the cloud environment (`require('playwright')`). Drive `npm run dev` and take
-screenshots. **Write screenshots and scratch scripts outside the repo.** Two stray PNGs were committed once by
+Playwright and Chromium are available in the cloud environment (`require('playwright')`). On the owner's Windows machine,
+install `playwright-core` in a scratch directory and launch the installed Chrome via `executablePath`. Drive
+`npm run dev` and take screenshots. **Write screenshots and scratch scripts outside the repo.** Two stray PNGs were committed once by
 accident.
 
 ## Deploying
@@ -86,7 +90,7 @@ balance experiments behind them (veterancy snowball, anti-air gaps, upgrade valu
 narrative). Read it before redesigning the roster. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
 - **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
-  new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Kingdom unit
+  new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Warden unit
   (Halberdiers), and veterancy (squads earn XP from damage dealt and pay to promote; DESIGN.md §5c). The owner said not
   to worry much about balance for now, because a lot will change for a while. Keep the punch/counterpunch feel of each
   round above all. Balance-test at level 1 only for now.
@@ -96,8 +100,11 @@ narrative). Read it before redesigning the roster. Open threads:
   owner wants clear counters, short lethal fights, and no Knight + Longbow default. Goblins are 10 HP (one-hit by any
   non-goblin) with very fast stabs; keep every non-goblin attack ≥ 10 damage. The one-unit matrix misses army-level
   counters, so also test mixed armies against each other (equal supply, towers on). Fliers still dominate one-unit
-  lab fights.
+  fights.
 - Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
   sideways (about 844 × 390).
 - Faction bonuses are designed but not built (DESIGN.md §8).
-- Ideas not yet built: reaction editor, lab with upgrades and mixed armies, reinforcement cards, spells, pathfinding.
+- **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Parked
+  idea to keep: the campaign finale's last Drill Book page is generated from the player's own winning board. It needs
+  stored progress, which the owner hasn't decided on yet.
+- Ideas not yet built: mixed armies and upgrades in the experiments script, reinforcement cards, spells, pathfinding.

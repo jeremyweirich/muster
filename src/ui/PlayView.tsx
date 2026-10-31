@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FACTIONS, factionOf } from "../data/roles";
 import { RULES } from "../data/rules";
 import { towerDaze, towerDef, towerPlacements, TOWER_MAP } from "../data/towers";
+import { DEFAULT_UNITS } from "../data/units";
 import { planAiRound, promoted, type AiPlan, type Difficulty } from "../game/ai";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
 import { applyRound, battleXp, canPromote, chooseOpening, newMatch, nextRound, promotePrice, unlockDiscounts, type MatchState } from "../game/match";
@@ -10,7 +11,6 @@ import { earnedLevel, levelDef, xpForLevel } from "../sim/levels";
 import { Battle, footprintOf, type BattleResult } from "../sim/battle";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
-import { useRoster } from "../store/roster";
 import { MEDAL_COLORS, MvpBoard, SquadDetail, SquadList, topSquads } from "./BattleReport";
 import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
@@ -54,7 +54,7 @@ function actionLabel(a: Action, defs: DefMap): string {
 }
 
 export function PlayView() {
-  const units = useRoster();
+  const units = DEFAULT_UNITS;
   const defs = useMemo(() => defMap(units), [units]);
   const [match, setMatch] = useState<MatchState>(() => newMatch(units, matchSeed()));
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
@@ -601,7 +601,6 @@ export function PlayView() {
     <UnitInfo
       def={card.def}
       owned={card.def.structure ? undefined : match.upgrades[card.side][card.def.id] ?? []}
-      detailedRoles={card.fromShop}
       upgradeAction={upgradeAction(card.def)}
     />
     </>

@@ -1,4 +1,6 @@
-# Muster — Design Document
+# Common Ground — Design Document
+
+(The repo and package are still called `muster`, the game's working title.)
 
 Status: living document, written after the first playable prototype. Every number here is a starting point to tune, not
 a final value. Sections marked **Decided** are settled direction. Sections marked **Open** still need a decision. Values
@@ -6,12 +8,12 @@ in code are the source of truth; this document explains what they are for.
 
 ## 1. Pitch
 
-Muster is a fantasy deploy-then-autobattle strategy game. Two armies face each other across a field. Each round, both
+Common Ground is a fantasy deploy-then-autobattle strategy game. Two armies face each other across a field. Each round, both
 players recruit squads and place them on their half of the field without seeing what the other is adding. Then the
 battle plays out with no input. Armies carry over from round to round and grow, so every round is a reaction to what
 the opponent showed last time.
 
-Muster sets itself apart through elements. Units make puddles, set fires, spread oil and call down lightning, and these
+Common Ground sets itself apart through elements. Units make puddles, set fires, spread oil and call down lightning, and these
 effects combine with each other. Positioning is about formations, and it is also about the ground the fight will happen
 on.
 
@@ -23,8 +25,8 @@ on.
    expensive unit.
 3. **Elements are neutral.** Your fire burns your own troops, and the enemy can electrify your puddle. Combos are
    strong, and that strength comes with risk.
-4. **Designing units is part of the fun.** Units are pure data built from shared building blocks. The editor, sandbox,
-   lab and battle report exist so you can invent and tune units quickly.
+4. **Units are data.** Units are pure data built from shared building blocks, so new ones are quick to invent and
+   tune. They are changed in `src/data/units.ts` by request; the battle report and the CLI scripts are the tuning tools.
 5. **Readable field.** The field should stay readable. Baseline units create **statuses**, not surfaces. Surfaces are a
    reward that comes from specific upgrades, so the ground only fills up when players choose it.
 
@@ -148,7 +150,7 @@ recruit list; faction bonuses come later (section 8).
 | Bat Riders | 200 | 100 | 4 (2×2, air) | 20 | 220 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Shriek**: Each hit Dazes the target for 2s: it deals 10% damage and takes double.<br>**Colony**: +2 bats per squad.<br>**Torch Riders**: Riders drop torches: every hit sets the target Burning, and Ignites oiled ones.<br>**Bloodsuckers**: The bats feed as they fight: regenerate 15 HP/s. |
 | Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 200 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre fight harder: +25% damage, so Goblin Horde stabs one-hit other goblins. |
 
-#### Kingdom
+#### Wardens
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
@@ -209,7 +211,7 @@ Lethality: fights are meant to be short. A Knight mirror resolves in about 25–
   1.25) that is immune to lightning, hard to burn, worn away by water, and easy for swarms to surround.
 - **Skirmishers** (Wolf Riders, Griffon Riders) throw from just outside melee. There are fewer pure melee units than
   before, and more short-range attacks, so the fight has a front line, a skirmish line and a back line.
-- **Halberdiers** are the Kingdom's answer to rushes: a pike line with short sweeping splash and ×1.75 damage to cavalry
+- **Halberdiers** are the Wardens' answer to rushes: a pike line with short sweeping splash and ×1.75 damage to cavalry
   and large units, so goblins, wolves, ogres, trolls and golems run onto it. Pike Wall hurts every melee attacker (each
   goblin stab costs a goblin, and it is the one thing on the ground that punishes Bat Riders). Archers, fire and fliers
   beat it.
@@ -221,19 +223,19 @@ Earthshaker).
 
 | Army | vs Greenskin | vs Storm | vs Frost/Fire | vs Independents |
 |---|---|---|---|---|
-| Kingdom, archers (2 Knights, 3 Longbow, Ballista, Cleric) | 58% / 25% | 100% / 83% | 67% / 100% | 100% / 100% |
-| Kingdom, pikes (2 Knights, 2 Longbow, Halberdiers, Ballista, Cleric) | 100% / 75% | 100% / 0% | 25% / 25% | 100% / 100% |
+| Wardens, archers (2 Knights, 3 Longbow, Ballista, Cleric) | 58% / 25% | 100% / 83% | 67% / 100% | 100% / 100% |
+| Wardens, pikes (2 Knights, 2 Longbow, Halberdiers, Ballista, Cleric) | 100% / 75% | 100% / 0% | 25% / 25% | 100% / 100% |
 | Greenskin (3 Horde, Wolves, 2 Sappers, Bats, Alchemist) | — | 0% / 0% | 0% / 0% | 100% / 100% |
 | Storm (Water, 2 Air, Golem, Wisps) | 100% / 100% | — | 25% / 42% | 100% / 100% |
 | Frost/Fire (Fire, Frost, Golem, Air, Wisps) | 100% / 100% | 83% / 17% | — | 100% / 100% |
 
-Measured after Wolf Riders got javelins and the Stone Golem became one huge model, all at level 1. The Kingdom is on
+Measured after Wolf Riders got javelins and the Stone Golem became one huge model, all at level 1. The Wardens are on
 top without upgrades, and its two builds are a real choice of counterpunch: pikes answer Greenskins, archers answer
 Elementals. Elementals beat Greenskins. Fights last 8–45 s. With one upgrade each, the Storm army edges ahead, which is
 the first thing to look at once upgrades get tuned. Upgrades and veterancy haven't been tuned; expect balance to move a
 lot.
 
-One-unit-type lab fights still over-reward fliers, because most ground units can't hit them at all.
+One-unit-type fights (the Counters tab, `npm run matrix`) still over-reward fliers, because most ground units can't hit them at all.
 
 ### Roles
 
@@ -284,7 +286,7 @@ the same badge.
 - **Counterpunch upgrades.** Several upgrades answer a specific answer: Knights *Warded Plate* (vs elementals), Troll
   *Thick Blood* (regenerates while burning), Ballista *Reinforced Frame* (vs raiders), Wisps *Flicker* (vs arrows), Goblin
   *Scrap Armor* (vs archers), Cleric *Purify* (vs statuses), Golem *Magma Core* (vs trolls and armor).
-- **Kingdom upgrades stay plain**: armor, damage, range, rate of fire, more bodies. The elementals' and greenskins'
+- **Warden upgrades stay plain**: armor, damage, range, rate of fire, more bodies. The elementals' and greenskins'
   upgrades are where the combos live.
 - **Surfaces come from upgrades.** Inferno, Wildfire, Napalm, Oil Slick, Tidal Surge and Permafrost are the only things
   that put surfaces on the field. Everything else uses statuses.
@@ -321,7 +323,7 @@ make it stronger.
 - Promoted squads show a gold `LvN` tag on their footprint during deployment and in the report, and one gold ring per
   level on each model in battle. Enemy levels are visible.
 - Code: `src/sim/levels.ts` (`earnedLevel`, `levelDef`), XP is awarded in `applyRound` (`src/game/match.ts`), and the
-  battle builds each squad at its `level`. The lab, the matrix and balance tests run everything at level 1.
+  battle builds each squad at its `level`. The Counters tab, the matrix and balance tests run everything at level 1.
 
 ## 6. The elemental system — Decided (structure), Open (tables)
 
@@ -401,7 +403,7 @@ decision.
 | Faction | Identity | Strengths | Weaknesses |
 |---|---|---|---|
 | **Greenskins** (goblin, ogre) | numbers, speed, things that explode | swarms, raiders, bats that hunt archers, sappers that blow up armor, oil into fire, goblin auras | goblins die to any hit, ogres take extra fire damage |
-| **Kingdom** (human) | discipline and anti-everything; **the strongest and most straightforward faction** | armor, range, anti-air, anti-large, healing, plain stat upgrades | few elemental tools, slow siege |
+| **Wardens** (human) | discipline and anti-everything; **the strongest and most straightforward faction** | armor, range, anti-air, anti-large, healing, plain stat upgrades | few elemental tools, slow siege |
 | **Elementals** | elemental combos; **harder to use**, with hard weaknesses and some total counters (Air vs fliers, Golem vs lightning) | big splash, Wet + lightning, freezing, stuns | slow ground bodies, weak to the opposite element |
 | **Independents** | big, unique monsters | Dragon, Troll (regeneration), Giant (boulders) | expensive unlocks, no faction synergies |
 
@@ -430,18 +432,28 @@ Because the AI only uses the simulator, it handles any unit you design without n
 - Plan unlocks over several rounds.
 - Learn placement (flanking, tower snipes) instead of using templates.
 
-## 10. Tools — Decided
+## 10. Tabs and tools — Decided
+
+The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **Story**, **Codex**,
+**Counters**. The site opens on Play.
 
 | Tool | What it's for |
 |---|---|
-| **Unit editor** | Every field, live, including the four upgrades; raw JSON view; copy/paste of the whole roster. Session-only |
-| **Sandbox** | Watch a unit fight another at equal supply, with or without its upgrades, or run 10 headless sims |
-| **Balance Lab** | Every unit against every unit at equal supply, in a Web Worker. One-unit-type armies undervalue combo units |
 | **Battle report** | After each battle the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
 | **How to play** | A five-page walkthrough for new players (header button; opens on the Play tab). The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
-| **Codex** | Elemental rules and towers |
-| `npm run matrix` | The lab's win-rate matrix in the terminal |
+| **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts` |
+| **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
+| **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
+| `npm run matrix` | Every unit against every unit, one-unit armies, as a win-rate matrix in the terminal |
+
+### Codex links — Decided
+
+Game screens don't explain rules; they link to the Codex. Role chips, elements, layers ("hits ground + air"),
+resistances, and keywords inside unit and upgrade descriptions (Burning, Wet, fliers, splash, Keeps, ...) are links
+(`src/ui/codexLinks.tsx`, which lists the keywords; first mention only). Buttons (like the upgrade buy buttons) stay
+plain text. A test checks that every link target exists. When adding a status, surface, role or rule section, give it a
+Codex entry and, if players will meet the word in descriptions, a keyword.
 
 ### Damage attribution rules (battle report)
 
@@ -471,29 +483,28 @@ Because the AI only uses the simulator, it handles any unit you design without n
 ```
 src/sim/     deterministic simulation: fixed 50 ms tick, seeded RNG, no DOM
 src/data/    content: units, towers, elements and reactions, rules
-src/game/    match flow, placement, unlocks, AI, lab
+src/game/    match flow, placement, unlocks, AI, one-unit matchups (lab) and counter reasons
 src/render/  canvas drawing
 src/ui/      React views
 ```
 
 - **Determinism is load-bearing.** The same armies with the same seed and the same data always produce the same battle.
-  Replays, the AI, the lab and tests all depend on this. Playback speed never changes the outcome; the renderer interpolates models and projectiles between the last two ticks so motion stays smooth at any speed.
-- The roster lives in `src/data/units.ts`. The in-app editor is a session-only sandbox; edits reset on reload. Unit changes
-  are made in code, by request.
-- The app is fully static (GitHub Pages): no storage, no network calls, no analytics. Commit units by exporting them and
-  pasting into `src/data/units.ts`.
+  Replays, the AI, the Counters tab and tests all depend on this. Playback speed never changes the outcome; the renderer interpolates models and projectiles between the last two ticks so motion stays smooth at any speed.
+- The roster lives in `src/data/units.ts`. There is no in-app editor: unit changes are made in code, by request.
+- The app is fully static (GitHub Pages): no storage, no network calls, no analytics.
 
 ## 12. Roadmap
 
 Rough priority order. Everything is open to reshuffling.
 
-1. **Balance pass** using the lab and battle reports. A first rock-paper-scissors pass is done (section 4, counter
+1. **Balance pass** using the matrix, the experiments script and battle reports. A first rock-paper-scissors pass is done (section 4, counter
    web): Knights became low-damage tanks, Longbowmen became anti-swarm and anti-air volleys, and all units move a third
-   faster. Still open: in one-unit-type lab fights, fliers (Griffons, Wisps, Air Elementals) dominate because most
-   ground units can't hit them. Decide whether that's a lab artifact or a real problem. Upgrades (four per unit since Oct 2026) haven't been tuned.
+   faster. Still open: in one-unit-type fights, fliers (Griffons, Wisps, Air Elementals) dominate because most
+   ground units can't hit them. Decide whether that's an artifact of one-unit armies or a real problem. Upgrades (four per unit since Oct 2026) haven't been tuned.
 2. **Faction bonuses** (section 8).
-3. **Reaction editor** in-app, so statuses, surfaces and reactions can be iterated like units.
-4. **Lab with upgrades and mixed armies**, to compare upgrade A vs B and test combo pairs.
+3. **Campaigns** (docs/CAMPAIGN.md): mission framework, then the Wardens campaign. Parked until stored progress is
+   decided: saving the player's winning board from a campaign finale as the Drill Book's last page.
+4. **Mixed armies and upgrades in the experiments script**, to compare upgrade A vs B and test combo pairs.
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary.
 7. **Pathfinding and formations:** move around obstacles, and keep squads together.
