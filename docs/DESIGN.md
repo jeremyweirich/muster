@@ -33,7 +33,7 @@ on.
 ```
 Round N
  ├─ Income: supply += 200 + 100·N, except round 1 which starts at 400 (unspent supply carries over)
- ├─ Opening (round 1 only): take a random unit's unlock 100 cheaper, or +50 supply (section 5)
+ ├─ Opening (round 1 only): take a random unit's unlock 100 cheaper (same unit for both sides), or +50 supply (section 5)
  ├─ Deployment (simultaneous, blind)
  │    ├─ see the enemy army as it stood last round, plus their unlocks, upgrades and tower levels
  │    ├─ unlock units (one-time cost per match)
@@ -261,7 +261,7 @@ A small, fair bit of variety at the start of each match. In round 1, each player
 - **War chest:** `RULES.openingBonus` (50) extra supply right away.
 
 The discount is worth more but only if you commit to that unit, so the offer nudges a game in a direction without handing
-anyone an edge. Each side rolls its own unit. The player must choose before the first Fight. The AI chooses at random
+anyone an edge. Both sides are offered the same unit, so each can guess what the other might build. The player must choose before the first Fight. The AI chooses at random
 when the match starts, and tries its discounted unit more often while planning. The enemy's choice is shown from round 2: a small % badge on the
 discounted unit beside its health bar (dimmed if not unlocked yet), or a "+50 supply" note. Your own discount wears
 the same badge.

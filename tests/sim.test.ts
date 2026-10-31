@@ -385,6 +385,7 @@ describe("match opening", () => {
     for (let seed = 1; seed < 20; seed++) {
       const m = newMatch(DEFAULT_UNITS, seed);
       expect(pool).toContain(m.openings[0].unitId);
+      expect(m.openings[1].unitId).toBe(m.openings[0].unitId); // both sides see the same unit
       expect(m.openings[0].choice).toBeNull();
       expect(m.openings[1].choice).not.toBeNull(); // the AI picks at once
       const bonus = chooseOpening(m, 0, "bonus");

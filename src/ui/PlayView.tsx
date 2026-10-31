@@ -974,7 +974,7 @@ function OpeningOffer({ unit, onChoose }: { unit: UnitDef | undefined; onChoose:
                 🔒 <s>{unit.unlockCost}</s> {unlockPrice(unit, { [unit.id]: RULES.openingDiscount })}
               </span>
             </span>
-            <span className="up-desc">Unlock it {RULES.openingDiscount} cheaper this match.</span>
+            <span className="up-desc">Unlock it {RULES.openingDiscount} cheaper this match. The enemy is offered the same unit.</span>
           </button>
         )}
         <button className="up-btn can-buy" onClick={() => onChoose("bonus")}>

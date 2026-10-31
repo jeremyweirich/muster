@@ -15,8 +15,9 @@ export interface RoundReport {
   damage: [number, number]; // damage taken by [player, ai]
 }
 
-// A small, fair bit of variety at the start of each match: each side is offered a
+// A small, fair bit of variety at the start of each match: both sides are offered the same
 // random unit with RULES.openingDiscount off its unlock, or RULES.openingBonus supply.
+// Sharing the unit lets each side guess what the other might build.
 export interface Opening {
   unitId: string | null; // the unit offered a cheaper unlock (null if no unit qualifies)
   choice: "discount" | "bonus" | null;
@@ -45,7 +46,8 @@ export function newMatch(units: UnitDef[], seed = 1): MatchState {
   const start = startingUnlocks(units);
   const rng = new Rng(seed);
   const pool = openingPool(units);
-  const offer = (): Opening => ({ unitId: pool.length ? rng.pick(pool).id : null, choice: null });
+  const unitId = pool.length ? rng.pick(pool).id : null;
+  const offer = (): Opening => ({ unitId, choice: null });
   let state: MatchState = {
     round: 1,
     hp: [RULES.startHp, RULES.startHp],
