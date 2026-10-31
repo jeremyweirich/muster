@@ -254,11 +254,104 @@ code {
   height: auto;
 }
 .hud {
+  position: relative;
+  z-index: 5; /* unlock tooltips drop over the field */
   display: flex;
   align-items: center;
   gap: 16px;
   width: 100%;
-  max-width: 720px;
+}
+.hud .hp {
+  min-width: 140px;
+}
+/* Each side's unlocked units sit at the outer end of its health bar. */
+.hud-unlocks {
+  flex: 0 1 auto;
+  max-width: 34%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+}
+.hud-unlocks-0 {
+  justify-content: flex-start;
+}
+.hud-unlocks-1 {
+  justify-content: flex-end;
+}
+.hud-note {
+  white-space: nowrap;
+}
+.unlock-chip {
+  position: relative;
+  display: inline-flex;
+  outline: none;
+}
+.unlock-count {
+  position: absolute;
+  right: -4px;
+  top: -5px;
+  min-width: 13px;
+  height: 13px;
+  padding: 0 2px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: #14110a;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 13px;
+  text-align: center;
+}
+.unlock-tip {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  flex-direction: column;
+  gap: 2px;
+  min-width: 150px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.hud-unlocks-0 .unlock-tip {
+  left: 0;
+}
+.hud-unlocks-1 .unlock-tip {
+  right: 0;
+}
+.unlock-chip:hover .unlock-tip,
+.unlock-chip:focus .unlock-tip {
+  display: flex;
+}
+.tip-ups {
+  display: flex;
+  flex-direction: column;
+}
+.tip-up {
+  color: var(--muted);
+  opacity: 0.7;
+}
+.tip-up.owned {
+  color: var(--accent);
+  opacity: 1;
+  font-weight: 600;
+}
+/* Desktop shows unlocks in the header; small screens keep them in the sidebar. */
+.enemy-unlocks {
+  display: none;
+}
+@media (max-height: 560px) and (orientation: landscape), (orientation: portrait) and (max-width: 900px) {
+  .hud-unlocks {
+    display: none;
+  }
+  .enemy-unlocks {
+    display: block;
+  }
 }
 .round {
   font-weight: 700;

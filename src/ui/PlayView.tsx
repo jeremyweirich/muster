@@ -9,7 +9,7 @@ import { drawBackground, drawPromoteIcon, drawSquad } from "../render/draw";
 import { earnedLevel, levelDef, xpForLevel } from "../sim/levels";
 import { Battle, footprintOf, type BattleResult } from "../sim/battle";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
-import { upgradedDefs } from "../sim/upgrades";
+import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
 import { useRoster } from "../store/roster";
 import { MEDAL_COLORS, MvpBoard, SquadDetail, SquadList, topSquads } from "./BattleReport";
 import { useBattlePlayer } from "./battlePlayer";
@@ -552,6 +552,11 @@ export function PlayView() {
   const report = match.history[match.history.length - 1];
   const focusStats = fought?.result ? fought.result.stats[hoverSquad ?? pinned ?? ""] : undefined;
   const enemyUnlocks = match.unlocked[1].map((id) => enemyDefs.get(id)).filter((d): d is UnitDef => !!d);
+  const myUnlocks = match.unlocked[0].map((id) => myDefs.get(id)).filter((d): d is UnitDef => !!d);
+  const enemyOpening =
+    match.round > 1 && match.openings[1].choice
+      ? `opened with ${match.openings[1].choice === "bonus" ? `+${RULES.openingBonus} supply` : `a cheaper ${defs.get(match.openings[1].unitId ?? "")?.name ?? "unit"}`}`
+      : null;
   const selectedDef = selected ? myDefs.get(selected) : undefined;
   const card = hoverInfo ?? (selectedDef ? { def: selectedDef, side: 0 as Side, fromShop: true } : null);
   const lastAction = actions[actions.length - 1];
@@ -605,9 +610,11 @@ export function PlayView() {
     <div className={`play ${portraitOk ? "portrait-ok" : ""}`}>
       <main className="board">
         <div className="hud">
+          <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} />
           <HpBar label="You" hp={match.hp[0]} side={0} />
           <div className="round">Round {match.round}</div>
           <HpBar label="Enemy" hp={match.hp[1]} side={1} />
+          <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
         </div>
         <div className="field-wrap" style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
           <FieldCanvas tile={TILE} draw={draw} onPointer={onPointer} />
@@ -728,7 +735,7 @@ export function PlayView() {
             <div className="enemy-unlocks">
               <div className="muted small">
                 Enemy has unlocked
-                {match.round > 1 && match.openings[1].choice && ` · opened with ${match.openings[1].choice === "bonus" ? `+${RULES.openingBonus} supply` : `a cheaper ${defs.get(match.openings[1].unitId ?? "")?.name ?? "unit"}`}`}
+                {enemyOpening && ` · ${enemyOpening}`}
               </div>
               <div className="swatches">
                 {enemyUnlocks.map((d) => (
@@ -1082,6 +1089,40 @@ function pill(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(text, cx, y - 4.5);
+}
+
+// A side's unlocked units beside its health bar. Hovering one shows its name and which upgrades it has.
+function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; owned: UpgradeState; side: Side; note?: string | null }) {
+  return (
+    <div className={`hud-unlocks hud-unlocks-${side}`} aria-label={side === 0 ? "Your unlocks" : "Enemy unlocks"}>
+      {units.map((d) => {
+        const bought = owned[d.id] ?? [];
+        return (
+          <span key={d.id} className="unlock-chip" tabIndex={0}>
+            <Swatch def={d} size={20} />
+            {bought.length > 0 && <span className="unlock-count">{bought.length}</span>}
+            <span className="unlock-tip" role="tooltip">
+              <b>{d.name}</b>
+              {d.upgrades?.length ? (
+                <span className="tip-ups">
+                  {d.upgrades.map((up) => {
+                    const has = bought.includes(up.id);
+                    return (
+                      <span key={up.id} className={has ? "tip-up owned" : "tip-up"}>
+                        {has ? "★" : "·"} {up.name}
+                      </span>
+                    );
+                  })}
+                </span>
+              ) : null}
+              <span className="muted small">{bought.length ? `${bought.length} of ${d.upgrades?.length ?? 0} upgrades` : "no upgrades"}</span>
+            </span>
+          </span>
+        );
+      })}
+      {note && <span className="muted small hud-note">{note}</span>}
+    </div>
+  );
 }
 
 function HpBar({ label, hp, side }: { label: string; hp: number; side: Side }) {

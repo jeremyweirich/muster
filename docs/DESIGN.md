@@ -73,8 +73,12 @@ and towers.
 ### Screen layout — Decided
 
 - **Landscape everywhere.** The Play screen is one sidebar (supply, Fight, the recruit list with the unit details
-  directly under it, towers, enemy unlocks) beside the field, about 1 : 3. The field keeps its 16:9 shape and fits
+  directly under it, towers) beside the field, about 1 : 3. The field keeps its 16:9 shape and fits
   whichever of width or height runs out first.
+- **Unlocks in the header.** Above the field, each side's unlocked units sit at the outer end of its health bar (yours
+  on the left, the enemy's on the right), with a gold count of upgrades bought. Hovering one shows its name and all of
+  its upgrades, with the bought ones starred in gold. On short landscape screens and in portrait the header has no
+  room, so the enemy's unlocks stay in the sidebar instead.
 - **Phones play sideways.** On short landscape screens the header and padding shrink so the field gets the height. In
   portrait, touch devices get a "turn your phone sideways" screen with a full-screen + landscape-lock button (works on
   Android; iOS has to rotate by hand) and a "play in portrait anyway" escape, which stacks the field above the sidebar.
