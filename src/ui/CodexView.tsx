@@ -15,7 +15,7 @@ import { Swatch } from "./UnitInfo";
 const ELEMENT_INFO: Record<Element, string> = {
   physical:
     "Swords, arrows, claws and boulders. Most attacks are physical, and armor (physical resistance) is common, so tough units shrug a lot of it off. A physical hit shatters a Frozen target.",
-  fire: "Fire goes straight through armor, and many big creatures take extra fire damage. It lights oil, melts ice, and stops most regeneration while a unit is Burning.",
+  fire: "Fire goes straight through armor, and many big creatures take extra fire damage. It lights oil and stops most regeneration while a unit is Burning. Fire doesn't melt ice or dry anything off: it just burns, until water puts it out.",
   water: "Water soaks its targets. Wet on its own does nothing, but it sets up lightning and frost. Water also puts out fires.",
   frost: "Frost chills its targets, slowing them down. Hit a Chilled or Wet target with frost and it freezes solid, ready to shatter.",
   lightning: "Lightning can jump from target to target. It hits Wet targets twice as hard, electrifies puddles, lights oil and shatters Frozen targets.",
@@ -34,9 +34,9 @@ const STATUS_INFO: Record<string, string> = {
 const SURFACE_INFO: Record<string, string> = {
   puddle: "Standing water. It soaks anyone who stands in it.",
   shockwater: "A puddle struck by lightning. The charge spreads through the whole connected puddle.",
-  ice: "Frozen water. It chills anyone on it, and fire melts it back into a puddle.",
+  ice: "Frozen water. It chills anyone on it, and melts back into a puddle when it runs out.",
   fire: "Burning ground. It spreads through oil and burns whoever stands in it, on either side.",
-  steam: "Fire meeting water. Units inside can't be targeted from range, and the steam scalds them.",
+  steam: "Water poured onto burning ground. Units inside can't be targeted from range, and the steam scalds them.",
   oil: "Slick oil. It slows units down, and fire or lightning turns all of it into burning ground.",
 };
 

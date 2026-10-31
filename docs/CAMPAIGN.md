@@ -226,7 +226,7 @@ game, becomes an act of care.
 | 1 | We Burned Our Own | goblins (G8 replayed) | friendly fire seen from the inside; objective: win a round with low friendly fire (the battle report already tracks it) |
 | 2 | Room to Breathe | goblins | positioning: fire at the back with gaps, a body in front; `spacing` |
 | 3 | Controlled Burn | goblins | **Controlled Burn as character growth**: an upgrade that turns care into a skill (`onHitAffects: "enemies"`) |
-| 4 | Water and Fire | goblins | first reactions: Douse, Evaporate, Steam; water puts out goblin oil fires; healing (Wellspring) |
+| 4 | Water and Fire | goblins | first reactions: Douse, Steam; water puts out goblin oil fires; healing (Wellspring) |
 | 5 | The Wall | Marshal | resistances: Warded Plate shrugs elements; Frost → Freeze → Shatter needs a physical partner |
 | 6 | Wet Ground | Marshal | the combo pair: Wet + lightning = Conduct; chain lightning in tight ranks |
 | 7 | The Field Is a Weapon | Marshal | surfaces you choose: Tidal Surge puddles, electrified water spreading, keeping your own units out |

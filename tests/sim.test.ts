@@ -53,14 +53,14 @@ describe("surfaces", () => {
     expect(g.events[0].name).toBe("Electrify");
   });
 
-  it("fire on puddle boils to steam, ice melts to puddle", () => {
+  it("water douses fire into steam, but fire doesn't boil puddles or melt ice", () => {
     const g = new SurfaceGrid(10, 10, 2);
-    g.create(3, 3, 1, "puddle");
-    g.create(3, 3, 0.5, "fire");
+    g.create(3, 3, 1, "fire");
+    g.create(3, 3, 0.5, "puddle");
     expect(g.at(3, 3)).toBe("steam");
     g.create(7, 7, 1, "ice");
     g.element(7, 7, 0.5, "fire");
-    expect(g.at(7, 7)).toBe("puddle");
+    expect(g.at(7, 7)).toBe("ice");
   });
 });
 

@@ -67,7 +67,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     },
     upgrades: [
       { id: "longshot", name: "Longshot", description: "+4 range.", mods: [{ stat: "range", add: 4 }] },
-      { id: "fire_arrows", name: "Fire Arrows", description: "Arrows burn: fire damage +25%, ignites oiled targets, melts ice.", element: "fire", mods: [{ stat: "damage", mult: 1.25 }] },
+      { id: "fire_arrows", name: "Fire Arrows", description: "Arrows burn: fire damage +25%, and they ignite oiled targets.", element: "fire", mods: [{ stat: "damage", mult: 1.25 }] },
       { id: "volley", name: "Volley", description: "Shoot 40% faster, but loose arcs reach 2 tiles less.", mods: [{ stat: "cooldown", mult: 0.7 }, { stat: "range", add: -2 }] },
       {
         id: "skyhunters",
@@ -313,7 +313,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:goblin", "race:goblin", "class:ranged", "size:small", "role:skirmisher", "role:antiair", "role:swarm"],
-    look: { shape: "triangle", color: "#9cb84a", icon: "bow" },
+    look: { shape: "circle", color: "#d9b23c", icon: "bow" },
   },
   {
     id: "wolf_riders",
@@ -724,10 +724,12 @@ export const DEFAULT_UNITS: UnitDef[] = [
         traits: [{ type: "periodic", interval: 2, effects: [{ type: "status", status: "chilled", radius: 2.5, affects: "enemies" }] }],
       },
       {
-        id: "cooling_mist",
-        name: "Cooling Mist",
-        description: "Every 2s, a cold mist washes every status off allies within 5 tiles: it puts out Burning, dries off Wet before lightning can Conduct, and thaws Frozen.",
-        traits: [{ type: "periodic", interval: 2, effects: [{ type: "cleanse", radius: 5 }] }],
+        // the optional answer to long-range archers: outranges Elven Archers (8), though not Longshot (12)
+        id: "glacial_reach",
+        name: "Glacial Reach",
+        description: "Long, thin icicles that hunt archers, casters and siege first: +4 range (11 in all, past the Elven Archers), but 25% less damage.",
+        mods: [{ stat: "range", add: 4 }, { stat: "damage", mult: 0.75 }],
+        prefers: { hasAnyTag: BACKLINE },
       },
     ],
     tags: ["faction:elemental", "race:elemental", "element:frost", "class:caster", "size:medium", "role:ranged", "role:antiair", "role:combo"],

@@ -34,7 +34,7 @@ export const KEYWORDS: [RegExp, string][] = [
   [/\bpuddles?\b/i, "surface-puddle"],
   [/\bsteam\b/i, "surface-steam"],
   [/\bice\b/i, "surface-ice"],
-  [/\b(conduct|shatter(s|ing)?|ignit(e|es|ing)|evaporates?)\b/i, "reactions"],
+  [/\b(conduct|shatter(s|ing)?|ignit(e|es|ing))\b/i, "reactions"],
   [/\b(keeps?|towers?)\b/i, "keeps"],
   [/\bfire\b/i, "element-fire"],
   [/\bwater\b/i, "element-water"],

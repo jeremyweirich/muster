@@ -102,7 +102,7 @@ export const SURFACES: Record<SurfaceId, SurfaceDef> = {
     color: "#e6e6e6",
     alpha: 0.45,
     blocksRanged: true,
-    onTick: [{ type: "damage", amount: 6, element: "fire" }], // scalding: boiling a puddle under someone hurts
+    onTick: [{ type: "damage", amount: 6, element: "fire" }], // scalding: dousing burning ground hurts whoever stands in it
   },
   oil: {
     id: "oil",
@@ -116,15 +116,12 @@ export const SURFACES: Record<SurfaceId, SurfaceDef> = {
   },
 };
 
+// Fire just burns: it doesn't boil, melt, thaw or evaporate, and frost doesn't snuff it. Only water puts it out (Douse).
 export const SURFACE_REACTIONS: SurfaceReaction[] = [
   { surface: "puddle", element: "lightning", becomes: "shockwater", spread: true, name: "Electrify" },
   { surface: "puddle", element: "frost", becomes: "ice", name: "Freeze" },
-  { surface: "puddle", element: "fire", becomes: "steam", name: "Boil" },
   { surface: "shockwater", element: "frost", becomes: "ice", name: "Freeze" },
-  { surface: "shockwater", element: "fire", becomes: "steam", name: "Boil" },
-  { surface: "ice", element: "fire", becomes: "puddle", name: "Melt" },
   { surface: "fire", element: "water", becomes: "steam", name: "Douse" },
-  { surface: "fire", element: "frost", becomes: null, name: "Snuff" },
   { surface: "oil", element: "fire", becomes: "fire", spread: true, name: "Ignite" },
   { surface: "oil", element: "lightning", becomes: "fire", spread: true, name: "Ignite" }, // sparks light oil too
 ];
@@ -132,15 +129,11 @@ export const SURFACE_REACTIONS: SurfaceReaction[] = [
 export const UNIT_REACTIONS: UnitReaction[] = [
   { status: "wet", element: "lightning", name: "Conduct", damageMult: 2 },
   { status: "wet", element: "frost", name: "Freeze", removeStatus: true, consumeIncoming: true, addStatus: { status: "frozen" } },
-  { status: "wet", element: "fire", name: "Evaporate", removeStatus: true, consumeIncoming: true },
   { status: "chilled", element: "frost", name: "Freeze", removeStatus: true, consumeIncoming: true, addStatus: { status: "frozen" } },
-  { status: "chilled", element: "fire", name: "Thaw", removeStatus: true, consumeIncoming: true },
   { status: "frozen", element: "physical", name: "Shatter", removeStatus: true, damageMult: 2 },
   { status: "frozen", element: "lightning", name: "Shatter", removeStatus: true, damageMult: 2 },
-  { status: "frozen", element: "fire", name: "Thaw", removeStatus: true, consumeIncoming: true, addStatus: { status: "wet" } },
   { status: "frozen", element: "frost", name: "", consumeIncoming: true },
   { status: "burning", element: "water", name: "Douse", removeStatus: true },
-  { status: "burning", element: "frost", name: "Snuff", removeStatus: true, consumeIncoming: true },
   { status: "oiled", element: "fire", name: "Ignite", removeStatus: true, bonusDamage: { amount: 60, element: "fire" }, addStatus: { status: "burning" } },
   { status: "oiled", element: "lightning", name: "Ignite", removeStatus: true, bonusDamage: { amount: 60, element: "fire" }, addStatus: { status: "burning" } },
 ];

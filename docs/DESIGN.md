@@ -147,7 +147,7 @@ recruit list; faction bonuses come later (section 8).
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Knights | 200 | 0 | 4 (4×1) | 10 | 760 | 60 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage.<br>**Warded Plate**: +40% resistance to fire, frost, lightning and water. The answer to elementals.<br>**Veterans**: Old hands: +25% damage, and each knight shrugs off the first hit it takes. |
-| Elven Archers | 100 | 0 | 6 (3×2) | 8 | 100 | 22 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +4 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice.<br>**Volley**: Shoot 40% faster, but loose arcs reach 2 tiles less.<br>**Skyhunters**: Hunt fliers first, with +2 range against them: they shoot them down before they reach the line. |
+| Elven Archers | 100 | 0 | 6 (3×2) | 8 | 100 | 22 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +4 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, and they ignite oiled targets.<br>**Volley**: Shoot 40% faster, but loose arcs reach 2 tiles less.<br>**Skyhunters**: Hunt fliers first, with +2 range against them: they shoot them down before they reach the line. |
 | Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 340 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +50% damage. Still one target at a time.<br>**Repeater**: Fires twice as fast for 60% damage per bolt.<br>**Chain Harpoons**: Bolts Chill the target. Hit it again and it freezes; the bolt after that shatters it for double. Pairs with Repeater.<br>**Reinforced Frame**: +100% HP and +30% physical resistance, so raiders can't just walk over it. |
 | Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 55 physical / 1s, range 2 | Flier, Fast, Skirmisher | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Hunt fliers first, with ×1.75 damage to them.<br>**Pride**: +1 griffon per squad. |
 | Cleric | 150 | 75 | 2 (2×1) | 8 | 300 | none | Healer, Support | **Sanctuary**: A second prayer heals 50 more every 2s, in a much wider circle.<br>**Blessing**: Allies nearby deal +35% damage.<br>**Purify**: Every 1.5s, washes every status off nearby allies: Burning, Frozen, Wet, Oiled, Dazed. Combos and Keep collapses barely touch the line.<br>**Battle Hymn**: Allies nearby attack 30% faster and march 25% faster. With Blessing, the line hits much harder. |
@@ -172,7 +172,7 @@ recruit list; faction bonuses come later (section 8).
 | Water Elemental | 250 | 100 | 1 (2×2) | 6 | 1800 | 60 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles.<br>**Wellspring**: Heals nearby allies 40 every 2s. The only healing the elementals have.<br>**Tsunami**: Waves crash wider: +1 splash radius and +25% damage. Soaks whole formations for lightning. |
 | Air Elemental | 200 | 100 | 2 (2×1) | 10 | 400 | 45 lightning / 2s, range 4, chain ×2 | Ranged, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster.<br>**Eye of the Storm**: Hunts fliers first, with ×2 more damage to them (×3 in all). Nothing in the sky survives.<br>**Take Flight**: Rises on its own winds and becomes a flier, 40% faster: only anti-air can touch it, and it floats over the ground's hazards. |
 | Cloudlings | 100 | 50 | 10 (3×2, air) | 16 | 45 | 12 physical / 1.4s, range 2 | Swarm, Flier, Fast | **Downpour**: Each cloud rains on its first target, and again every 6s: everyone there is soaked Wet, and the ground turns to a puddle.<br>**Thunderstorm**: Each cloud calls down a lightning strike on its first target, and another every 10s. Wet targets take double; Frozen ones shatter.<br>**Overcast**: The sky fills in: +6 clouds per squad.<br>**Freezing Rain**: The hail turns to freezing rain: frost damage that goes through armor and freezes Wet targets solid. |
-| Frost Elemental | 150 | 100 | 3 (3×1) | 8 | 350 | 55 frost / 1.5s, range 7 | Ranged, Anti-air, Combo | **Chilling Bolts**: Bolts Chill the target, slowing its moves and attacks. The next frost hit on a Chilled target freezes it solid.<br>**Cold Snap**: Shoots 50% faster.<br>**Hoarfrost**: A ring of bitter cold: every 2s, enemies within 2.5 tiles are Chilled. Raiders that reach the back line slow to a crawl.<br>**Cooling Mist**: Every 2s, a cold mist washes every status off allies within 5 tiles: it puts out Burning, dries off Wet before lightning can Conduct, and thaws Frozen. |
+| Frost Elemental | 150 | 100 | 3 (3×1) | 8 | 350 | 55 frost / 1.5s, range 7 | Ranged, Anti-air, Combo | **Chilling Bolts**: Bolts Chill the target, slowing its moves and attacks. The next frost hit on a Chilled target freezes it solid.<br>**Cold Snap**: Shoots 50% faster.<br>**Hoarfrost**: A ring of bitter cold: every 2s, enemies within 2.5 tiles are Chilled. Raiders that reach the back line slow to a crawl.<br>**Glacial Reach**: Long, thin icicles that hunt archers, casters and siege first: +4 range (11 in all, past the Elven Archers), but 25% less damage. |
 | Stone Golem | 200 | 75 | 1 (3×3) | 6 | 2400 | 220 physical / 2s, range 0.8 | Sturdy, Melee, Slow | **Granite**: +40% HP and +20% physical resistance.<br>**Quake**: Slams shake the ground: they splash, and stun everything around for 0.5s.<br>**Magma Core**: Fists turn molten: fire damage that sets enemies Burning. Melts armor and stops trolls healing.<br>**Landslide**: Rolls into battle 60% faster, and its first slam deals ×3. |
 
 #### Independents
@@ -243,8 +243,9 @@ can take to the sky. Frost is the steady single-target shooter whose upgrades ar
   targets Conduct, Frozen ones Shatter), and Overcast adds clouds.
 - **Frost Elemental** is three ice spirits with long-range frost bolts (range 7, hits air): steady single-target damage
   that goes through armor and freezes anything Wet. Chilling Bolts adds control, Cold Snap adds damage, Hoarfrost chills
-  raiders that reach the back line, and Cooling Mist washes statuses off allies (the elementals' answer to Conduct and
-  Burning on their own side). Fire melts it (−50% fire resistance).
+  raiders that reach the back line, and Glacial Reach (+4 range, −25% damage, hunts archers, casters and siege first) is
+  the optional answer to long-range archers. Fire melts it (−50% fire resistance). The Fire Elemental's Meteor is the
+  other way to outrange archers.
 - **Stone Golem** is the elementals' plain front line: one huge body (3×3, size 1.25) that is immune to lightning, hard
   to burn, worn away by water, and easy for swarms to surround. Magma Core gives it fire fists.
 
@@ -331,7 +332,7 @@ the same badge.
 - **Counterpunch upgrades.** Several upgrades answer a specific answer: Knights *Warded Plate* (vs elementals), Troll
   *Thick Blood* (regenerates while burning), Troll *Boulder Toss* (vs Pike Wall), Ballista *Reinforced Frame* (vs
   raiders), Air Elemental *Take Flight* (vs pikes and Knights), Cloudlings *Freezing Rain* (vs armor), Frost Elemental
-  *Cooling Mist* (vs Conduct and Burning), Grunts *Scrap Armor* (vs archers), Skirmishers *Ambush* (vs archers), Cleric *Purify* (vs statuses), Golem *Magma Core* (vs trolls and armor).
+  *Glacial Reach* (vs archers), Grunts *Scrap Armor* (vs archers), Skirmishers *Ambush* (vs archers), Cleric *Purify* (vs statuses), Golem *Magma Core* (vs trolls and armor).
 - **Warden upgrades stay plain**: armor, damage, range, rate of fire, more bodies. The elementals' and goblins'
   upgrades are where the combos live.
 - **Surfaces come from upgrades.** Inferno, Wildfire, Oil Bombs, Tidal Surge and Downpour are the only things
@@ -391,14 +392,15 @@ There are three layers:
   - Frost on Wet or Chilled → **Freeze**
   - Physical or Lightning on Frozen → **Shatter**, ×2
   - Fire or Lightning on Oiled → **Ignite**, +60 fire and the target is left Burning
-  - Fire on Wet → **Evaporate**
   - Water on Burning → **Douse**
 - *Surface reactions:* element × surface → new surface. Examples:
   - Lightning on Puddle → **Electrified Water**, which spreads through the connected puddle
   - Frost on Puddle → **Ice**
-  - Fire on Puddle → **Steam**, which blocks ranged targeting and scalds whoever stands in it (6 fire per tick)
+  - Water on Fire → **Steam**, which blocks ranged targeting and scalds whoever stands in it (6 fire per tick)
   - Fire or Lightning on Oil → **Fire**, which spreads
-  - Fire on Ice → **Puddle**
+- **Fire just burns** (Oct 2026, owner's call): fire doesn't boil puddles, melt ice, thaw Frozen or Chilled units, or
+  dry off Wet ones, and frost doesn't snuff Burning. Only water puts fire out. Elemental armies stopped undoing their
+  own combos (fire thawing what frost froze, frost putting out what fire lit).
 
 **Dial setting (Oct 2026):** the first prototype was far too complex and was cut back hard. The current pass turns it up
 a little, with no new statuses, surfaces or elements: lightning now also sparks oil and shatters ice, Ignite leaves
