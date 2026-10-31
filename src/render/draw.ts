@@ -272,6 +272,16 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
   ctx.lineWidth = Math.max(1.5, r * 0.22);
   ctx.strokeStyle = SIDE_COLORS[side];
   ctx.stroke();
+  if ((def.level ?? 1) > 1) {
+    // veterans wear a gold ring, one per level above 1
+    ctx.strokeStyle = VETERAN_GOLD;
+    ctx.lineWidth = 1.2;
+    for (let i = 1; i < Math.min(def.level!, 4); i++) {
+      ctx.beginPath();
+      ctx.arc(px, py, r + 1.5 + i * 2.2, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
   if (r >= 3.5 && def.speed > 0) {
     // facing notch in the team color
     ctx.fillStyle = SIDE_COLORS[side];
@@ -342,6 +352,48 @@ export function drawSquad(
     const dead = o.alive !== undefined && i >= o.alive;
     drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3 });
   });
+  ctx.globalAlpha = 1;
+  if ((sq.level ?? 1) > 1) drawLevelBadge(ctx, sq.x * tile + 1, sq.y * tile + 1, sq.level!);
+}
+
+export const VETERAN_GOLD = "#f5c542";
+
+// A squad's level, as a small gold tag in the top-left corner of its footprint.
+export function drawLevelBadge(ctx: CanvasRenderingContext2D, x: number, y: number, level: number) {
+  const text = `Lv${level}`;
+  ctx.font = "bold 10px system-ui, sans-serif";
+  const w = ctx.measureText(text).width + 6;
+  ctx.fillStyle = "rgba(10,14,18,0.85)";
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, 13, 3);
+  ctx.fill();
+  ctx.fillStyle = VETERAN_GOLD;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, x + 3, y + 7);
+}
+
+// "Ready to promote": a pulsing gold chevron above the squad's footprint.
+export function drawPromoteIcon(ctx: CanvasRenderingContext2D, cx: number, top: number, time: number) {
+  const bob = Math.sin(time * 4) * 1.5;
+  const y = top - 10 + bob;
+  ctx.fillStyle = "rgba(10,14,18,0.85)";
+  ctx.beginPath();
+  ctx.arc(cx, y, 9, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = VETERAN_GOLD;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  for (const dy of [-2.5, 2]) {
+    ctx.beginPath();
+    ctx.moveTo(cx - 4.5, y + dy + 2.5);
+    ctx.lineTo(cx, y + dy - 2);
+    ctx.lineTo(cx + 4.5, y + dy + 2.5);
+    ctx.stroke();
+  }
 }
 
 export function drawTowers(ctx: CanvasRenderingContext2D, tile: number, alpha = 1) {

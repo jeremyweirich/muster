@@ -8,6 +8,7 @@ export const ROLES: Record<string, { name: string; description: string }> = {
   sniper: { name: "Sniper", description: "Very long range. Stays at the back." },
   ranged: { name: "Ranged", description: "Attacks from a distance." },
   melee: { name: "Melee", description: "Has to get up close." },
+  skirmisher: { name: "Skirmisher", description: "Short-range throws: hits from just outside melee, a step behind the front line." },
   splash: { name: "Splash", description: "Hits groups. Punishes swarms and tight formations." },
   antiair: { name: "Anti-air", description: "Can shoot down fliers." },
   antilarge: { name: "Anti-large", description: "Bonus damage against big targets." },

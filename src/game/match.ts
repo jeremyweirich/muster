@@ -1,6 +1,7 @@
 import { RULES } from "../data/rules";
 import type { BattleResult } from "../sim/battle";
 import type { UpgradeState } from "../sim/upgrades";
+import { earnedLevel } from "../sim/levels";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { startingUnlocks, type DefMap, type UnlockDiscounts } from "./army";
@@ -89,13 +90,31 @@ export function roundDamage(result: BattleResult, defs: DefMap): [number, number
   return [dmgFrom(1), dmgFrom(0)];
 }
 
+// XP a squad earned in a battle: damage dealt to enemies plus healing done.
+export function battleXp(result: BattleResult, uid: string): number {
+  const s = result.stats[uid];
+  return s ? Math.round(s.dealt + s.healed) : 0;
+}
+
+// Squads whose XP unlocks a level they haven't been promoted to yet.
+export function canPromote(sq: PlacedSquad): boolean {
+  return earnedLevel(sq.xp ?? 0, RULES) > (sq.level ?? 1);
+}
+
+// Promotions cost the unit's base price, every level.
+export function promotePrice(def: UnitDef): number {
+  return def.cost;
+}
+
 export function applyRound(state: MatchState, result: BattleResult, defs: DefMap): MatchState {
   const damage = roundDamage(result, defs);
   const hp: [number, number] = [Math.max(0, state.hp[0] - damage[0]), Math.max(0, state.hp[1] - damage[1])];
   const report: RoundReport = { round: state.round, winner: result.winner, timedOut: result.timedOut, damage };
+  const gain = (army: PlacedSquad[]) => army.map((sq) => ({ ...sq, xp: (sq.xp ?? 0) + battleXp(result, sq.uid) || undefined }));
   return {
     ...state,
     hp,
+    armies: [gain(state.armies[0]), gain(state.armies[1])],
     phase: hp[0] <= 0 || hp[1] <= 0 ? "over" : "result",
     history: [...state.history, report],
   };

@@ -140,6 +140,7 @@ export interface UnitDef {
   tags: string[];
   look: { shape: Shape; color: string; icon?: string; glyph?: string }; // icon: an id from src/render/icons.ts; glyph: emoji fallback
   structure?: boolean; // towers: never move, don't count toward winning the battle
+  level?: number; // set by levelDef for promoted squads; absent = level 1
   upgrades?: UpgradeDef[]; // four per unit; prices come from RULES.upgradeCosts, in buy order
 }
 
@@ -204,6 +205,8 @@ export interface PlacedSquad {
   y: number;
   rot?: boolean; // rotated 90°: footprint w and h swap
   round: number; // round it was placed in
+  xp?: number; // damage dealt + healing done, summed over every battle it fought
+  level?: number; // promotions paid for; absent = level 1
 }
 
 export interface Rules {
@@ -233,4 +236,5 @@ export interface Rules {
   towerDazeBase: number; // seconds of Daze when a level-0 tower falls
   towerDazePerLevel: number; // Daze seconds removed per tower level
   towerDazeMin: number;
+  levelXp: number[]; // total XP that unlocks level 2, 3, 4...
 }

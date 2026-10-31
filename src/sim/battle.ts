@@ -1,6 +1,7 @@
 import { ELEMENT_COLORS, STATUSES, SURFACES, UNIT_REACTIONS } from "../data/elements";
 import { RULES } from "../data/rules";
 import { towerDef, towerPlacements } from "../data/towers";
+import { levelDef } from "./levels";
 import { Rng } from "./rng";
 import { matches } from "./selectors";
 import { SurfaceGrid } from "./surfaces";
@@ -227,7 +228,7 @@ export class Battle {
       const sideDefs = Array.isArray(defs) ? defs[side] : defs;
       for (const sq of armies[side]) {
         const def = sideDefs.get(sq.defId);
-        if (def) this.addSquad(sq, def, side);
+        if (def) this.addSquad(sq, levelDef(def, sq.level ?? 1), side);
       }
       if (opts.towers ?? true) {
         towerPlacements(side, this.rules).forEach((t, i) => {

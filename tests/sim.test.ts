@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, canPlace, defMap, priceOf, upgradePrice } from "../src/game/army";
-import { chooseOpening, newMatch, openingPool, unlockDiscounts } from "../src/game/match";
+import { applyRound, battleXp, canPromote, chooseOpening, newMatch, openingPool, roundDamage, unlockDiscounts } from "../src/game/match";
+import { earnedLevel, levelDef } from "../src/sim/levels";
 import { ROLES } from "../src/data/roles";
 import { applyUpgrades, upgradedDefs } from "../src/sim/upgrades";
 import { towerPlacements } from "../src/data/towers";
@@ -410,5 +411,63 @@ describe("ai opening", () => {
       );
       expect(plan.squads.some((s) => defs.get(s.defId)?.attack)).toBe(true);
     }
+  });
+});
+
+describe("veterancy", () => {
+  it("levels scale HP, damage, healing and regeneration linearly", () => {
+    const k = levelDef(byId("knights"), 3);
+    expect(k.hp).toBe(byId("knights").hp * 3);
+    expect(k.attack!.damage).toBe(byId("knights").attack!.damage * 3);
+    expect(k.attack!.cooldown).toBe(byId("knights").attack!.cooldown);
+    const c = levelDef(byId("cleric"), 2);
+    const heal = (d: typeof c) => (d.traits![0] as { effects: { amount: number }[] }).effects[0].amount;
+    expect(heal(c)).toBe(heal(byId("cleric")) * 2);
+    const t = levelDef(byId("troll"), 2);
+    expect((t.traits![0] as { perSecond: number }).perSecond).toBe(80);
+    expect(levelDef(byId("knights"), 1)).toBe(byId("knights"));
+  });
+
+  it("XP thresholds unlock levels, which cost more XP each time", () => {
+    expect(earnedLevel(0, RULES)).toBe(1);
+    expect(earnedLevel(RULES.levelXp[0], RULES)).toBe(2);
+    expect(earnedLevel(RULES.levelXp[1] - 1, RULES)).toBe(2);
+    for (let i = 1; i < RULES.levelXp.length; i++) {
+      expect(RULES.levelXp[i] - RULES.levelXp[i - 1]).toBeGreaterThan(i > 1 ? RULES.levelXp[i - 1] - RULES.levelXp[i - 2] : RULES.levelXp[0]);
+    }
+  });
+
+  it("squads earn XP from battle and fight at their level", () => {
+    let m = newMatch(DEFAULT_UNITS, 1);
+    m = { ...m, armies: [army(0, ["knights", "longbowmen"]), army(1, ["goblin_horde"])] };
+    const r = new Battle(defs, m.armies, { seed: 1 }).run();
+    const after = applyRound(m, r, defs);
+    const top = [...after.armies[0]].sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))[0];
+    expect(top.xp).toBe(battleXp(r, top.uid));
+    expect(top.xp).toBeGreaterThan(0);
+    const vet = { ...top, xp: RULES.levelXp[0] };
+    expect(canPromote(vet)).toBe(true);
+    expect(canPromote({ ...vet, level: 2 })).toBe(false);
+    const b = new Battle(defs, [[{ ...vet, level: 2 }], []], { towers: false });
+    expect(b.models[0].maxHp).toBe(byId(vet.defId).hp * 2);
+  });
+
+  it("levels don't change round damage", () => {
+    const a = army(0, ["knights", "knights"]);
+    const r = new Battle(defs, [a, []], { towers: false }).run();
+    const vets = a.map((s) => ({ ...s, level: 3 }));
+    const rv = new Battle(defs, [vets, []], { towers: false }).run();
+    expect(roundDamage(rv, defs)).toEqual(roundDamage(r, defs));
+  });
+
+  it("the AI promotes veterans it can afford", () => {
+    const vets = army(1, ["knights", "knights"]).map((s) => ({ ...s, xp: 99999 }));
+    let promotedAny = false;
+    for (let seed = 1; seed < 6 && !promotedAny; seed++) {
+      const plan = planAiRound(DEFAULT_UNITS, defs, { army: vets, unlocked: ["knights", "longbowmen", "goblin_horde"], upgrades: {}, towerLevels: [0, 0], supply: 800 }, { army: army(0, ["knights"]), upgrades: {}, towerLevels: [0, 0] }, 2, "normal", seed);
+      promotedAny = plan.promotions.length > 0;
+      for (const uid of plan.promotions) expect(vets.some((v) => v.uid === uid)).toBe(true);
+    }
+    expect(promotedAny).toBe(true);
   });
 });

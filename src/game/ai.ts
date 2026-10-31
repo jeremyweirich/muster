@@ -2,6 +2,7 @@ import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, UnitDef } from "../sim/types";
 import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
+import { canPromote, promotePrice } from "./match";
 import { armyValue, autoPlace, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap, type PlacementStyle, type UnlockDiscounts } from "./army";
 
 export type Difficulty = "easy" | "normal" | "hard";
@@ -27,6 +28,7 @@ export interface AiPlan {
   unlocks: string[];
   upgrades: { unitId: string; upgradeId: string }[];
   towerUpgrades: number[]; // tower indexes, one entry per level bought
+  promotions: string[]; // uids of its own squads it pays to level up
   spent: number;
   candidatesTried: number;
   bestScore: number | null;
@@ -37,12 +39,13 @@ interface Candidate {
   unlocks: UnitDef[];
   upgrades: { unitId: string; upgradeId: string }[];
   towerUpgrades: number[];
+  promotions: string[];
   investment: number; // spent on one-time purchases
 }
 
 function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef): Candidate {
   const unlocked = new Set(me.unlocked);
-  const out: Candidate = { units: [], unlocks: [], upgrades: [], towerUpgrades: [], investment: 0 };
+  const out: Candidate = { units: [], unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], investment: 0 };
   let left = me.supply;
   const levels = [...me.towerLevels];
 
@@ -56,6 +59,16 @@ function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef)
       left -= p;
       out.investment += p;
     }
+  }
+  // often promote veterans that have earned a level
+  for (const sq of me.army) {
+    const def = units.find((u) => u.id === sq.defId);
+    if (!def || !canPromote(sq) || rng.next() < 0.4) continue;
+    const p = promotePrice(def);
+    if (p > left * 0.7) continue;
+    out.promotions.push(sq.uid);
+    left -= p;
+    out.investment += p;
   }
   // sometimes upgrade something already in the army
   if (rng.next() < 0.35) {
@@ -124,7 +137,7 @@ export function planAiRound(
   }
 
   const planOf = (cand: (typeof candidates)[number] | undefined, tried: number, score: number | null): AiPlan => {
-    if (!cand) return { squads: [], unlocks: [], upgrades: [], towerUpgrades: [], spent: 0, candidatesTried: 0, bestScore: null };
+    if (!cand) return { squads: [], unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], spent: 0, candidatesTried: 0, bestScore: null };
     // a squad that didn't fit on the field isn't paid for
     const spent = armyValue(cand.squads, defs) + cand.c.investment;
     return {
@@ -132,6 +145,7 @@ export function planAiRound(
       unlocks: cand.c.unlocks.map((u) => u.id),
       upgrades: cand.c.upgrades,
       towerUpgrades: cand.c.towerUpgrades,
+      promotions: cand.c.promotions,
       spent,
       candidatesTried: tried,
       bestScore: score,
@@ -168,7 +182,8 @@ export function planAiRound(
     for (const u of cand.c.upgrades) myUpgrades[u.unitId] = [...(myUpgrades[u.unitId] ?? []), u.upgradeId];
     const myLevels = [...me.towerLevels];
     for (const i of cand.c.towerUpgrades) myLevels[i]++;
-    const battle = new Battle([playerDefs, upgradedDefs(defs, myUpgrades)], [opponent, [...me.army, ...cand.squads]], {
+    const myArmy = promoted(me.army, cand.c.promotions);
+    const battle = new Battle([playerDefs, upgradedDefs(defs, myUpgrades)], [opponent, [...myArmy, ...cand.squads]], {
       seed: seed + tried,
       towerLevels: [player.towerLevels, myLevels],
     });
@@ -187,4 +202,9 @@ export function planAiRound(
     }
   }
   return planOf(best, tried, bestScore);
+}
+
+// An army with the listed squads promoted one level.
+export function promoted(army: PlacedSquad[], uids: string[]): PlacedSquad[] {
+  return army.map((sq) => (uids.includes(sq.uid) ? { ...sq, level: (sq.level ?? 1) + 1 } : sq));
 }

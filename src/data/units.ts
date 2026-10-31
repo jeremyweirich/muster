@@ -51,7 +51,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "wolf_riders",
     name: "Wolf Riders",
-    description: "Goblins on wolves. Very fast, and their first bite hits hard.",
+    description: "Goblins on wolves, throwing javelins from just out of sword reach. Very fast, and the first javelin hits hard.",
     cost: 150,
     unlockCost: 50,
     squadSize: 4,
@@ -61,8 +61,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 20,
     size: 0.38,
     attack: {
-      damage: 45, element: "physical", cooldown: 1, range: 0.5,
-      targets: ["ground"], targeting: "nearest", delivery: "instant",
+      damage: 45, element: "physical", cooldown: 1, range: 2.5,
+      targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
     traits: [{ type: "charge", mult: 3 }],
     upgrades: [
@@ -84,11 +84,11 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "bloodthirst",
         name: "Bloodthirst",
-        description: "Every kill readies another ×3 charge bite. Deadly with Flankers against soft targets.",
+        description: "Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets.",
         traits: [{ type: "onKill", effects: [], recharge: true }],
       },
     ],
-    tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:fast", "role:raider", "role:melee"],
+    tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:fast", "role:raider", "role:skirmisher"],
     look: { shape: "circle", color: "#a8743a", icon: "paw" },
   },
   {
@@ -344,7 +344,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "griffon_riders",
     name: "Griffon Riders",
-    description: "Fast fliers that ignore the ground and its hazards.",
+    description: "Fast fliers whose riders hurl spears from just above the fight. Ignore the ground and its hazards.",
     cost: 200,
     unlockCost: 100,
     squadSize: 3,
@@ -354,8 +354,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 18,
     size: 0.45,
     attack: {
-      damage: 55, element: "physical", cooldown: 1, range: 0.8,
-      targets: ["ground", "air"], targeting: "nearest", delivery: "instant",
+      damage: 55, element: "physical", cooldown: 1, range: 2,
+      targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
     upgrades: [
       { id: "dive", name: "Dive Attack", description: "The first strike deals ×4 damage.", traits: [{ type: "charge", mult: 4 }] },
@@ -369,7 +369,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
       { id: "pride", name: "Pride", description: "+1 griffon per squad.", mods: [{ stat: "squadSize", add: 1 }] },
     ],
-    tags: ["faction:kingdom", "race:beast", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:raider"],
+    tags: ["faction:kingdom", "race:beast", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:skirmisher"],
     look: { shape: "diamond", color: "#e0b34a", icon: "wing" },
   },
   {
@@ -663,19 +663,19 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "stone_golem",
     name: "Stone Golem",
-    description: "Living rock. Slow and heavy, immune to lightning and hard to burn, but water wears it away.",
+    description: "A towering mass of living rock. Slow and heavy, immune to lightning and hard to burn, but water wears it away and swarms can surround it.",
     cost: 200,
     unlockCost: 75,
-    squadSize: 2,
-    footprint: { w: 2, h: 1 },
+    squadSize: 1,
+    footprint: { w: 3, h: 3 },
     layer: "ground",
-    hp: 1000,
-    speed: 7,
-    size: 0.5,
+    hp: 2400,
+    speed: 6,
+    size: 1.25,
     resist: { lightning: 1, fire: 0.5, physical: 0.2, water: -0.5 },
     immuneStatuses: ["shocked", "burning"],
     attack: {
-      damage: 110, element: "physical", cooldown: 1.8, range: 0.6,
+      damage: 220, element: "physical", cooldown: 2, range: 0.8,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
@@ -684,8 +684,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
         id: "quake",
         name: "Quake",
         description: "Slams shake the ground: they splash, and stun everything around for 0.5s.",
-        mods: [{ stat: "splash", add: 1.2 }],
-        onHit: [{ type: "status", status: "shocked", duration: 0.5, radius: 1.2, affects: "enemies" }],
+        mods: [{ stat: "splash", add: 1.6 }],
+        onHit: [{ type: "status", status: "shocked", duration: 0.5, radius: 1.6, affects: "enemies" }],
       },
       {
         id: "magma_core",
@@ -702,7 +702,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         traits: [{ type: "charge", mult: 3 }],
       },
     ],
-    tags: ["faction:elemental", "race:elemental", "size:large", "role:sturdy", "role:melee", "role:slow"],
+    tags: ["faction:elemental", "race:elemental", "size:huge", "role:sturdy", "role:melee", "role:slow"],
     look: { shape: "square", color: "#8d8579", icon: "golem" },
   },
 

@@ -39,6 +39,7 @@ Round N
  │    ├─ unlock units (one-time cost per match)
  │    ├─ buy upgrades (four per unit; 200 / 400 / 600 / 800 in the order bought, whatever the unit)
  │    ├─ upgrade towers (100 / 200 / 400 / 800)
+ │    ├─ promote veterans that earned a level (unit cost per level; section 5c)
  │    ├─ buy squads, place and rotate them in your zone
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
@@ -46,6 +47,7 @@ Round N
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
+      ├─ every squad gains XP = damage dealt + healing done; enough XP unlocks a level (section 5c)
       ├─ every unit is restored for the next round (armies are permanent; battles are not)
       └─ battle report and replay
 Match ends when a player reaches 0 HP (start: 400).
@@ -135,7 +137,7 @@ recruit list; faction bonuses come later (section 8).
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 10 | 8 physical / 0.25s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 30% faster and stab 40% faster.<br>**Bigger Mob**: +8 goblins per squad: more bodies to soak the hits, more knives in the fight.<br>**War Drums**: Every goblin near a horde attacks 25% faster, wolves and bats included. Stacks with Frenzy.<br>**Scrap Armor**: Pots and planks: +15 HP, so a goblin lives through one arrow. 15% slower. |
-| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 45 physical / 1s, range 0.5 | Fast, Raider, Melee | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers.<br>**Flankers**: Circle the line and run down archers, casters and siege first, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge bite. Deadly with Flankers against soft targets. |
+| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 45 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers.<br>**Flankers**: Circle the line and run down archers, casters and siege first, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets. |
 | Goblin Alchemist | 100 | 50 | 3 (3×1) | 11 | 100 | 18 physical / 2s, range 5, splash 1.2 | Combo, Ranged | **Oil Slick**: Flasks leave oil on the ground. It slows, and fire or lightning sets it all ablaze.<br>**Firebombs**: Flasks burst into flame: fire damage ×2, igniting oiled targets.<br>**Acid Flasks**: ×2.5 damage to sturdy units: knights, ogres, trolls, golems. Stacks with Firebombs.<br>**Mad Batch**: Brews faster: throws 40% faster, and flasks splash wider. |
 | Goblin Sappers | 100 | 50 | 6 (3×2) | 16 | 50 | 125 fire / 1s, range 0.3, splash 1.4 | Splash, Fast, Glass cannon | **Volatile Powder**: Kegs also go off when a sapper is killed, so cutting them down up close still hurts.<br>**Big Kegs**: +50% blast damage and a wider blast.<br>**Thunder Kegs**: Survivors of a blast are Dazed for 2s: they deal 10% damage and take double.<br>**Napalm**: Blasts leave burning ground. It burns whoever walks in, your own troops too. |
 | Bat Riders | 200 | 100 | 4 (2×2, air) | 20 | 220 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Shriek**: Each hit Dazes the target for 2s: it deals 10% damage and takes double.<br>**Colony**: +2 bats per squad.<br>**Torch Riders**: Riders drop torches: every hit sets the target Burning, and Ignites oiled ones.<br>**Bloodsuckers**: The bats feed as they fight: regenerate 15 HP/s. |
@@ -148,7 +150,7 @@ recruit list; faction bonuses come later (section 8).
 | Knights | 200 | 0 | 4 (4×1) | 10 | 760 | 60 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage.<br>**Warded Plate**: +40% resistance to fire, frost, lightning and water. The answer to elementals.<br>**Veterans**: +50% damage. With Lance Charge, the opening strike is brutal. |
 | Longbowmen | 100 | 0 | 6 (3×2) | 8 | 100 | 22 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice.<br>**Volley**: Shoot 40% faster.<br>**Skyhunters**: ×2 damage to fliers. |
 | Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 340 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +50% damage. Still one target at a time.<br>**Repeater**: Fires twice as fast for 60% damage per bolt.<br>**Chain Harpoons**: Bolts Chill the target. Hit it again and it freezes; the bolt after that shatters it for double. Pairs with Repeater.<br>**Reinforced Frame**: +100% HP and +30% physical resistance, so raiders can't just walk over it. |
-| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 55 physical / 1s, range 0.8 | Flier, Fast, Raider | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Hunt fliers first, with ×1.75 damage to them.<br>**Pride**: +1 griffon per squad. |
+| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 55 physical / 1s, range 2 | Flier, Fast, Skirmisher | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Hunt fliers first, with ×1.75 damage to them.<br>**Pride**: +1 griffon per squad. |
 | Cleric | 150 | 75 | 2 (2×1) | 8 | 220 | none | Healer, Support | **Sanctuary**: A second prayer heals 30 more, in a wider circle.<br>**Blessing**: Allies nearby deal +20% damage.<br>**Purify**: Every 2.5s, washes every status off nearby allies: Burning, Frozen, Wet, Oiled, Dazed.<br>**Battle Hymn**: Allies nearby attack 25% faster. With Blessing, the line hits much harder. |
 | Halberdiers | 150 | 75 | 6 (3×2) | 9 | 260 | 40 physical / 1.2s, range 0.9, splash 0.6 | Anti-large, Splash, Melee | **Pike Wall**: Anyone who hits them in melee takes 30 damage back. Goblins die on the pikes.<br>**Long Pikes**: +1 range, so the back rank fights too.<br>**Heavy Halberds**: +40% damage and wider sweeps.<br>**Drilled Ranks**: +2 halberdiers per squad. |
 
@@ -161,7 +163,7 @@ recruit list; faction bonuses come later (section 8).
 | Air Elemental | 200 | 100 | 2 (2×1, air) | 14 | 350 | 45 lightning / 2s, range 5, chain ×2 | Flier, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster.<br>**Eye of the Storm**: Hunts fliers first, with ×2 more damage to them (×3 in all). Nothing in the sky survives.<br>**Overcharge**: Each bolt stuns for 1s instead of a flicker. With Thunderhead, whole lines lock up. |
 | Wisps | 100 | 50 | 10 (3×2, air) | 16 | 45 | 12 lightning / 1.4s, range 2 | Swarm, Flier, Fast | **Kindling**: Each wisp bursts into flame when destroyed.<br>**Brighter Swarm**: +6 wisps per squad.<br>**Static Sparks**: Each zap stuns for a flicker. A big swarm keeps a lone giant locked down.<br>**Flicker**: Hard to hit with steel: +50% physical resistance. Arrows and swords barely touch them. |
 | Frost Elemental | 200 | 100 | 1 (2×2) | 7 | 1500 | 65 frost / 1.6s, range 5 | Combo, Ranged, Slow | **Blizzard**: The beam bursts: frost hits and chills everything within 1.4 tiles, for 30% less damage.<br>**Permafrost**: Hits leave ice on the ground that chills anyone standing in it. Fire melts it to water.<br>**Cold Snap**: Attacks 50% faster: chill, freeze, chill, freeze.<br>**Glacier**: +50% HP and +30% physical resistance. |
-| Stone Golem | 200 | 75 | 2 (2×1) | 7 | 1000 | 110 physical / 1.8s, range 0.6 | Sturdy, Melee, Slow | **Granite**: +40% HP and +20% physical resistance.<br>**Quake**: Slams shake the ground: they splash, and stun everything around for 0.5s.<br>**Magma Core**: Fists turn molten: fire damage that sets enemies Burning. Melts armor and stops trolls healing.<br>**Landslide**: Rolls into battle 60% faster, and its first slam deals ×3. |
+| Stone Golem | 200 | 75 | 1 (3×3) | 6 | 2400 | 220 physical / 2s, range 0.8 | Sturdy, Melee, Slow | **Granite**: +40% HP and +20% physical resistance.<br>**Quake**: Slams shake the ground: they splash, and stun everything around for 0.5s.<br>**Magma Core**: Fists turn molten: fire damage that sets enemies Burning. Melts armor and stops trolls healing.<br>**Landslide**: Rolls into battle 60% faster, and its first slam deals ×3. |
 
 #### Independents
 
@@ -195,10 +197,13 @@ Lethality: fights are meant to be short. A Knight mirror resolves in about 25–
   counter to fliers: Wisps, Bats and Griffons simply die. It resists lightning (60%) but isn't immune, so Air mirrors end.
 - The **Ballista** is a single-target sniper (no splash, even fully upgraded) that hunts the biggest unit: Ogre, Giant,
   elementals, Dragon. Swarms and raiders beat it. **Splash** (Ogre, Fire Elemental, Giant, Alchemist) shreds swarms.
-  **Wolf Riders** run down archers and siege. Water and Air Elementals are a combo pair.
+  **Wolf Riders** throw javelins from just outside melee (range 2.5) and run down archers and siege. Water and Air
+  Elementals are a combo pair.
 - **Frost Elemental** is single-target control: chill, then freeze; physical allies shatter frozen enemies for ×2. Fire
-  melts it (−60% fire resistance). **Stone Golem** is the elementals' plain front line: immune to lightning, hard to burn,
-  worn away by water, and swarmed by goblins.
+  melts it (−60% fire resistance). **Stone Golem** is the elementals' plain front line: one huge body (3×3, size
+  1.25) that is immune to lightning, hard to burn, worn away by water, and easy for swarms to surround.
+- **Skirmishers** (Wolf Riders, Griffon Riders) throw from just outside melee. There are fewer pure melee units than
+  before, and more short-range attacks, so the fight has a front line, a skirmish line and a back line.
 - **Halberdiers** are the Kingdom's answer to rushes: a pike line with short sweeping splash and ×1.75 damage to cavalry
   and large units, so goblins, wolves, ogres, trolls and golems run onto it. Pike Wall hurts every melee attacker (each
   goblin stab costs a goblin, and it is the one thing on the ground that punishes Bat Riders). Archers, fire and fliers
@@ -211,15 +216,17 @@ Earthshaker).
 
 | Army | vs Greenskin | vs Storm | vs Frost/Fire | vs Independents |
 |---|---|---|---|---|
-| Kingdom, archers (2 Knights, 3 Longbow, Ballista, Cleric) | 75% / 33% | 100% / 92% | 83% / 100% | 100% / 100% |
-| Kingdom, pikes (2 Knights, 2 Longbow, Halberdiers, Ballista, Cleric) | 100% / 75% | 100% / 8% | 83% / 33% | 100% / 100% |
+| Kingdom, archers (2 Knights, 3 Longbow, Ballista, Cleric) | 58% / 25% | 100% / 83% | 67% / 100% | 100% / 100% |
+| Kingdom, pikes (2 Knights, 2 Longbow, Halberdiers, Ballista, Cleric) | 100% / 75% | 100% / 0% | 25% / 25% | 100% / 100% |
 | Greenskin (3 Horde, Wolves, 2 Sappers, Bats, Alchemist) | — | 0% / 0% | 0% / 0% | 100% / 100% |
-| Storm (Water, 2 Air, Golem, Wisps) | 100% / 100% | — | 92% / 100% | 100% / 100% |
-| Frost/Fire (Fire, Frost, Golem, Air, Wisps) | 100% / 100% | 42% / 0% | — | 100% / 100% |
+| Storm (Water, 2 Air, Golem, Wisps) | 100% / 100% | — | 25% / 42% | 100% / 100% |
+| Frost/Fire (Fire, Frost, Golem, Air, Wisps) | 100% / 100% | 83% / 17% | — | 100% / 100% |
 
-The Kingdom is on top without upgrades, and its two builds are a real choice of counterpunch: pikes answer Greenskins,
-archers answer Elementals. Elementals beat Greenskins. Fights last 7–30 s. With one upgrade each, the Storm army edges
-ahead, which is the first thing to look at once upgrades get tuned. Upgrades haven't been tuned; expect balance to move a lot.
+Measured after Wolf Riders got javelins and the Stone Golem became one huge model, all at level 1. The Kingdom is on
+top without upgrades, and its two builds are a real choice of counterpunch: pikes answer Greenskins, archers answer
+Elementals. Elementals beat Greenskins. Fights last 8–45 s. With one upgrade each, the Storm army edges ahead, which is
+the first thing to look at once upgrades get tuned. Upgrades and veterancy haven't been tuned; expect balance to move a
+lot.
 
 One-unit-type lab fights still over-reward fliers, because most ground units can't hit them at all.
 
@@ -227,7 +234,7 @@ One-unit-type lab fights still over-reward fliers, because most ground units can
 
 Role tags (`role:*`) say what a unit is *for*. They show on hover in the recruit list and in the Codex. The current
 roles are Sturdy, Swarm, Fast, Slow, Sniper, Ranged, Melee, Splash, Anti-air, Anti-large, Flier, Support, Healer, Combo,
-Regenerates, Glass cannon and Raider. They live in `src/data/roles.ts`.
+Regenerates, Glass cannon, Raider and Skirmisher. They live in `src/data/roles.ts`.
 
 ## 5. Unlocks — Decided (values open)
 
@@ -282,6 +289,30 @@ when the match starts, and tries its discounted unit more often while planning. 
 - Bought upgrades show as ★ next to the unit in the shop. The enemy's upgrades are visible too.
 - **Buying:** the sidebar's Upgrades tab lists every unlocked unit with its upgrades as one-click buttons (name, price,
   what it does), plus tower levels. The tab shows how many upgrades you can afford right now.
+
+## 5c. Veterancy — Decided (values open)
+
+Placing a squad well, so it deals a lot of damage without being destroyed, earns it experience, and experience lets you
+make it stronger.
+
+- **XP** is damage dealt to enemies plus healing done, added up over every battle the squad fights (stored on the
+  placed squad). Squads keep their XP between rounds. Leveling doesn't depend on whether the squad survived.
+- **Unlocking a level.** Total XP of 1,200 / 4,000 / 9,000 / 16,000 unlocks level 2 / 3 / 4 / 5 (`RULES.levelXp`). Each
+  step needs more XP than the last. In a typical battle the MVP deals about 2,000, second place about 1,200 and third
+  about 800, so one good fight usually unlocks a level for the MVP, often for second place, and only sometimes for
+  third. Bigger late-game armies get there faster.
+- **Promoting.** An unlocked level does nothing until you pay for it. At deployment, a squad with a level waiting shows
+  a gold chevron above it. Click the squad, use its card, or use the Promotions list in the Upgrades tab. Each
+  promotion costs the unit's base price, and Undo reverses it.
+- **Effect:** a level-N squad has N× the base HP, attack damage, healing, regeneration and trait damage (on-death,
+  periodic, retaliation, on-kill). Speed, range, cooldowns, statuses and surfaces don't change. Upgrades apply first,
+  then the level.
+- **Round damage ignores levels.** The damage a winner deals at the end of the round still uses the unit's base cost ×
+  fraction alive, so a veteran isn't worth more HP damage than a fresh squad.
+- Promoted squads show a gold `LvN` tag on their footprint during deployment and in the report, and one gold ring per
+  level on each model in battle. Enemy levels are visible.
+- Code: `src/sim/levels.ts` (`earnedLevel`, `levelDef`), XP is awarded in `applyRound` (`src/game/match.ts`), and the
+  battle builds each squad at its `level`. The lab, the matrix and balance tests run everything at level 1.
 
 ## 6. The elemental system — Decided (structure), Open (tables)
 
@@ -376,9 +407,11 @@ Faction weaknesses already work through resistances.
 
 The AI plans by simulation. At the start of each deployment it generates candidate plans: purchases and placements
 (with rotation and placement styles), and sometimes an upgrade for a unit it already fields or a tower level. It
+often promotes veterans that have earned a level (each about 60% of the time, if it can afford it), and simulates them
+at their new level. It
 simulates each plan against the player's army from last round, including the player's upgrades and tower levels. It
 keeps the best by: win (±1000) + surviving value difference + 50% of the money spent on one-time purchases (unlocks,
-upgrades, tower levels). Difficulty sets the number of
+upgrades, tower levels, promotions). Difficulty sets the number of
 candidates and the time budget: Easy is 3 candidates plus random noise, Normal 12, Hard 30.
 
 Because the AI only uses the simulator, it handles any unit you design without new code.
@@ -392,7 +425,7 @@ Because the AI only uses the simulator, it handles any unit you design without n
 
 | Tool | What it's for |
 |---|---|
-| **Unit editor** | Every field, live, including the two upgrades; raw JSON view; copy/paste of the whole roster. Session-only |
+| **Unit editor** | Every field, live, including the four upgrades; raw JSON view; copy/paste of the whole roster. Session-only |
 | **Sandbox** | Watch a unit fight another at equal supply, with or without its upgrades, or run 10 headless sims |
 | **Balance Lab** | Every unit against every unit at equal supply, in a Web Worker. One-unit-type armies undervalue combo units |
 | **Battle report** | After each battle the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
@@ -421,6 +454,8 @@ Because the AI only uses the simulator, it handles any unit you design without n
 - Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
   wings; elemental fliers (Wisps, Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.
+- Veterans (level 2+) have a gold ring per level around each model and a gold `LvN` tag on their deployment footprint.
+  A squad ready for promotion gets a pulsing gold chevron above it.
 
 ## 11. Architecture — Decided
 

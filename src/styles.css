@@ -1071,6 +1071,45 @@ code {
 .shop-cost.lock.bargain {
   color: var(--accent);
 }
+.veterancy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+}
+.veterancy.ready {
+  border-color: rgba(245, 197, 66, 0.7);
+  background: rgba(245, 197, 66, 0.08);
+}
+.promote-btn:not(:disabled) {
+  border-color: #f5c542;
+  color: #f5c542;
+}
+.vet-level {
+  color: #f5c542;
+}
+.promotions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+.promotions .up-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.promotions-earned {
+  color: #f5c542;
+  font-size: 13px;
+  margin: 0;
+}
 .opening {
   display: flex;
   flex-direction: column;

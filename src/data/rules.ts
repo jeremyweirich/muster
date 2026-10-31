@@ -30,6 +30,9 @@ export const RULES: Rules = {
   towerDazeBase: 4,
   towerDazePerLevel: 0.5,
   towerDazeMin: 2,
+  // Veterancy: total XP (damage dealt + healing) that unlocks level 2, 3, 4, 5. A typical battle's MVP deals
+  // about 2000, the runner-up about 1200 and third about 800, so one good fight usually earns the MVP a level.
+  levelXp: [1200, 4000, 9000, 16000],
 };
 
 // Deployment zone rows (inclusive start, exclusive end) for each side.

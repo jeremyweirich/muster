@@ -91,6 +91,10 @@ export function Intro({ onClose }: { onClose: () => void }) {
             four, and each one you buy for it costs more, so pick a specialty.
           </p>
           <p>
+            Squads earn <b>XP</b> for the damage they deal. When one earns a level, a gold <b>▲</b> appears over it: click it
+            and pay its price to double its HP and damage (then triple, and so on).
+          </p>
+          <p>
             Each side has two <b>Keeps</b>. If one falls, its owner&apos;s whole army is <b>Dazed</b> for a few seconds and fights
             badly, so guard your flanks, or sneak raiders around theirs.
           </p>

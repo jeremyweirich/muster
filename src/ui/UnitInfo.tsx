@@ -82,6 +82,7 @@ export function UnitInfo({
           <div className="muted">
             {def.structure ? "tower" : `${def.cost} supply`} · {def.squadSize} × {def.layer}
             {def.unlockCost ? ` · unlock ${def.unlockCost}` : ""}
+            {(def.level ?? 1) > 1 && <span className="vet-level"> · level {def.level}</span>}
           </div>
         </div>
       </div>
