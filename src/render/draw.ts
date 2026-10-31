@@ -203,7 +203,7 @@ function drawWings(ctx: CanvasRenderingContext2D, px: number, py: number, r: num
   }
 }
 
-// A soft, flickering halo for elemental fliers (wisps, air elementals).
+// A soft, flickering halo for elemental fliers (cloudlings, flying air elementals).
 function drawGlow(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, color: string, time: number, phase: number) {
   const pulse = 0.75 + 0.25 * Math.sin(time * 7 + phase);
   const g = ctx.createRadialGradient(px, py, r * 0.4, px, py, r * 2.6);

@@ -90,7 +90,9 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 See DESIGN.md §12 for the roadmap. **`docs/PLAYTEST-2026-10.md`** records five full matches against the AI and the
 balance experiments behind them (veterancy snowball, anti-air gaps, upgrade value, the faction triangle vs the
-narrative). Read it before redesigning the roster. Open threads:
+narrative). Read it before redesigning the roster. **`docs/PLAYTEST-2026-10-31.md`** follows the elemental redesign
+(four-flame Fire, ground Air with Take Flight, Cloudlings replacing Wisps, three-body Frost shooters) and records a fix
+to experiment E: before it, every 150- and 250-cost unit was overrated. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
 - **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
   new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Warden unit

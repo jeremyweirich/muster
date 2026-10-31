@@ -30,6 +30,7 @@ export function describeTrait(t: TraitDef): string {
     case "regen":
       return `Regenerates ${t.perSecond} hp/s${t.suppressedBy ? ` (not while ${STATUSES[t.suppressedBy].name})` : ""}`;
     case "periodic":
+      if (t.once) return `Once per battle${t.atTarget ? ", at its target as soon as it's in range" : `, after ${t.interval}s`}: ${t.effects.map(describeEffect).join(", ")}`;
       return `Every ${t.interval}s${t.atTarget ? ", at its target (the first right away)" : ""}: ${t.effects.map(describeEffect).join(", ")}`;
     case "retaliate":
       return `When hit: ${t.effects.map(describeEffect).join(", ")} on the attacker${t.maxRange !== undefined ? ` (within ${t.maxRange})` : ""}`;
@@ -111,6 +112,7 @@ export function describeUpgrade(u: UpgradeDef): string[] {
   for (const m of u.mods ?? []) out.push(describeMod(m));
   if (u.element) out.push(`attacks become ${u.element}`);
   if (u.targets) out.push(`hits ${u.targets.join(" + ")}`);
+  if (u.layer) out.push(u.layer === "air" ? "becomes a flier" : "becomes a ground unit");
   if (u.targeting) out.push(u.targeting === "towers" ? "hunts towers first" : `targets ${u.targeting}`);
   for (const e of u.onHit ?? []) out.push(`on hit: ${describeEffect(e)}`);
   for (const b of u.bonusVs ?? []) out.push(`×${b.mult} damage vs ${describeSelector(b.selector)}`);

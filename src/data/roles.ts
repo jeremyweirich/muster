@@ -117,8 +117,9 @@ export function rolesOf(tags: string[]): { id: string; name: string; description
 }
 
 export const FACTIONS: { id: string; name: string }[] = [
-  { id: "goblin", name: "Goblins" },
+  // Listed in complexity order: Wardens are the plainest, Elementals the trickiest.
   { id: "warden", name: "Wardens" },
+  { id: "goblin", name: "Goblins" },
   { id: "elemental", name: "Elementals" },
   { id: "independent", name: "Independents" },
 ];

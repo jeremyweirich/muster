@@ -179,7 +179,7 @@ at THEM." Goblins who go out in a blaze get cheered, not mourned.
 | 2 | A Bigger Thing | Marshal | shoot, don't stab: short range against Pike Wall | Skirmishers, Troll *Boulder Toss* |
 | 3 | The Gang | Marshal | chaff and screening; numbers absorb the losses | Grunt *Party Time*, Ogre Warboss summons and Thick Skull |
 | 4 | Both Keeps | Marshal | tempo: a double Keep raid against a rigid army; first statuses you wield (Dazed) | Giant Bats (*Shriek*) |
-| 5 | Snobs | elementals | statuses from the receiving end; splash punishes clumps; anti-air against Wisps and Air | Skirmisher archers turn to the sky |
+| 5 | Snobs | elementals | statuses from the receiving end; splash punishes clumps; anti-air against Cloudlings and flying Air Elementals | Skirmisher archers turn to the sky |
 | 6 | Fire's Hot | elementals | your own fire burns your own gang (friendly fire) | Skirmisher *Improvised Bombs* |
 | 7 | Fire's Free | elementals | the first surface: dead grunts leave oil; Oiled → Ignite | Grunt *Oil Bombs* |
 | 8 | Point It at Them | elementals (fire-heavy) | steer *their* fire: oil under their line, their fireballs light it | everything |

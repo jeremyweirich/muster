@@ -50,7 +50,7 @@ function fight(a: Army, b: Army, seeds = 8, towers = false) {
 const REFS: Record<string, Army> = {
   wardens: { ids: ["knights", "knights", "elven_archers", "elven_archers", "elven_archers", "ballista", "pikemen"] },
   goblin: { ids: ["grunts", "grunts", "skirmishers", "wolf_riders", "troll", "giant_bats"] },
-  elemental: { ids: ["water_elemental", "air_elemental", "stone_golem", "wisps", "frost_elemental"] },
+  elemental: { ids: ["water_elemental", "fire_elemental", "air_elemental", "cloudlings", "frost_elemental"] },
   independent: { ids: ["giant", "dragon"] },
 };
 const cost = (a: Army) => a.ids.reduce((t, id) => t + D(id).cost, 0);
@@ -137,9 +137,11 @@ if (mode === "E") {
     for (const [fname, ref] of refs) {
       for (const [oname, opp] of refs) {
         if (oname === fname) continue;
-        const withX = fight({ ids: [...ref.ids, u.id] }, opp, 4).diff;
-        const withF = fight({ ids: [...ref.ids, ...filler(u.cost)] }, opp, 4).diff;
-        tot += withX - withF; n++;
+        // filler buys in 100s, so units with an odd cost are added in pairs (and the result halved)
+        const k = u.cost % 100 === 0 ? 1 : 2;
+        const withX = fight({ ids: [...ref.ids, ...Array(k).fill(u.id)] }, opp, 4).diff;
+        const withF = fight({ ids: [...ref.ids, ...filler(u.cost * k)] }, opp, 4).diff;
+        tot += (withX - withF) / k; n++;
       }
     }
     rows.push([`${u.id} (${u.cost})`, tot / n]);

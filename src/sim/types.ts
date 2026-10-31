@@ -73,8 +73,9 @@ export type TraitDef =
       moveSpeed?: number;
       damage?: number;
     }
-  // every `interval` seconds. atTarget: used on the current target while it's in range, and ready from the start
-  | { type: "periodic"; interval: number; effects: Effect[]; atTarget?: boolean }
+  // every `interval` seconds. atTarget: used on the current target while it's in range, and ready from the start.
+  // once: used a single time per battle
+  | { type: "periodic"; interval: number; effects: Effect[]; atTarget?: boolean; once?: boolean }
   // effects applied to an enemy that hits this unit with an attack
   | { type: "retaliate"; effects: Effect[]; maxRange?: number }
   // the first attack of the battle deals extra damage
@@ -122,6 +123,7 @@ export interface UpgradeDef {
   mods?: StatMod[];
   element?: Element; // replaces the attack's element
   targets?: Layer[]; // replaces what the attack can hit
+  layer?: Layer; // replaces the unit's own layer (Air Elemental Take Flight)
   targeting?: Targeting; // replaces the attack's targeting
   delivery?: Delivery; // replaces how the attack travels
   projectileSpeed?: number;

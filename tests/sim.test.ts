@@ -275,7 +275,8 @@ describe("upgrades", () => {
     expect(up.hp).toBe(Math.round(dragon.hp * 1.4));
     expect(up.attack!.onHit!.some((e) => e.type === "surface" && e.surface === "fire")).toBe(true);
     expect(dragon.attack!.onHit!.some((e) => e.type === "surface")).toBe(false); // base def untouched
-    expect(applyUpgrades(byId("wisps"), ["kindling"]).traits!.some((t) => t.type === "onDeath")).toBe(true);
+    expect(applyUpgrades(byId("cloudlings"), ["downpour"]).traits!.some((t) => t.type === "periodic")).toBe(true);
+    expect(applyUpgrades(byId("air_elemental"), ["take_flight"]).layer).toBe("air");
     const fire = applyUpgrades(byId("fire_elemental"), ["controlled_burn", "meteor"]);
     expect(fire.attack!.onHit!.every((e) => e.type !== "status" || e.affects === "enemies")).toBe(true);
     expect(fire.attack!.range).toBe(byId("fire_elemental").attack!.range + 4);
@@ -517,6 +518,8 @@ describe("goblin mechanics", () => {
   it("Improvised Bombs throw fire at the skirmishers' targets", () => {
     const b = runFor(new Battle([defs, up({ skirmishers: ["improvised_bombs"] })], [army(0, ["knights"]), army(1, ["skirmishers"])], { seed: 1, towers: false }), 12);
     expect(b.result().stats[b.squads.find((s) => s.def.id === "knights")!.uid].takenByElement.fire ?? 0).toBeGreaterThan(0);
+    // one grenade each: once thrown, the timer never comes back
+    expect(b.models.some((m) => m.def.id === "skirmishers" && m.periodic.includes(Infinity))).toBe(true);
   });
 
   it("Oil Bombs leave oil where grunts fall", () => {

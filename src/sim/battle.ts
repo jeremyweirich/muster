@@ -432,7 +432,7 @@ export class Battle {
             // used on the current target: it waits, ready, until there's one in range
             const target = m.engaged ? this.byId.get(m.targetId) : undefined;
             if (!target?.alive) return;
-            m.periodic[i] = t.interval;
+            m.periodic[i] = t.once ? Infinity : t.interval;
             const r = Math.max(0.6, ...t.effects.map((e) => ("radius" in e && e.radius) || 0));
             const e0 = t.effects[0];
             const color = e0?.type === "damage" ? ELEMENT_COLORS[e0.element] : e0?.type === "status" ? STATUSES[e0.status].color : "#ffffff";
@@ -440,7 +440,7 @@ export class Battle {
             for (const e of t.effects) this.applyEffect(e, target.x, target.y, target.def.layer, m.side, target, attr);
             return;
           }
-          m.periodic[i] = t.interval;
+          m.periodic[i] = t.once ? Infinity : t.interval;
           for (const e of t.effects) {
             // an area status or blast around the unit reaches both layers, so a bat's shriek hits the ground below
             const layers: Layer[] = (e.type === "status" || e.type === "damage") && e.radius ? ["ground", "air"] : [m.def.layer];
