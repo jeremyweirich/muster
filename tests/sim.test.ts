@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, canPlace, defMap, priceOf, upgradePrice } from "../src/game/army";
 import { applyRound, battleXp, canPromote, chooseOpening, newMatch, openingPool, roundDamage, unlockDiscounts } from "../src/game/match";
-import { earnedLevel, levelDef } from "../src/sim/levels";
+import { capXp, earnedLevel, levelDef } from "../src/sim/levels";
 import { ROLES } from "../src/data/roles";
 import { applyUpgrades, upgradedDefs } from "../src/sim/upgrades";
 import { towerPlacements } from "../src/data/towers";
@@ -444,13 +444,26 @@ describe("veterancy", () => {
     const r = new Battle(defs, m.armies, { seed: 1 }).run();
     const after = applyRound(m, r, defs);
     const top = [...after.armies[0]].sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))[0];
-    expect(top.xp).toBe(battleXp(r, top.uid));
+    expect(top.xp).toBe(Math.min(battleXp(r, top.uid), RULES.levelXp[0]));
     expect(top.xp).toBeGreaterThan(0);
     const vet = { ...top, xp: RULES.levelXp[0] };
     expect(canPromote(vet)).toBe(true);
     expect(canPromote({ ...vet, level: 2 })).toBe(false);
     const b = new Battle(defs, [[{ ...vet, level: 2 }], []], { towers: false });
     expect(b.models[0].maxHp).toBe(byId(vet.defId).hp * 2);
+  });
+
+  it("a squad holds at most one unpaid level", () => {
+    expect(capXp(99999, 1, RULES)).toBe(RULES.levelXp[0]);
+    expect(capXp(99999, 2, RULES)).toBe(RULES.levelXp[1]);
+    expect(capXp(500, 1, RULES)).toBe(500);
+    let m = newMatch(DEFAULT_UNITS, 1);
+    m = { ...m, armies: [army(0, ["knights"]).map((s) => ({ ...s, xp: RULES.levelXp[0] })), army(1, ["goblin_horde"])] };
+    const after = applyRound(m, new Battle(defs, m.armies, { seed: 1 }).run(), defs);
+    const sq = after.armies[0][0];
+    expect(sq.xp).toBe(RULES.levelXp[0]); // the level waiting soaks up nothing more
+    expect(canPromote(sq)).toBe(true);
+    expect(canPromote({ ...sq, level: 2 })).toBe(false); // so promoting once uses it all up
   });
 
   it("levels don't change round damage", () => {

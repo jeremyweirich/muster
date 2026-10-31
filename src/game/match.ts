@@ -1,7 +1,7 @@
 import { RULES } from "../data/rules";
 import type { BattleResult } from "../sim/battle";
 import type { UpgradeState } from "../sim/upgrades";
-import { earnedLevel } from "../sim/levels";
+import { capXp, earnedLevel } from "../sim/levels";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { startingUnlocks, type DefMap, type UnlockDiscounts } from "./army";
@@ -112,7 +112,8 @@ export function applyRound(state: MatchState, result: BattleResult, defs: DefMap
   const damage = roundDamage(result, defs);
   const hp: [number, number] = [Math.max(0, state.hp[0] - damage[0]), Math.max(0, state.hp[1] - damage[1])];
   const report: RoundReport = { round: state.round, winner: result.winner, timedOut: result.timedOut, damage };
-  const gain = (army: PlacedSquad[]) => army.map((sq) => ({ ...sq, xp: (sq.xp ?? 0) + battleXp(result, sq.uid) || undefined }));
+  const gain = (army: PlacedSquad[]) =>
+    army.map((sq) => ({ ...sq, xp: capXp((sq.xp ?? 0) + battleXp(result, sq.uid), sq.level ?? 1, RULES) || undefined }));
   return {
     ...state,
     hp,

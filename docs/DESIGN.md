@@ -308,6 +308,8 @@ make it stronger.
   step needs more XP than the last. In a typical battle the MVP deals about 2,000, second place about 1,200 and third
   about 800, so one good fight usually unlocks a level for the MVP, often for second place, and only sometimes for
   third. Bigger late-game armies get there faster.
+- **One level at a time.** A squad holds at most one unpaid level: while a level is waiting, its XP stops at that
+  level's threshold and the rest is lost (`capXp`). So a squad can't bank levels and be promoted several times in a row.
 - **Promoting.** An unlocked level does nothing until you pay for it. At deployment, a squad with a level waiting shows
   a gold chevron above it. Click the squad, use its card, or use the Promotions list in the Upgrades tab. Each
   promotion costs half the unit's base price (`promotePrice`), a reward for the work of earning it. Undo reverses it.

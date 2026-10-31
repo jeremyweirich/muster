@@ -882,7 +882,8 @@ function Veterancy({ squad, canBuy, price, supply, onPromote }: { squad: PlacedS
       <span>
         <b>Level {level}</b>{" "}
         <span className="muted small">
-          {Math.round(xp).toLocaleString()} XP{next !== null ? ` / ${next.toLocaleString()} for level ${earned + 1}` : " (max)"}
+          {Math.round(xp).toLocaleString()} XP
+          {earned > level ? " · full: promote to earn more" : next !== null ? ` / ${next.toLocaleString()} for level ${earned + 1}` : " (max)"}
         </span>
       </span>
       {earned > level &&

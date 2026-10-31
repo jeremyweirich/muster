@@ -16,6 +16,13 @@ export function xpForLevel(level: number, rules: Rules): number | null {
   return rules.levelXp[level - 1] ?? null;
 }
 
+// XP can't run past the next level's threshold: a squad holds at most one unpaid level,
+// so it can never be promoted twice in a row. Extra XP while a level waits is lost.
+export function capXp(xp: number, level: number, rules: Rules): number {
+  const next = xpForLevel(level, rules);
+  return next === null ? xp : Math.min(xp, next);
+}
+
 function scaleEffect(e: Effect, k: number): Effect {
   return e.type === "damage" || e.type === "heal" ? { ...e, amount: e.amount * k } : e;
 }
