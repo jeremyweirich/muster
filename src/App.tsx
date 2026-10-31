@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CodexView } from "./ui/CodexView";
 import { EditorView } from "./ui/EditorView";
+import { Intro } from "./ui/Intro";
 import { LabView } from "./ui/LabView";
 import { PlayView } from "./ui/PlayView";
 
@@ -20,6 +21,8 @@ function initialTab(): Tab {
 
 export function App() {
   const [tab, setTab] = useState<Tab>(initialTab);
+  // new players land on Play, so greet them there with the walkthrough
+  const [intro, setIntro] = useState(() => initialTab() === "play");
   return (
     <div className="app">
       <header className="top">
@@ -49,6 +52,9 @@ export function App() {
             </button>
           ))}
         </nav>
+        <button className="help-btn" onClick={() => setIntro(true)}>
+          How to play
+        </button>
         <div className="version muted" title={`Built ${new Date(__BUILD_TIME__).toLocaleString()}`}>
           prototype <span className="build">{__APP_VERSION__}</span>
         </div>
@@ -60,6 +66,7 @@ export function App() {
       {tab === "units" && <EditorView />}
       {tab === "lab" && <LabView />}
       {tab === "codex" && <CodexView />}
+      {intro && <Intro onClose={() => setIntro(false)} />}
     </div>
   );
 }

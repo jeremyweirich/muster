@@ -174,8 +174,15 @@ code {
 .top nav button.active {
   border-color: var(--accent);
 }
-.version {
+.help-btn {
   margin-left: auto;
+  background: transparent;
+  border-color: var(--accent);
+  color: var(--accent);
+  padding: 3px 10px;
+  font-size: 13px;
+}
+.version {
   font-size: 12px;
 }
 .version .build {
@@ -1305,4 +1312,121 @@ button.primary.warn-btn {
   border-radius: 8px;
   padding: 8px;
   margin-top: 8px;
+}
+
+/* ---------------------------------------------------------------- intro */
+
+.intro-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(6, 9, 12, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.intro {
+  width: min(560px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.intro h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--accent);
+  font-size: 24px;
+}
+.intro-body p {
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.intro-body .blue {
+  color: var(--blue);
+}
+.intro-small {
+  font-size: 13px;
+  color: var(--muted);
+}
+.intro-art {
+  display: flex;
+  justify-content: center;
+  padding: 6px 0 2px;
+}
+.intro-icons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.tri {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.tri-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.tri-arrow {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+.intro-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+}
+.intro-buttons {
+  display: flex;
+  gap: 6px;
+}
+.intro-dots {
+  display: flex;
+  gap: 6px;
+}
+.dot-btn {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border-radius: 50%;
+  border: none;
+  background: var(--border);
+}
+.dot-btn.on {
+  background: var(--accent);
+}
+@media (max-height: 560px) {
+  .intro {
+    padding: 12px 16px 10px;
+    gap: 6px;
+  }
+  .intro h2 {
+    font-size: 19px;
+  }
+  .intro-body p {
+    margin-bottom: 5px;
+    font-size: 13px;
+  }
+  .intro-art .swatch {
+    transform: scale(0.75);
+  }
+  .intro-art {
+    padding: 0;
+  }
 }

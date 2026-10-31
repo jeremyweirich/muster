@@ -50,7 +50,7 @@ export function PlayView() {
   const units = useRoster();
   const defs = useMemo(() => defMap(units), [units]);
   const [match, setMatch] = useState<MatchState>(() => newMatch(units));
-  const [difficulty, setDifficulty] = useState<Difficulty>("normal");
+  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [selected, setSelected] = useState<string | null>(null);
   const [held, setHeld] = useState<string | null>(null);
   const [rot, setRot] = useState(false);

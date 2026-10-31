@@ -350,6 +350,7 @@ Because the AI only uses the simulator, it handles any unit you design without n
 | **Balance Lab** | Every unit against every unit at equal supply, in a Web Worker. One-unit-type armies undervalue combo units |
 | **Battle report** | After each battle the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
+| **How to play** | A five-page walkthrough for new players (header button; opens on the Play tab). The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
 | **Codex** | Elemental rules and towers |
 | `npm run matrix` | The lab's win-rate matrix in the terminal |
 
