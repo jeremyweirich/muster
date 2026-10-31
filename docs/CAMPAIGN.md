@@ -77,21 +77,21 @@ rule #1.
 
 | # | Mission | Dispute | New for the player | Warden unit | Goblin unit | HP |
 |---|---|---|---|---|---|---|
-| 1 | Hands Off | a goat | placement, Fight, the hands-off rule | Knights, Longbows | Grunts | 1 battle |
+| 1 | Hands Off | a goat | placement, Fight, the hands-off rule | Knights, Elven Archers | Grunts | 1 battle |
 | 2 | The Appeal | the goat, appealed | rounds, locked squads, reading their last army, HP | | Skirmishers | 60 |
 | 3 | Two Keeps | a rude drawing on a Keep | towers, collapse Daze, flanks, tower levels | | Wolf Riders | 100 |
 | 4 | Under the Bridge | the bridge toll | unlocks, big units, regeneration | Ballista | Troll | 140 |
 | 5 | Plain Steel | the wheelbarrow patent | upgrades, yours and theirs | Cleric | the Tinker's gadgets | 180 |
 | 6 | Look Up | who owns the sky | the air layer | Griffon Riders | Giant Bats | 240 |
-| 7 | Old Grumm | an old grudge | veterancy, promotions | Halberdiers | Ogre Brute (veteran) | 300 |
+| 7 | Old Grumm | an old grudge | veterancy, promotions | Pikemen | Ogre Brute (veteran) | 300 |
 | 8 | The Marches | the border itself | the full Compact: opening offer, blind from round 1 | (all) | (all) | 400 |
 
 ### 1. Hands Off
 - **Dispute.** A goat wandered across the border at Millbrook. Both sides claim it.
 - **Page 1 (the Compact).** "Choose your champions. Place them. When the horn sounds, no hand may touch the Field."
-- **Kit.** A fixed 400 supply, Knights and Longbows. **The goblin army is already placed and visible** ("the
+- **Kit.** A fixed 400 supply, Knights and Elven Archers. **The goblin army is already placed and visible** ("the
   challenger deploys first"), the only time the player gets a full look.
-- **Punch.** Three Grunt mobs charge. Longbows one-shot grunts; Knights hold the charge.
+- **Punch.** Three Grunt mobs charge. Archers one-shot grunts; Knights hold the charge.
 - **Teaches.** Steel in front, arrows behind. Then the horn sounds and you let go.
 - Sergeant: "Boring wins. Write that down."
 
@@ -132,8 +132,8 @@ rule #1.
 ### 6. Look Up
 - **Dispute.** "The Compact draws borders on the ground. The goblins have noticed."
 - **Page 6.** "Knights cannot strike what flies. Know which of your champions can."
-- **Punch.** Giant Bats fly over the line and eat the Longbows.
-- **Teaches.** Two layers. Longbows, Ballista and Griffons hit air; Knights, Halberdiers and Trolls don't. Skyhunters
+- **Punch.** Giant Bats fly over the line and eat the archers.
+- **Teaches.** Two layers. Elven Archers, Ballista and Griffons hit air; Knights, Pikemen and Trolls don't. Skyhunters
   is the counter-upgrade. Griffons are fast and good against bats, but weak against massed arrows and skirmishers.
 
 ### 7. Old Grumm
@@ -143,7 +143,7 @@ rule #1.
 - **Punch.** Grumm, a Lv3 Ogre Warboss summoning grunts, plus Wolf Riders. Grumm is the player's first look at a
   veteran.
 - **Teaches.** Veterancy: squads that deal damage earn levels, and you pay to promote them. The answer to a legend is
-  a cheap specialist: Halberdiers (×1.75 vs large and cavalry, Pike Wall against melee). Seed for Campaign 2: Pike Wall
+  a cheap specialist: Pikemen (×1.75 vs large and cavalry, Pike Wall against melee). Seed for Campaign 2: Pike Wall
   makes stabbing goblins kill themselves.
 
 ### 8. The Marches
@@ -279,8 +279,8 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
 ## 6. Plan of attack
 
 1. **Owner decisions** (§7).
-2. **Goblin roster rework** per `UNIT_NOTES.md`, plus the Warden tweaks (Knights Veterans → shield, Longbow Skyhunters
-   and Longshot). Campaign 1 needs every goblin unit.
+2. ~~**Goblin roster rework**~~ **Done (Oct 2026)** per `UNIT_NOTES.md`, with the Warden tweaks. Skirmishers *Skyshot*
+   and Troll *Boulder Toss* are placeholders for the deferred fourth upgrades.
 3. **Mission framework.** A `MissionDef` in `src/data/campaign.ts`: per-side HP, unit and upgrade pools, towers,
    veterancy and opening on or off, a win condition (standard or "topple a Keep"), and an enemy plan: scripted rounds,
    then the AI limited to a pool with a personality. Also a briefing and debrief view with the book page, and a
@@ -296,7 +296,7 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
 
 Decided: Skirmishers are goblin archers that hit air; the mission list is open with no stored progress.
 
-1. **Halberdiers in mission 7 or 8?** Mission 7 gives the player a mission to learn pikes before the finale
+1. **Pikemen in mission 7 or 8?** Mission 7 gives the player a mission to learn pikes before the finale
    (recommended). Mission 8 is more dramatic but untested.
 2. **The bigger thing:** a Troll upgrade (*Boulder Toss*) or a new goblin siege unit?
 3. **Who the goblin player is:** the Boss (recommended, with the Tinker advising), or a new goblin?

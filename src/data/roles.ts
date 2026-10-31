@@ -117,7 +117,7 @@ export function rolesOf(tags: string[]): { id: string; name: string; description
 }
 
 export const FACTIONS: { id: string; name: string }[] = [
-  { id: "greenskin", name: "Greenskins" },
+  { id: "goblin", name: "Goblins" },
   { id: "warden", name: "Wardens" },
   { id: "elemental", name: "Elementals" },
   { id: "independent", name: "Independents" },

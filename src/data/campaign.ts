@@ -33,7 +33,7 @@ export const CAMPAIGNS: CampaignInfo[] = [
   },
   {
     id: "goblins",
-    faction: "greenskin",
+    faction: "goblin",
     title: "The Tinker's Odds",
     tagline: "“Lads, they had pointy sticks and we had nothing. So I made a bigger thing.”",
     missions: [],

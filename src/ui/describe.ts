@@ -18,6 +18,8 @@ export function describeEffect(e: Effect): string {
       return `heals allies ${e.amount}${area}`;
     case "cleanse":
       return `clears every status off allies${area}`;
+    case "summon":
+      return `summons ${e.count === 1 ? "a" : e.count} ${e.unit.replace(/_/g, " ")}`;
   }
 }
 
@@ -28,7 +30,7 @@ export function describeTrait(t: TraitDef): string {
     case "regen":
       return `Regenerates ${t.perSecond} hp/s${t.suppressedBy ? ` (not while ${STATUSES[t.suppressedBy].name})` : ""}`;
     case "periodic":
-      return `Every ${t.interval}s: ${t.effects.map(describeEffect).join(", ")}`;
+      return `Every ${t.interval}s${t.atTarget ? ", at its target (the first right away)" : ""}: ${t.effects.map(describeEffect).join(", ")}`;
     case "retaliate":
       return `When hit: ${t.effects.map(describeEffect).join(", ")} on the attacker${t.maxRange !== undefined ? ` (within ${t.maxRange})` : ""}`;
     case "charge":
@@ -38,6 +40,20 @@ export function describeTrait(t: TraitDef): string {
       if (t.recharge) bits.push("its charge is ready again");
       return `On kill: ${bits.join(", ")}`;
     }
+    case "shield":
+      return t.hits === 1 ? "Ignores the first hit it takes" : `Ignores the first ${t.hits} hits it takes`;
+    case "ambush":
+      return `Can't be targeted until it attacks, then for ${t.reveal}s after each attack`;
+    case "ramp":
+      return `Each hit in a row on the same target deals +${Math.round(t.perHit * 100)}% more, up to ×${t.max}`;
+    case "unhurt":
+      return `Attacks ${Math.round((t.attackSpeed - 1) * 100)}% faster while at full HP`;
+    case "sprint":
+      return `Moves ${Math.round((t.mult - 1) * 100)}% faster for the first ${t.duration}s of a battle`;
+    case "lifesteal":
+      return `Heals for ${Math.round(t.fraction * 100)}% of the damage it deals`;
+    case "meatShield":
+      return `When hit, ${Math.round(t.chance * 100)}% chance a nearby ${describeSelector(t.selector).replace(/ units$/, "")} dies in its place`;
     case "aura": {
       const bits: string[] = [];
       if (t.attackSpeed) bits.push(`+${Math.round((t.attackSpeed - 1) * 100)}% attack speed`);

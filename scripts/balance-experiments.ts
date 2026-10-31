@@ -1,9 +1,9 @@
 // Balance experiments behind docs/PLAYTEST-2026-10.md. Usage: npm run experiments -- <A|B|C|D|E|F>
 //   A  promotion: two Lv2 squads vs four Lv1 squads of each unit, beside the same filler
-//   B  towers: tower levels vs the same supply spent on Longbows
+//   B  towers: tower levels vs the same supply spent on Elven Archers
 //   C  upgrades in one-unit mass armies (1000 supply) vs the four reference armies, and vs +200 supply
 //   D  upgrades inside each faction's reference army, against the other three
-//   E  one squad of each unit added to the reference armies vs the same supply of Longbows/Knights
+//   E  one squad of each unit added to the reference armies vs the same supply of Elven Archers/Knights
 //   F  role, range, element and anti-air coverage
 //   G  faction triangle: the four reference armies against each other, towers on
 // Level 1 except A, automatic placement, sides alternated, few seeds: treat small differences as noise.
@@ -48,10 +48,10 @@ function fight(a: Army, b: Army, seeds = 8, towers = false) {
 }
 
 const REFS: Record<string, Army> = {
-  wardens: { ids: ["knights", "knights", "longbowmen", "longbowmen", "longbowmen", "ballista", "halberdiers"] },
-  greenskin: { ids: ["goblin_horde", "goblin_horde", "goblin_horde", "wolf_riders", "goblin_sappers", "goblin_sappers", "bat_riders", "goblin_alchemist"] },
+  wardens: { ids: ["knights", "knights", "elven_archers", "elven_archers", "elven_archers", "ballista", "pikemen"] },
+  goblin: { ids: ["grunts", "grunts", "skirmishers", "wolf_riders", "troll", "giant_bats"] },
   elemental: { ids: ["water_elemental", "air_elemental", "stone_golem", "wisps", "frost_elemental"] },
-  independent: { ids: ["troll", "giant", "troll", "longbowmen", "longbowmen"] },
+  independent: { ids: ["giant", "dragon"] },
 };
 const cost = (a: Army) => a.ids.reduce((t, id) => t + D(id).cost, 0);
 const mass = (id: string, budget: number): Army => ({ ids: Array(Math.max(1, Math.round(budget / D(id).cost))).fill(id) });
@@ -61,9 +61,9 @@ const pct = (x: number) => `${Math.round(x * 100)}%`.padStart(4);
 
 if (mode === "A") {
   // Promotion: one Lv2 squad (1.5x cost) vs two Lv1 squads (2x cost) of the same unit, inside a mixed army.
-  console.log("Lv2 squad (cost x1.5) vs two Lv1 squads (cost x2), each beside 2 Knights + 2 Longbows filler:");
+  console.log("Lv2 squad (cost x1.5) vs two Lv1 squads (cost x2), each beside 2 Knights + 2 Elven Archers filler:");
   for (const u of DEFAULT_UNITS) {
-    const filler = ["knights", "longbowmen", "longbowmen"];
+    const filler = ["knights", "elven_archers", "elven_archers"];
     const a: Army = { ids: [u.id, u.id, ...filler], levels: [2, 2, 1, 1, 1] };
     const b: Army = { ids: [u.id, u.id, u.id, u.id, ...filler] };
     const r = fight(a, b, 6);
@@ -81,9 +81,9 @@ if (mode === "B") {
   }
   // Towers vs army: is 200 on towers better than 200 more army?
   for (const [name, ref] of Object.entries(REFS)) {
-    const extra: Army = { ids: [...ref.ids, "longbowmen", "longbowmen"] };
+    const extra: Army = { ids: [...ref.ids, "elven_archers", "elven_archers"] };
     const r = fight({ ...ref, towers: [1, 1] }, extra, 10, true);
-    console.log(`${name.padEnd(12)} towers L1 both (200) vs +2 Longbows (200): towers side wins ${pct(r.win)}`);
+    console.log(`${name.padEnd(12)} towers L1 both (200) vs +2 Elven Archers (200): towers side wins ${pct(r.win)}`);
   }
 }
 
@@ -118,8 +118,8 @@ if (mode === "D") {
     const others = refs.filter(([k]) => k !== fname);
     const score = (a: Army) => others.reduce((t, [, o]) => t + fight(a, o, 6).diff, 0) / others.length;
     const base = score(ref);
-    const plus = score({ ids: [...ref.ids, "longbowmen", "longbowmen"] });
-    console.log(`\n${fname} army (${cost(ref)}): base value diff ${Math.round(base)}, +200 supply of Longbows ${Math.round(plus)}`);
+    const plus = score({ ids: [...ref.ids, "elven_archers", "elven_archers"] });
+    console.log(`\n${fname} army (${cost(ref)}): base value diff ${Math.round(base)}, +200 supply of Elven Archers ${Math.round(plus)}`);
     for (const id of [...new Set(ref.ids)]) {
       const ups = (D(id).upgrades ?? []).map((up) => `${up.id} ${String(Math.round(score({ ...ref, ups: { [id]: [up.id] } }) - base)).padStart(5)}`);
       console.log(`  ${id.padEnd(17)} ${ups.join(" | ")}`);
@@ -128,9 +128,9 @@ if (mode === "D") {
 }
 
 if (mode === "E") {
-  // Unit value in context: add one squad of X to every reference army vs adding the same supply of Longbows/Knights.
+  // Unit value in context: add one squad of X to every reference army vs adding the same supply of Elven Archers/Knights.
   const refs = Object.entries(REFS);
-  const filler = (budget: number) => { const ids: string[] = []; let left = budget; let i = 0; while (left >= 100) { const id = i++ % 3 === 2 && left >= 200 ? "knights" : "longbowmen"; ids.push(id); left -= D(id).cost; } return ids; };
+  const filler = (budget: number) => { const ids: string[] = []; let left = budget; let i = 0; while (left >= 100) { const id = i++ % 3 === 2 && left >= 200 ? "knights" : "elven_archers"; ids.push(id); left -= D(id).cost; } return ids; };
   const rows: [string, number][] = [];
   for (const u of DEFAULT_UNITS) {
     let tot = 0, n = 0;
@@ -145,7 +145,7 @@ if (mode === "E") {
     rows.push([`${u.id} (${u.cost})`, tot / n]);
   }
   rows.sort((a, b) => b[1] - a[1]);
-  console.log("value diff of adding one squad vs the same supply of Longbows/Knights (positive = better than filler):");
+  console.log("value diff of adding one squad vs the same supply of Elven Archers/Knights (positive = better than filler):");
   for (const [k, v] of rows) console.log(`  ${k.padEnd(24)} ${String(Math.round(v)).padStart(5)}`);
 }
 

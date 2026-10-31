@@ -23,7 +23,7 @@ export function Intro({ onClose }: { onClose: () => void }) {
   const steps: Step[] = [
     {
       title: "Welcome to Common Ground",
-      art: <Icons defs={[u("knights"), u("goblin_horde"), u("fire_elemental"), u("bat_riders")]} />,
+      art: <Icons defs={[u("knights"), u("grunts"), u("fire_elemental"), u("giant_bats")]} />,
       body: (
         <>
           <p>
@@ -36,7 +36,7 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "1. Recruit and place",
-      art: <Icons defs={[u("knights"), u("longbowmen"), u("goblin_horde")]} />,
+      art: <Icons defs={[u("knights"), u("elven_archers"), u("grunts")]} />,
       body: (
         <>
           <p>
@@ -51,7 +51,7 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "2. Your army keeps growing",
-      art: <Icons defs={[u("knights"), u("knights"), u("longbowmen"), u("ogre_brute")]} />,
+      art: <Icons defs={[u("knights"), u("knights"), u("elven_archers"), u("ogre_brute")]} />,
       body: (
         <>
           <p>
@@ -67,14 +67,14 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "3. Counter what you see",
-      art: <Triangle a={u("goblin_horde")} b={u("knights")} c={u("longbowmen")} />,
+      art: <Triangle a={u("grunts")} b={u("knights")} c={u("elven_archers")} />,
       body: (
         <>
           <p>
             Before you build, you can see the enemy&apos;s army from last round. Every unit beats some units and loses to others:
           </p>
           <p className="intro-small">
-            Goblins swarm Knights · Knights shrug off arrows · Longbowmen pick off Goblins. Fire melts armor, Bat Riders hunt
+            Goblins swarm Knights · Knights shrug off arrows · Elven Archers pick off Goblins. Fire melts armor, Giant Bats hunt
             archers, and Air Elementals swat fliers.
           </p>
           <p>
@@ -86,7 +86,7 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "4. Upgrades and Keeps",
-      art: <Icons defs={[u("goblin_sappers"), u("wolf_riders")]} keep />,
+      art: <Icons defs={[u("ogre_brute"), u("wolf_riders")]} keep />,
       body: (
         <>
           <p>

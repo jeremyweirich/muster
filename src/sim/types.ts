@@ -1,6 +1,5 @@
 // Core data definitions. Units, statuses, surfaces and reactions are all plain
-// data so they can be edited in the UI, saved as JSON and reasoned about
-// generically by the AI.
+// data, so they can be reasoned about generically by the AI and the tools.
 
 export type Element = "physical" | "fire" | "water" | "frost" | "lightning";
 export const ELEMENTS: Element[] = ["physical", "fire", "water", "frost", "lightning"];
@@ -39,7 +38,8 @@ export type Effect =
     }
   | { type: "surface"; surface: SurfaceId; radius: number; duration?: number }
   | { type: "heal"; amount: number; radius: number }
-  | { type: "cleanse"; radius: number }; // removes every status from allies in the radius
+  | { type: "cleanse"; radius: number } // removes every status from allies in the radius
+  | { type: "summon"; unit: string; count: number }; // new models of that unit join the source's squad for this battle
 
 export type Targeting = "nearest" | "highestHp" | "lowestHp" | "towers"; // towers: hunt towers first
 export type Delivery = "instant" | "projectile" | "beam";
@@ -58,7 +58,7 @@ export interface AttackDef {
   bonusVs?: { selector: Selector; mult: number }[];
   rangeVs?: { selector: Selector; add: number }[]; // extra range (tiles) against matching targets
   prefers?: Selector; // enemies matching this are targeted first, anywhere on the field
-  selfDestruct?: boolean; // the model dies after its first attack (sappers)
+  selfDestruct?: boolean; // the model dies after its first attack
   onHit?: Effect[]; // extra effects at the impact point
 }
 
@@ -73,13 +73,28 @@ export type TraitDef =
       moveSpeed?: number;
       damage?: number;
     }
-  | { type: "periodic"; interval: number; effects: Effect[] }
+  // every `interval` seconds. atTarget: used on the current target while it's in range, and ready from the start
+  | { type: "periodic"; interval: number; effects: Effect[]; atTarget?: boolean }
   // effects applied to an enemy that hits this unit with an attack
   | { type: "retaliate"; effects: Effect[]; maxRange?: number }
   // the first attack of the battle deals extra damage
   | { type: "charge"; mult: number }
   // when one of its attacks kills an enemy: effects at its position, and optionally a fresh charge
-  | { type: "onKill"; effects: Effect[]; recharge?: boolean };
+  | { type: "onKill"; effects: Effect[]; recharge?: boolean }
+  // each model ignores the first `hits` hits it takes in a battle
+  | { type: "shield"; hits: number }
+  // can't be targeted, except within `reveal` seconds of its own last attack (splash still hits it)
+  | { type: "ambush"; reveal: number }
+  // each hit in a row on the same target deals +perHit more damage, up to ×max
+  | { type: "ramp"; perHit: number; max: number }
+  // attacks faster while at full HP
+  | { type: "unhurt"; attackSpeed: number }
+  // moves faster for the first `duration` seconds of the battle
+  | { type: "sprint"; mult: number; duration: number }
+  // heals itself for a share of the damage its attacks deal to enemies
+  | { type: "lifesteal"; fraction: number }
+  // when hit by an attack: chance that a nearby ally matching the selector dies in its place (smallest first)
+  | { type: "meatShield"; chance: number; radius: number; selector: Selector };
 
 // Upgrades: one-time purchases per match that change every squad of a unit.
 export type ModStat =
@@ -108,6 +123,8 @@ export interface UpgradeDef {
   element?: Element; // replaces the attack's element
   targets?: Layer[]; // replaces what the attack can hit
   targeting?: Targeting; // replaces the attack's targeting
+  delivery?: Delivery; // replaces how the attack travels
+  projectileSpeed?: number;
   onHit?: Effect[]; // appended to the attack's on-hit effects
   onHitAffects?: "enemies" | "allies" | "all"; // who the attack's on-hit statuses can land on (enemies = no friendly fire)
   bonusVs?: { selector: Selector; mult: number }[]; // appended to the attack's bonus damage

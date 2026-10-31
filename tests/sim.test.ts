@@ -22,8 +22,8 @@ function army(side: 0 | 1, ids: string[], seed = 1) {
 
 describe("battle", () => {
   it("is deterministic for the same seed", () => {
-    const a = army(0, ["knights", "longbowmen", "fire_elemental"]);
-    const b = army(1, ["goblin_horde", "goblin_horde", "ogre_brute"]);
+    const a = army(0, ["knights", "elven_archers", "fire_elemental"]);
+    const b = army(1, ["grunts", "grunts", "ogre_brute"]);
     const r1 = new Battle(defs, [a, b], { seed: 5 }).run();
     const r2 = new Battle(defs, [a, b], { seed: 5 }).run();
     expect(r1).toEqual(r2);
@@ -31,7 +31,7 @@ describe("battle", () => {
 
   it("finishes with a winner when one side is outmatched", () => {
     const a = army(0, ["knights", "knights", "knights"]);
-    const b = army(1, ["goblin_horde"]);
+    const b = army(1, ["grunts"]);
     const r = new Battle(defs, [a, b], { seed: 1 }).run();
     expect(r.winner).toBe(0);
   });
@@ -66,7 +66,7 @@ describe("surfaces", () => {
 
 describe("combos", () => {
   it("air elementals deal more lightning damage when a water elemental soaks the enemy", () => {
-    const enemy = (s: number) => army(1, ["knights", "knights", "goblin_horde"], s);
+    const enemy = (s: number) => army(1, ["knights", "knights", "grunts"], s);
     const airDamage = (support: string) => {
       let total = 0;
       for (let s = 0; s < 4; s++) {
@@ -81,11 +81,11 @@ describe("combos", () => {
 
 describe("ai and lab", () => {
   it("ai spends within budget", () => {
-    const player = army(0, ["knights", "longbowmen"]);
+    const player = army(0, ["knights", "elven_archers"]);
     const plan = planAiRound(
       DEFAULT_UNITS,
       defs,
-      { army: [], unlocked: ["knights", "longbowmen", "goblin_horde"], upgrades: {}, towerLevels: [0, 0], supply: 500 },
+      { army: [], unlocked: ["knights", "elven_archers", "grunts"], upgrades: {}, towerLevels: [0, 0], supply: 500 },
       { army: player, upgrades: {}, towerLevels: [0, 0] },
       1,
       "easy",
@@ -97,7 +97,7 @@ describe("ai and lab", () => {
 
   it("matchup runs quickly", () => {
     const t = performance.now();
-    const r = runMatchup(DEFAULT_UNITS, "goblin_horde", "fire_elemental", 1000, 2);
+    const r = runMatchup(DEFAULT_UNITS, "grunts", "fire_elemental", 1000, 2);
     expect(r.winRate).toBeGreaterThanOrEqual(0);
     expect(performance.now() - t).toBeLessThan(5000);
   });
@@ -105,7 +105,7 @@ describe("ai and lab", () => {
 
 describe("towers", () => {
   it("towers don't count toward winning", () => {
-    const r = new Battle(defs, [army(0, ["knights", "knights", "knights"]), army(1, ["goblin_horde"])], { seed: 2 }).run();
+    const r = new Battle(defs, [army(0, ["knights", "knights", "knights"]), army(1, ["grunts"])], { seed: 2 }).run();
     expect(r.winner).toBe(0);
     expect(r.survivors[1]).toHaveLength(0);
     expect(r.stats["tower-1-0"].structure).toBe(true);
@@ -177,7 +177,7 @@ describe("fire elemental upgrades", () => {
       let total = 0;
       for (let s = 0; s < 4; s++) {
         const a = army(0, ["fire_elemental", "knights", "knights"], s);
-        const b = army(1, ["troll", "troll", "goblin_horde"], s);
+        const b = army(1, ["troll", "troll", "grunts"], s);
         const r = new Battle([upgradedDefs(defs, { fire_elemental: ups }), defs], [a, b], { seed: s, towers: false }).run();
         total += Object.values(r.stats).reduce((t, st) => t + (st.side === 0 && st.defId === "fire_elemental" ? st.friendly : 0), 0);
       }
@@ -189,20 +189,22 @@ describe("fire elemental upgrades", () => {
 });
 
 describe("targeting and self-destruct", () => {
-  it("sappers die after their first blast", () => {
-    const b = new Battle(defs, [army(0, ["goblin_sappers"]), army(1, ["knights"])], { seed: 1, towers: false });
+  it("self-destructing attackers die after their first blast", () => {
+    const g = byId("grunts");
+    const kegs = { ...g, attack: { ...g.attack!, element: "fire" as const, damage: 125, splash: 1.4, selfDestruct: true } };
+    const b = new Battle(new Map(defs).set("grunts", kegs), [army(0, ["grunts"]), army(1, ["knights"])], { seed: 1, towers: false });
     for (let i = 0; i < 400; i++) b.step();
-    expect(b.models.filter((m) => m.def.id === "goblin_sappers" && m.alive)).toHaveLength(0);
+    expect(b.models.filter((m) => m.def.id === "grunts" && m.alive)).toHaveLength(0);
     const knights = b.squads.find((s) => s.def.id === "knights")!.stats;
     expect(knights.takenByElement.fire ?? 0).toBeGreaterThan(0); // the kegs went off
   });
 
   it("bat riders fly past knights to hunt archers first", () => {
-    const b = new Battle(defs, [army(0, ["bat_riders"]), army(1, ["knights", "knights", "longbowmen"])], { seed: 1, towers: false });
+    const b = new Battle(defs, [army(0, ["giant_bats"]), army(1, ["knights", "knights", "elven_archers"])], { seed: 1, towers: false });
     for (let i = 0; i < 20; i++) b.step();
-    const bats = b.models.filter((m) => m.def.id === "bat_riders" && m.targetId >= 0);
+    const bats = b.models.filter((m) => m.def.id === "giant_bats" && m.targetId >= 0);
     expect(bats.length).toBeGreaterThan(0);
-    for (const m of bats) expect(b.models.find((t) => t.id === m.targetId)!.def.id).toBe("longbowmen");
+    for (const m of bats) expect(b.models.find((t) => t.id === m.targetId)!.def.id).toBe("elven_archers");
   });
 });
 
@@ -223,19 +225,19 @@ describe("rotation and unlocks", () => {
 
   it("ai pays for unlocks within its budget", () => {
     for (let seed = 1; seed < 6; seed++) {
-      const mine = army(1, ["goblin_horde"]);
+      const mine = army(1, ["grunts"]);
       const plan = planAiRound(
         DEFAULT_UNITS,
         defs,
-        { army: mine, unlocked: ["goblin_horde"], upgrades: {}, towerLevels: [0, 0], supply: 400 },
+        { army: mine, unlocked: ["grunts"], upgrades: {}, towerLevels: [0, 0], supply: 400 },
         { army: army(0, ["knights"]), upgrades: {}, towerLevels: [0, 0] },
         2,
         "normal",
         seed,
       );
       expect(plan.spent).toBeLessThanOrEqual(400);
-      for (const sq of plan.squads) expect(["goblin_horde", ...plan.unlocks]).toContain(sq.defId);
-      for (const u of plan.upgrades) expect(u.unitId).toBe("goblin_horde");
+      for (const sq of plan.squads) expect(["grunts", ...plan.unlocks]).toContain(sq.defId);
+      for (const u of plan.upgrades) expect(u.unitId).toBe("grunts");
     }
   });
 });
@@ -254,7 +256,7 @@ describe("battle report stats", () => {
 
   it("credits reactions and tracks friendly fire", () => {
     const a = army(0, ["water_elemental", "air_elemental", "air_elemental", "knights"]);
-    const b = army(1, ["knights", "knights", "goblin_horde"]);
+    const b = army(1, ["knights", "knights", "grunts"]);
     const r = new Battle(defs, [a, b], { seed: 4, towers: false }).run();
     const storm = Object.values(r.stats).filter((s) => s.defId === "air_elemental");
     const conduct = storm.reduce((t, s) => t + (s.dealtBy["Conduct"] ?? 0), 0);
@@ -280,7 +282,7 @@ describe("upgrades", () => {
   });
 
   it("cost 200 / 400 / 600 / 800 in buy order, whatever the unit", () => {
-    for (const id of ["goblin_horde", "dragon"]) {
+    for (const id of ["grunts", "dragon"]) {
       const u = byId(id);
       expect([0, 1, 2, 3].map((n) => upgradePrice(u, n))).toEqual([200, 400, 600, 800]);
       expect(upgradePrice(u, 4)).toBeNull();
@@ -314,7 +316,7 @@ describe("upgrades", () => {
 
   it("Bloodthirst re-arms the wolves' charge after a kill", () => {
     const wolves = applyUpgrades(byId("wolf_riders"), ["bloodthirst"]);
-    const b = new Battle([new Map(defs).set("wolf_riders", wolves), defs], [army(0, ["wolf_riders"]), army(1, ["longbowmen", "longbowmen"])], { seed: 1, towers: false });
+    const b = new Battle([new Map(defs).set("wolf_riders", wolves), defs], [army(0, ["wolf_riders"]), army(1, ["elven_archers", "elven_archers"])], { seed: 1, towers: false });
     let recharged = false;
     let sawKill = false;
     while (!b.over && b.time < 30) {
@@ -327,15 +329,15 @@ describe("upgrades", () => {
     expect(recharged).toBe(true);
   });
 
-  it("Pike Wall kills goblins that stab the halberdiers", () => {
-    const pikes = applyUpgrades(byId("halberdiers"), ["pike_wall"]);
+  it("Pike Wall kills goblins that stab the pikemen", () => {
+    const pikes = applyUpgrades(byId("pikemen"), ["pike_wall"]);
     const goblinsLost = (d: typeof defs) => {
-      const r = new Battle([d, defs], [army(0, ["halberdiers"]), army(1, ["goblin_horde", "goblin_horde", "goblin_horde"])], { seed: 2, towers: false }).run();
-      const st = Object.values(r.stats).find((s) => s.defId === "halberdiers")!;
+      const r = new Battle([d, defs], [army(0, ["pikemen"]), army(1, ["grunts", "grunts", "grunts"])], { seed: 2, towers: false }).run();
+      const st = Object.values(r.stats).find((s) => s.defId === "pikemen")!;
       return st.dealtBy["Retaliation"] ?? 0;
     };
     expect(goblinsLost(defs)).toBe(0);
-    expect(goblinsLost(new Map(defs).set("halberdiers", pikes))).toBeGreaterThan(0);
+    expect(goblinsLost(new Map(defs).set("pikemen", pikes))).toBeGreaterThan(0);
   });
 
   it("Purify washes statuses off allies", () => {
@@ -348,11 +350,11 @@ describe("upgrades", () => {
   });
 
   it("each side fights with its own upgrades", () => {
-    const a = army(0, ["goblin_horde", "goblin_horde"]);
-    const b = army(1, ["goblin_horde", "goblin_horde"]);
+    const a = army(0, ["grunts", "grunts"]);
+    const b = army(1, ["grunts", "grunts"]);
     let wins = 0;
     for (let s = 0; s < 6; s++) {
-      const r = new Battle([upgradedDefs(defs, { goblin_horde: ["frenzy", "mob"] }), defs], [a, b], { seed: s, towers: false }).run();
+      const r = new Battle([upgradedDefs(defs, { grunts: ["feral_frenzy", "party_time"] }), defs], [a, b], { seed: s, towers: false }).run();
       if (r.winner === 0) wins++;
     }
     expect(wins).toBeGreaterThanOrEqual(5);
@@ -404,7 +406,7 @@ describe("ai opening", () => {
       const plan = planAiRound(
         DEFAULT_UNITS,
         defs,
-        { army: [], unlocked: ["goblin_horde", "knights", "longbowmen"], upgrades: {}, towerLevels: [0, 0], supply: 300 },
+        { army: [], unlocked: ["grunts", "knights", "elven_archers"], upgrades: {}, towerLevels: [0, 0], supply: 300 },
         { army: [], upgrades: {}, towerLevels: [0, 0] },
         1,
         "normal",
@@ -425,7 +427,7 @@ describe("veterancy", () => {
     const heal = (d: typeof c) => (d.traits![0] as { effects: { amount: number }[] }).effects[0].amount;
     expect(heal(c)).toBe(heal(byId("cleric")) * 2);
     const t = levelDef(byId("troll"), 2);
-    expect((t.traits![0] as { perSecond: number }).perSecond).toBe(80);
+    expect((t.traits![0] as { perSecond: number }).perSecond).toBe((byId("troll").traits![0] as { perSecond: number }).perSecond * 2);
     expect(levelDef(byId("knights"), 1)).toBe(byId("knights"));
   });
 
@@ -440,7 +442,7 @@ describe("veterancy", () => {
 
   it("squads earn XP from battle and fight at their level", () => {
     let m = newMatch(DEFAULT_UNITS, 1);
-    m = { ...m, armies: [army(0, ["knights", "longbowmen"]), army(1, ["goblin_horde"])] };
+    m = { ...m, armies: [army(0, ["knights", "elven_archers"]), army(1, ["grunts"])] };
     const r = new Battle(defs, m.armies, { seed: 1 }).run();
     const after = applyRound(m, r, defs);
     const top = [...after.armies[0]].sort((a, b) => (b.xp ?? 0) - (a.xp ?? 0))[0];
@@ -458,7 +460,7 @@ describe("veterancy", () => {
     expect(capXp(99999, 2, RULES)).toBe(RULES.levelXp[1]);
     expect(capXp(500, 1, RULES)).toBe(500);
     let m = newMatch(DEFAULT_UNITS, 1);
-    m = { ...m, armies: [army(0, ["knights"]).map((s) => ({ ...s, xp: RULES.levelXp[0] })), army(1, ["goblin_horde"])] };
+    m = { ...m, armies: [army(0, ["knights"]).map((s) => ({ ...s, xp: RULES.levelXp[0] })), army(1, ["grunts"])] };
     const after = applyRound(m, new Battle(defs, m.armies, { seed: 1 }).run(), defs);
     const sq = after.armies[0][0];
     expect(sq.xp).toBe(RULES.levelXp[0]); // the level waiting soaks up nothing more
@@ -478,10 +480,85 @@ describe("veterancy", () => {
     const vets = army(1, ["knights", "knights"]).map((s) => ({ ...s, xp: 99999 }));
     let promotedAny = false;
     for (let seed = 1; seed < 6 && !promotedAny; seed++) {
-      const plan = planAiRound(DEFAULT_UNITS, defs, { army: vets, unlocked: ["knights", "longbowmen", "goblin_horde"], upgrades: {}, towerLevels: [0, 0], supply: 800 }, { army: army(0, ["knights"]), upgrades: {}, towerLevels: [0, 0] }, 2, "normal", seed);
+      const plan = planAiRound(DEFAULT_UNITS, defs, { army: vets, unlocked: ["knights", "elven_archers", "grunts"], upgrades: {}, towerLevels: [0, 0], supply: 800 }, { army: army(0, ["knights"]), upgrades: {}, towerLevels: [0, 0] }, 2, "normal", seed);
       promotedAny = plan.promotions.length > 0;
       for (const uid of plan.promotions) expect(vets.some((v) => v.uid === uid)).toBe(true);
     }
     expect(promotedAny).toBe(true);
+  });
+});
+
+describe("goblin mechanics", () => {
+  const up = (state: Record<string, string[]>) => upgradedDefs(defs, state);
+  const fxTexts = (b: Battle, text: string) => b.fx.filter((f) => f.kind === "text" && f.text === text).length;
+  const runFor = (b: Battle, seconds: number) => {
+    for (let i = 0; i < seconds / RULES.tick && !b.over; i++) b.step();
+    return b;
+  };
+
+  it("Scrap Armor blocks each grunt's first hit, so arrows need two shots", () => {
+    const fight = (ups: string[]) =>
+      runFor(new Battle([defs, up({ grunts: ups })], [army(0, ["elven_archers", "elven_archers"]), army(1, ["grunts"])], { seed: 1, towers: false, recordFx: true }), 6);
+    expect(fxTexts(fight([]), "Blocked")).toBe(0);
+    const armored = fight(["scrap_armor"]);
+    expect(fxTexts(armored, "Blocked")).toBeGreaterThan(0);
+    for (const m of armored.models) if (m.def.id === "grunts" && m.alive) expect(m.hp).toBeLessThanOrEqual(20);
+  });
+
+  it("Ambush hides skirmishers from archers until they shoot", () => {
+    const targetsSkirmishers = (ups: string[]) => {
+      const b = runFor(new Battle([defs, up({ skirmishers: ups })], [army(0, ["elven_archers"]), army(1, ["skirmishers"])], { seed: 1, towers: false }), 1);
+      return b.models.filter((m) => m.def.id === "elven_archers" && b.get(m.targetId)?.def.id === "skirmishers").length;
+    };
+    expect(targetsSkirmishers([])).toBeGreaterThan(0);
+    expect(targetsSkirmishers(["ambush"])).toBe(0);
+  });
+
+  it("Improvised Bombs throw fire at the skirmishers' targets", () => {
+    const b = runFor(new Battle([defs, up({ skirmishers: ["improvised_bombs"] })], [army(0, ["knights"]), army(1, ["skirmishers"])], { seed: 1, towers: false }), 12);
+    expect(b.result().stats[b.squads.find((s) => s.def.id === "knights")!.uid].takenByElement.fire ?? 0).toBeGreaterThan(0);
+  });
+
+  it("Oil Bombs leave oil where grunts fall", () => {
+    const b = runFor(new Battle([defs, up({ grunts: ["oil_bombs"] })], [army(0, ["knights", "knights"]), army(1, ["grunts"])], { seed: 1, towers: false }), 8);
+    const fallen = b.models.filter((m) => m.def.id === "grunts" && !m.alive);
+    expect(fallen.length).toBeGreaterThan(0);
+    expect(fallen.some((m) => b.surfaces.at(m.x, m.y) === "oil")).toBe(true);
+  });
+
+  it("Berserk makes trolls much better against one big target", () => {
+    const dealt = (ups: string[]) => {
+      const b = runFor(new Battle([up({ troll: ups }), defs], [army(0, ["troll"]), army(1, ["stone_golem"])], { seed: 1, towers: false }), 15);
+      return b.result().stats[b.squads.find((s) => s.def.id === "troll")!.uid].dealt;
+    };
+    expect(dealt(["berserk"])).toBeGreaterThan(dealt([]) * 1.3);
+  });
+
+  it("Warboss summons grunts that fight but don't count as the ogre's survivors", () => {
+    const b = runFor(new Battle([up({ ogre_brute: ["warboss"] }), defs], [army(0, ["ogre_brute"]), army(1, ["knights", "knights"])], { seed: 1, towers: false }), 6);
+    const summoned = b.models.filter((m) => m.summoned);
+    expect(summoned.length).toBe(1);
+    for (const m of summoned) expect(m.def.id).toBe("grunts");
+    const ogre = b.result().survivors[0].find((s) => s.defId === "ogre_brute");
+    if (ogre) expect(ogre.alive).toBeLessThanOrEqual(ogre.total);
+  });
+
+  it("Thick Skull lets nearby goblins take hits for the ogre", () => {
+    const b = runFor(
+      new Battle([up({ ogre_brute: ["thick_skull"] }), defs], [army(0, ["ogre_brute", "grunts", "grunts"]), army(1, ["knights", "knights"])], { seed: 3, towers: false, recordFx: true }),
+      10,
+    );
+    expect(fxTexts(b, "Meat shield!")).toBeGreaterThan(0);
+  });
+
+  it("Bloodsuckers heal the bats and Shriek dazes enemies below", () => {
+    const b = new Battle([up({ giant_bats: ["bloodsuckers", "shriek"] }), defs], [army(0, ["giant_bats"]), army(1, ["elven_archers", "elven_archers", "knights"])], { seed: 1, towers: false });
+    let dazed = false;
+    for (let i = 0; i < 12 / RULES.tick && !b.over; i++) {
+      b.step();
+      dazed ||= b.models.some((m) => m.side === 1 && m.statuses.dazed !== undefined);
+    }
+    expect(dazed).toBe(true);
+    expect(b.result().stats[b.squads.find((s) => s.def.id === "giant_bats")!.uid].healed).toBeGreaterThan(0);
   });
 });

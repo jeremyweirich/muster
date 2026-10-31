@@ -23,7 +23,7 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   `src/game/counters.ts` if it changes who beats whom). New statuses, surfaces, roles or rules need a Codex entry
   (`CodexView.tsx`, or `detail` in `roles.ts`); a test checks that every Codex link has a target.
 - Every unit needs:
-  - tags: `faction:*` (greenskin, warden, elemental, independent), `race:*`, `size:*`, and 2–4 `role:*` tags from
+  - tags: `faction:*` (goblin, warden, elemental, independent), `race:*`, `size:*`, and 2–4 `role:*` tags from
     `src/data/roles.ts`
   - a one-line description
   - an unlock cost: 0 for starter units only
@@ -32,7 +32,7 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
     (`RULES.upgradeCosts`: 200 / 400 / 600 / 800). Each upgrade has a short player-facing `description`. A test checks
     the count, descriptions and tags.
 - Faction feel: the **Wardens** (formerly the Kingdom) are the strongest and most straightforward faction (plain stat upgrades). **Elementals**
-  can be harder to use and may have total counters. Greenskins sit between them.
+  can be harder to use and may have total counters. Goblins sit between them.
 - **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed) and do
   **not** create surfaces. Surfaces come only from specific upgrades. Don't add new statuses, surfaces or elements
   without the owner agreeing.
@@ -91,13 +91,18 @@ narrative). Read it before redesigning the roster. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
 - **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
   new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Warden unit
-  (Halberdiers), and veterancy (squads earn XP from damage dealt and pay to promote; DESIGN.md §5c). The owner said not
+  (Pikemen), and veterancy (squads earn XP from damage dealt and pay to promote; DESIGN.md §5c). The owner said not
   to worry much about balance for now, because a lot will change for a while. Keep the punch/counterpunch feel of each
   round above all. Balance-test at level 1 only for now.
+- **Goblin rework done (Oct 2026, from the owner's `UNIT_NOTES.md`):** Greenskins became Goblins (`faction:goblin`):
+  Grunts, Skirmishers (goblin archers that hit air), Wolf Riders, Troll (moved from the independents), Ogre Brute,
+  Giant Bats. Sappers and the Alchemist are gone. Longbowmen became Elven Archers and Halberdiers became Pikemen. Two
+  upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and Troll
+  *Boulder Toss*. Expect the owner to replace them. The goblin army-vs-army numbers in DESIGN.md §4 predate the rework.
 - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon Riders
   throw spears; role `skirmisher`). Lean that way when designing new units.
 - Balance: two rock-paper-scissors passes are done (DESIGN.md §4, counter web, including army-vs-army results). The
-  owner wants clear counters, short lethal fights, and no Knight + Longbow default. Goblins are 10 HP (one-hit by any
+  owner wants clear counters, short lethal fights, and no Knight + archer default. Goblins are 10 HP (one-hit by any
   non-goblin) with very fast stabs; keep every non-goblin attack ≥ 10 damage. The one-unit matrix misses army-level
   counters, so also test mixed armies against each other (equal supply, towers on). Fliers still dominate one-unit
   fights.
