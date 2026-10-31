@@ -9,7 +9,7 @@ export const ROLES: Record<string, { name: string; description: string }> = {
   ranged: { name: "Ranged", description: "Attacks from a distance." },
   melee: { name: "Melee", description: "Has to get up close." },
   splash: { name: "Splash", description: "Hits groups. Punishes swarms and tight formations." },
-  antiair: { name: "Anti-air", description: "Can shoot down fliers and the Sky Spire." },
+  antiair: { name: "Anti-air", description: "Can shoot down fliers." },
   antilarge: { name: "Anti-large", description: "Bonus damage against big targets." },
   flier: { name: "Flier", description: "Ignores ground surfaces. Only anti-air can hit it." },
   support: { name: "Support", description: "Makes nearby allies better. Weak on its own." },

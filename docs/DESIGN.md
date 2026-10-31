@@ -78,13 +78,12 @@ and towers.
 
 ### Towers — Decided (values open)
 
-Each side has two towers near the back of its zone, 2 rows in from the back edge (`RULES.towerInset`), spaced apart
-horizontally and mirrored for the opponent. Squads can stand behind them:
+Each side has two Keeps (West and East) near the back of its zone, 2 rows in from the back edge
+(`RULES.towerInset`), spaced apart horizontally and mirrored for the opponent. Squads can stand behind them.
 
 | Tower | Layer | Base HP | Weapon |
 |---|---|---|---|
-| Keep | ground | 150 | light crossbow: 15 physical / 1 s, range 6, hits ground and air |
-| Sky Spire | air | 120 | none; only anti-air can reach it |
+| Keep (×2) | ground | 150 | none |
 
 - **Unupgraded towers are fragile.** Almost any squad that reaches one kills it in a second or two.
 - **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +300 HP, so HP
@@ -94,8 +93,8 @@ horizontally and mirrored for the opponent. Squads can stand behind them:
 - Towers don't move and don't count toward winning the round. A side loses when its *army* is gone.
 - **Why:** a single strong deathball in the center leaves the flanks open. A cheap raider that slips through and snipes a
   tower can swing the main fight. Tower levels are the counter-investment: you pay supply for insurance instead of army.
-- The ground Keep can be reached by any army. The flying Spire can only be reached by anti-air, which gives fliers and
-  archers a strategic job beyond fighting units. Wolf Riders can buy *Tower Raiders* to go straight for towers.
+- Both Keeps are ground structures with no weapons, so any army can reach them and they never shoot back. Wolf Riders
+  can buy *Tower Raiders* to go straight for towers.
 
 ## 4. Units — Decided (data model), Open (roster)
 
@@ -197,11 +196,11 @@ Army-level results at 1000 supply each, towers on (8 seeds, `autoPlace` position
 
 | Army | vs Knight + Longbow | vs Fire line | vs Bats + Sappers |
 |---|---|---|---|
-| Knight + Longbow (3 Knights, 4 Longbow) | ~40% (mirror) | 0% | ~5% |
+| Knight + Longbow (3 Knights, 4 Longbow) | ~50% (mirror) | 0% | ~5% |
 | Fire line (2 Knights, 2 Fire Elementals, 1 Longbow) | 100% | — | 0% |
-| Goblin flood (4 Horde, 2 Sappers, 2 Bats) | ~70% | 100% | ~50% (time-outs) |
+| Goblin flood (4 Horde, 2 Sappers, 2 Bats) | ~65% | 100% | ~50% (time-outs) |
 | Bats + Sappers (3 Bats, 4 Sappers) | ~95% | 100% | — |
-| Anti-air line (2 Knights, 2 Air Elementals, 2 Longbow) | 0% | ~15% | 100% |
+| Anti-air line (2 Knights, 2 Air Elementals, 2 Longbow) | 0% | 0–15% | 100% |
 
 One-unit-type lab fights still over-reward fliers, because most ground units can't hit them at all.
 
@@ -372,7 +371,7 @@ Because the AI only uses the simulator, it handles any unit you design without n
 - Size marks *how hard*: projectile radius and beam thickness scale with damage per hit.
 - Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
 - Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
-  wings; elemental fliers (Wisps, Air Elemental) and the Sky Spire glow instead.
+  wings; elemental fliers (Wisps, Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.
 
 ## 11. Architecture — Decided

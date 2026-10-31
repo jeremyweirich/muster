@@ -230,7 +230,7 @@ export class Battle {
       }
       if (opts.towers ?? true) {
         towerPlacements(side, this.rules).forEach((t, i) => {
-          this.addSquad(t, towerDef(t.defId, opts.towerLevels?.[side]?.[i] ?? 0, this.rules), side);
+          this.addSquad(t, towerDef(t.defId, opts.towerLevels?.[side]?.[i] ?? 0, this.rules, this.rules.towers[i]?.name), side);
         });
       }
     }

@@ -128,6 +128,16 @@ describe("towers", () => {
     expect(canPlace(byId("knights"), t.x, t.y, 0, [], defs)).toBe(false);
   });
 
+  it("towers are unarmed ground keeps", () => {
+    const b = new Battle(defs, [army(0, ["knights"]), army(1, ["knights"])], { seed: 1 });
+    const towers = b.models.filter((m) => m.def.structure);
+    expect(towers).toHaveLength(2 * RULES.towers.length);
+    for (const t of towers) {
+      expect(t.def.layer).toBe("ground");
+      expect(t.def.attack).toBeUndefined();
+    }
+  });
+
   it("towers stand towerInset rows in from each side's back edge", () => {
     for (const side of [0, 1] as const) {
       for (const t of towerPlacements(side)) {

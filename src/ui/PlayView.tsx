@@ -42,7 +42,7 @@ function actionLabel(a: Action, defs: DefMap): string {
     case "upgrade":
       return `upgrade ${defs.get(a.unitId)?.upgrades?.find((u) => u.id === a.upgradeId)?.name ?? ""}`;
     case "tower":
-      return `${TOWER_MAP.get(RULES.towers[a.index].defId)?.name ?? "tower"} upgrade`;
+      return `${RULES.towers[a.index].name ?? TOWER_MAP.get(RULES.towers[a.index].defId)?.name ?? "tower"} upgrade`;
   }
 }
 
@@ -170,7 +170,7 @@ export function PlayView() {
   const towerInfo = (uid: string, levels: [number[], number[]]) => {
     const [, side, i] = uid.split("-");
     const t = RULES.towers[+i];
-    return t ? towerDef(t.defId, levels[+side as Side][+i] ?? 0) : undefined;
+    return t ? towerDef(t.defId, levels[+side as Side][+i] ?? 0, RULES, t.name) : undefined;
   };
 
   const rotateInPlace = (sq: PlacedSquad) => {
@@ -858,7 +858,7 @@ function TowerPanel({ levels, supply, onBuy }: { levels: [number[], number[]]; s
       <div className="muted small">Your towers</div>
       {RULES.towers.map((t, i) => {
         const level = levels[0][i] ?? 0;
-        const def = towerDef(t.defId, level);
+        const def = towerDef(t.defId, level, RULES, t.name);
         const price = towerUpgradePrice(level);
         return (
           <div key={i} className="tower-row">
@@ -884,7 +884,7 @@ function TowerPanel({ levels, supply, onBuy }: { levels: [number[], number[]]; s
         );
       })}
       <div className="muted small">
-        Enemy: {RULES.towers.map((t, i) => `${TOWER_MAP.get(t.defId)?.name} Lv ${levels[1][i] ?? 0}`).join(" · ")}
+        Enemy: {RULES.towers.map((t, i) => `${t.name ?? TOWER_MAP.get(t.defId)?.name} Lv ${levels[1][i] ?? 0}`).join(" · ")}
       </div>
     </div>
   );

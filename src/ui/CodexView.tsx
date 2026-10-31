@@ -105,7 +105,7 @@ export function CodexView() {
         <section>
           <h3>Towers</h3>
           <p className="muted small">
-            Each side has a Keep and a Sky Spire at the back of its zone. They fall fast unless upgraded. Towers don&apos;t count toward
+            Each side has two Keeps near the back of its zone. They have no weapons and fall fast unless upgraded. Towers don&apos;t count toward
             winning the round, but when one falls its owner&apos;s whole army is Dazed (10% damage dealt, double damage taken) for{" "}
             {towerDaze(0)}s, minus 1s per tower level (minimum {RULES.towerDazeMin}s). Each level costs{" "}
             {RULES.towerUpgradeCosts.join(" / ")} and adds {RULES.towerHpPerLevel} HP.

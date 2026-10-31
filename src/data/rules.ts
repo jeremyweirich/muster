@@ -15,8 +15,8 @@ export const RULES: Rules = {
   lockPlacedSquads: true,
   unlocks: true,
   towers: [
-    { defId: "tower_keep", x: 11 },
-    { defId: "tower_spire", x: 35 },
+    { defId: "tower_keep", x: 11, name: "West Keep" },
+    { defId: "tower_keep", x: 35, name: "East Keep" },
   ],
   towerInset: 2,
   speedScale: 0.2,

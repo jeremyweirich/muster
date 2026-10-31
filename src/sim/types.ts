@@ -215,7 +215,7 @@ export interface Rules {
   elementalFriendlyFire: boolean;
   lockPlacedSquads: boolean;
   unlocks: boolean;
-  towers: { defId: string; x: number }[]; // per side, x for the bottom side (mirrored for the top)
+  towers: { defId: string; x: number; name?: string }[]; // per side, x for the bottom side (mirrored for the top)
   towerInset: number; // rows between a tower and its side's back edge
   speedScale: number; // tiles per second per speed point
   upgradeCostMult: number[]; // price multiplier for the 1st, 2nd... upgrade bought for a unit
