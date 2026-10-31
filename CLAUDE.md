@@ -4,6 +4,9 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - **Live site:** https://jeremyweirich.github.io/muster/. It deploys automatically on every push to `main`.
 - **Design:** `docs/DESIGN.md` is the source of truth for the design. Read it before making design changes and keep it
   up to date.
+- **Vision:** `docs/VISION.md` is the owner's story and themes: the Compact, the faction triangle, care as the quiet
+  theme, and each faction's voice. Read it before writing player-facing text (Story, Codex, unit descriptions) or
+  campaign content. `docs/CAMPAIGN.md` turns it into missions.
 
 ## How the owner works
 
@@ -94,7 +97,7 @@ narrative). Read it before redesigning the roster. Open threads:
   (Pikemen), and veterancy (squads earn XP from damage dealt and pay to promote; DESIGN.md §5c). The owner said not
   to worry much about balance for now, because a lot will change for a while. Keep the punch/counterpunch feel of each
   round above all. Balance-test at level 1 only for now.
-- **Goblin rework done (Oct 2026, from the owner's `UNIT_NOTES.md`):** Greenskins became Goblins (`faction:goblin`):
+- **Goblin rework done (Oct 2026, from the owner's unit notes):** Greenskins became Goblins (`faction:goblin`):
   Grunts, Skirmishers (goblin archers that hit air), Wolf Riders, Troll (moved from the independents), Ogre Brute,
   Giant Bats. Sappers and the Alchemist are gone. Longbowmen became Elven Archers and Halberdiers became Pikemen. Two
   upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and Troll

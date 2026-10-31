@@ -2,8 +2,8 @@
 
 The game is now called **Common Ground** (the repo stays `muster`). The Kingdom faction is now the **Wardens**.
 
-Status: **proposal**. Inputs: `PROMPT.md` (narrative), `UNIT_NOTES.md` (goblin rework, AI difficulty), DESIGN.md and
-`docs/PLAYTEST-2026-10.md`. No balancing or playtesting yet. This is about the order in which the game, its mechanics
+Status: **proposal**. Inputs: `docs/VISION.md` (narrative), the owner's unit notes (now built; the AI difficulty plans
+are parked in DESIGN.md §9), DESIGN.md and `docs/PLAYTEST-2026-10.md`. No balancing or playtesting yet. This is about the order in which the game, its mechanics
 and its factions are introduced. Names in *italics* are placeholders.
 
 ## 1. The big idea: each campaign teaches one layer
@@ -42,7 +42,7 @@ a fallen Keep.
   There's no locked progression to save.
 - **Authored enemies, then the AI.** Playtest §2.8: the planner won't reliably produce a story beat. Early missions use
   scripted rounds (fixed purchases and placements). Later ones use the AI limited to a themed pool. Commander
-  personalities map onto the difficulty notes in `UNIT_NOTES.md`:
+  personalities map onto the parked difficulty plans in DESIGN.md §9:
   - **the Boss = Easy.** Builds an even mix and doesn't counter until it's taken real damage. Goblins don't change
     plans until it hurts.
   - **the Marshal (as enemy) = Medium.** A structured board with early counters. It plays by the book, which makes it
@@ -70,7 +70,7 @@ in centuries. Mission 8's last page is the first one the Marshal writes. The own
 player's own winning board**, drawn as a drill-book diagram, but it's **parked** until stored progress is decided (§5).
 Until then, the page can be generated and shown at the end of the finale, without being kept.
 
-**Roster needed.** The goblin rework in `UNIT_NOTES.md` (Grunts, Skirmishers, Wolf Riders, Troll, Ogre Brute, Giant
+**Roster needed.** The goblin rework (now built: Grunts, Skirmishers, Wolf Riders, Troll, Ogre Brute, Giant
 Bats) plus the six Warden units. **Decided: Skirmishers are goblin archers and can hit air.** Without them, Griffons
 (mission 6) would be a win button in missions 6–8 and the pike-line finale wouldn't land. This also satisfies playtest
 rule #1.
@@ -185,7 +185,7 @@ at THEM." Goblins who go out in a blaze get cheered, not mourned.
 | 8 | Point It at Them | elementals (fire-heavy) | steer *their* fire: oil under their line, their fireballs light it | everything |
 
 Notes:
-- **Mission 1** replays the Wardens finale from the losing side, as `PROMPT.md` suggests. A head-on win is near
+- **Mission 1** replays the Wardens finale from the losing side, as `docs/VISION.md` suggests. A head-on win is near
   impossible, but **the win condition is a fallen Keep**, so the first goblin lesson is the goblin way to win. The
   Boss watches the replay and points at things.
 - **Mission 4** is the revenge payoff. Both Keeps fall, the Warden army is Dazed, and the gang pours in. The Marshal:
@@ -257,7 +257,7 @@ opening offer and the three AI difficulties.
 
 ### Final reflection
 
-- The structure holds up because each faction's weakness is the flip side of its strength, which `PROMPT.md` already
+- The structure holds up because each faction's weakness is the flip side of its strength, which `docs/VISION.md` already
   states: the Wardens are rigid, the goblins are reckless with fire and numbers, the elementals are dangerous to each
   other. Each campaign's lessons come out of that, not out of a checklist.
 - **Two balance targets, kept apart** (playtest §3): campaign edges come from authored kits and enemies. Skirmish
@@ -279,7 +279,7 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
 ## 6. Plan of attack
 
 1. **Owner decisions** (§7).
-2. ~~**Goblin roster rework**~~ **Done (Oct 2026)** per `UNIT_NOTES.md`, with the Warden tweaks. Skirmishers *Skyshot*
+2. ~~**Goblin roster rework**~~ **Done (Oct 2026)** from the owner's unit notes, with the Warden tweaks. Skirmishers *Skyshot*
    and Troll *Boulder Toss* are placeholders for the deferred fourth upgrades.
 3. **Mission framework.** A `MissionDef` in `src/data/campaign.ts`: per-side HP, unit and upgrade pools, towers,
    veterancy and opening on or off, a win condition (standard or "topple a Keep"), and an enemy plan: scripted rounds,

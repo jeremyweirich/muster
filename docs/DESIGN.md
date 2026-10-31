@@ -8,6 +8,8 @@ in code are the source of truth; this document explains what they are for.
 
 ## 1. Pitch
 
+The story, themes and faction voices are in `docs/VISION.md`; the campaign plan is in `docs/CAMPAIGN.md`.
+
 Common Ground is a fantasy deploy-then-autobattle strategy game. Two armies face each other across a field. Each round, both
 players recruit squads and place them on their half of the field without seeing what the other is adding. Then the
 battle plays out with no input. Armies carry over from round to round and grow, so every round is a reaction to what

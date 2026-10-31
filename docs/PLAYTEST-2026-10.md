@@ -1,6 +1,6 @@
 # Playtest and balance notes, October 2026
 
-A snapshot written for a future session that will combine these notes with the narrative overhaul (`PROMPT.md`) and the
+A snapshot written for a future session that will combine these notes with the narrative overhaul (now `docs/VISION.md`) and the
 campaign plans. It records what Claude learned by playing full matches against the AI and running controlled fights,
 taken at commit `b958793` (the 21-unit roster in DESIGN.md §4).
 
@@ -134,7 +134,7 @@ then its mean value diff.
 | **Elemental** | 0% / −740 | 100% / +675 | — | 8% / −479 |
 | **Independent** | 0% / −727 | 0% / −215 | 100% / +525 | — |
 
-`PROMPT.md` wants Kingdom > Goblins > Elementals > Kingdom.
+`docs/VISION.md` wants Kingdom (now Wardens) > Goblins > Elementals > Kingdom.
 
 - **Kingdom > Goblins already holds**, for the reason the story gives: Halberdiers (×1.75 vs cavalry and large) and
   Longbows (one arrow kills a goblin) are a pike line goblins have no answer to. This edge is ready.
