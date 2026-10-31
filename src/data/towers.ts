@@ -23,7 +23,7 @@ export const TOWER_DEFS: UnitDef[] = [
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
     tags: ["class:tower"],
-    look: { shape: "hex", color: "#9aa4b1", glyph: "♜" },
+    look: { shape: "hex", color: "#9aa4b1", icon: "keep" },
   },
   {
     id: "tower_spire",
@@ -38,7 +38,7 @@ export const TOWER_DEFS: UnitDef[] = [
     size: 0.8,
     structure: true,
     tags: ["class:tower"],
-    look: { shape: "diamond", color: "#b9c6ff", glyph: "✧" },
+    look: { shape: "diamond", color: "#b9c6ff", icon: "crystal" },
   },
 ];
 

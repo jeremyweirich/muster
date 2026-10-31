@@ -2,18 +2,33 @@ import type { ReactNode } from "react";
 import { ELEMENT_COLORS } from "../data/elements";
 import { RULES } from "../data/rules";
 import { rolesOf } from "../data/roles";
+import { ICONS, type IconDef, type IconId } from "../render/icons";
 import { describeSelector } from "../sim/selectors";
 import type { Element, UnitDef } from "../sim/types";
 import { derived, describeEffect, describeTrait, describeUpgrade } from "./describe";
 
 export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
+  const icon = def.look.icon && def.look.icon in ICONS ? ICONS[def.look.icon as IconId] : null;
+  const fit = def.look.shape === "diamond" || def.look.shape === "triangle" ? 0.55 : 0.72;
   return (
     <span
       className={`swatch shape-${def.look.shape}`}
       style={{ width: size, height: size, background: def.look.color, fontSize: size * 0.55 }}
     >
-      {def.look.glyph}
+      {icon ? <IconSvg icon={icon} size={size * fit} nudge={def.look.shape === "triangle" ? size * 0.12 : 0} /> : def.look.glyph}
     </span>
+  );
+}
+
+function IconSvg({ icon, size, nudge }: { icon: IconDef; size: number; nudge: number }) {
+  const color = "rgba(14,17,21,0.82)";
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ marginTop: nudge }} aria-hidden="true">
+      {icon.fill?.map((d, i) => <path key={`f${i}`} d={d} fill={color} fillRule="evenodd" />)}
+      {icon.stroke?.map((s, i) => (
+        <path key={`s${i}`} d={s.d} fill="none" stroke={color} strokeWidth={s.w} strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
   );
 }
 

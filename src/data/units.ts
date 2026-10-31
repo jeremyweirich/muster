@@ -30,7 +30,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "mob", name: "Bigger Mob", description: "+8 goblins per squad: more bodies to soak the hits, more knives in the fight.", mods: [{ stat: "squadSize", add: 8 }] },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:swarm", "role:fast", "role:melee", "role:glass"],
-    look: { shape: "triangle", color: "#7bbf3a" },
+    look: { shape: "triangle", color: "#7bbf3a", icon: "dagger" },
   },
   {
     id: "wolf_riders",
@@ -60,7 +60,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:fast", "role:raider", "role:melee"],
-    look: { shape: "triangle", color: "#a8743a", glyph: "🐺" },
+    look: { shape: "circle", color: "#a8743a", icon: "paw" },
   },
   {
     id: "goblin_alchemist",
@@ -84,7 +84,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "firebombs", name: "Firebombs", description: "Flasks burst into flame: fire damage ×2, igniting oiled targets.", element: "fire", mods: [{ stat: "damage", mult: 2 }] },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:caster", "size:small", "role:combo", "role:ranged"],
-    look: { shape: "triangle", color: "#8a6d3b", glyph: "⚗" },
+    look: { shape: "circle", color: "#b08d4f", icon: "flask" },
   },
   {
     id: "goblin_sappers",
@@ -112,7 +112,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "big_kegs", name: "Big Kegs", description: "+50% blast damage and a wider blast.", mods: [{ stat: "damage", mult: 1.5 }, { stat: "splash", add: 0.6 }] },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:splash", "role:fast", "role:glass"],
-    look: { shape: "triangle", color: "#c0582b", glyph: "💣" },
+    look: { shape: "circle", color: "#d0602e", icon: "bomb" },
   },
   {
     id: "bat_riders",
@@ -142,7 +142,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "colony", name: "Colony", description: "+2 bats per squad.", mods: [{ stat: "squadSize", add: 2 }] },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:raider"],
-    look: { shape: "diamond", color: "#6b4f7a", glyph: "🦇" },
+    look: { shape: "diamond", color: "#8a6aa0", icon: "bat" },
   },
   {
     id: "ogre_brute",
@@ -166,7 +166,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "rampage", name: "Rampage", description: "Swings 50% faster and moves 30% faster.", mods: [{ stat: "cooldown", mult: 0.65 }, { stat: "speed", mult: 1.3 }] },
     ],
     tags: ["faction:greenskin", "race:ogre", "class:infantry", "size:large", "role:sturdy", "role:splash", "role:slow", "role:melee"],
-    look: { shape: "square", color: "#8f7a4f" },
+    look: { shape: "square", color: "#8f7a4f", icon: "club" },
   },
 
   // --------------------------------------------------------------- Kingdom
@@ -192,7 +192,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "lance_charge", name: "Lance Charge", description: "30% faster, and the first strike deals ×4 damage.", mods: [{ stat: "speed", mult: 1.3 }], traits: [{ type: "charge", mult: 4 }] },
     ],
     tags: ["faction:kingdom", "race:human", "class:infantry", "size:medium", "role:sturdy", "role:melee"],
-    look: { shape: "square", color: "#c0c8d8" },
+    look: { shape: "square", color: "#c0c8d8", icon: "shield" },
   },
   {
     id: "longbowmen",
@@ -215,7 +215,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "fire_arrows", name: "Fire Arrows", description: "Arrows burn: fire damage +25%, ignites oiled targets, melts ice.", element: "fire", mods: [{ stat: "damage", mult: 1.25 }] },
     ],
     tags: ["faction:kingdom", "race:human", "class:ranged", "size:small", "role:ranged", "role:antiair"],
-    look: { shape: "circle", color: "#a7d07a" },
+    look: { shape: "circle", color: "#a7d07a", icon: "bow" },
   },
   {
     id: "ballista",
@@ -239,7 +239,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "repeater", name: "Repeater", description: "Fires twice as fast for 60% damage per bolt.", mods: [{ stat: "cooldown", mult: 0.5 }, { stat: "damage", mult: 0.6 }] },
     ],
     tags: ["faction:kingdom", "class:siege", "size:medium", "role:sniper", "role:antilarge", "role:antiair", "role:slow"],
-    look: { shape: "diamond", color: "#b08a5a" },
+    look: { shape: "diamond", color: "#b08a5a", icon: "crossbow" },
   },
   {
     id: "griffon_riders",
@@ -262,7 +262,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "armored_saddles", name: "Armored Saddles", description: "+40% HP and +20% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.2 } },
     ],
     tags: ["faction:kingdom", "race:beast", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:raider"],
-    look: { shape: "diamond", color: "#e0b34a", glyph: "🦅" },
+    look: { shape: "diamond", color: "#e0b34a", icon: "wing" },
   },
   {
     id: "cleric",
@@ -288,7 +288,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "blessing", name: "Blessing", description: "Allies nearby deal +20% damage.", traits: [{ type: "aura", radius: 3, selector: { side: "ally" }, damage: 1.2 }] },
     ],
     tags: ["faction:kingdom", "race:human", "class:support", "size:small", "role:healer", "role:support"],
-    look: { shape: "circle", color: "#f4e7b0", glyph: "✚" },
+    look: { shape: "circle", color: "#f4e7b0", icon: "cross" },
   },
 
   // ------------------------------------------------------------- Elementals
@@ -322,7 +322,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:elemental", "race:elemental", "element:fire", "size:large", "role:splash", "role:ranged", "role:slow"],
-    look: { shape: "circle", color: "#ff6b2b", glyph: "🔥" },
+    look: { shape: "circle", color: "#ff6b2b", icon: "flame" },
   },
   {
     id: "water_elemental",
@@ -359,7 +359,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:elemental", "race:elemental", "element:water", "size:large", "role:sturdy", "role:combo"],
-    look: { shape: "hex", color: "#3d8bff", glyph: "💧" },
+    look: { shape: "hex", color: "#3d8bff", icon: "drop" },
   },
   {
     id: "air_elemental",
@@ -386,7 +386,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "tempest", name: "Tempest", description: "+40% HP and attacks 40% faster.", mods: [{ stat: "hp", mult: 1.4 }, { stat: "cooldown", mult: 0.7 }] },
     ],
     tags: ["faction:elemental", "race:elemental", "element:lightning", "size:medium", "role:flier", "role:antiair", "role:combo"],
-    look: { shape: "diamond", color: "#d6e4ff", glyph: "🌪" },
+    look: { shape: "diamond", color: "#d6e4ff", icon: "wind" },
   },
   {
     id: "wisps",
@@ -410,7 +410,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "swarm", name: "Brighter Swarm", description: "+6 wisps per squad.", mods: [{ stat: "squadSize", add: 6 }] },
     ],
     tags: ["faction:elemental", "race:elemental", "element:lightning", "size:small", "role:swarm", "role:flier", "role:fast"],
-    look: { shape: "circle", color: "#fff3a0", glyph: "✦" },
+    look: { shape: "circle", color: "#fff3a0", icon: "sparkle" },
   },
 
   // ------------------------------------------------------------ Independents
@@ -438,7 +438,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "ancient_scales", name: "Ancient Scales", description: "+40% HP and +30% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.3 } },
     ],
     tags: ["faction:independent", "race:dragon", "element:fire", "size:huge", "role:flier", "role:splash", "role:sturdy"],
-    look: { shape: "hex", color: "#c0392b", glyph: "🐉" },
+    look: { shape: "hex", color: "#c0392b", icon: "claws" },
   },
   {
     id: "troll",
@@ -463,7 +463,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "berserk", name: "Berserk", description: "Attacks 65% faster and regenerates even quicker.", mods: [{ stat: "cooldown", mult: 0.6 }], traits: [{ type: "regen", perSecond: 15, suppressedBy: "burning" }] },
     ],
     tags: ["faction:independent", "race:troll", "size:large", "role:sturdy", "role:regen", "role:melee"],
-    look: { shape: "square", color: "#5e7d6a", glyph: "👹" },
+    look: { shape: "square", color: "#5e7d6a", icon: "fangs" },
   },
   {
     id: "giant",
@@ -486,6 +486,6 @@ export const DEFAULT_UNITS: UnitDef[] = [
       { id: "thick_hide", name: "Thick Hide", description: "+40% HP and +25% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.25 } },
     ],
     tags: ["faction:independent", "race:giant", "size:huge", "role:splash", "role:sturdy", "role:slow", "role:ranged"],
-    look: { shape: "square", color: "#9c8b72", glyph: "🪨" },
+    look: { shape: "square", color: "#9c8b72", icon: "boulder" },
   },
 ];

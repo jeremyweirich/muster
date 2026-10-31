@@ -15,12 +15,14 @@ export function matches(sel: Selector, def: UnitDef, side: Side, fromSide: Side 
   return true;
 }
 
+// Player-facing text: tags lose their category ("class:ranged" reads as "ranged").
 export function describeSelector(sel: Selector): string {
+  const tag = (t: string) => t.slice(t.indexOf(":") + 1);
   const parts: string[] = [];
   if (sel.side && sel.side !== "any") parts.push(sel.side === "ally" ? "allied" : "enemy");
   if (sel.layer) parts.push(sel.layer);
-  if (sel.hasTag) parts.push(sel.hasTag);
-  if (sel.hasAnyTag?.length) parts.push(sel.hasAnyTag.join(" / "));
-  if (sel.lacksTag) parts.push(`not ${sel.lacksTag}`);
+  if (sel.hasTag) parts.push(tag(sel.hasTag));
+  if (sel.hasAnyTag?.length) parts.push(sel.hasAnyTag.map(tag).join(" / "));
+  if (sel.lacksTag) parts.push(`not ${tag(sel.lacksTag)}`);
   return parts.length ? parts.join(" ") + " units" : "all units";
 }

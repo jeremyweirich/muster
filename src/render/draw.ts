@@ -3,25 +3,78 @@ import { deployZone, RULES } from "../data/rules";
 import { towerPlacements, TOWER_MAP } from "../data/towers";
 import { footprintOf, formation, type Battle, type Fx, type Model, type Projectile } from "../sim/battle";
 import { SurfaceGrid } from "../sim/surfaces";
+import { drawIcon, ICONS, type IconId } from "./icons";
 import type { PlacedSquad, Shape, Side, StatusId, UnitDef } from "../sim/types";
 
 export const SIDE_COLORS = ["#4da3ff", "#ff5468"] as const;
 const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
 const SURFACE_IDS = SurfaceGrid.ids();
 
-export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts: { zones?: boolean; grid?: Side[] } = {}) {
+type BackgroundOpts = { zones?: boolean; grid?: Side[] };
+
+// The field never changes during a battle, so it's rendered once per size/options into an offscreen canvas.
+const bgCache = new Map<string, HTMLCanvasElement>();
+
+export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts = {}) {
   const W = RULES.fieldW * tile;
   const H = RULES.fieldH * tile;
-  ctx.fillStyle = "#1d2a1f";
+  const dpr = ctx.getTransform().a || 1;
+  const key = `${tile}|${dpr}|${opts.zones ? 1 : 0}|${(opts.grid ?? []).join(",")}`;
+  let bg = bgCache.get(key);
+  if (!bg) {
+    bg = document.createElement("canvas");
+    bg.width = Math.round(W * dpr);
+    bg.height = Math.round(H * dpr);
+    const c = bg.getContext("2d")!;
+    c.scale(dpr, dpr);
+    paintBackground(c, tile, opts);
+    bgCache.set(key, bg);
+  }
+  ctx.drawImage(bg, 0, 0, W, H);
+}
+
+function paintBackground(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts) {
+  const W = RULES.fieldW * tile;
+  const H = RULES.fieldH * tile;
+  // grass: a slightly lighter band through the middle
+  const base = ctx.createLinearGradient(0, 0, 0, H);
+  base.addColorStop(0, "#1c2a1e");
+  base.addColorStop(0.5, "#24372a");
+  base.addColorStop(1, "#1c2a1e");
+  ctx.fillStyle = base;
   ctx.fillRect(0, 0, W, H);
-  // subtle checker so distances read at a glance
-  ctx.fillStyle = "rgba(255,255,255,0.025)";
-  for (let y = 0; y < RULES.fieldH; y++)
-    for (let x = 0; x < RULES.fieldW; x++) if ((x + y) % 2 === 0) ctx.fillRect(x * tile, y * tile, tile, tile);
+  // mowed stripes, two tiles wide, so distances still read at a glance
+  ctx.fillStyle = "rgba(255,255,255,0.022)";
+  for (let x = 0; x < RULES.fieldW; x += 4) ctx.fillRect(x * tile, 0, 2 * tile, H);
+  // speckles and grass tufts from a fixed seed, so the field looks the same every time
+  let seed = 1234567;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const tufts = Math.round(RULES.fieldW * RULES.fieldH * 2.2);
+  for (let i = 0; i < tufts; i++) {
+    const x = rnd() * W;
+    const y = rnd() * H;
+    const light = rnd() < 0.5;
+    ctx.fillStyle = light ? "rgba(170,210,140,0.07)" : "rgba(0,0,0,0.12)";
+    const s = (0.04 + rnd() * 0.08) * tile;
+    ctx.fillRect(x, y, s, s);
+    if (rnd() < 0.35) {
+      ctx.strokeStyle = "rgba(150,200,120,0.09)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x + (rnd() - 0.5) * tile * 0.25, y - tile * (0.15 + rnd() * 0.2));
+      ctx.stroke();
+    }
+  }
   if (opts.zones) {
     for (const side of [0, 1] as Side[]) {
       const { y0, y1 } = deployZone(side);
-      ctx.fillStyle = side === 0 ? "rgba(77,163,255,0.07)" : "rgba(255,84,104,0.07)";
+      // tint fades from the back edge toward the front of the zone
+      const g = ctx.createLinearGradient(0, (side === 0 ? y1 : y0) * tile, 0, (side === 0 ? y0 : y1) * tile);
+      const rgb = side === 0 ? "77,163,255" : "255,84,104";
+      g.addColorStop(0, `rgba(${rgb},0.13)`);
+      g.addColorStop(1, `rgba(${rgb},0.04)`);
+      ctx.fillStyle = g;
       ctx.fillRect(0, y0 * tile, W, (y1 - y0) * tile);
       ctx.strokeStyle = side === 0 ? "rgba(77,163,255,0.45)" : "rgba(255,84,104,0.45)";
       ctx.lineWidth = 1;
@@ -55,6 +108,12 @@ export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts
   ctx.lineTo(W, (RULES.fieldH / 2) * tile);
   ctx.stroke();
   ctx.setLineDash([]);
+  // vignette pulls the eye to the middle
+  const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.hypot(W, H) * 0.6);
+  v.addColorStop(0, "rgba(0,0,0,0)");
+  v.addColorStop(1, "rgba(0,0,0,0.38)");
+  ctx.fillStyle = v;
+  ctx.fillRect(0, 0, W, H);
 }
 
 export function drawSurfaces(ctx: CanvasRenderingContext2D, grid: SurfaceGrid, tile: number, time: number) {
@@ -112,6 +171,9 @@ function shapePath(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: nu
   }
 }
 
+// How big an icon fits inside each token shape, as a multiple of the token radius.
+const ICON_FIT: Record<Shape, number> = { circle: 1.5, square: 1.5, hex: 1.45, diamond: 1.15, triangle: 1.05 };
+
 export interface UnitDrawOpts {
   alpha?: number;
   facing?: number;
@@ -130,6 +192,12 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.fillStyle = "rgba(0,0,0,0.35)";
     ctx.beginPath();
     ctx.ellipse(px + r * 0.4, py + r * 0.9, r * 0.9, r * 0.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (r >= 4) {
+    // contact shadow so ground units sit on the grass
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(px + r * 0.15, py + r * 0.55, r * 1.05, r * 0.7, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   shapePath(ctx, def.look.shape, px, py, r, facing);
@@ -173,7 +241,10 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
       k++;
     }
   }
-  if (def.look.glyph && r >= 5) {
+  const icon = def.look.icon && def.look.icon in ICONS ? (def.look.icon as IconId) : null;
+  if (icon && r >= 5.5) {
+    drawIcon(ctx, icon, px, py + (def.look.shape === "triangle" ? r * 0.08 : 0), r * ICON_FIT[def.look.shape], "rgba(14,17,21,0.82)");
+  } else if (def.look.glyph && r >= 5) {
     ctx.font = `${Math.round(r * 1.2)}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";

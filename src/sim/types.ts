@@ -131,7 +131,7 @@ export interface UnitDef {
   attack?: AttackDef;
   traits?: TraitDef[];
   tags: string[];
-  look: { shape: Shape; color: string; glyph?: string };
+  look: { shape: Shape; color: string; icon?: string; glyph?: string }; // icon: an id from src/render/icons.ts; glyph: emoji fallback
   structure?: boolean; // towers: never move, don't count toward winning the battle
   upgrades?: UpgradeDef[];
   upgradeCost?: number; // price of the first upgrade bought (default: unit cost); the second costs double

@@ -4,6 +4,7 @@ import { RULES } from "../data/rules";
 import { defMap } from "../game/army";
 import { massArmy, runArmies } from "../game/lab";
 import { drawBackground } from "../render/draw";
+import { ICON_IDS } from "../render/icons";
 import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
 import { ELEMENTS, type AttackDef, type Element, type Layer, type ModStat, type Shape, type StatusId, type Targeting, type TraitDef, type UnitDef, type UpgradeDef } from "../sim/types";
@@ -206,6 +207,14 @@ export function EditorView() {
               <Row label="Look">
                 <input type="color" value={unit.look.color} onChange={(e) => update({ look: { ...unit.look, color: e.target.value } })} />
                 <Pick value={unit.look.shape} options={SHAPES} onChange={(shape) => update({ look: { ...unit.look, shape } })} />
+                <select value={unit.look.icon ?? ""} onChange={(e) => update({ look: { ...unit.look, icon: e.target.value || undefined } })}>
+                  <option value="">no icon</option>
+                  {ICON_IDS.map((id) => (
+                    <option key={id} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   className="glyph"
