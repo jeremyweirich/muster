@@ -2,8 +2,9 @@ import { useRef } from "react";
 import { drawBattle, FxLayer } from "../render/draw";
 import type { Battle, BattleResult } from "../sim/battle";
 
-// Plays a Battle in real time at a chosen speed. The sim always advances in
-// fixed ticks, so playback speed never changes the outcome.
+// Plays a Battle at a chosen speed. The sim always advances in fixed ticks, so playback speed never changes the outcome.
+// "1×" runs the sim at half real time, which reads better; the speed buttons are relative to that.
+export const PLAYBACK_SCALE = 0.5;
 export function useBattlePlayer() {
   const fx = useRef(new FxLayer());
   const acc = useRef(0);
@@ -25,7 +26,7 @@ export function useBattlePlayer() {
       onEnd?: (r: BattleResult) => void,
     ) {
       if (speed > 0 && !battle.over) {
-        acc.current += dt * speed;
+        acc.current += dt * speed * PLAYBACK_SCALE;
         let steps = 0;
         while (acc.current >= battle.rules.tick && steps < 400 && !battle.over) {
           battle.step();

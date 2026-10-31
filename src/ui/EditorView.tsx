@@ -724,7 +724,7 @@ function Sandbox({ unit: base, units }: { unit: UnitDef; units: UnitDef[] }) {
           Watch
         </button>
         <button onClick={batch}>Sim ×10</button>
-        {[0.5, 1, 2, 4].map((s) => (
+        {[0.5, 1, 2, 4, 8].map((s) => (
           <button key={s} className={`small-btn ${speed === s ? "active" : ""}`} onClick={() => setSpeed(s)}>
             {s}×
           </button>

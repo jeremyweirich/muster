@@ -20,6 +20,7 @@ export const RULES: Rules = {
   ],
   towerInset: 2,
   speedScale: 0.2,
+  allyPush: 0.15, // allies squeeze past each other, so melee units can reach the fight
   upgradeCostMult: [1, 2],
   towerUpgradeCosts: [100, 200, 400, 800],
   towerHpPerLevel: 300,

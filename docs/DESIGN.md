@@ -41,7 +41,7 @@ Round N
  │    ├─ buy squads, place and rotate them in your zone
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
- ├─ Battle (automatic, deterministic, up to 90 s; always starts at 1× speed)
+ ├─ Battle (automatic, deterministic, up to 90 s; always starts at 1× playback, which is half real time)
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
@@ -120,8 +120,7 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `structure` | towers only: anchored and not counted toward winning |
 
 **Behavior.** Each model picks a target (nearest, highest HP, lowest HP, towers first, or enemies matching `prefers` first, among layers it can hit),
-walks until it is in range, and attacks. Units with no attack follow the nearest armed ally. Models push each other apart; heavier models
-get pushed less, and towers never move. There is no pathfinding yet.
+walks until it is in range, and attacks. Units with no attack follow the nearest armed ally. Models push each other apart; heavier models get pushed less, and towers never move. Enemies block each other fully, but allies only nudge each other (`RULES.allyPush` = 0.15), so units behind a front line can squeeze through to reach the fight. There is no pathfinding yet.
 
 **Damage pipeline:**
 `attack damage × aura buffs × attacker status (Dazed) → reactions with the target's statuses (Conduct ×2, Shatter ×2, …) → bonusVs → target resist → target status (Dazed ×2)`
@@ -198,8 +197,8 @@ Army-level results at 1000 supply each, towers on (8 seeds, `autoPlace` position
 |---|---|---|---|
 | Knight + Longbow (3 Knights, 4 Longbow) | ~50% (mirror) | 0% | ~5% |
 | Fire line (2 Knights, 2 Fire Elementals, 1 Longbow) | 100% | — | 0% |
-| Goblin flood (4 Horde, 2 Sappers, 2 Bats) | ~65% | 100% | ~50% (time-outs) |
-| Bats + Sappers (3 Bats, 4 Sappers) | ~95% | 100% | — |
+| Goblin flood (4 Horde, 2 Sappers, 2 Bats) | ~85% | 100% | ~50% (time-outs) |
+| Bats + Sappers (3 Bats, 4 Sappers) | ~95–100% | 100% | — |
 | Anti-air line (2 Knights, 2 Air Elementals, 2 Longbow) | 0% | 0–15% | 100% |
 
 One-unit-type lab fights still over-reward fliers, because most ground units can't hit them at all.

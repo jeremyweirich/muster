@@ -218,6 +218,7 @@ export interface Rules {
   towers: { defId: string; x: number; name?: string }[]; // per side, x for the bottom side (mirrored for the top)
   towerInset: number; // rows between a tower and its side's back edge
   speedScale: number; // tiles per second per speed point
+  allyPush: number; // how hard allies push each other apart, 0..1 (enemies always fully block each other)
   upgradeCostMult: number[]; // price multiplier for the 1st, 2nd... upgrade bought for a unit
   towerUpgradeCosts: number[]; // price of each tower level
   towerHpPerLevel: number;

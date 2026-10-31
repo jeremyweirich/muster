@@ -811,7 +811,8 @@ export class Battle {
   }
 
   // Simple circle separation using a spatial hash; ground and air don't collide.
-  // Anchored units (towers) never get pushed.
+  // Anchored units (towers) never get pushed. Enemies block each other fully; allies only nudge each other
+  // (rules.allyPush), so units behind a front line can squeeze through to reach their targets.
   private separate() {
     const cell = 1;
     const grid = new Map<number, Model[]>();
@@ -845,7 +846,7 @@ export class Battle {
             const d2 = dx * dx + dy * dy;
             if (d2 >= min * min) continue;
             const d = Math.sqrt(d2) || 0.001;
-            const overlap = (min - d) * 0.5;
+            const overlap = (min - d) * 0.5 * (m.side === o.side && !am && !ao ? this.rules.allyPush : 1);
             const wm = m.def.size * m.def.size;
             const wo = o.def.size * o.def.size;
             // heavier models get pushed less

@@ -687,7 +687,7 @@ export function PlayView() {
         )}
         {(match.phase === "battle" || view === "replay") && match.phase !== "deploy" && (
           <div className="speed">
-            {[0, 0.5, 1, 2, 4].map((s) => (
+            {[0, 0.5, 1, 2, 4, 8].map((s) => (
               <button key={s} className={speed === s ? "active" : ""} onClick={() => setSpeed(s)}>
                 {s === 0 ? "❚❚" : `${s}×`}
               </button>
