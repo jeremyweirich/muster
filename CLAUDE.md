@@ -60,6 +60,8 @@ npm test              # vitest (sim, upgrades, towers, AI)
 npm run build         # typecheck + static build in dist/
 npm run matrix        # unit-vs-unit win-rate matrix
 npm run roster-table  # roster tables for DESIGN.md
+npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
+npm run experiments   # balance experiments in mixed armies (modes listed in scripts/balance-experiments.ts)
 ```
 
 **npm note:** npm 10 (the version bundled with Node 22) crashes resolving vitest 4's optional peer dependencies
@@ -79,7 +81,9 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 ## Where things stand
 
-See DESIGN.md §12 for the roadmap. Open threads:
+See DESIGN.md §12 for the roadmap. **`docs/PLAYTEST-2026-10.md`** records five full matches against the AI and the
+balance experiments behind them (veterancy snowball, anti-air gaps, upgrade value, the faction triangle vs the
+narrative). Read it before redesigning the roster. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
 - **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
   new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Kingdom unit

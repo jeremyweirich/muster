@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "matrix": "tsx scripts/matrix.ts",
-    "roster-table": "tsx scripts/roster-table.ts"
+    "roster-table": "tsx scripts/roster-table.ts",
+    "playtest": "tsx scripts/playtest.ts",
+    "experiments": "tsx scripts/balance-experiments.ts"
   },
   "dependencies": {
     "react": "^19.1.0",
