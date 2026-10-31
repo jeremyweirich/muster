@@ -41,7 +41,7 @@ Round N
  │    ├─ buy squads, place and rotate them in your zone
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
- ├─ Battle (automatic, deterministic, up to 90 s)
+ ├─ Battle (automatic, deterministic, up to 90 s; always starts at 1× speed)
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
@@ -113,14 +113,14 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `spacing` | extra distance kept from allies **while advancing**; ranks close once fighting. Reduces splash damage taken |
 | `resist` | per element: 0.3 = takes 30% less, -0.35 = takes 35% more, 1 = immune |
 | `immuneStatuses` | statuses that never apply |
-| `attack` | damage, element, cooldown, range, targets, targeting, delivery, splash, chain, `bonusVs`, `onHit` effects |
+| `attack` | damage, element, cooldown, range, targets, targeting, delivery, splash, chain, `bonusVs`, `prefers` (hunt matching enemies first), `selfDestruct` (dies after its first attack), `onHit` effects |
 | `traits` | aura, onDeath, regen, periodic, retaliate, charge |
 | `upgrades` | two upgrades per unit (section 5b) |
 | `upgradeCost` | price of the first upgrade bought (default: unit cost); the second costs double |
 | `tags` | `category:value` labels used by selectors, including `faction:*` and `role:*` |
 | `structure` | towers only: anchored and not counted toward winning |
 
-**Behavior.** Each model picks a target (nearest, highest HP, lowest HP, or towers first, among layers it can hit),
+**Behavior.** Each model picks a target (nearest, highest HP, lowest HP, towers first, or enemies matching `prefers` first, among layers it can hit),
 walks until it is in range, and attacks. Units with no attack follow the nearest armed ally. Models push each other apart; heavier models
 get pushed less, and towers never move. There is no pathfinding yet.
 
@@ -136,58 +136,72 @@ bonuses come later (section 8).
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 35 | 16 physical / 0.8s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 50% faster and attack 25% faster.<br>**Scatter**: Spread out as they charge, so splash hits fewer of them. +20% HP. |
-| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 35 physical / 1s, range 0.5 | Fast, Raider, Melee | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers. |
-| Goblin Alchemist | 100 | 50 | 3 (3×1) | 11 | 100 | 12 physical / 2s, range 5, splash 1.2 | Combo, Ranged | **Oil Slick**: Flasks leave oil on the ground. It slows, and fire races through it.<br>**Firebombs**: Flasks burst into flame: fire damage ×2, igniting oiled targets. |
-| War Drummer | 100 | 50 | 1 (1×1) | 12 | 300 | none | Support | **War Chant**: Goblins nearby also deal +25% damage.<br>**Great Drum**: Reaches much farther and rallies every greenskin, ogres included. |
-| Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 150 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness.<br>**Rampage**: Swings 50% faster and moves 30% faster. |
+| Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 10 | 8 physical / 0.25s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 30% faster and stab 40% faster.<br>**Bigger Mob**: +8 goblins per squad: more bodies to soak the hits, more knives in the fight. |
+| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 45 physical / 1s, range 0.5 | Fast, Raider, Melee | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers. |
+| Goblin Alchemist | 100 | 50 | 3 (3×1) | 11 | 100 | 18 physical / 2s, range 5, splash 1.2 | Combo, Ranged | **Oil Slick**: Flasks leave oil on the ground. It slows, and fire races through it.<br>**Firebombs**: Flasks burst into flame: fire damage ×2, igniting oiled targets. |
+| Goblin Sappers | 100 | 50 | 6 (3×2) | 16 | 50 | 140 fire / 1s, range 0.3, splash 1.4 | Splash, Fast, Glass cannon | **Volatile Powder**: Kegs also go off when a sapper is killed, so cutting them down up close still hurts.<br>**Big Kegs**: +50% blast damage and a wider blast. |
+| Bat Riders | 200 | 100 | 4 (2×2, air) | 20 | 240 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Shriek**: Each hit Dazes the target for 2s: it deals 10% damage and takes double.<br>**Colony**: +2 bats per squad. |
+| Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 200 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness.<br>**Rampage**: Swings 50% faster and moves 30% faster. |
 
 #### Kingdom
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Knights | 200 | 0 | 4 (4×1) | 10 | 1200 | 22 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage. |
-| Longbowmen | 100 | 0 | 6 (3×2) | 8 | 90 | 14 physical / 1.5s, range 8, splash 0.5 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice. |
-| Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 260 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +40% damage, and bolts splash.<br>**Repeater**: Fires twice as fast for 60% damage per bolt. |
-| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 42 physical / 1s, range 0.8 | Flier, Fast, Raider | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance. |
+| Knights | 200 | 0 | 4 (4×1) | 10 | 700 | 55 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage. |
+| Longbowmen | 100 | 0 | 6 (3×2) | 8 | 100 | 20 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice. |
+| Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 340 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +40% damage, and bolts splash.<br>**Repeater**: Fires twice as fast for 60% damage per bolt. |
+| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 55 physical / 1s, range 0.8 | Flier, Fast, Raider | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance. |
 | Cleric | 150 | 75 | 2 (2×1) | 8 | 220 | none | Healer, Support | **Sanctuary**: Heals 70 in a wider circle.<br>**Blessing**: Allies nearby deal +20% damage. |
 
 #### Elementals
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Fire Elemental | 250 | 100 | 1 (2×2) | 7 | 1100 | 110 fire / 2.5s, range 7, splash 2 | Splash, Ranged, Slow | **Scorched Earth**: Fireballs leave burning ground. Mind your own troops.<br>**Magma Core**: +50% HP, and it erupts when destroyed. |
-| Water Elemental | 250 | 100 | 1 (2×2) | 6 | 1800 | 45 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles. |
-| Air Elemental | 200 | 100 | 2 (2×1, air) | 14 | 350 | 35 lightning / 2s, range 5, chain ×2 | Flier, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster. |
-| Wisps | 100 | 50 | 10 (3×2, air) | 16 | 45 | 6 lightning / 1s, range 2 | Swarm, Flier, Fast | **Kindling**: Each wisp bursts into flame when destroyed.<br>**Brighter Swarm**: +6 wisps per squad. |
+| Fire Elemental | 250 | 100 | 1 (2×2) | 7 | 1100 | 145 fire / 2.5s, range 7, splash 2 | Splash, Ranged, Slow | **Scorched Earth**: Fireballs leave burning ground. Mind your own troops.<br>**Magma Core**: +50% HP, and it erupts when destroyed. |
+| Water Elemental | 250 | 100 | 1 (2×2) | 6 | 1800 | 60 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles. |
+| Air Elemental | 200 | 100 | 2 (2×1, air) | 14 | 350 | 45 lightning / 2s, range 5, chain ×2 | Flier, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster. |
+| Wisps | 100 | 50 | 10 (3×2, air) | 16 | 45 | 12 lightning / 1.4s, range 2 | Swarm, Flier, Fast | **Kindling**: Each wisp bursts into flame when destroyed.<br>**Brighter Swarm**: +6 wisps per squad. |
 
 #### Independents
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Dragon | 600 | 200 | 1 (4×4, air) | 9 | 4200 | 80 fire / 1.6s, range 3, splash 1.8 | Flier, Splash, Sturdy | **Inferno**: +25% damage, and its breath leaves burning ground.<br>**Ancient Scales**: +40% HP and +30% physical resistance. |
-| Troll | 200 | 75 | 2 (2×1) | 10 | 1000 | 70 physical / 1.3s, range 0.6 | Sturdy, Regenerates, Melee | **Rock Skin**: +30% physical resistance, and fire only hurts it a little extra.<br>**Berserk**: Attacks 65% faster and regenerates even quicker. |
-| Giant | 350 | 150 | 1 (3×3) | 5 | 3000 | 150 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance. |
+| Dragon | 600 | 200 | 1 (4×4, air) | 9 | 4200 | 95 fire / 1.6s, range 3, splash 1.8 | Flier, Splash, Sturdy | **Inferno**: +25% damage, and its breath leaves burning ground.<br>**Ancient Scales**: +40% HP and +30% physical resistance. |
+| Troll | 200 | 75 | 2 (2×1) | 10 | 1000 | 90 physical / 1.3s, range 0.6 | Sturdy, Regenerates, Melee | **Rock Skin**: +30% physical resistance, and fire only hurts it a little extra.<br>**Berserk**: Attacks 65% faster and regenerates even quicker. |
+| Giant | 350 | 150 | 1 (3×3) | 5 | 3000 | 200 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance. |
 
 ### Counter web — Decided (direction), Open (numbers)
 
-Rock-paper-scissors is the main balance goal. Generic units should be strong against some things and clearly weak
-against others, and no unit should be a safe default. The starter units form a triangle:
+Rock-paper-scissors is the main balance goal. Every unit should be strong against some things and clearly weak against
+others, and no army should be a safe default. Knight + Longbow spam in particular must have several direct answers.
 
-- **Goblin Horde beats Knights.** Swarms gang up on bigger foes (+50% damage vs medium and larger), and Knights hit
-  too softly to thin a swarm fast.
-- **Knights beat Longbowmen.** Armor shrugs off arrows, and Knights close the distance.
-- **Longbowmen beat Goblin Horde.** Volleys splash a little, and goblins die in three arrows.
+Lethality: fights are meant to be short. A Knight mirror resolves in about 25–30 s; most mixed fights end in 10–45 s.
 
-The rest of the roster hangs off that triangle:
-- Splash (Ogre, Fire Elemental, Giant, Alchemist) shreds swarms.
-- Fire beats armor and regeneration: it ignores physical resistance, and Burning stops the Troll's regeneration.
-- The Ballista hunts large units (Ogre, Giant, elementals, Dragon) but dies to swarms, Knights and Wolf Riders.
-- Wolf Riders charge into archers and other backliners (the ×3 first bite one-shots a Longbowman) but lose to Goblins,
-  Knights and anything sturdy.
-- Big melee (Ogre, Troll) beats Knights, and the Ogre walks through arrows. The Ballista and fire answer them.
-- Anti-air (Longbowmen with ×1.5 vs fliers, Air Elemental, Ballista) answers fliers and the Sky Spire.
-- Water and Air Elementals are a combo pair: Wet targets take double lightning damage.
+- **Goblin Horde** dies to any single non-goblin hit (10 HP) but stabs very fast (8 damage every 0.25 s). Archers and
+  anything that hits often stop it; a horde that reaches soft or slow units shreds them. Frenzy and Bigger Mob make it
+  much deadlier.
+- **Knights** are the tank: the most effective HP per supply, low damage per supply. Arrows bounce off them. Fire,
+  Sappers, Ogres and Trolls answer them.
+- **Longbowmen** are steady single-target arrows: they pick off swarms and Griffons, and lose to armor, Bat Riders and
+  anything big.
+- **Goblin Sappers** run in and blow up (fire, splash), one blast each. They delete clumped Knights and big units, but
+  archers can pop them on the way in.
+- **Bat Riders** fly over the front line and hunt ranged, caster and siege units first (×2 damage to them). They can
+  only hit the ground, so Griffons, Air Elementals and other anti-air swat them.
+- **Fire** (Fire Elemental, Sappers, Firebombs, Fire Arrows) ignores physical armor and stops the Troll's regeneration.
+- **Air Elemental** is the dedicated anti-air (×1.5 vs fliers, chain lightning).
+- The **Ballista** hunts large units (Ogre, Giant, elementals, Dragon). **Splash** (Ogre, Fire Elemental, Giant,
+  Alchemist) shreds swarms. **Wolf Riders** run down archers and siege. Water and Air Elementals are a combo pair.
+
+Army-level results at 1000 supply each, towers on (8 seeds, `autoPlace` positions):
+
+| Army | vs Knight + Longbow | vs Fire line | vs Bats + Sappers |
+|---|---|---|---|
+| Knight + Longbow (3 Knights, 4 Longbow) | ~40% (mirror) | 0% | ~5% |
+| Fire line (2 Knights, 2 Fire Elementals, 1 Longbow) | 100% | — | 0% |
+| Goblin flood (4 Horde, 2 Sappers, 2 Bats) | ~70% | 100% | ~50% (time-outs) |
+| Bats + Sappers (3 Bats, 4 Sappers) | ~95% | 100% | — |
+| Anti-air line (2 Knights, 2 Air Elementals, 2 Longbow) | 0% | ~15% | 100% |
 
 One-unit-type lab fights still over-reward fliers, because most ground units can't hit them at all.
 
@@ -216,7 +230,7 @@ whether unlock costs should scale with the round.
 - **Price depends on order:** whichever you buy first costs about the unit's price (`upgradeCost`, which defaults to
   `cost`). The second costs **double**. Both are meant to be strong, and the choice of which to take first should matter.
 - **Upgrades should add personality**, not just numbers. Good upgrades change how a unit plays. Examples:
-  - Goblins *Scatter* (spread out while charging) or *Frenzy* (much faster)
+  - Goblins *Bigger Mob* (more bodies) or *Frenzy* (much faster)
   - Water Elemental *Glacial Heart* (freeze whoever hits it) or *Tidal Surge* (more damage and range, plus puddles)
   - Wolf Riders *Tower Raiders* (ignore the army and go for towers)
 - **Surfaces come from upgrades.** Scorched Earth, Inferno, Oil Slick and Tidal Surge are the only things that put
@@ -297,7 +311,7 @@ decision.
 
 | Faction | Identity | Strengths | Weaknesses |
 |---|---|---|---|
-| **Greenskins** (goblin, ogre) | numbers, speed, oil | swarms, raiders, drum auras, oil into fire | low HP per model, ogres take extra fire damage |
+| **Greenskins** (goblin, ogre) | numbers, speed, things that explode | swarms, raiders, bats that hunt archers, sappers that blow up armor, oil into fire | goblins die to any hit, ogres take extra fire damage |
 | **Kingdom** (human) | discipline and anti-everything | armor, range, anti-air, anti-large, healing | few elemental tools, slow siege |
 | **Elementals** | elemental combos | big splash, Wet + lightning, freezing | slow ground bodies, weak to the opposite element |
 | **Independents** | big, unique monsters | Dragon, Troll (regeneration), Giant (boulders) | expensive unlocks, no faction synergies |

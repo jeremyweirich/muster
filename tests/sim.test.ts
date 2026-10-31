@@ -158,6 +158,24 @@ describe("towers", () => {
   });
 });
 
+describe("targeting and self-destruct", () => {
+  it("sappers die after their first blast", () => {
+    const b = new Battle(defs, [army(0, ["goblin_sappers"]), army(1, ["knights"])], { seed: 1, towers: false });
+    for (let i = 0; i < 400; i++) b.step();
+    expect(b.models.filter((m) => m.def.id === "goblin_sappers" && m.alive)).toHaveLength(0);
+    const knights = b.squads.find((s) => s.def.id === "knights")!.stats;
+    expect(knights.takenByElement.fire ?? 0).toBeGreaterThan(0); // the kegs went off
+  });
+
+  it("bat riders fly past knights to hunt archers first", () => {
+    const b = new Battle(defs, [army(0, ["bat_riders"]), army(1, ["knights", "knights", "longbowmen"])], { seed: 1, towers: false });
+    for (let i = 0; i < 20; i++) b.step();
+    const bats = b.models.filter((m) => m.def.id === "bat_riders" && m.targetId >= 0);
+    expect(bats.length).toBeGreaterThan(0);
+    for (const m of bats) expect(b.models.find((t) => t.id === m.targetId)!.def.id).toBe("longbowmen");
+  });
+});
+
 describe("rotation and unlocks", () => {
   it("rotation swaps the footprint", () => {
     const k = byId("knights"); // 4x1
@@ -229,7 +247,7 @@ describe("upgrades", () => {
     const b = army(1, ["goblin_horde", "goblin_horde"]);
     let wins = 0;
     for (let s = 0; s < 6; s++) {
-      const r = new Battle([upgradedDefs(defs, { goblin_horde: ["frenzy", "scatter"] }), defs], [a, b], { seed: s, towers: false }).run();
+      const r = new Battle([upgradedDefs(defs, { goblin_horde: ["frenzy", "mob"] }), defs], [a, b], { seed: s, towers: false }).run();
       if (r.winner === 0) wins++;
     }
     expect(wins).toBeGreaterThanOrEqual(5);

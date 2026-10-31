@@ -306,6 +306,21 @@ export function EditorView() {
                   <Row label="Targeting">
                     <Pick value={atk.targeting} options={TARGETINGS} onChange={(targeting) => updateAttack({ targeting })} />
                   </Row>
+                  <Row label="Prefers" hint="Enemies matching this are targeted first, anywhere on the field">
+                    <label className="check">
+                      <input
+                        type="checkbox"
+                        checked={!!atk.prefers}
+                        onChange={(e) => updateAttack({ prefers: e.target.checked ? { hasTag: "class:ranged" } : undefined })}
+                      />
+                    </label>
+                    {atk.prefers && <SelectorEditor sel={atk.prefers} onChange={(prefers) => updateAttack({ prefers })} />}
+                  </Row>
+                  <Row label="Self-destruct" hint="The model dies after its first attack">
+                    <label className="check">
+                      <input type="checkbox" checked={!!atk.selfDestruct} onChange={(e) => updateAttack({ selfDestruct: e.target.checked || undefined })} />
+                    </label>
+                  </Row>
                   <Row label="Delivery">
                     <Pick value={atk.delivery} options={["instant", "projectile", "beam"] as const} onChange={(delivery) => updateAttack({ delivery })} />
                     {atk.delivery === "projectile" && (

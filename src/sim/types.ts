@@ -55,6 +55,8 @@ export interface AttackDef {
   splash?: number; // radius of the main damage, hits enemies only
   chain?: { count: number; range: number; falloff: number };
   bonusVs?: { selector: Selector; mult: number }[];
+  prefers?: Selector; // enemies matching this are targeted first, anywhere on the field
+  selfDestruct?: boolean; // the model dies after its first attack (sappers)
   onHit?: Effect[]; // extra effects at the impact point
 }
 

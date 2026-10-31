@@ -313,6 +313,7 @@ export function PlayView() {
     setFought({ armies, defs: sideDefs, towerLevels, seed, result: null });
     setActions([]);
     player.reset();
+    setSpeed(1); // every battle starts at normal speed, even if the last one was fast-forwarded
     setSelected(null);
     setHeld(null);
     setView("report");
@@ -328,6 +329,7 @@ export function PlayView() {
     if (!fought) return;
     battleRef.current = new Battle(fought.defs, fought.armies, { seed: fought.seed, recordFx: true, towerLevels: fought.towerLevels });
     player.reset();
+    setSpeed(1); // every battle starts at normal speed, even if the last one was fast-forwarded
     setView("replay");
   };
 

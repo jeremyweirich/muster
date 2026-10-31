@@ -77,9 +77,11 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 See DESIGN.md §12 for the roadmap. Open threads:
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
-- Balance: one rock-paper-scissors pass is done (DESIGN.md §4, counter web). The owner wants clear counters, not
-  generic units that are good at everything. Fliers still dominate one-unit-type lab fights. Upgrades haven't been
-  retuned since the pass.
+- Balance: two rock-paper-scissors passes are done (DESIGN.md §4, counter web, including army-vs-army results). The
+  owner wants clear counters, short lethal fights, and no Knight + Longbow default. Goblins are 10 HP (one-hit by any
+  non-goblin) with very fast stabs; keep every non-goblin attack ≥ 10 damage. The one-unit matrix misses army-level
+  counters, so also test mixed armies against each other (equal supply, towers on). Fliers still dominate one-unit
+  lab fights.
 - Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
   sideways (about 844 × 390).
 - Faction bonuses are designed but not built (DESIGN.md §8).

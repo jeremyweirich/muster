@@ -19,7 +19,7 @@ export const TOWER_DEFS: UnitDef[] = [
     size: 0.9,
     structure: true,
     attack: {
-      damage: 15, element: "physical", cooldown: 1, range: 6,
+      damage: 20, element: "physical", cooldown: 1, range: 6,
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
     tags: ["class:tower"],

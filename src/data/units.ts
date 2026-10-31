@@ -11,24 +11,23 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "goblin_horde",
     name: "Goblin Horde",
-    description: "A screaming mob. Shreds anything it reaches, but dies to a stiff breeze.",
+    description: "A screaming mob. Any blow kills a goblin, but a horde left alone stabs anything to pieces.",
     cost: 100,
     unlockCost: 0,
     squadSize: 16,
     footprint: { w: 4, h: 2 },
     layer: "ground",
-    hp: 35,
+    // 10 HP: every non-goblin attack one-shots them. 8 damage: goblins need two stabs to kill each other.
+    hp: 10,
     speed: 15,
     size: 0.22,
     attack: {
-      damage: 16, element: "physical", cooldown: 0.8, range: 0.4,
+      damage: 8, element: "physical", cooldown: 0.25, range: 0.4,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
-      // they gang up on anything bigger than a goblin
-      bonusVs: [{ selector: { hasAnyTag: ["size:medium", "size:large", "size:huge"] }, mult: 1.5 }],
     },
     upgrades: [
-      { id: "frenzy", name: "Frenzy", description: "Run 50% faster and attack 25% faster.", mods: [{ stat: "speed", mult: 1.5 }, { stat: "cooldown", mult: 0.8 }] },
-      { id: "scatter", name: "Scatter", description: "Spread out as they charge, so splash hits fewer of them. +20% HP.", mods: [{ stat: "spacing", add: 0.9 }, { stat: "hp", mult: 1.2 }] },
+      { id: "frenzy", name: "Frenzy", description: "Run 30% faster and stab 40% faster.", mods: [{ stat: "speed", mult: 1.3 }, { stat: "cooldown", mult: 0.6 }] },
+      { id: "mob", name: "Bigger Mob", description: "+8 goblins per squad: more bodies to soak the hits, more knives in the fight.", mods: [{ stat: "squadSize", add: 8 }] },
     ],
     tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:swarm", "role:fast", "role:melee", "role:glass"],
     look: { shape: "triangle", color: "#7bbf3a" },
@@ -46,7 +45,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 20,
     size: 0.38,
     attack: {
-      damage: 35, element: "physical", cooldown: 1, range: 0.5,
+      damage: 45, element: "physical", cooldown: 1, range: 0.5,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     traits: [{ type: "charge", mult: 3 }],
@@ -76,7 +75,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 11,
     size: 0.26,
     attack: {
-      damage: 12, element: "physical", cooldown: 2, range: 5,
+      damage: 18, element: "physical", cooldown: 2, range: 5,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 8, splash: 1.2,
       onHit: [{ type: "status", status: "oiled", radius: 1.2 }],
     },
@@ -88,36 +87,62 @@ export const DEFAULT_UNITS: UnitDef[] = [
     look: { shape: "triangle", color: "#8a6d3b", glyph: "⚗" },
   },
   {
-    id: "goblin_drummer",
-    name: "War Drummer",
-    description: "Goblins nearby attack and move faster. Does not fight.",
+    id: "goblin_sappers",
+    name: "Goblin Sappers",
+    description: "Goblins hauling powder kegs. They run at the enemy and blow up, armor and all. Pop them before they arrive.",
     cost: 100,
     unlockCost: 50,
-    squadSize: 1,
-    footprint: { w: 1, h: 1 },
+    squadSize: 6,
+    footprint: { w: 3, h: 2 },
     layer: "ground",
-    hp: 300,
-    speed: 12,
-    size: 0.35,
-    traits: [{ type: "aura", radius: 3.5, selector: { side: "ally", hasTag: "race:goblin" }, attackSpeed: 1.4, moveSpeed: 1.2 }],
+    hp: 50,
+    speed: 16,
+    size: 0.24,
+    attack: {
+      damage: 140, element: "fire", cooldown: 1, range: 0.3,
+      targets: ["ground"], targeting: "nearest", delivery: "instant", splash: 1.4, selfDestruct: true,
+    },
     upgrades: [
       {
-        id: "war_chant",
-        name: "War Chant",
-        description: "Goblins nearby also deal +25% damage.",
-        replaceTraits: true,
-        traits: [{ type: "aura", radius: 3.5, selector: { side: "ally", hasTag: "race:goblin" }, attackSpeed: 1.4, moveSpeed: 1.2, damage: 1.25 }],
+        id: "volatile_powder",
+        name: "Volatile Powder",
+        description: "Kegs also go off when a sapper is killed, so cutting them down up close still hurts.",
+        traits: [{ type: "onDeath", effects: [{ type: "damage", amount: 100, element: "fire", radius: 1.4 }] }],
       },
-      {
-        id: "great_drum",
-        name: "Great Drum",
-        description: "Reaches much farther and rallies every greenskin, ogres included.",
-        replaceTraits: true,
-        traits: [{ type: "aura", radius: 6, selector: { side: "ally", hasTag: "faction:greenskin" }, attackSpeed: 1.4, moveSpeed: 1.2 }],
-      },
+      { id: "big_kegs", name: "Big Kegs", description: "+50% blast damage and a wider blast.", mods: [{ stat: "damage", mult: 1.5 }, { stat: "splash", add: 0.6 }] },
     ],
-    tags: ["faction:greenskin", "race:goblin", "class:support", "size:small", "role:support"],
-    look: { shape: "hex", color: "#5f8f2a", glyph: "🥁" },
+    tags: ["faction:greenskin", "race:goblin", "class:infantry", "size:small", "role:splash", "role:fast", "role:glass"],
+    look: { shape: "triangle", color: "#c0582b", glyph: "💣" },
+  },
+  {
+    id: "bat_riders",
+    name: "Bat Riders",
+    description: "Goblins on giant bats. They fly over the front line and dive onto archers, casters and siege crews.",
+    cost: 200,
+    unlockCost: 100,
+    squadSize: 4,
+    footprint: { w: 2, h: 2 },
+    layer: "air",
+    hp: 240,
+    speed: 20,
+    size: 0.4,
+    attack: {
+      damage: 45, element: "physical", cooldown: 1, range: 0.6,
+      targets: ["ground"], targeting: "nearest", delivery: "instant",
+      prefers: { hasAnyTag: ["class:ranged", "class:caster", "class:siege"] },
+      bonusVs: [{ selector: { hasAnyTag: ["class:ranged", "class:caster", "class:siege"] }, mult: 2 }],
+    },
+    upgrades: [
+      {
+        id: "shriek",
+        name: "Shriek",
+        description: "Each hit Dazes the target for 2s: it deals 10% damage and takes double.",
+        onHit: [{ type: "status", status: "dazed", duration: 2 }],
+      },
+      { id: "colony", name: "Colony", description: "+2 bats per squad.", mods: [{ stat: "squadSize", add: 2 }] },
+    ],
+    tags: ["faction:greenskin", "race:goblin", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:raider"],
+    look: { shape: "diamond", color: "#6b4f7a", glyph: "🦇" },
   },
   {
     id: "ogre_brute",
@@ -133,7 +158,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     size: 0.75,
     resist: { fire: -0.35 },
     attack: {
-      damage: 150, element: "physical", cooldown: 2, range: 0.7,
+      damage: 200, element: "physical", cooldown: 2, range: 0.7,
       targets: ["ground"], targeting: "nearest", delivery: "instant", splash: 1.1,
     },
     upgrades: [
@@ -154,12 +179,12 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 4,
     footprint: { w: 4, h: 1 },
     layer: "ground",
-    hp: 1200,
+    hp: 700,
     speed: 10,
     size: 0.42,
     resist: { physical: 0.3 },
     attack: {
-      damage: 22, element: "physical", cooldown: 1, range: 0.6,
+      damage: 55, element: "physical", cooldown: 1, range: 0.6,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
@@ -172,19 +197,18 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "longbowmen",
     name: "Longbowmen",
-    description: "Arrow volleys that shred swarms and fliers, but bounce off heavy armor.",
+    description: "Steady long-range arrows. Pick off swarms and fliers, but bounce off heavy armor.",
     cost: 100,
     unlockCost: 0,
     squadSize: 6,
     footprint: { w: 3, h: 2 },
     layer: "ground",
-    hp: 90,
+    hp: 100,
     speed: 8,
     size: 0.28,
     attack: {
-      damage: 14, element: "physical", cooldown: 1.5, range: 8,
-      targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14, splash: 0.5,
-      bonusVs: [{ selector: { layer: "air" }, mult: 1.5 }],
+      damage: 20, element: "physical", cooldown: 1.5, range: 8,
+      targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
     upgrades: [
       { id: "longshot", name: "Longshot", description: "+3 range.", mods: [{ stat: "range", add: 3 }] },
@@ -206,7 +230,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 5,
     size: 0.6,
     attack: {
-      damage: 260, element: "physical", cooldown: 3.5, range: 10,
+      damage: 340, element: "physical", cooldown: 3.5, range: 10,
       targets: ["ground", "air"], targeting: "highestHp", delivery: "projectile", projectileSpeed: 18,
       bonusVs: [{ selector: { hasAnyTag: ["size:large", "size:huge"] }, mult: 1.6 }],
     },
@@ -230,7 +254,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 18,
     size: 0.45,
     attack: {
-      damage: 42, element: "physical", cooldown: 1, range: 0.8,
+      damage: 55, element: "physical", cooldown: 1, range: 0.8,
       targets: ["ground", "air"], targeting: "nearest", delivery: "instant",
     },
     upgrades: [
@@ -283,7 +307,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     resist: { fire: 1, water: -0.3 },
     immuneStatuses: ["burning"],
     attack: {
-      damage: 110, element: "fire", cooldown: 2.5, range: 7,
+      damage: 145, element: "fire", cooldown: 2.5, range: 7,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 7, splash: 2,
       onHit: [{ type: "status", status: "burning", radius: 2 }],
     },
@@ -314,7 +338,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     size: 0.7,
     resist: { water: 1, fire: 0.5, lightning: -0.5 },
     attack: {
-      damage: 45, element: "water", cooldown: 2, range: 4,
+      damage: 60, element: "water", cooldown: 2, range: 4,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 9, splash: 1.2,
       onHit: [{ type: "status", status: "wet", radius: 1.2 }],
     },
@@ -351,9 +375,10 @@ export const DEFAULT_UNITS: UnitDef[] = [
     size: 0.45,
     resist: { lightning: 1 },
     attack: {
-      damage: 35, element: "lightning", cooldown: 2, range: 5,
+      damage: 45, element: "lightning", cooldown: 2, range: 5,
       targets: ["ground", "air"], targeting: "nearest", delivery: "beam",
       chain: { count: 2, range: 2.5, falloff: 0.8 },
+      bonusVs: [{ selector: { layer: "air" }, mult: 1.5 }],
       onHit: [{ type: "status", status: "shocked" }],
     },
     upgrades: [
@@ -377,7 +402,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     size: 0.2,
     resist: { lightning: 0.5 },
     attack: {
-      damage: 6, element: "lightning", cooldown: 1, range: 2,
+      damage: 12, element: "lightning", cooldown: 1.4, range: 2,
       targets: ["ground", "air"], targeting: "nearest", delivery: "beam",
     },
     upgrades: [
@@ -404,7 +429,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     resist: { fire: 1 },
     immuneStatuses: ["burning"],
     attack: {
-      damage: 80, element: "fire", cooldown: 1.6, range: 3,
+      damage: 95, element: "fire", cooldown: 1.6, range: 3,
       targets: ["ground", "air"], targeting: "nearest", delivery: "beam", splash: 1.8,
       onHit: [{ type: "status", status: "burning", radius: 1.8 }],
     },
@@ -429,7 +454,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     size: 0.5,
     resist: { fire: -0.5 },
     attack: {
-      damage: 70, element: "physical", cooldown: 1.3, range: 0.6,
+      damage: 90, element: "physical", cooldown: 1.3, range: 0.6,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
     },
     traits: [{ type: "regen", perSecond: 40, suppressedBy: "burning" }],
@@ -453,7 +478,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 5,
     size: 1,
     attack: {
-      damage: 150, element: "physical", cooldown: 3.2, range: 6,
+      damage: 200, element: "physical", cooldown: 3.2, range: 6,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 8, splash: 1.8,
     },
     upgrades: [

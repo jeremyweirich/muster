@@ -457,6 +457,7 @@ export class Battle {
       const d = Math.sqrt(dist2(m, t)) - t.def.size;
       let score = d;
       if (atk?.targeting === "towers" && t.def.structure) score = d - 1000;
+      else if (atk?.prefers && matches(atk.prefers, t.def, t.side, m.side)) score = d - 500;
       else if (atk?.targeting === "highestHp" && d < reach) score = -t.hp * 1000 + d;
       else if (atk?.targeting === "lowestHp" && d < reach) score = -1e7 + t.hp * 1000 + d;
       if (score < bestScore) {
@@ -512,6 +513,7 @@ export class Battle {
       if (atk && m.cooldown <= 0) {
         m.cooldown = atk.cooldown;
         this.fire(m, target, atk);
+        if (atk.selfDestruct) this.die(m);
       }
       return;
     }
@@ -781,13 +783,20 @@ export class Battle {
     }
 
     if (m.hp <= 0) {
-      m.alive = false;
-      victim.lost++;
       if (dealer) friendly ? dealer.stats.teamKills++ : dealer.stats.kills++;
-      this.deathQueue.push(m);
-      this.emit({ kind: "death", x: m.x, y: m.y, color: m.def.look.color, size: m.def.size });
-      if (m.def.structure) this.emit({ kind: "text", x: m.x, y: m.y - 1.2, text: `${m.def.name} falls!`, color: "#c77dff", big: true });
+      this.die(m);
     }
+  }
+
+  // Remove a model; onDeath traits fire in processDeaths.
+  private die(m: Model) {
+    if (!m.alive) return;
+    m.alive = false;
+    m.hp = Math.min(m.hp, 0);
+    this.squads[m.squad].stats.lost++;
+    this.deathQueue.push(m);
+    this.emit({ kind: "death", x: m.x, y: m.y, color: m.def.look.color, size: m.def.size });
+    if (m.def.structure) this.emit({ kind: "text", x: m.x, y: m.y - 1.2, text: `${m.def.name} falls!`, color: "#c77dff", big: true });
   }
 
   private processDeaths() {

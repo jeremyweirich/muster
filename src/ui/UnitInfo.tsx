@@ -144,7 +144,7 @@ export function UnitInfo({
           </>
         )}
       </dl>
-      {(atk?.onHit?.length || atk?.bonusVs?.length || def.traits?.length || def.immuneStatuses?.length) && (
+      {(atk?.onHit?.length || atk?.bonusVs?.length || atk?.prefers || atk?.selfDestruct || atk?.targeting === "towers" || def.traits?.length || def.immuneStatuses?.length) && (
         <ul className="effects">
           {atk?.onHit?.map((e, i) => <li key={`h${i}`}>On hit: {describeEffect(e)}</li>)}
           {atk?.bonusVs?.map((b, i) => (
@@ -153,6 +153,8 @@ export function UnitInfo({
             </li>
           ))}
           {atk?.targeting === "towers" && <li>Hunts towers first</li>}
+          {atk?.prefers && <li>Hunts {describeSelector(atk.prefers)} first</li>}
+          {atk?.selfDestruct && <li>Blows itself up on its first attack</li>}
           {def.traits?.map((t, i) => <li key={`t${i}`}>{describeTrait(t)}</li>)}
           {def.immuneStatuses?.length ? <li>Immune to {def.immuneStatuses.join(", ")}</li> : null}
         </ul>
