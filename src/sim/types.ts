@@ -223,5 +223,6 @@ export interface Rules {
   towerUpgradeCosts: number[]; // price of each tower level
   towerHpPerLevel: number;
   towerDazeBase: number; // seconds of Daze when a level-0 tower falls
+  towerDazePerLevel: number; // Daze seconds removed per tower level
   towerDazeMin: number;
 }

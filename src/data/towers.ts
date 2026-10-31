@@ -26,7 +26,7 @@ export const TOWER_DEFS: UnitDef[] = [
 export const TOWER_MAP = new Map(TOWER_DEFS.map((d) => [d.id, d]));
 
 export function towerDaze(level: number, rules: Rules = RULES): number {
-  return Math.max(rules.towerDazeMin, rules.towerDazeBase - level);
+  return Math.max(rules.towerDazeMin, rules.towerDazeBase - level * rules.towerDazePerLevel);
 }
 
 export function towerMaxLevel(rules: Rules = RULES): number {

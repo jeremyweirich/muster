@@ -24,8 +24,9 @@ export const RULES: Rules = {
   upgradeCostMult: [1, 2],
   towerUpgradeCosts: [100, 200, 400, 800],
   towerHpPerLevel: 300,
-  towerDazeBase: 8,
-  towerDazeMin: 4,
+  towerDazeBase: 4,
+  towerDazePerLevel: 0.5,
+  towerDazeMin: 2,
 };
 
 // Deployment zone rows (inclusive start, exclusive end) for each side.

@@ -89,7 +89,7 @@ Each side has two Keeps (West and East) near the back of its zone, 2 rows in fro
 - **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +300 HP, so HP
   grows in a straight line while the price doubles.
 - **Collapse.** When a tower falls, **its owner's entire army is Dazed**: it deals 10% damage and takes double damage.
-  The Daze lasts **8 s at level 0, 1 s less per level** (minimum 4 s).
+  The Daze lasts **4 s at level 0, 0.5 s less per level** (minimum 2 s), in sim time; at 1× playback (half real time) that reads as 8 s.
 - Towers don't move and don't count toward winning the round. A side loses when its *army* is gone.
 - **Why:** a single strong deathball in the center leaves the flanks open. A cheap raider that slips through and snipes a
   tower can swing the main fight. Tower levels are the counter-investment: you pay supply for insurance instead of army.
