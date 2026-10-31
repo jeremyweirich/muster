@@ -465,16 +465,31 @@ export class FxLayer {
   }
 }
 
-export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: number, fx: FxLayer, realTime: number) {
+// Render interpolation: where each model was one tick ago, and how far (0..1) playback is into the current tick.
+export type Interp = { alpha: number; prev: Map<Model, { x: number; y: number; facing: number }> };
+
+export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: number, fx: FxLayer, realTime: number, interp?: Interp) {
   drawBackground(ctx, tile);
   drawSurfaces(ctx, battle.surfaces, tile, realTime);
+  const a = interp?.alpha ?? 1;
   const draw = (m: Model) => {
+    const p = interp?.prev.get(m);
+    let x = m.x;
+    let y = m.y;
+    let facing = m.facing;
+    if (p) {
+      x = p.x + (m.x - p.x) * a;
+      y = p.y + (m.y - p.y) * a;
+      const turn = Math.atan2(Math.sin(m.facing - p.facing), Math.cos(m.facing - p.facing));
+      facing = p.facing + turn * a;
+    }
     // melee units lunge toward their target, ranged units recoil slightly
-    const t = m.attackAnim > 0 ? Math.sin((m.attackAnim / 0.18) * Math.PI) : 0;
+    const anim = m.attackAnim > 0 ? Math.min(0.18, m.attackAnim + (1 - a) * battle.rules.tick) : 0;
+    const t = anim > 0 ? Math.sin((anim / 0.18) * Math.PI) : 0;
     const melee = (m.def.attack?.range ?? 0) <= 1.5;
     const off = t * (melee ? 0.25 : -0.08);
-    return drawUnit(ctx, m.def, m.side, m.x + Math.cos(m.facing) * off, m.y + Math.sin(m.facing) * off, tile, {
-      facing: m.facing,
+    return drawUnit(ctx, m.def, m.side, x + Math.cos(facing) * off, y + Math.sin(facing) * off, tile, {
+      facing,
       hpFrac: m.hp / m.maxHp,
       flash: m.flash > 0,
       statuses: m.statuses,
@@ -483,16 +498,16 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);
-  for (const p of battle.projectiles) drawProjectile(ctx, p, tile);
+  for (const p of battle.projectiles) drawProjectile(ctx, p, tile, a);
   for (const m of battle.models) if (m.alive && m.def.layer === "air") draw(m);
   fx.draw(ctx, tile);
 }
 
 // Projectiles: element-colored core inside a team-colored halo, sized by damage, with a team-colored trail.
-function drawProjectile(ctx: CanvasRenderingContext2D, p: Projectile, tile: number) {
+function drawProjectile(ctx: CanvasRenderingContext2D, p: Projectile, tile: number, alpha = 1) {
   const r = Math.min(7, 1.6 + Math.sqrt(p.damage) / 3.2);
-  const x = p.x * tile;
-  const y = p.y * tile;
+  const x = (p.px + (p.x - p.px) * alpha) * tile;
+  const y = (p.py + (p.y - p.py) * alpha) * tile;
   const dx = (p.x - p.px) * tile;
   const dy = (p.y - p.py) * tile;
   const team = SIDE_COLORS[p.side];

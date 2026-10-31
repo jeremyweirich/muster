@@ -385,7 +385,7 @@ src/ui/      React views
 ```
 
 - **Determinism is load-bearing.** The same armies with the same seed and the same data always produce the same battle.
-  Replays, the AI, the lab and tests all depend on this. Playback speed never changes the outcome.
+  Replays, the AI, the lab and tests all depend on this. Playback speed never changes the outcome; the renderer interpolates models and projectiles between the last two ticks so motion stays smooth at any speed.
 - The roster lives in `src/data/units.ts`. The in-app editor is a session-only sandbox; edits reset on reload. Unit changes
   are made in code, by request.
 - The app is fully static (GitHub Pages): no storage, no network calls, no analytics. Commit units by exporting them and
