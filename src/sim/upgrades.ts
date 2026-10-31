@@ -31,6 +31,7 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
       if (up.onHit?.length) a.onHit = [...(a.onHit ?? []), ...structuredClone(up.onHit)];
       if (up.onHitAffects) a.onHit = a.onHit?.map((e) => (e.type === "status" ? { ...e, affects: up.onHitAffects } : e));
       if (up.bonusVs?.length) a.bonusVs = [...(a.bonusVs ?? []), ...structuredClone(up.bonusVs)];
+      if (up.rangeVs?.length) a.rangeVs = [...(a.rangeVs ?? []), ...structuredClone(up.rangeVs)];
       if (up.prefers) a.prefers = structuredClone(up.prefers);
     }
     if (up.traits?.length || up.replaceTraits) {

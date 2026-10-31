@@ -98,6 +98,7 @@ export function describeUpgrade(u: UpgradeDef): string[] {
   if (u.targeting) out.push(u.targeting === "towers" ? "hunts towers first" : `targets ${u.targeting}`);
   for (const e of u.onHit ?? []) out.push(`on hit: ${describeEffect(e)}`);
   for (const b of u.bonusVs ?? []) out.push(`×${b.mult} damage vs ${describeSelector(b.selector)}`);
+  for (const r of u.rangeVs ?? []) out.push(`+${r.add} range vs ${describeSelector(r.selector)}`);
   if (u.prefers) out.push(`hunts ${describeSelector(u.prefers)} first`);
   if (u.immuneStatuses?.length) out.push(`immune to ${u.immuneStatuses.map((s) => STATUSES[s].name).join(", ")}`);
   if (u.onHitAffects) out.push(`on-hit statuses only land on ${u.onHitAffects === "all" ? "anyone" : u.onHitAffects}`);

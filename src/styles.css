@@ -302,6 +302,24 @@ code {
   line-height: 13px;
   text-align: center;
 }
+.unlock-chip.locked > .swatch {
+  opacity: 0.45;
+}
+.discount-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #6cc46c;
+  color: #0e1a0e;
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 12px;
+  text-align: center;
+  pointer-events: none;
+}
 .unlock-tip {
   display: none;
   position: absolute;

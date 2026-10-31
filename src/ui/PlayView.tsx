@@ -553,10 +553,11 @@ export function PlayView() {
   const focusStats = fought?.result ? fought.result.stats[hoverSquad ?? pinned ?? ""] : undefined;
   const enemyUnlocks = match.unlocked[1].map((id) => enemyDefs.get(id)).filter((d): d is UnitDef => !!d);
   const myUnlocks = match.unlocked[0].map((id) => myDefs.get(id)).filter((d): d is UnitDef => !!d);
-  const enemyOpening =
-    match.round > 1 && match.openings[1].choice
-      ? `opened with ${match.openings[1].choice === "bonus" ? `+${RULES.openingBonus} supply` : `a cheaper ${defs.get(match.openings[1].unitId ?? "")?.name ?? "unit"}`}`
-      : null;
+  // the enemy's opening shows once round 1 is over: a discount badge on that unit, or a supply note
+  const enemyRevealed = match.round > 1;
+  const enemyDiscount = enemyRevealed ? enemyDefs.get(Object.keys(unlockDiscounts(match, 1))[0] ?? "") : undefined;
+  const myDiscount = myDefs.get(Object.keys(unlockDiscounts(match, 0))[0] ?? "");
+  const enemyOpening = enemyRevealed && match.openings[1].choice === "bonus" ? `opened with +${RULES.openingBonus} supply` : null;
   const selectedDef = selected ? myDefs.get(selected) : undefined;
   const card = hoverInfo ?? (selectedDef ? { def: selectedDef, side: 0 as Side, fromShop: true } : null);
   const lastAction = actions[actions.length - 1];
@@ -610,11 +611,11 @@ export function PlayView() {
     <div className={`play ${portraitOk ? "portrait-ok" : ""}`}>
       <main className="board">
         <div className="hud">
-          <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} />
+          <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} discount={myDiscount} />
           <HpBar label="You" hp={match.hp[0]} side={0} />
           <div className="round">Round {match.round}</div>
           <HpBar label="Enemy" hp={match.hp[1]} side={1} />
-          <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
+          <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} discount={enemyDiscount} note={enemyOpening} />
         </div>
         <div className="field-wrap" style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
           <FieldCanvas tile={TILE} draw={draw} onPointer={onPointer} />
@@ -738,9 +739,16 @@ export function PlayView() {
                 {enemyOpening && ` · ${enemyOpening}`}
               </div>
               <div className="swatches">
-                {enemyUnlocks.map((d) => (
-                  <span key={d.id} title={d.name} onMouseEnter={() => setHoverInfo({ def: d, side: 1 })} onMouseLeave={() => setHoverInfo(null)}>
+                {withDiscount(enemyUnlocks, enemyDiscount).map((d) => (
+                  <span
+                    key={d.id}
+                    className={`unlock-chip ${enemyUnlocks.includes(d) ? "" : "locked"}`}
+                    title={d === enemyDiscount ? `${d.name} (cheaper unlock)` : d.name}
+                    onMouseEnter={() => setHoverInfo({ def: d, side: 1 })}
+                    onMouseLeave={() => setHoverInfo(null)}
+                  >
                     <Swatch def={d} size={20} />
+                    {d === enemyDiscount && <DiscountBadge />}
                     {(match.upgrades[1][d.id]?.length ?? 0) > 0 && <span className="pips">{"★".repeat(match.upgrades[1][d.id].length)}</span>}
                   </span>
                 ))}
@@ -1091,18 +1099,35 @@ function pill(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
   ctx.fillText(text, cx, y - 4.5);
 }
 
+// Unlocked units, plus the opening's discounted unit (shown dimmed) if it isn't unlocked yet.
+function withDiscount(units: UnitDef[], discount: UnitDef | undefined): UnitDef[] {
+  return discount && !units.includes(discount) ? [...units, discount] : units;
+}
+
+function DiscountBadge() {
+  return (
+    <span className="discount-badge" aria-label="cheaper unlock">
+      %
+    </span>
+  );
+}
+
 // A side's unlocked units beside its health bar. Hovering one shows its name and which upgrades it has.
-function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; owned: UpgradeState; side: Side; note?: string | null }) {
+// The unit its opening made cheaper to unlock wears a discount badge.
+function UnlockStrip({ units, owned, side, discount, note }: { units: UnitDef[]; owned: UpgradeState; side: Side; discount?: UnitDef; note?: string | null }) {
   return (
     <div className={`hud-unlocks hud-unlocks-${side}`} aria-label={side === 0 ? "Your unlocks" : "Enemy unlocks"}>
-      {units.map((d) => {
+      {withDiscount(units, discount).map((d) => {
         const bought = owned[d.id] ?? [];
+        const locked = !units.includes(d);
         return (
-          <span key={d.id} className="unlock-chip" tabIndex={0}>
+          <span key={d.id} className={`unlock-chip ${locked ? "locked" : ""}`} tabIndex={0}>
             <Swatch def={d} size={20} />
             {bought.length > 0 && <span className="unlock-count">{bought.length}</span>}
+            {d === discount && <DiscountBadge />}
             <span className="unlock-tip" role="tooltip">
               <b>{d.name}</b>
+              {d === discount && <span className="muted small">{locked ? "Cheaper unlock, not unlocked yet" : "Unlocked at a discount"}</span>}
               {d.upgrades?.length ? (
                 <span className="tip-ups">
                   {d.upgrades.map((up) => {
@@ -1115,7 +1140,6 @@ function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; owned: Up
                   })}
                 </span>
               ) : null}
-              <span className="muted small">{bought.length ? `${bought.length} of ${d.upgrades?.length ?? 0} upgrades` : "no upgrades"}</span>
             </span>
           </span>
         );

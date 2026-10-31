@@ -160,12 +160,17 @@ export function UnitInfo({
           </>
         )}
       </dl>
-      {(atk?.onHit?.length || atk?.bonusVs?.length || atk?.prefers || atk?.selfDestruct || atk?.targeting === "towers" || def.traits?.length || def.immuneStatuses?.length) && (
+      {(atk?.onHit?.length || atk?.bonusVs?.length || atk?.rangeVs?.length || atk?.prefers || atk?.selfDestruct || atk?.targeting === "towers" || def.traits?.length || def.immuneStatuses?.length) && (
         <ul className="effects">
           {atk?.onHit?.map((e, i) => <li key={`h${i}`}>On hit: {describeEffect(e)}</li>)}
           {atk?.bonusVs?.map((b, i) => (
             <li key={`b${i}`}>
               ×{b.mult} damage vs {describeSelector(b.selector)}
+            </li>
+          ))}
+          {atk?.rangeVs?.map((r, i) => (
+            <li key={`r${i}`}>
+              +{r.add} range vs {describeSelector(r.selector)}
             </li>
           ))}
           {atk?.targeting === "towers" && <li>Hunts towers first</li>}

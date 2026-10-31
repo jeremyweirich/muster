@@ -101,9 +101,9 @@ export function canPromote(sq: PlacedSquad): boolean {
   return earnedLevel(sq.xp ?? 0, RULES) > (sq.level ?? 1);
 }
 
-// Promotions cost the unit's base price, every level.
+// Promotions cost half the unit's base price, every level: a reward for the XP it took.
 export function promotePrice(def: UnitDef): number {
-  return def.cost;
+  return Math.round(def.cost / 2);
 }
 
 export function applyRound(state: MatchState, result: BattleResult, defs: DefMap): MatchState {

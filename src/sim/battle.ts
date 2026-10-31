@@ -456,7 +456,8 @@ export class Battle {
     const reach = (atk?.range ?? 0) + 4;
     for (const t of this.models) {
       if (t.side === m.side || !this.canTarget(atk, t)) continue;
-      const d = Math.sqrt(dist2(m, t)) - t.def.size;
+      // extra range against a target counts as it being that much closer
+      const d = Math.sqrt(dist2(m, t)) - t.def.size - this.rangeBonus(m, atk, t);
       let score = d;
       if (atk?.targeting === "towers" && t.def.structure) score = d - 1000;
       else if (atk?.prefers && matches(atk.prefers, t.def, t.side, m.side)) score = d - 500;
@@ -468,6 +469,12 @@ export class Battle {
       }
     }
     return best;
+  }
+
+  private rangeBonus(m: Model, atk: AttackDef | undefined, t: Model): number {
+    let add = 0;
+    for (const r of atk?.rangeVs ?? []) if (matches(r.selector, t.def, t.side, m.side)) add += r.add;
+    return add;
   }
 
   private findEscort(m: Model): Model | undefined {
@@ -507,7 +514,7 @@ export class Battle {
     const dy = target.y - m.y;
     const d = Math.sqrt(dx * dx + dy * dy);
     const gap = d - m.def.size - target.def.size;
-    const range = atk ? atk.range : 1;
+    const range = atk ? atk.range + this.rangeBonus(m, atk, target) : 1;
     if (!anchored) m.facing = Math.atan2(dy, dx);
 
     m.engaged = gap <= range;

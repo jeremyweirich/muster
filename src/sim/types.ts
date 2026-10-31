@@ -56,6 +56,7 @@ export interface AttackDef {
   splash?: number; // radius of the main damage, hits enemies only
   chain?: { count: number; range: number; falloff: number };
   bonusVs?: { selector: Selector; mult: number }[];
+  rangeVs?: { selector: Selector; add: number }[]; // extra range (tiles) against matching targets
   prefers?: Selector; // enemies matching this are targeted first, anywhere on the field
   selfDestruct?: boolean; // the model dies after its first attack (sappers)
   onHit?: Effect[]; // extra effects at the impact point
@@ -110,6 +111,7 @@ export interface UpgradeDef {
   onHit?: Effect[]; // appended to the attack's on-hit effects
   onHitAffects?: "enemies" | "allies" | "all"; // who the attack's on-hit statuses can land on (enemies = no friendly fire)
   bonusVs?: { selector: Selector; mult: number }[]; // appended to the attack's bonus damage
+  rangeVs?: { selector: Selector; add: number }[]; // appended to the attack's bonus range
   prefers?: Selector; // replaces who the attack hunts first
   immuneStatuses?: StatusId[]; // added
   traits?: TraitDef[]; // appended (or replace existing ones with replaceTraits)

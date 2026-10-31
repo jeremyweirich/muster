@@ -386,6 +386,27 @@ export function EditorView() {
                   </div>
                   <div className="sub">
                     <div className="sub-head">
+                      <span>Bonus range vs</span>
+                      <button className="small-btn" onClick={() => updateAttack({ rangeVs: [...(atk.rangeVs ?? []), { selector: { layer: "air" }, add: 2 }] })}>
+                        + add
+                      </button>
+                    </div>
+                    {atk.rangeVs?.map((r, i) => (
+                      <div key={i} className="sub-item">
+                        <SelectorEditor
+                          sel={r.selector}
+                          onChange={(selector) => updateAttack({ rangeVs: atk.rangeVs!.map((x, j) => (j === i ? { ...x, selector } : x)) })}
+                        />
+                        <span className="mini">+</span>
+                        <Num value={r.add} step={0.5} onChange={(add) => updateAttack({ rangeVs: atk.rangeVs!.map((x, j) => (j === i ? { ...x, add } : x)) })} />
+                        <button className="icon" onClick={() => updateAttack({ rangeVs: atk.rangeVs!.filter((_, j) => j !== i) })}>
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="sub">
+                    <div className="sub-head">
                       <span>On-hit effects</span>
                       <span className="muted small">statuses & surfaces affect both sides</span>
                       <button className="small-btn" onClick={() => updateAttack({ onHit: [...(atk.onHit ?? []), defaultEffect("status")] })}>
@@ -851,6 +872,24 @@ function UpgradeEditor({ up, onChange, onRemove }: { up: UpgradeDef; onChange: (
             <span className="mini">×</span>
             <Num value={b.mult} step={0.1} onChange={(mult) => onChange({ ...up, bonusVs: up.bonusVs!.map((x, j) => (j === i ? { ...x, mult } : x)) })} />
             <button className="icon" onClick={() => onChange({ ...up, bonusVs: up.bonusVs!.length > 1 ? up.bonusVs!.filter((_, j) => j !== i) : undefined })}>
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="sub">
+        <div className="sub-head">
+          <span>Bonus range vs (added)</span>
+          <button className="small-btn" onClick={() => onChange({ ...up, rangeVs: [...(up.rangeVs ?? []), { selector: { layer: "air" }, add: 2 }] })}>
+            + add
+          </button>
+        </div>
+        {up.rangeVs?.map((r, i) => (
+          <div key={i} className="sub-item">
+            <SelectorEditor sel={r.selector} onChange={(selector) => onChange({ ...up, rangeVs: up.rangeVs!.map((x, j) => (j === i ? { ...x, selector } : x)) })} />
+            <span className="mini">+</span>
+            <Num value={r.add} step={0.5} onChange={(add) => onChange({ ...up, rangeVs: up.rangeVs!.map((x, j) => (j === i ? { ...x, add } : x)) })} />
+            <button className="icon" onClick={() => onChange({ ...up, rangeVs: up.rangeVs!.length > 1 ? up.rangeVs!.filter((_, j) => j !== i) : undefined })}>
               ✕
             </button>
           </div>

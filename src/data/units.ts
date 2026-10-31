@@ -35,7 +35,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "war_drums",
         name: "War Drums",
-        description: "Every goblin near a horde attacks 25% faster, wolves and bats included. Stacks with Frenzy.",
+        description: "Every goblin within 3 tiles of this squad attacks 25% faster, wolf and bat riders included. Stacks with Frenzy.",
         traits: [{ type: "aura", radius: 3, selector: { side: "ally", hasTag: "race:goblin" }, attackSpeed: 1.25 }],
       },
       {
@@ -238,7 +238,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "warboss",
         name: "Warboss",
-        description: "Goblins near the ogre fight harder: +25% damage. Hordes one-stab other goblins.",
+        description: "Goblins near the ogre fight harder: +25% damage, so Goblin Horde stabs one-hit other goblins.",
         traits: [{ type: "aura", radius: 3.5, selector: { side: "ally", hasTag: "race:goblin" }, damage: 1.25 }],
       },
     ],
@@ -298,8 +298,13 @@ export const DEFAULT_UNITS: UnitDef[] = [
     upgrades: [
       { id: "longshot", name: "Longshot", description: "+3 range.", mods: [{ stat: "range", add: 3 }] },
       { id: "fire_arrows", name: "Fire Arrows", description: "Arrows burn: fire damage +25%, ignites oiled targets, melts ice.", element: "fire", mods: [{ stat: "damage", mult: 1.25 }] },
-      { id: "volley", name: "Volley", description: "Shoot 40% faster.", mods: [{ stat: "cooldown", mult: 0.7 }] },
-      { id: "skyhunters", name: "Skyhunters", description: "×2 damage to fliers.", bonusVs: [{ selector: { layer: "air" }, mult: 2 }] },
+      { id: "volley", name: "Volley", description: "Shoot 40% faster, but loose arcs reach 2 tiles less.", mods: [{ stat: "cooldown", mult: 0.7 }, { stat: "range", add: -2 }] },
+      {
+        id: "skyhunters",
+        name: "Skyhunters",
+        description: "+3 range against fliers: they shoot them down long before they reach the line.",
+        rangeVs: [{ selector: { layer: "air" }, add: 3 }],
+      },
     ],
     tags: ["faction:kingdom", "race:human", "class:ranged", "size:small", "role:ranged", "role:antiair"],
     look: { shape: "circle", color: "#a7d07a", icon: "bow" },

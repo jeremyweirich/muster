@@ -39,7 +39,7 @@ Round N
  │    ├─ unlock units (one-time cost per match)
  │    ├─ buy upgrades (four per unit; 200 / 400 / 600 / 800 in the order bought, whatever the unit)
  │    ├─ upgrade towers (100 / 200 / 400 / 800)
- │    ├─ promote veterans that earned a level (unit cost per level; section 5c)
+ │    ├─ promote veterans that earned a level (half unit cost per level; section 5c)
  │    ├─ buy squads, place and rotate them in your zone
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
@@ -119,7 +119,7 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `spacing` | extra distance kept from allies **while advancing**; ranks close once fighting. Reduces splash damage taken |
 | `resist` | per element: 0.3 = takes 30% less, -0.35 = takes 35% more, 1 = immune |
 | `immuneStatuses` | statuses that never apply |
-| `attack` | damage, element, cooldown, range, targets, targeting, delivery, splash, chain, `bonusVs`, `prefers` (hunt matching enemies first), `selfDestruct` (dies after its first attack), `onHit` effects |
+| `attack` | damage, element, cooldown, range, targets, targeting, delivery, splash, chain, `bonusVs`, `rangeVs` (extra range against matching targets), `prefers` (hunt matching enemies first), `selfDestruct` (dies after its first attack), `onHit` effects |
 | `traits` | aura, onDeath, regen, periodic, retaliate, charge, onKill |
 | `upgrades` | four upgrades per unit (section 5b); prices are global (`RULES.upgradeCosts`) |
 | `tags` | `category:value` labels used by selectors, including `faction:*` and `role:*` |
@@ -136,23 +136,24 @@ walks until it is in range, and attacks. Units with no attack follow the nearest
 There are three factions of six units each, plus independents. Factions are currently tags and groupings in the
 recruit list; faction bonuses come later (section 8).
 
+
 #### Greenskins
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 10 | 8 physical / 0.25s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 30% faster and stab 40% faster.<br>**Bigger Mob**: +8 goblins per squad: more bodies to soak the hits, more knives in the fight.<br>**War Drums**: Every goblin near a horde attacks 25% faster, wolves and bats included. Stacks with Frenzy.<br>**Scrap Armor**: Pots and planks: +15 HP, so a goblin lives through one arrow. 15% slower. |
+| Goblin Horde | 100 | 0 | 16 (4×2) | 15 | 10 | 8 physical / 0.25s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Frenzy**: Run 30% faster and stab 40% faster.<br>**Bigger Mob**: +8 goblins per squad: more bodies to soak the hits, more knives in the fight.<br>**War Drums**: Every goblin within 3 tiles of this squad attacks 25% faster, wolf and bat riders included. Stacks with Frenzy.<br>**Scrap Armor**: Pots and planks: +15 HP, so a goblin lives through one arrow. 15% slower. |
 | Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 45 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers.<br>**Flankers**: Circle the line and run down archers, casters and siege first, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets. |
 | Goblin Alchemist | 100 | 50 | 3 (3×1) | 11 | 100 | 18 physical / 2s, range 5, splash 1.2 | Combo, Ranged | **Oil Slick**: Flasks leave oil on the ground. It slows, and fire or lightning sets it all ablaze.<br>**Firebombs**: Flasks burst into flame: fire damage ×2, igniting oiled targets.<br>**Acid Flasks**: ×2.5 damage to sturdy units: knights, ogres, trolls, golems. Stacks with Firebombs.<br>**Mad Batch**: Brews faster: throws 40% faster, and flasks splash wider. |
 | Goblin Sappers | 100 | 50 | 6 (3×2) | 16 | 50 | 125 fire / 1s, range 0.3, splash 1.4 | Splash, Fast, Glass cannon | **Volatile Powder**: Kegs also go off when a sapper is killed, so cutting them down up close still hurts.<br>**Big Kegs**: +50% blast damage and a wider blast.<br>**Thunder Kegs**: Survivors of a blast are Dazed for 2s: they deal 10% damage and take double.<br>**Napalm**: Blasts leave burning ground. It burns whoever walks in, your own troops too. |
 | Bat Riders | 200 | 100 | 4 (2×2, air) | 20 | 220 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Shriek**: Each hit Dazes the target for 2s: it deals 10% damage and takes double.<br>**Colony**: +2 bats per squad.<br>**Torch Riders**: Riders drop torches: every hit sets the target Burning, and Ignites oiled ones.<br>**Bloodsuckers**: The bats feed as they fight: regenerate 15 HP/s. |
-| Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 200 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre fight harder: +25% damage. Hordes one-stab other goblins. |
+| Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 200 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre fight harder: +25% damage, so Goblin Horde stabs one-hit other goblins. |
 
 #### Kingdom
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Knights | 200 | 0 | 4 (4×1) | 10 | 760 | 60 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage.<br>**Warded Plate**: +40% resistance to fire, frost, lightning and water. The answer to elementals.<br>**Veterans**: +50% damage. With Lance Charge, the opening strike is brutal. |
-| Longbowmen | 100 | 0 | 6 (3×2) | 8 | 100 | 22 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice.<br>**Volley**: Shoot 40% faster.<br>**Skyhunters**: ×2 damage to fliers. |
+| Longbowmen | 100 | 0 | 6 (3×2) | 8 | 100 | 22 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, ignites oiled targets, melts ice.<br>**Volley**: Shoot 40% faster, but loose arcs reach 2 tiles less.<br>**Skyhunters**: +3 range against fliers: they shoot them down long before they reach the line. |
 | Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 340 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +50% damage. Still one target at a time.<br>**Repeater**: Fires twice as fast for 60% damage per bolt.<br>**Chain Harpoons**: Bolts Chill the target. Hit it again and it freezes; the bolt after that shatters it for double. Pairs with Repeater.<br>**Reinforced Frame**: +100% HP and +30% physical resistance, so raiders can't just walk over it. |
 | Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 55 physical / 1s, range 2 | Flier, Fast, Skirmisher | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Hunt fliers first, with ×1.75 damage to them.<br>**Pride**: +1 griffon per squad. |
 | Cleric | 150 | 75 | 2 (2×1) | 8 | 220 | none | Healer, Support | **Sanctuary**: A second prayer heals 30 more, in a wider circle.<br>**Blessing**: Allies nearby deal +20% damage.<br>**Purify**: Every 2.5s, washes every status off nearby allies: Burning, Frozen, Wet, Oiled, Dazed.<br>**Battle Hymn**: Allies nearby attack 25% faster. With Blessing, the line hits much harder. |
@@ -190,7 +191,7 @@ Lethality: fights are meant to be short. A Knight mirror resolves in about 25–
 - **Knights** are the tank: the most effective HP per supply, low damage per supply. Arrows bounce off them. Fire,
   Sappers, Ogres, Trolls and Acid Flasks answer them; Warded Plate answers the elemental answers.
 - **Longbowmen** are steady single-target arrows: they pick off swarms and Griffons, and lose to armor, Bat Riders and
-  anything big. Skyhunters turns them into flier hunters.
+  anything big. Skyhunters (+3 range vs fliers) turns them into flier hunters; Volley trades 2 range for rate of fire.
 - **Goblin Sappers** run in and blow up (fire, splash), one blast each. They delete clumped Knights and big units, but
   archers can pop them on the way in.
 - **Bat Riders** fly over the front line and hunt ranged, caster and siege units first (×2 damage to them). They can
@@ -261,7 +262,9 @@ A small, fair bit of variety at the start of each match. In round 1, each player
 
 The discount is worth more but only if you commit to that unit, so the offer nudges a game in a direction without handing
 anyone an edge. Each side rolls its own unit. The player must choose before the first Fight. The AI chooses at random
-when the match starts, and tries its discounted unit more often while planning. The enemy's choice is shown from round 2.
+when the match starts, and tries its discounted unit more often while planning. The enemy's choice is shown from round 2: a small % badge on the
+discounted unit beside its health bar (dimmed if not unlocked yet), or a "+50 supply" note. Your own discount wears
+the same badge.
 
 ## 5b. Upgrades — Decided (values open)
 
@@ -287,7 +290,7 @@ when the match starts, and tries its discounted unit more often while planning. 
   that put surfaces on the field. Everything else uses statuses.
 - Data: an upgrade can apply stat mods (`value × mult + add` to hp, speed, size, spacing, squadSize, damage, cooldown,
   range, splash or chainCount). It can replace the attack's element, targets, targeting or preferred targets
-  (`prefers`); add bonus damage (`bonusVs`) and on-hit effects; limit who its on-hit statuses land on (`onHitAffects`,
+  (`prefers`); add bonus damage (`bonusVs`), bonus range (`rangeVs`) and on-hit effects; limit who its on-hit statuses land on (`onHitAffects`,
   e.g. Controlled Burn: enemies only, so no friendly fire); add or replace traits; and add resistances, status
   immunities and tags. Upgraded units are computed per side, so each army fights with its own upgrades.
 - Bought upgrades show as ★ next to the unit in the shop. The enemy's upgrades are visible too.
@@ -307,7 +310,7 @@ make it stronger.
   third. Bigger late-game armies get there faster.
 - **Promoting.** An unlocked level does nothing until you pay for it. At deployment, a squad with a level waiting shows
   a gold chevron above it. Click the squad, use its card, or use the Promotions list in the Upgrades tab. Each
-  promotion costs the unit's base price, and Undo reverses it.
+  promotion costs half the unit's base price (`promotePrice`), a reward for the work of earning it. Undo reverses it.
 - **Effect:** a level-N squad has N× the base HP, attack damage, healing, regeneration and trait damage (on-death,
   periodic, retaliation, on-kill). Speed, range, cooldowns, statuses and surfaces don't change. Upgrades apply first,
   then the level.
