@@ -409,6 +409,43 @@ export const DEFAULT_UNITS: UnitDef[] = [
     tags: ["faction:kingdom", "race:human", "class:support", "size:small", "role:healer", "role:support"],
     look: { shape: "circle", color: "#f4e7b0", icon: "cross" },
   },
+  {
+    id: "halberdiers",
+    name: "Halberdiers",
+    description: "A pike line. Sweeping blows cut down swarms, and they hit cavalry and big brutes extra hard. Arrows and fire break them.",
+    cost: 150,
+    unlockCost: 75,
+    squadSize: 6,
+    footprint: { w: 3, h: 2 },
+    layer: "ground",
+    hp: 260,
+    speed: 9,
+    size: 0.3,
+    resist: { physical: 0.15 },
+    attack: {
+      damage: 40, element: "physical", cooldown: 1.2, range: 0.9,
+      targets: ["ground"], targeting: "nearest", delivery: "instant", splash: 0.6,
+      bonusVs: [{ selector: { hasAnyTag: ["class:cavalry", "size:large", "size:huge"] }, mult: 1.75 }],
+    },
+    upgrades: [
+      {
+        id: "pike_wall",
+        name: "Pike Wall",
+        description: "Anyone who hits them in melee takes 30 damage back. Goblins die on the pikes.",
+        traits: [{ type: "retaliate", effects: [{ type: "damage", amount: 30, element: "physical" }], maxRange: 1 }],
+      },
+      { id: "long_pikes", name: "Long Pikes", description: "+1 range, so the back rank fights too.", mods: [{ stat: "range", add: 1 }] },
+      {
+        id: "heavy_halberds",
+        name: "Heavy Halberds",
+        description: "+40% damage and wider sweeps.",
+        mods: [{ stat: "damage", mult: 1.4 }, { stat: "splash", add: 0.4 }],
+      },
+      { id: "drilled_ranks", name: "Drilled Ranks", description: "+2 halberdiers per squad.", mods: [{ stat: "squadSize", add: 2 }] },
+    ],
+    tags: ["faction:kingdom", "race:human", "class:infantry", "size:small", "role:antilarge", "role:splash", "role:melee"],
+    look: { shape: "triangle", color: "#9fb3c8", icon: "halberd" },
+  },
 
   // ------------------------------------------------------------- Elementals
   // Harder to use: strong combos, hard weaknesses, and some total counters.

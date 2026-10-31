@@ -326,6 +326,17 @@ describe("upgrades", () => {
     expect(recharged).toBe(true);
   });
 
+  it("Pike Wall kills goblins that stab the halberdiers", () => {
+    const pikes = applyUpgrades(byId("halberdiers"), ["pike_wall"]);
+    const goblinsLost = (d: typeof defs) => {
+      const r = new Battle([d, defs], [army(0, ["halberdiers"]), army(1, ["goblin_horde", "goblin_horde", "goblin_horde"])], { seed: 2, towers: false }).run();
+      const st = Object.values(r.stats).find((s) => s.defId === "halberdiers")!;
+      return st.dealtBy["Retaliation"] ?? 0;
+    };
+    expect(goblinsLost(defs)).toBe(0);
+    expect(goblinsLost(new Map(defs).set("halberdiers", pikes))).toBeGreaterThan(0);
+  });
+
   it("Purify washes statuses off allies", () => {
     const cleric = applyUpgrades(byId("cleric"), ["purify"]);
     const b = new Battle([new Map(defs).set("cleric", cleric), defs], [army(0, ["cleric", "knights"]), army(1, ["knights"])], { towers: false });
