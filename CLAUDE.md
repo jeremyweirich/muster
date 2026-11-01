@@ -137,3 +137,9 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't
   decided on yet.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.
+- **Playtest vs Hard (Nov 1, 2026):** after it, veterancy got rarer (`veterancyXp` knobs, DESIGN.md §5c), Keep levels
+  became +3,000 HP each, and playback fast-forwards once a fight is decided. Owner decisions: round damage ignoring
+  levels is intentional; battles can't end early because the survivors set the round damage (only playback speeds up).
+  Deferred by the owner, don't raise again unprompted: most fights end in 15–25 s, short of the 40–60 s goal; and the
+  report doesn't say why a hard-countered squad dealt 0. Not yet checked: whether the AI now buys Keep levels, and
+  how the new XP curve plays over a full match.
