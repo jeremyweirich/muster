@@ -334,8 +334,8 @@ make it stronger.
   then the level.
 - **Round damage ignores levels.** The damage a winner deals at the end of the round still uses the unit's base cost ×
   fraction alive, so a veteran isn't worth more HP damage than a fresh squad.
-- Promoted squads show a gold `LvN` tag on their footprint during deployment and in the report, and one gold ring per
-  level on each model in battle. Enemy levels are visible.
+- Promoted squads show a gold `LvN` tag on their footprint during deployment and in the report, and a small gold level
+  number on each model in battle. Enemy levels are visible.
 - Code: `src/sim/levels.ts` (`earnedLevel`, `levelDef`), XP is awarded in `applyRound` (`src/game/match.ts`), and the
   battle builds each squad at its `level`. The Counters tab and the balance matrix run everything at level 1; `npm run balance -- upgrades <unit>` tests each level, paying for the promotions.
 
@@ -525,15 +525,24 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
 
 ## 10b. Battle visuals
 
-- Team color (blue = you, red = enemy) marks ownership everywhere: unit outlines, the facing notch, projectile halos and
-  trails, and beam glows.
-- Element color marks *what* is being thrown: projectile cores and beam cores.
-- Size marks *how hard*: projectile radius and beam thickness scale with damage per hit.
+- Team color (blue = you, red = enemy) marks ownership everywhere: unit outlines, the facing notch, arrow fletching,
+  javelin grips, the rims of boulders, orbs and shards, and beam glows.
+- Each shooter has its own projectile art (`look.projectile` on the unit; `src/render/combat.ts`): arrows (Skirmishers),
+  crossbow bolts (Crossbowmen, Ballista), javelins (Wolf Riders, Griffon Riders), boulders (Giant, Troll), hail
+  (Cloudlings). Without one, the element decides: fireball, water blob, ice shard or spark. An upgrade that changes the
+  element keeps the shape and adds that element's glow, trail and embers (Fire Bolts, Frost Giant, Freezing Rain).
+- Lobbed shots (boulders, fireballs, water) fly in an arc over a ground shadow; bolts and shards fly nearly flat.
+- Beams: lightning crackles and forks; fire (the Dragon) pours out as a widening cone of flame.
+- Impacts throw particles in the element's style: embers, droplets, ice glints, sparks or dust. Splash hits flash,
+  single-target shots spark where they land, and deaths burst into bits of the unit's color. All of this is
+  renderer-only and never touches the sim.
+- Size marks *how hard*: projectile size and beam thickness scale with damage per hit.
 - Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
 - Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
   wings; elemental fliers (Cloudlings, a flying Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.
-- Veterans (level 2+) have a gold ring per level around each model and a gold `LvN` tag on their deployment footprint.
+- Veterans (level 2+) show their level as a small gold number on the bottom-right corner of each model, and a gold
+  `LvN` tag on their deployment footprint. (Not stars: ★ already means a bought upgrade.)
   A squad ready for promotion gets a pulsing gold chevron above it.
 
 ## 11. Architecture — Decided

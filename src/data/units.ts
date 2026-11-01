@@ -84,7 +84,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:warden", "race:human", "class:ranged", "size:small", "role:ranged", "role:antiair"],
-    look: { shape: "circle", color: "#a7d07a", icon: "crossbow" },
+    look: { shape: "circle", color: "#a7d07a", icon: "crossbow", projectile: "bolt" },
   },
   {
     id: "ballista",
@@ -121,7 +121,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:warden", "race:human", "class:siege", "size:medium", "role:sniper", "role:antilarge", "role:antiair", "role:slow"],
-    look: { shape: "diamond", color: "#b08a5a", icon: "crossbow" },
+    look: { shape: "diamond", color: "#b08a5a", icon: "crossbow", projectile: "bolt" },
   },
   {
     id: "griffon_riders",
@@ -158,7 +158,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:warden", "race:halfling", "class:cavalry", "size:medium", "role:flier", "role:fast", "role:skirmisher"],
-    look: { shape: "diamond", color: "#e0b34a", icon: "wing" },
+    look: { shape: "diamond", color: "#e0b34a", icon: "wing", projectile: "javelin" },
   },
   {
     id: "cleric",
@@ -323,7 +323,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:goblin", "race:goblin", "class:ranged", "size:small", "role:skirmisher", "role:antiair", "role:swarm"],
-    look: { shape: "circle", color: "#d9b23c", icon: "arrows" },
+    look: { shape: "circle", color: "#d9b23c", icon: "arrows", projectile: "arrow" },
   },
   {
     id: "wolf_riders",
@@ -366,7 +366,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:goblin", "race:goblin", "class:cavalry", "size:medium", "role:fast", "role:raider", "role:skirmisher"],
-    look: { shape: "circle", color: "#a8743a", icon: "paw" },
+    look: { shape: "circle", color: "#a8743a", icon: "paw", projectile: "javelin" },
   },
   {
     id: "troll",
@@ -416,7 +416,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:goblin", "race:troll", "size:large", "role:antilarge", "role:sturdy", "role:regen", "role:melee"],
-    look: { shape: "square", color: "#5e7d6a", icon: "fangs" },
+    look: { shape: "square", color: "#5e7d6a", icon: "fangs", projectile: "boulder" },
   },
   {
     id: "ogre_brute",
@@ -701,7 +701,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:elemental", "race:elemental", "element:water", "size:small", "role:swarm", "role:flier", "role:fast"],
-    look: { shape: "circle", color: "#cdd8e6", icon: "cloud" },
+    look: { shape: "circle", color: "#cdd8e6", icon: "cloud", projectile: "hail" },
   },
   {
     id: "frost_elemental",
@@ -861,6 +861,6 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:independent", "race:giant", "size:huge", "role:splash", "role:sturdy", "role:slow", "role:ranged"],
-    look: { shape: "square", color: "#9c8b72", icon: "boulder" },
+    look: { shape: "square", color: "#9c8b72", icon: "boulder", projectile: "boulder" },
   },
 ];

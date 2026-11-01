@@ -1,8 +1,9 @@
 import { STATUSES, SURFACES } from "../data/elements";
 import { deployZone, RULES } from "../data/rules";
 import { towerPlacements, TOWER_MAP } from "../data/towers";
-import { footprintOf, formation, type Battle, type Fx, type Model, type Projectile } from "../sim/battle";
+import { footprintOf, formation, type Battle, type Fx, type Model } from "../sim/battle";
 import { SurfaceGrid } from "../sim/surfaces";
+import { elementOfColor, hexAlpha, Particles, Shots } from "./combat";
 import { drawIcon, ICONS, type IconId } from "./icons";
 import type { PlacedSquad, Shape, Side, StatusId, UnitDef } from "../sim/types";
 
@@ -216,11 +217,6 @@ function drawGlow(ctx: CanvasRenderingContext2D, px: number, py: number, r: numb
   ctx.fill();
 }
 
-function hexAlpha(hex: string, a: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
 export interface UnitDrawOpts {
   time?: number; // seconds, for idle animation (wings, bobbing, glow)
   phase?: number; // per-model offset so a squad doesn't move in lockstep
@@ -273,16 +269,6 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
   ctx.lineWidth = Math.max(1.5, r * 0.22);
   ctx.strokeStyle = SIDE_COLORS[side];
   ctx.stroke();
-  if ((def.level ?? 1) > 1) {
-    // veterans wear a gold ring, one per level above 1
-    ctx.strokeStyle = VETERAN_GOLD;
-    ctx.lineWidth = 1.2;
-    for (let i = 1; i < Math.min(def.level!, 4); i++) {
-      ctx.beginPath();
-      ctx.arc(px, py, r + 1.5 + i * 2.2, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-  }
   if (r >= 3.5 && def.speed > 0) {
     // facing notch in the team color
     ctx.fillStyle = SIDE_COLORS[side];
@@ -319,6 +305,7 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.fillStyle = "#111";
     ctx.fillText(def.look.glyph, px, py + 1);
   }
+  if ((def.level ?? 1) > 1) drawLevelPip(ctx, px + r * 0.8, py + r * 0.75, r, def.level!);
   if (o.hpFrac !== undefined && o.hpFrac < 1 && (def.hp >= 300 || r >= 6)) {
     const w = Math.max(10, r * 2);
     ctx.fillStyle = "rgba(0,0,0,0.6)";
@@ -358,6 +345,21 @@ export function drawSquad(
 }
 
 export const VETERAN_GOLD = "#f5c542";
+
+// A veteran model's level, as a small outlined gold number on the bottom-right corner of its token.
+function drawLevelPip(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, level: number) {
+  const fs = Math.round(Math.max(8, Math.min(12, r * 0.8)));
+  ctx.font = `800 ${fs}px system-ui, sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = "rgba(10,14,18,0.9)";
+  ctx.strokeText(String(level), x, y);
+  ctx.fillStyle = VETERAN_GOLD;
+  ctx.fillText(String(level), x, y);
+  ctx.lineJoin = "miter";
+}
 
 // A squad's level, as a small gold tag in the top-left corner of its footprint.
 export function drawLevelBadge(ctx: CanvasRenderingContext2D, x: number, y: number, level: number) {
@@ -411,79 +413,106 @@ interface LiveFx {
   life: number;
 }
 
-const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.2, burst: 0.3, text: 1.1, death: 0.5, heal: 0.6, slash: 0.2 };
+const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.2, burst: 0.35, text: 1.1, death: 0.5, heal: 0.6, slash: 0.2 };
 const BIG_TEXT_LIFE = 2.5;
 
 export class FxLayer {
   items: LiveFx[] = [];
+  parts = new Particles();
+  shots = new Shots();
   take(battle: Battle) {
     for (const fx of battle.fx) {
       // keep reaction labels from piling up on top of each other
       if (fx.kind === "text" && this.items.some((i) => i.fx.kind === "text" && i.fx.text === fx.text && i.age < 0.3 && Math.hypot((i.fx as typeof fx).x - fx.x, (i.fx as typeof fx).y - fx.y) < 2)) continue;
       this.items.push({ fx, age: 0, life: fx.kind === "text" && fx.big ? BIG_TEXT_LIFE : FX_LIFE[fx.kind] });
+      this.spark(fx);
     }
     battle.fx.length = 0;
+  }
+  // Particles thrown off by an fx as it starts.
+  private spark(fx: Fx) {
+    switch (fx.kind) {
+      case "burst": {
+        const el = elementOfColor(fx.color);
+        const n = Math.round(5 + fx.r * 8);
+        if (el) this.parts.debris(fx.x, fx.y, n, el, 2.4, 0.8 + fx.r * 0.6);
+        else this.parts.spawn(fx.x, fx.y, n, { colors: [fx.color], glow: false, grav: 3, speed: 1.5 + fx.r, life: 0.45, size: 2.2 });
+        break;
+      }
+      case "slash":
+        this.parts.debris(fx.x, fx.y, 2, elementOfColor(fx.color) ?? "physical", 1.6, 0.6);
+        break;
+      case "beam":
+        this.parts.debris(fx.x2, fx.y2, 3, elementOfColor(fx.color) ?? "physical", 1.8, 0.7);
+        break;
+      case "death":
+        this.parts.spawn(fx.x, fx.y, Math.round(5 + fx.size * 14), { colors: [fx.color, "#3a3a3a"], glow: false, grav: 2, speed: 1.2 + fx.size * 2, life: 0.55, size: 2.4 });
+        break;
+    }
   }
   update(dt: number) {
     for (const i of this.items) i.age += dt;
     this.items = this.items.filter((i) => i.age < i.life);
+    this.parts.update(dt);
   }
   clear() {
     this.items = [];
+    this.parts.items = [];
+    this.shots.clear();
   }
   draw(ctx: CanvasRenderingContext2D, tile: number) {
     for (const { fx, age, life } of this.items) {
       const k = 1 - age / life;
       ctx.globalAlpha = k;
       switch (fx.kind) {
-        case "beam": {
-          const w = fx.width ?? 2.5;
-          const path = () => {
-            ctx.beginPath();
-            ctx.moveTo(fx.x1 * tile, fx.y1 * tile);
-            // jagged line so lightning reads as lightning
-            for (let s = 1; s < 5; s++) {
-              const t = s / 5;
-              const jx = (Math.sin(s * 12.9 + fx.x1 * 7) * tile) / 5;
-              const jy = (Math.cos(s * 7.3 + fx.y1 * 5) * tile) / 5;
-              ctx.lineTo((fx.x1 + (fx.x2 - fx.x1) * t) * tile + jx, (fx.y1 + (fx.y2 - fx.y1) * t) * tile + jy);
-            }
-            ctx.lineTo(fx.x2 * tile, fx.y2 * tile);
-          };
-          // team-colored glow underneath, element-colored core on top
-          if (fx.side !== undefined) {
-            ctx.strokeStyle = SIDE_COLORS[fx.side];
-            ctx.globalAlpha = k * 0.45;
-            ctx.lineWidth = w + 4;
-            path();
-            ctx.stroke();
-            ctx.globalAlpha = k;
-          }
-          ctx.strokeStyle = fx.color;
-          ctx.lineWidth = w;
-          path();
-          ctx.stroke();
+        case "beam":
+          drawBeam(ctx, fx, tile, k, age);
           break;
-        }
         case "slash": {
           const r = fx.size * tile * (0.8 + (1 - k) * 0.6);
           ctx.strokeStyle = fx.color;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 2.5;
           ctx.beginPath();
           ctx.arc(fx.x * tile, fx.y * tile, r, fx.angle - 1.1, fx.angle + 1.1);
           ctx.stroke();
+          ctx.strokeStyle = "#ffffff";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.arc(fx.x * tile, fx.y * tile, r * 0.92, fx.angle - 0.8, fx.angle + 0.8);
+          ctx.stroke();
           break;
         }
-        case "burst":
+        case "burst": {
+          const grow = 1 - k;
+          const R = fx.r * tile * (0.55 + 0.45 * grow);
+          const x = fx.x * tile;
+          const y = fx.y * tile;
+          if (grow < 0.45) {
+            // a bright flash as it lands
+            const f = 1 - grow / 0.45;
+            ctx.globalCompositeOperation = "lighter";
+            const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+            g.addColorStop(0, `rgba(255,255,255,${0.7 * f})`);
+            g.addColorStop(0.4, hexAlpha(fx.color, 0.55 * f));
+            g.addColorStop(1, hexAlpha(fx.color, 0));
+            ctx.fillStyle = g;
+            ctx.globalAlpha = 1;
+            ctx.beginPath();
+            ctx.arc(x, y, R, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalCompositeOperation = "source-over";
+            ctx.globalAlpha = k;
+          }
           ctx.strokeStyle = fx.color;
-          ctx.lineWidth = 2;
+          ctx.lineWidth = 0.8 + 2.2 * k;
           ctx.beginPath();
-          ctx.arc(fx.x * tile, fx.y * tile, fx.r * tile * (0.6 + 0.4 * (1 - k)), 0, Math.PI * 2);
+          ctx.arc(x, y, R, 0, Math.PI * 2);
           ctx.stroke();
-          ctx.globalAlpha = k * 0.25;
+          ctx.globalAlpha = k * 0.22;
           ctx.fillStyle = fx.color;
           ctx.fill();
           break;
+        }
         case "heal":
           ctx.strokeStyle = "#7dffa0";
           ctx.lineWidth = 2;
@@ -501,21 +530,120 @@ export class FxLayer {
           ctx.fillStyle = fx.color;
           ctx.fillText(fx.text, fx.x * tile, (fx.y - age * 0.8) * tile);
           break;
-        case "death":
-          ctx.strokeStyle = fx.color;
-          ctx.lineWidth = 2;
+        case "death": {
           const r = Math.max(3, fx.size * tile) * (1 + age * 2);
+          ctx.globalAlpha = k * 0.6;
+          ctx.strokeStyle = fx.color;
+          ctx.lineWidth = 1.5;
           ctx.beginPath();
-          ctx.moveTo(fx.x * tile - r, fx.y * tile - r);
-          ctx.lineTo(fx.x * tile + r, fx.y * tile + r);
-          ctx.moveTo(fx.x * tile + r, fx.y * tile - r);
-          ctx.lineTo(fx.x * tile - r, fx.y * tile + r);
+          ctx.arc(fx.x * tile, fx.y * tile, r * 1.2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.globalAlpha = k;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(fx.x * tile - r * 0.6, fx.y * tile - r * 0.6);
+          ctx.lineTo(fx.x * tile + r * 0.6, fx.y * tile + r * 0.6);
+          ctx.moveTo(fx.x * tile + r * 0.6, fx.y * tile - r * 0.6);
+          ctx.lineTo(fx.x * tile - r * 0.6, fx.y * tile + r * 0.6);
           ctx.stroke();
           break;
+        }
       }
     }
     ctx.globalAlpha = 1;
+    this.parts.draw(ctx, tile);
   }
+}
+
+type BeamFx = Extract<Fx, { kind: "beam" }>;
+
+// Lightning crackles (its path re-forks every few frames), fire pours out as a widening stream of flame, anything else
+// is a straight glowing line. All have a team-colored glow underneath.
+function drawBeam(ctx: CanvasRenderingContext2D, fx: BeamFx, tile: number, k: number, age: number) {
+  const w = fx.width ?? 2.5;
+  const el = elementOfColor(fx.color);
+  const x1 = fx.x1 * tile;
+  const y1 = fx.y1 * tile;
+  const x2 = fx.x2 * tile;
+  const y2 = fx.y2 * tile;
+  const len = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const nx = -(y2 - y1) / len; // unit normal
+  const ny = (x2 - x1) / len;
+  if (el === "fire") {
+    if (fx.side !== undefined) {
+      ctx.strokeStyle = SIDE_COLORS[fx.side];
+      ctx.globalAlpha = k * 0.35;
+      ctx.lineWidth = w + 3;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    ctx.globalCompositeOperation = "lighter";
+    // a widening cone of overlapping puffs: hot and narrow at the mouth, red and broad where it lands
+    const n = Math.max(10, Math.round(len / (w * 0.9)));
+    for (let s = n; s >= 0; s--) {
+      const t = s / n;
+      const wob = Math.sin(age * 40 + s * 1.7) * w * 0.5 * t;
+      const cx = x1 + (x2 - x1) * t + nx * wob;
+      const cy = y1 + (y2 - y1) * t + ny * wob;
+      ctx.globalAlpha = k * (0.3 + 0.2 * (1 - t));
+      ctx.fillStyle = t < 0.25 ? "#fff2b0" : t < 0.6 ? "#ffb347" : "#ff5a1f";
+      ctx.beginPath();
+      ctx.arc(cx, cy, w * (0.7 + 2.3 * t), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+    ctx.globalAlpha = k;
+    return;
+  }
+  const crackle = el === "lightning";
+  const seed = Math.floor(age * 30); // re-jag a few times over the beam's short life
+  const pts: [number, number][] = [[x1, y1]];
+  if (crackle) {
+    for (let s = 1; s < 6; s++) {
+      const t = s / 6;
+      const j = Math.sin(s * 12.9 + seed * 3.1 + fx.x1 * 7) * Math.min(tile * 0.3, len * 0.12);
+      pts.push([x1 + (x2 - x1) * t + nx * j, y1 + (y2 - y1) * t + ny * j]);
+    }
+  }
+  pts.push([x2, y2]);
+  const path = () => {
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+  };
+  ctx.lineJoin = "round";
+  if (fx.side !== undefined) {
+    ctx.strokeStyle = SIDE_COLORS[fx.side];
+    ctx.globalAlpha = k * 0.4;
+    ctx.lineWidth = w + 4;
+    path();
+    ctx.stroke();
+  }
+  ctx.globalCompositeOperation = "lighter";
+  ctx.strokeStyle = fx.color;
+  ctx.globalAlpha = k * 0.7;
+  ctx.lineWidth = w + 1.5;
+  path();
+  ctx.stroke();
+  if (crackle && pts.length > 3) {
+    // a short side fork off the middle
+    const [mx, my] = pts[3];
+    const f = Math.sin(seed * 5.3) > 0 ? 1 : -1;
+    ctx.lineWidth = Math.max(1, w * 0.5);
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(mx + nx * f * tile * 0.45 + (x2 - x1) * 0.08, my + ny * f * tile * 0.45 + (y2 - y1) * 0.08);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = "#ffffff";
+  ctx.globalAlpha = k;
+  ctx.lineWidth = Math.max(1, w * 0.4);
+  path();
+  ctx.stroke();
+  ctx.globalCompositeOperation = "source-over";
+  ctx.lineJoin = "miter";
 }
 
 // Render interpolation: where each model was one tick ago, and how far (0..1) playback is into the current tick.
@@ -551,35 +679,10 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);
-  for (const p of battle.projectiles) drawProjectile(ctx, p, tile, a);
+  // sim time at this frame, so trails freeze on pause and stretch with fast-forward
+  const simT = battle.time - (1 - a) * battle.rules.tick;
+  for (const p of battle.projectiles) fx.shots.draw(ctx, p, tile, a, simT, SIDE_COLORS[p.side], fx.parts);
+  fx.shots.settle(fx.parts);
   for (const m of battle.models) if (m.alive && m.def.layer === "air") draw(m);
   fx.draw(ctx, tile);
-}
-
-// Projectiles: element-colored core inside a team-colored halo, sized by damage, with a team-colored trail.
-function drawProjectile(ctx: CanvasRenderingContext2D, p: Projectile, tile: number, alpha = 1) {
-  const r = Math.min(7, 1.6 + Math.sqrt(p.damage) / 3.2);
-  const x = (p.px + (p.x - p.px) * alpha) * tile;
-  const y = (p.py + (p.y - p.py) * alpha) * tile;
-  const dx = (p.x - p.px) * tile;
-  const dy = (p.y - p.py) * tile;
-  const team = SIDE_COLORS[p.side];
-  ctx.strokeStyle = team;
-  ctx.globalAlpha = 0.55;
-  ctx.lineWidth = Math.max(1.5, r * 0.9);
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x - dx * 2.5, y - dy * 2.5);
-  ctx.stroke();
-  ctx.lineCap = "butt";
-  ctx.globalAlpha = 1;
-  ctx.fillStyle = team;
-  ctx.beginPath();
-  ctx.arc(x, y, r + 1.5, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = p.color;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.fill();
 }
