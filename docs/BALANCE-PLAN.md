@@ -44,7 +44,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Griffon Riders | Anti-medium (Phantom Ray) | *Giant Slayers* replaces Pride: ×2.5 against large and huge (→ Phoenix) |
 | Cleric | Utility | 200 cost, heals 80 |
 | Pikemen | Anti-giant: an anti-large line | 6 × 300 HP, reach 1.5, ×3.5 against large units and cavalry, no splash. *Heavy Halberds* (→ chaff clear), *Long Pikes* (→ beats Wolf Riders) |
-| Grunts | Chaff (Crawler) | 40 HP, 8 damage every 0.6 s |
+| Grunts | Chaff (Crawler) | 40 HP, 8 damage every 0.6 s, speed 20 |
 | Skirmishers | Chaff (Fang) | 12 per squad, 30 HP, speed 16 |
 | Wolf Riders | Diver (Rhino) | 200 cost, 540 HP, 70 damage, speed 24 |
 | Troll | Anti-giant (Steel Ball) | Berserk is built in (+35% per hit in a row, up to ×3). *Gorge* (heal 30% of damage dealt) takes its slot |
@@ -52,7 +52,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Giant Bats | Diver (none) | 280 HP, 45 damage |
 | Fire Elemental | Chaff clear (Stormcaller) | 200 cost, 4 × 180 HP, 45 fire every 3 s, splash 1.3, fire resist 0.3 (was immune) |
 | Water Elemental | Utility | 300 cost, 2400 HP, water resist 0.3 (was immune) |
-| Air Elemental | Chaff clear (Arclight → Raiden) | 40 lightning every 1.2 s, lightning resist 0.3 |
+| Air Elemental | Chaff clear (Arclight → Raiden) | 50 lightning every 1.2 s (two chain links kill a goblin each), lightning resist 0.3. Beats Knights; *Warded Plate* flips it |
 | Cloudlings | Chaff (Wasp) | 14 per flock, 50 HP, speed 19 |
 | Frost Elemental | Anti-giant (Melting Point) | 200 cost, ramping cold (+25% per hit, up to ×3), frost resist 0.3 (was immune) |
 | Stone Golem | Tank (Fortress) | 300 cost, 3600 HP, 300 damage, speed 9, physical resist 0.4, lightning and fire 0.3 (were immune) |

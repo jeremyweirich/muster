@@ -162,6 +162,12 @@ export function footprintOf(def: UnitDef, rot?: boolean): { w: number; h: number
 
 // Lay out a squad's models inside its (possibly rotated) footprint.
 // A short last row goes at the back: the bottom of the footprint for side 0, the top for side 1.
+// Most models carry no status most of the time; this lets the per-tick status checks skip them.
+function anyStatus(m: Model): boolean {
+  for (const _ in m.statuses) return true;
+  return false;
+}
+
 export function formation(def: UnitDef, sx: number, sy: number, rot?: boolean, side: Side = 0): [number, number][] {
   const { w, h } = footprintOf(def, rot);
   const n = Math.max(1, def.squadSize);
@@ -223,6 +229,7 @@ export class Battle {
   readonly recordFx: boolean;
   time = 0;
   private orderRng: Rng; // shuffles who updates first each tick
+  private order: Model[] = []; // this tick's update order (reused)
   over = false;
   winner: Side | null = null;
   timedOut = false;
@@ -325,7 +332,9 @@ export class Battle {
 
     // Hits land at once, so whoever updates first strikes first. Side 0's models were created first, so a fixed
     // order hands it the first blow in every even exchange. Shuffle the order each tick (its own seeded stream).
-    const order = this.models.filter((m) => m.alive);
+    const order = this.order;
+    order.length = 0;
+    for (const m of this.models) if (m.alive) order.push(m);
     for (let i = order.length - 1; i > 0; i--) {
       const j = this.orderRng.int(i + 1);
       [order[i], order[j]] = [order[j], order[i]];
@@ -390,6 +399,7 @@ export class Battle {
       if (!m.alive) continue;
       if (m.flash > 0) m.flash -= dt;
       if (m.attackAnim > 0) m.attackAnim -= dt;
+      if (!anyStatus(m)) continue;
       for (const id of STATUS_IDS) {
         const t = m.statuses[id];
         if (t === undefined) continue;
@@ -475,12 +485,14 @@ export class Battle {
   }
 
   private isStunned(m: Model): boolean {
+    if (!anyStatus(m)) return false;
     for (const id of STATUS_IDS) if (m.statuses[id] !== undefined && STATUSES[id].stun) return true;
     return false;
   }
 
   private statusMult(m: Model, key: keyof Pick<StatusDef, "moveMult" | "attackMult" | "damageDealtMult" | "damageTakenMult">): number {
     let mult = 1;
+    if (!anyStatus(m)) return mult;
     for (const id of STATUS_IDS) {
       if (m.statuses[id] === undefined) continue;
       const v = STATUSES[id][key];
@@ -959,27 +971,67 @@ export class Battle {
   // Simple circle separation using a spatial hash; ground and air don't collide.
   // Anchored units (towers) never get pushed. Enemies block each other fully; allies only nudge each other
   // (rules.allyPush), so units behind a front line can squeeze through to reach their targets.
+  // Buckets for separate(): one per 1-tile cell and layer, over the field plus a margin, reused every tick. A model
+  // outside the margin (rare) goes in the overflow map instead. Either way each bucket keeps model order, so the
+  // pushes happen in exactly the same sequence as a plain map would give.
+  private grid: Model[][] = [];
+  private gridUsed: number[] = [];
+  private gridOverflow = new Map<number, Model[]>();
+  private gridRows = new Int32Array(0); // models per grid row and layer, so empty rows are skipped in one check
+
   private separate() {
-    const cell = 1;
-    const grid = new Map<number, Model[]>();
-    const key = (cx: number, cy: number, layer: Layer) => (layer === "air" ? 1 : 0) + 2 * (cx + 1000 * cy);
+    const PAD = 8;
+    const gw = this.rules.fieldW + 2 * PAD;
+    const gh = this.rules.fieldH + 2 * PAD;
+    if (this.grid.length !== gw * gh * 2) {
+      this.grid = Array.from({ length: gw * gh * 2 }, () => []);
+      this.gridRows = new Int32Array(gh * 2);
+    }
+    const grid = this.grid;
+    const rows = this.gridRows;
+    rows.fill(0);
+    for (const i of this.gridUsed) grid[i].length = 0;
+    this.gridUsed.length = 0;
+    const overflow = this.gridOverflow;
+    overflow.clear();
+    // a cell's slot in the grid, or -1 when it's outside the margin
+    const slot = (cx: number, cy: number, air: number) => {
+      const gx = cx + PAD, gy = cy + PAD;
+      return gx < 0 || gy < 0 || gx >= gw || gy >= gh ? -1 : (gy * gw + gx) * 2 + air;
+    };
+    const bucket = (cx: number, cy: number, air: number): Model[] | undefined => {
+      const i = slot(cx, cy, air);
+      return i >= 0 ? grid[i] : overflow.get(air + 2 * (cx + 1000 * cy));
+    };
     for (const m of this.models) {
       if (!m.alive) continue;
-      const k = key(Math.floor(m.x / cell), Math.floor(m.y / cell), m.def.layer);
-      let b = grid.get(k);
-      if (!b) grid.set(k, (b = []));
-      b.push(m);
+      const cx = Math.floor(m.x), cy = Math.floor(m.y), air = m.def.layer === "air" ? 1 : 0;
+      const i = slot(cx, cy, air);
+      if (i >= 0) {
+        if (!grid[i].length) this.gridUsed.push(i);
+        grid[i].push(m);
+        rows[(cy + PAD) * 2 + air]++;
+      } else {
+        const k = air + 2 * (cx + 1000 * cy);
+        let b = overflow.get(k);
+        if (!b) overflow.set(k, (b = []));
+        b.push(m);
+      }
     }
     for (const m of this.models) {
       if (!m.alive) continue;
-      const cx = Math.floor(m.x / cell);
-      const cy = Math.floor(m.y / cell);
-      const reach = Math.ceil((m.def.size + 1.7 + (m.def.spacing ?? 0)) / cell);
+      const cx = Math.floor(m.x);
+      const cy = Math.floor(m.y);
+      const air = m.def.layer === "air" ? 1 : 0;
+      const reach = Math.ceil(m.def.size + 1.7 + (m.def.spacing ?? 0));
       const am = m.def.speed <= 0;
       for (let oy = -reach; oy <= reach; oy++) {
+        // a row with nothing in the grid can only matter through the overflow map
+        const gy = cy + oy + PAD;
+        if (gy >= 0 && gy < gh && rows[gy * 2 + air] === 0 && overflow.size === 0) continue;
         for (let ox = -reach; ox <= reach; ox++) {
-          const b = grid.get(key(cx + ox, cy + oy, m.def.layer));
-          if (!b) continue;
+          const b = bucket(cx + ox, cy + oy, air);
+          if (!b || !b.length) continue;
           for (const o of b) {
             if (o.id <= m.id) continue;
             const ao = o.def.speed <= 0;

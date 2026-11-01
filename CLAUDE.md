@@ -63,6 +63,10 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 
 - `src/sim` is deterministic and DOM-free: fixed 50 ms tick, seeded `Rng`, no `Math.random`, no wall-clock time.
   Replays, the AI, the Counters tab and the tests depend on this.
+- Simulation speed matters (the AI and the harness run thousands of battles). Before and after touching `src/sim`,
+  run `npm run bench`: a pure speedup must keep the fingerprint; a changed fingerprint means results changed.
+  `docs/SIMULATION.md` has the profile recipe, what's been done and the next levers. The balance harness runs
+  matchups on a thread pool (`scripts/sim-pool.ts`); queue many with `Promise.all`.
 - Main attack damage only hits enemies. Statuses, surfaces and reactions are neutral, so friendly fire is on.
 - Each side fights with its own upgraded unit definitions (`upgradedDefs`, `new Battle([defsA, defsB], …)`).
 - The AI only uses the simulator, so new units must work with it without special-casing.
@@ -79,6 +83,7 @@ npm run build         # typecheck + static build in dist/
 npm run balance -- <mode>  # balance harness (modes listed at the top of scripts/balance.ts)
 npm run matrix        # shortcut for the equal-supply matrix: win rate, value margin, Nash mix
 npm run roster-table  # roster tables for DESIGN.md
+npm run bench         # simulator speed, plus a fingerprint of every outcome (docs/SIMULATION.md)
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
 ```
 

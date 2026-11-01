@@ -4,7 +4,7 @@ import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, UnitDef } from "../sim/types";
 import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
-import { canPromote, packSquads, promotePrice } from "./match";
+import { canPromote, packSquads, promotePrice, roundDamage } from "./match";
 import { armyValue, autoPlace, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap, type PlacementStyle } from "./army";
 
 export type Difficulty = "easy" | "normal" | "hard";
@@ -13,9 +13,14 @@ export type Difficulty = "easy" | "normal" | "hard";
 // a worker while the player deploys, so Hard can afford to think for a while.
 const CANDIDATES: Record<Difficulty, number> = { easy: 3, normal: 12, hard: Infinity };
 const TIME_BUDGET_MS: Record<Difficulty, number> = { easy: 400, normal: 2000, hard: 6000 };
+// Hard splits its time into phases, as fractions of its budget: screening unit types, random plans, local search,
+// then re-scoring its best few plans over more battle seeds (one simulation is noisy) before it picks.
+const HARD_PHASES = { screen: 0.3, random: 0.55, search: 0.85 };
+const FINALISTS = 5;
+const EXTRA_SEEDS = 2;
 const STYLES: PlacementStyle[] = ["center", "spread", "left", "right"];
 // How much one-time purchases (unlocks, upgrades, tower levels) are worth beyond
-// this round, as a fraction of their price.
+// this round, as a fraction of their price (counted in HP at RULES.damagePerSupply).
 const FUTURE_VALUE = 0.5;
 const MAX_SQUADS = 10;
 
@@ -48,6 +53,7 @@ export interface PlayerView {
 export interface PlanOptions {
   openingPacks?: OpeningPack[]; // round 1: the packs the player was offered, as stand-ins for an army it hasn't shown
   budgetMs?: number; // overrides the difficulty's thinking time (scripts and tests)
+  searchSeed?: number; // parallel searches use different search seeds against the same scenarios
 }
 
 // Everything a plan buys except the squads: tower levels, promotions and an upgrade.
@@ -62,7 +68,8 @@ interface Candidate {
   extras: Extras;
   units: UnitDef[];
   squads: PlacedSquad[];
-  score: number;
+  score: number; // mean over `runs` simulated battles
+  runs: number;
 }
 
 function randomExtras(units: UnitDef[], me: AiSide, rng: Rng): Extras {
@@ -185,16 +192,18 @@ export function planAiRound(
   seed: number,
   opts: PlanOptions = {},
 ): AiPlan {
-  const rng = new Rng(seed);
+  // scenarios come from the round's seed; the search has its own stream, so parallel searches face the same armies
+  const rng = new Rng(seed * 31 + 7 + (opts.searchSeed ?? 0) * 7919);
   const start = performance.now();
   const budget = opts.budgetMs ?? TIME_BUDGET_MS[difficulty];
-  const outOfTime = () => performance.now() - start > budget;
+  const outOfTime = (phase = 1) => performance.now() - start > budget * phase;
   const playerDefs = upgradedDefs(defs, player.upgrades);
-  const scenarios = opponentScenarios(units, defs, me, player, round, difficulty, opts, rng);
+  const scenarios = opponentScenarios(units, defs, me, player, round, difficulty, opts, new Rng(seed));
   let tried = 0;
 
   const place = (list: UnitDef[]) => autoPlace(list, me.army, 1, defs, round, rng, rng.pick(STYLES));
-  const evaluate = (extras: Extras, list: UnitDef[], squads: PlacedSquad[]): number => {
+  // Plays a plan against every scenario, once per battle seed; returns the summed score and how many battles that was.
+  const evaluate = (extras: Extras, list: UnitDef[], squads: PlacedSquad[], seeds = 1, seedBase = 0): { sum: number; runs: number } => {
     tried++;
     const myUpgrades: UpgradeState = { ...me.upgrades };
     for (const u of extras.upgrades) myUpgrades[u.unitId] = [...(myUpgrades[u.unitId] ?? []), u.upgradeId];
@@ -202,21 +211,29 @@ export function planAiRound(
     for (const i of extras.towerUpgrades) myLevels[i]++;
     const mine = [...promoted(me.army, extras.promotions), ...squads];
     const myDefs = upgradedDefs(defs, myUpgrades);
+    // Score in what a round really costs: the HP each side would lose (armies are restored after every battle).
     let total = 0;
+    let runs = 0;
     scenarios.forEach((opponent, k) => {
-      const r = new Battle([playerDefs, myDefs], [opponent, mine], { seed: seed + tried * 7 + k, towerLevels: [player.towerLevels, myLevels] }).run();
-      const value = (side: 0 | 1) => r.survivors[side].reduce((s, q) => s + (defs.get(q.defId)?.cost ?? 0) * (q.alive / q.total), 0);
-      total += value(1) - value(0) + (r.winner === 1 ? 1000 : r.winner === 0 ? -1000 : 0);
+      for (let s = 0; s < seeds; s++) {
+        // a fresh seed per evaluation: a fixed seed lets the search tune plans to one roll of the dice
+        const battleSeed = seed + tried * 7 + k * 101 + (s + seedBase) * 7919 + (opts.searchSeed ?? 0) * 104729;
+        const r = new Battle([playerDefs, myDefs], [opponent, mine], { seed: battleSeed, towerLevels: [player.towerLevels, myLevels] }).run();
+        const [toPlayer, toMe] = roundDamage(r, defs);
+        total += toPlayer - toMe;
+        runs++;
+      }
     });
     const unlockSpend = list.reduce((t, u, i) => t + (me.unlocked.includes(u.id) || list.slice(0, i).includes(u) ? 0 : unlockPrice(u)), 0);
-    let score = total / scenarios.length + (extras.cost + unlockSpend) * FUTURE_VALUE;
+    let score = total / runs + (extras.cost + unlockSpend) * FUTURE_VALUE * RULES.damagePerSupply;
     // a little personality on easier settings
-    if (difficulty === "easy") score += rng.range(-800, 800);
-    return score;
+    if (difficulty === "easy") score += rng.range(-60, 60);
+    return { sum: score * runs, runs };
   };
   const candidate = (extras: Extras, list: UnitDef[]): Candidate => {
     const squads = place(list);
-    return { extras, units: list, squads, score: evaluate(extras, list, squads) };
+    const e = evaluate(extras, list, squads);
+    return { extras, units: list, squads, score: e.sum / e.runs, runs: e.runs };
   };
 
   const pool: Candidate[] = [];
@@ -231,7 +248,7 @@ export function planAiRound(
     }
     const screened: { u: UnitDef; score: number }[] = [];
     for (const u of types) {
-      if (screened.length && outOfTime()) break;
+      if (screened.length && outOfTime(HARD_PHASES.screen)) break;
       const c = candidate(NO_EXTRAS, massOf(u));
       screened.push({ u, score: c.score });
       pool.push(c);
@@ -240,14 +257,14 @@ export function planAiRound(
   }
   const randoms = Math.min(CANDIDATES[difficulty], difficulty === "hard" ? 16 : CANDIDATES[difficulty]);
   for (let i = 0; i < randoms; i++) {
-    if (pool.length && outOfTime()) break;
+    if (pool.length && outOfTime(difficulty === "hard" ? HARD_PHASES.random : 1)) break;
     const extras = randomExtras(units, me, rng);
     const unitFocus = focus.length ? focus : i % 2 === 0 ? [rng.pick(units)] : [];
     pool.push(candidate(extras, fillUnits(units, me, me.supply - extras.cost, rng, [], unitFocus)));
   }
   if (difficulty === "hard") {
     // Local search: tweak one of the best plans (swap, add or drop a squad, or place it again); keep improvements.
-    while (!outOfTime()) {
+    while (!outOfTime(HARD_PHASES.search)) {
       pool.sort((a, b) => b.score - a.score);
       const base = pool[rng.int(Math.min(3, pool.length))];
       const list = [...base.units];
@@ -257,6 +274,14 @@ export function planAiRound(
       const refilled = move === 3 ? list : fillUnits(units, me, me.supply - base.extras.cost, rng, list, focus);
       if (unitsCost(refilled, me.unlocked) + base.extras.cost > me.supply) continue;
       pool.push(candidate(base.extras, refilled));
+    }
+    // Finalists: re-score the best few over more battle seeds, so a lucky simulation doesn't decide the round.
+    pool.sort((a, b) => b.score - a.score);
+    for (const c of pool.slice(0, FINALISTS)) {
+      if (outOfTime()) break;
+      const e = evaluate(c.extras, c.units, c.squads, EXTRA_SEEDS, 1);
+      c.score = (c.score * c.runs + e.sum) / (c.runs + e.runs);
+      c.runs += e.runs;
     }
   }
 

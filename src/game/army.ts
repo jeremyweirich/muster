@@ -29,6 +29,12 @@ export function squadRect(sq: PlacedSquad, def: UnitDef) {
   return { x: sq.x, y: sq.y, w, h };
 }
 
+// The Keeps' footprints per side. Placement asks for them for every candidate tile, so build them once.
+const towerRects: { x: number; y: number; w: number; h: number }[][] = [];
+function keepRects(side: Side) {
+  return (towerRects[side] ??= towerPlacements(side).map((t) => squadRect(t, TOWER_MAP.get(t.defId)!)));
+}
+
 export function canPlace(
   def: UnitDef,
   x: number,
@@ -42,10 +48,7 @@ export function canPlace(
   const { y0, y1 } = deployZone(side);
   const { w, h } = footprintOf(def, rot);
   if (x < 0 || x + w > RULES.fieldW || y < y0 || y + h > y1) return false;
-  for (const t of towerPlacements(side)) {
-    const r = squadRect(t, TOWER_MAP.get(t.defId)!);
-    if (overlaps(x, y, w, h, r.x, r.y, r.w, r.h)) return false;
-  }
+  for (const r of keepRects(side)) if (overlaps(x, y, w, h, r.x, r.y, r.w, r.h)) return false;
   for (const s of squads) {
     if (s.uid === ignoreUid) continue;
     const d = defs.get(s.defId);

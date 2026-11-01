@@ -23,6 +23,7 @@ export class SurfaceGrid {
   readonly time: Float32Array;
   readonly owner: Int16Array; // squad index credited for this cell's effects, -1 = none
   events: SurfaceEvent[] = [];
+  private active = 0; // cells holding a surface, so an empty field skips the per-tick sweep
 
   constructor(fieldW: number, fieldH: number, res: number) {
     this.res = res;
@@ -49,6 +50,7 @@ export class SurfaceGrid {
   }
 
   private set(i: number, id: SurfaceId | null, duration?: number, owner?: number) {
+    this.active += (id === null ? 0 : 1) - (this.type[i] < 0 ? 0 : 1);
     if (id === null) {
       this.type[i] = -1;
       this.time[i] = 0;
@@ -144,6 +146,7 @@ export class SurfaceGrid {
   }
 
   update(dt: number) {
+    if (this.active === 0) return;
     const n = this.type.length;
     for (let i = 0; i < n; i++) {
       const t = this.type[i];

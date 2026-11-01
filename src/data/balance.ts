@@ -74,7 +74,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     upgrades: {
       shield_wall: { intent: "A deeper wall: armor that javelins and claws can't get through", beats: ["wolf_riders"] },
       lance_charge: { intent: "Reach the shooters: a fast charge whose first strike kills", beats: ["crossbowmen"] },
-      warded_plate: { intent: "The counterpunch to elementals: resist fire, frost, lightning and water", beats: ["fire_elemental"] },
+      warded_plate: { intent: "The counterpunch to elementals: resist fire, frost, lightning and water", beats: ["fire_elemental", "air_elemental"] },
       veterans: { intent: "Plain power: more damage, and a shield against the first hit", beats: ["troll"] },
     },
   },
@@ -313,6 +313,7 @@ export const RELATIONS: [string, string, string][] = [
   ["fire_elemental", "pikemen", "splash through the ranks, from range"],
   ["fire_elemental", "troll", "burning stops it regenerating"],
   ["fire_elemental", "knights", "fire burns through armor, from range"],
+  ["air_elemental", "knights", "lightning arcs through a packed armored line"],
   ["ogre_brute", "grunts", "a cleaving club"],
   ["giant", "grunts", "boulders on the mob"],
   ["giant", "skirmishers", "boulders on the mob"],
@@ -353,7 +354,6 @@ export const RELATIONS: [string, string, string][] = [
   ["knights", "pikemen", "armor, and no bonus against it"],
   ["knights", "ballista", "they reach it"],
   ["knights", "frost_elemental", "they reach it"],
-  ["knights", "air_elemental", "they reach it and outlast it"],
   ["stone_golem", "knights", "too big to cut down"],
   ["stone_golem", "crossbowmen", "bolts bounce off a titan"],
 

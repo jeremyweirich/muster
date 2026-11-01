@@ -20,7 +20,8 @@ import { DEFAULT_UNITS } from "../src/data/units";
 import { RULES } from "../src/data/rules";
 import { bandTtk, lanchesterValue, modelDps, nashMix, perSupply, selfTtk, sizeClass, ttkBand } from "../src/game/balance";
 import { autoPlace, defMap } from "../src/game/army";
-import { massArmy, pickStyle, runArmies, runMatchup, equalCostCounts, type MatchupOptions, type MatchupResult } from "../src/game/lab";
+import { massArmy, pickStyle, runArmies, equalCostCounts, type MatchupOptions, type MatchupResult } from "../src/game/lab";
+import { SimPool } from "./sim-pool";
 import { Battle, footprintOf } from "../src/sim/battle";
 import { Rng } from "../src/sim/rng";
 import { upgradedDefs } from "../src/sim/upgrades";
@@ -64,22 +65,26 @@ function table(ids: string[], cell: (a: string, b: string) => string) {
 }
 
 // ------------------------------------------------------------------ the matrix
-const run = (a: string, b: string, budget = BUDGET, opts: MatchupOptions = {}, list: UnitDef[] = units) =>
-  runMatchup(list, a, b, budget, SEEDS, { formations: "random", ...opts });
+// Matchups run on a pool of threads, one per spare core. Each is deterministic, so the results are exactly what a
+// sequential run gives; queue many with Promise.all to keep every core busy.
+let pool: SimPool | undefined;
+const run = (a: string, b: string, budget = BUDGET, opts: MatchupOptions = {}, list: UnitDef[] = units): Promise<MatchupResult> =>
+  (pool ??= new SimPool()).matchup(list, a, b, budget, SEEDS, { formations: "random", ...opts });
 
 const flip = (r: MatchupResult): MatchupResult => ({
   a: r.b, b: r.a, winRate: 1 - r.winRate, avgRemainA: r.avgRemainB, avgRemainB: r.avgRemainA, avgTime: r.avgTime, supply: [r.supply[1], r.supply[0]],
 });
 
 // Every pair once (the reverse is the same fight seen from the other side), plus mirrors.
-function matrix(ids: string[], budget = BUDGET): Map<string, MatchupResult> {
+async function matrix(ids: string[], budget = BUDGET): Promise<Map<string, MatchupResult>> {
+  const pairs: [string, string][] = [];
+  for (let i = 0; i < ids.length; i++) for (let j = i; j < ids.length; j++) pairs.push([ids[i], ids[j]]);
+  const results = await Promise.all(pairs.map(([a, b]) => run(a, b, budget)));
   const m = new Map<string, MatchupResult>();
-  for (let i = 0; i < ids.length; i++)
-    for (let j = i; j < ids.length; j++) {
-      const r = run(ids[i], ids[j], budget);
-      m.set(`${ids[i]}|${ids[j]}`, r);
-      if (i !== j) m.set(`${ids[j]}|${ids[i]}`, flip(r));
-    }
+  pairs.forEach(([a, b], k) => {
+    m.set(`${a}|${b}`, results[k]);
+    if (a !== b) m.set(`${b}|${a}`, flip(results[k]));
+  });
   return m;
 }
 const get = (m: Map<string, MatchupResult>, a: string, b: string) => m.get(`${a}|${b}`)!;
@@ -131,25 +136,21 @@ if (mode === "mirror") printMirrors(roster, true);
 if (mode === "targets") {
   // The quick loop while tuning: only the relations and upgrade intents that involve the named units.
   const named = pos.map((id) => D(id).id);
-  let held = 0, total = 0;
-  for (const [a, b, why] of RELATIONS) {
-    if (!named.includes(a) && !named.includes(b)) continue;
-    const r = run(a, b);
-    total++;
-    const ok = r.winRate >= TOLERANCE.soft;
-    if (ok) held++;
-    console.log(`${ok ? "  ok  " : "  MISS"} ${`${a} > ${b}`.padEnd(36)} win ${pad(pct(r.winRate), 4)}  margin ${pad(Math.round(margin(r) * 100), 4)}  (${why})`);
-  }
+  const checks: { label: string; why: string; result: Promise<MatchupResult> }[] = [];
+  for (const [a, b, why] of RELATIONS)
+    if (named.includes(a) || named.includes(b)) checks.push({ label: `${a} > ${b}`, why, result: run(a, b) });
   for (const a of named)
     for (const [up, intent] of Object.entries(BALANCE_TARGETS[a]?.upgrades ?? {}))
-      for (const b of intent.beats ?? []) {
-        const r = run(a, b, BUDGET, { defsA: upgradedDefs(defs, { [a]: [up] }) });
-        total++;
-        const ok = r.winRate >= TOLERANCE.soft;
-        if (ok) held++;
-        console.log(`${ok ? "  ok  " : "  MISS"} ${`${a} + ${up} > ${b}`.padEnd(36)} win ${pad(pct(r.winRate), 4)}  margin ${pad(Math.round(margin(r) * 100), 4)}  (${intent.intent})`);
-      }
-  console.log(`${held} of ${total} hold`);
+      for (const b of intent.beats ?? [])
+        checks.push({ label: `${a} + ${up} > ${b}`, why: intent.intent, result: run(a, b, BUDGET, { defsA: upgradedDefs(defs, { [a]: [up] }) }) });
+  let held = 0;
+  for (const c of checks) {
+    const r = await c.result;
+    const ok = r.winRate >= TOLERANCE.soft;
+    if (ok) held++;
+    console.log(`${ok ? "  ok  " : "  MISS"} ${c.label.padEnd(36)} win ${pad(pct(r.winRate), 4)}  margin ${pad(Math.round(margin(r) * 100), 4)}  (${c.why})`);
+  }
+  console.log(`${held} of ${checks.length} hold`);
 }
 
 if (mode === "density") {
@@ -272,7 +273,7 @@ if (mode === "matrix") {
   const results: Map<string, MatchupResult>[] = [];
   const t0 = performance.now();
   for (const k of scales) {
-    const m = matrix(roster, BUDGET * k);
+    const m = await matrix(roster, BUDGET * k);
     results.push(m);
     printMatrix(m, roster, `${k}x (about ${BUDGET * k} supply)`);
     for (const r of m.values())
@@ -297,13 +298,14 @@ if (mode === "matrix") {
 
 if (mode === "check") {
   const ids = roster;
-  const m = matrix(ids);
+  const m = await matrix(ids);
   const beats = (a: string, b: string) => get(m, a, b).winRate >= TOLERANCE.soft;
   // Hard counter: wins against hardRatio times its own supply of the target.
   const hard = new Map<string, MatchupResult>();
-  for (const a of ids)
-    for (const b of ids)
-      if (a !== b && beats(a, b)) hard.set(`${a}|${b}`, run(a, b, BUDGET, { costA: D(a).cost * TOLERANCE.hardRatio }));
+  const hardPairs: [string, string][] = [];
+  for (const a of ids) for (const b of ids) if (a !== b && beats(a, b)) hardPairs.push([a, b]);
+  const hardResults = await Promise.all(hardPairs.map(([a, b]) => run(a, b, BUDGET, { costA: D(a).cost * TOLERANCE.hardRatio })));
+  hardPairs.forEach(([a, b], k) => hard.set(`${a}|${b}`, hardResults[k]));
   const isHard = (a: string, b: string) => (hard.get(`${a}|${b}`)?.winRate ?? 0) > 0.5;
   const verdict = (a: string, b: string) => (isHard(a, b) ? "hard" : beats(a, b) ? "soft" : beats(b, a) ? "loses" : "even");
   const fmt = (a: string, b: string) => `win ${pct(get(m, a, b).winRate)}, margin ${Math.round(margin(get(m, a, b)) * 100)}`;
@@ -322,18 +324,19 @@ if (mode === "check") {
   for (const s of misses) console.log(`  MISS ${s}`);
 
   // Upgrade intents: with the upgrade bought, the unit should win the matchups its intent lists.
-  let upHeld = 0, upTotal = 0;
-  const upMisses: string[] = [];
+  const intents: { a: string; up: string; b: string; result: Promise<MatchupResult> }[] = [];
   for (const a of ids)
     for (const [up, intent] of Object.entries(BALANCE_TARGETS[a]?.upgrades ?? {}))
-      for (const b of intent.beats ?? []) {
-        if (!ids.includes(b)) continue;
-        upTotal++;
-        const r = run(a, b, BUDGET, { defsA: upgradedDefs(defs, { [a]: [up] }) });
-        if (r.winRate >= TOLERANCE.soft) upHeld++;
-        else upMisses.push(`${a} + ${up} should beat ${b}: win ${pct(r.winRate)} (${pct(get(m, a, b).winRate)} without)`);
-      }
-  console.log(`\nUpgrade intents: ${upHeld} of ${upTotal} hold`);
+      for (const b of intent.beats ?? [])
+        if (ids.includes(b)) intents.push({ a, up, b, result: run(a, b, BUDGET, { defsA: upgradedDefs(defs, { [a]: [up] }) }) });
+  let upHeld = 0;
+  const upMisses: string[] = [];
+  for (const { a, up, b, result } of intents) {
+    const r = await result;
+    if (r.winRate >= TOLERANCE.soft) upHeld++;
+    else upMisses.push(`${a} + ${up} should beat ${b}: win ${pct(r.winRate)} (${pct(get(m, a, b).winRate)} without)`);
+  }
+  console.log(`\nUpgrade intents: ${upHeld} of ${intents.length} hold`);
   for (const s of upMisses) console.log(`  MISS ${s}`);
 
   const unplanned: string[] = [];
@@ -415,8 +418,11 @@ if (mode === "sensitivity") {
   const u = D(id);
   const k = num("pct", 10) / 100;
   const opponents = roster.filter((x) => x !== id);
-  const row = (list: UnitDef[]) => new Map(opponents.map((b) => [b, run(id, b, BUDGET, {}, list)]));
-  const base = row(units);
+  const row = async (list: UnitDef[]) => {
+    const rs = await Promise.all(opponents.map((b) => run(id, b, BUDGET, {}, list)));
+    return new Map(opponents.map((b, i) => [b, rs[i]]));
+  };
+  const base = await row(units);
   const nudges: [string, (d: UnitDef, f: number) => UnitDef][] = [
     ["hp", (d, f) => ({ ...d, hp: d.hp * f })],
     ["damage", (d, f) => (d.attack ? { ...d, attack: { ...d.attack, damage: d.attack.damage * f } } : d)],
@@ -426,10 +432,10 @@ if (mode === "sensitivity") {
   ];
   const mean = (r: Map<string, MatchupResult>) => [...r.values()].reduce((t, x) => t + margin(x), 0) / r.size;
   console.log(`${u.name}: mean value margin ${Math.round(mean(base) * 100)} at base. Change per nudge, and matchups that flip:`);
-  for (const [name, f] of nudges)
-    for (const sign of [1, -1]) {
-      const list = units.map((d) => (d.id === id ? f(d, 1 + sign * k) : d));
-      const r = row(list);
+  const variants = nudges.flatMap(([name, f]) => [1, -1].map((sign) => ({ name, sign, r: row(units.map((d) => (d.id === id ? f(d, 1 + sign * k) : d))) })));
+  for (const v of variants) {
+      const { name, sign } = v;
+      const r = await v.r;
       const flips = opponents.filter((b) => {
         const w0 = base.get(b)!.winRate, w1 = r.get(b)!.winRate;
         return Math.abs(w1 - w0) >= 0.5 && w0 > 0.5 !== w1 > 0.5;
@@ -450,8 +456,10 @@ if (mode === "upgrades") {
   for (let lv = 2; lv <= RULES.levelXp.length + 1; lv++) variants.push([`level ${lv}`, { levelA: lv, costA: u.cost * (1 + 0.5 * (lv - 1)) }]);
   console.log(`${u.name}'s win rate vs each unit (equal supply; levels pay for their promotions)`);
   console.log("".padEnd(20) + opponents.map((b) => pad(abbr(b), 5)).join("") + "  margin");
-  for (const [name, opts] of variants) {
-    const rs = opponents.map((b) => run(id, b, BUDGET, opts));
+  const rows = variants.map(([name, opts]) => ({ name, rs: Promise.all(opponents.map((b) => run(id, b, BUDGET, opts))) }));
+  for (const row of rows) {
+    const name = row.name;
+    const rs = await row.rs;
     const mm = rs.reduce((t, r) => t + margin(r), 0) / rs.length;
     console.log(name.padEnd(20) + rs.map((r) => pad(pct(r.winRate), 5)).join("") + pad(Math.round(mm * 100), 8));
   }
@@ -459,6 +467,8 @@ if (mode === "upgrades") {
   for (const [up, i] of Object.entries(BALANCE_TARGETS[id]?.upgrades ?? {}))
     console.log(`  ${up.padEnd(18)} ${i.intent}${i.role ? ` [-> ${ROLE_INFO[i.role].name}]` : ""}${i.beats?.length ? ` (should beat ${i.beats.join(", ")})` : ""}`);
 }
+
+pool?.close();
 
 if (!mode || !["stats", "coverage", "mirror", "density", "targets", "matrix", "check", "distance", "fight", "sensitivity", "upgrades"].includes(mode)) {
   console.log("Usage: npm run balance -- <stats|coverage|mirror|matrix|check|distance|fight|sensitivity|upgrades> [args]. See the top of scripts/balance.ts.");

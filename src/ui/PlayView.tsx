@@ -99,25 +99,40 @@ export function PlayView() {
       opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]) },
     };
     const onMainThread = () => planAiRound(units, defs, request.me, request.player, request.round, request.difficulty, request.seed, request.opts);
-    let worker: Worker | null = null;
+    // Hard searches on several cores at once: each worker uses its own search seed against the same armies, and the
+    // best plan wins. Easier settings use one.
+    const cores = typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 2 : 2;
+    const searches = difficulty === "hard" ? Math.max(1, Math.min(4, cores - 1)) : 1;
+    const workers: Worker[] = [];
+    const plans: AiPlan[] = [];
     let timer: ReturnType<typeof setTimeout> | undefined;
+    const finish = () => {
+      plans.sort((a, b) => (b.bestScore ?? -Infinity) - (a.bestScore ?? -Infinity));
+      setAiPlan({ ...plans[0], candidatesTried: plans.reduce((t, p) => t + p.candidatesTried, 0) });
+    };
     try {
-      worker = new Worker(new URL("../game/ai.worker.ts", import.meta.url), { type: "module" });
-      worker.onmessage = (e: MessageEvent<AiResponse>) => {
-        setAiPlan(e.data.plan);
-        worker?.terminate();
-      };
-      worker.onerror = () => {
-        worker?.terminate();
-        setAiPlan(onMainThread());
-      };
-      worker.postMessage(request);
+      for (let i = 0; i < searches; i++) {
+        const worker = new Worker(new URL("../game/ai.worker.ts", import.meta.url), { type: "module" });
+        workers.push(worker);
+        worker.onmessage = (e: MessageEvent<AiResponse>) => {
+          worker.terminate();
+          plans.push(e.data.plan);
+          if (plans.length === searches) finish();
+        };
+        worker.onerror = () => {
+          worker.terminate();
+          plans.push(onMainThread());
+          if (plans.length === searches) finish();
+        };
+        worker.postMessage({ ...request, opts: { ...request.opts, searchSeed: i } } satisfies AiRequest);
+      }
     } catch {
       // no workers (old browsers, tests): plan on the page instead
+      for (const w of workers) w.terminate();
       timer = setTimeout(() => setAiPlan(onMainThread()), 30);
     }
     return () => {
-      worker?.terminate();
+      for (const w of workers) w.terminate();
       clearTimeout(timer);
     };
   }, [matchNo, match.round, match.phase === "deploy"]);

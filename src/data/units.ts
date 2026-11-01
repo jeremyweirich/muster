@@ -246,7 +246,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     footprint: { w: 4, h: 2 },
     layer: "ground",
     hp: 40,
-    speed: 15,
+    speed: 20,
     size: 0.22,
     attack: {
       damage: 8, element: "physical", cooldown: 0.6, range: 0.4,
@@ -624,7 +624,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     size: 0.45,
     resist: { lightning: 0.3 },
     attack: {
-      damage: 40, element: "lightning", cooldown: 1.2, range: 4,
+      damage: 50, element: "lightning", cooldown: 1.2, range: 4,
       targets: ["ground", "air"], targeting: "nearest", delivery: "beam",
       chain: { count: 2, range: 2.5, falloff: 0.8 },
       bonusVs: [{ selector: { layer: "air" }, mult: 1.5 }],
