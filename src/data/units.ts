@@ -323,7 +323,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       },
     ],
     tags: ["faction:goblin", "race:goblin", "class:ranged", "size:small", "role:skirmisher", "role:antiair", "role:swarm"],
-    look: { shape: "circle", color: "#d9b23c", icon: "bow" },
+    look: { shape: "circle", color: "#d9b23c", icon: "arrows" },
   },
   {
     id: "wolf_riders",

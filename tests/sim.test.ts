@@ -404,7 +404,7 @@ describe("match opening", () => {
       expect(new Set(m.openings[0].packs).size).toBe(RULES.openingChoices);
       expect(m.openings[1].packs).toEqual(m.openings[0].packs);
       expect(m.openings[0].choice).toBeNull();
-      expect(m.openings[1].choice).not.toBeNull();
+      expect(m.openings[0].packs).toContain(m.openings[1].choice); // the AI always takes a pack, never the war chest
     }
   });
 

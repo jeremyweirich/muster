@@ -48,7 +48,8 @@ export function packLabel(pack: OpeningPack, units: UnitDef[]): string {
   return pack.units.map((u) => `${u.count > 1 ? `${u.count} ` : ""}${units.find((d) => d.id === u.id)?.name ?? u.id}`).join(" + ");
 }
 
-// The AI (side 1) takes its opening straight away; the player chooses during round 1.
+// The AI (side 1) takes its opening straight away: always a pack, never the war chest, so its opening is easier to
+// read. The player chooses during round 1.
 export function newMatch(units: UnitDef[], seed = 1): MatchState {
   const rng = new Rng(seed);
   const pool = OPENING_PACKS.map((_, i) => i);
@@ -66,8 +67,7 @@ export function newMatch(units: UnitDef[], seed = 1): MatchState {
     phase: "deploy",
     history: [],
   };
-  const options: OpeningChoice[] = [...packs, "flat"];
-  state = chooseOpening(state, 1, rng.pick(options), units, seed);
+  state = chooseOpening(state, 1, rng.pick(packs), units, seed);
   return state;
 }
 

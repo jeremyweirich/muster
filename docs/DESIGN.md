@@ -262,7 +262,7 @@ A small, fair bit of variety at the start of each match, and round 1's income. B
 
 Every pack is the same value, so the offer changes how a match starts, not who is ahead. Both sides see the same packs,
 so each can guess what the other might start with. The player must choose before the first Fight; nothing can be
-bought before that. The AI chooses at random when the match starts. The enemy's pack stays hidden during round 1 (its
+bought before that. The AI picks one of the three packs at random when the match starts, never the war chest, so its opening is easier to read. The enemy's pack stays hidden during round 1 (its
 squads and unlocks show from round 2, as everything else does), and from round 2 a note beside its unlocks says what it
 opened with.
 
