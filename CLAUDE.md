@@ -18,6 +18,13 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades). Game screens
   don't explain rules: keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
+- **Two computers, one source of truth.** The owner works on a desktop and a laptop. Claude Code's memory is per
+  machine and isn't shared, so anything the other machine should know (decisions, preferences, conventions, status,
+  how-tos) goes in this file or `docs/`, committed and pushed. Don't rely on memory for that. Keep memory for local
+  details only: this machine's paths, installed tools and their versions, and quirks.
+- **Naming:** anything user-facing or newly named uses the game's name, Common Ground (`common-ground` as a slug), e.g.
+  the PvP relay Worker `common-ground-relay`. `muster` stays only in the repo, its npm package and the `/muster/` Pages
+  path.
 
 ## Designing units (checklist)
 
