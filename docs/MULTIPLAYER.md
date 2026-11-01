@@ -105,6 +105,15 @@ connections from `https://jeremyweirich.github.io` and from local development ad
 - A player who reloads before sending their turn comes back to the last battle's result and clicks **Next round**
   again; whatever they had placed but not sent is gone. A turn that was sent is kept.
 
+## Not yet checked
+
+- A real match between two people on separate devices and networks (so far: two scripted Chrome windows on one
+  machine, against the deployed relay).
+- Cross-browser determinism: Firefox and Safari running the same battle as Chrome. Playwright's Firefox and WebKit
+  could run `npm run bench`'s fights in each engine and compare fingerprints. A mismatch in play shows a notice and the
+  host's result wins.
+- The round-1 opening text still says "the enemy is offered the same" in PvP.
+
 ## Not built (ideas)
 
 - Hash-then-reveal turns, spectators, emotes or chat, a turn timer.
