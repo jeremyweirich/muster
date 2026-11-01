@@ -7,7 +7,7 @@
 // Plan (every key optional):
 //   opening: 0 | 1 | 2 | "flat"                      round 1 only: an offered pack by position, or the war chest (default 0)
 //   promote: ["all" | uid suffix]                    paid first
-//   up: [[unitId, upgradeId]], tower: [index]        then upgrades and tower levels
+//   up: [[unitId, upgradeId]], tower: [index]        then upgrades (unlocking the unit first if needed) and tower levels
 //   buy: [{u, x, y, rot?} | {u, auto: "center" | "spread" | "left" | "right"}]
 //   fill: [unitId, ...], style                       then keep buying these in turn, auto-placed, until broke
 // Your side is the bottom (rows 20-26). `show` prints the field with a legend. State is saved in the OS temp folder.
@@ -42,14 +42,15 @@ const save = (n: string, s: Saved) => writeFileSync(file(n), JSON.stringify(s));
 const short = (uid: string) => uid.slice(-3);
 const nm = (id: string) => defs.get(id)?.name ?? id;
 
-function grid(state: MatchState): string {
+// `hideAi`: round 1 hides the AI's opening pack until you fight, as the game does.
+function grid(state: MatchState, hideAi = false): string {
   const g: string[][] = Array.from({ length: RULES.fieldH }, () => Array(RULES.fieldW).fill("."));
   const legend: string[] = [];
   let ch = 0;
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (const side of [1, 0] as const) {
     for (const t of towerPlacements(side)) for (let y = t.y; y < t.y + 2; y++) for (let x = t.x; x < t.x + 2; x++) g[y][x] = "#";
-    for (const sq of state.armies[side]) {
+    for (const sq of side === 1 && hideAi ? [] : state.armies[side]) {
       const d = defs.get(sq.defId)!;
       const { w, h } = footprintOf(d, sq.rot);
       const c = side === 0 ? letters[ch % 26] : letters[ch % 26].toLowerCase();
@@ -66,17 +67,18 @@ function grid(state: MatchState): string {
 function show(s: Saved) {
   const st = s.state;
   const lines: string[] = [];
-  lines.push(`ROUND ${st.round}  HP me ${st.hp[0]} / ai ${st.hp[1]}   supply me ${st.supply[0]}  (ai ${st.supply[1]})   phase ${st.phase}`);
+  lines.push(`ROUND ${st.round}  HP me ${st.hp[0]} / ai ${st.hp[1]}   supply me ${st.supply[0]}  (ai ${st.round === 1 ? "?" : st.supply[1]})   phase ${st.phase}`);
   const label = (c: number | "flat" | null) => (c === null ? "-" : c === "flat" ? `war chest (${RULES.openingFlat})` : packLabel(OPENING_PACKS[c], units));
   lines.push(`opening offer: ${st.openings[0].packs.map((i, k) => `${k}: ${label(i)}`).join(" | ")} | flat: ${label("flat")}`);
   lines.push(`opening taken: me ${label(st.openings[0].choice)}, ai ${st.round > 1 ? label(st.openings[1].choice) : "?"}`);
   for (const side of [0, 1] as const) {
     const who = side === 0 ? "ME" : "AI";
     const ups = Object.entries(st.upgrades[side]).map(([u, l]) => `${u}:${l.join("+")}`).join(" ");
-    lines.push(`${who} unlocked: ${st.unlocked[side].join(", ")}`);
+    const hidden = side === 1 && st.round === 1;
+    lines.push(`${who} unlocked: ${hidden ? "?" : st.unlocked[side].join(", ")}`);
     lines.push(`${who} upgrades: ${ups || "-"}   towers: ${st.towerLevels[side].join("/")}`);
   }
-  lines.push(grid(st));
+  lines.push(grid(st, st.round === 1));
   console.log(lines.join("\n"));
 }
 
@@ -137,9 +139,15 @@ function cmdPlay(name: string, plan: Plan) {
     }
   }
   for (const [u, id] of plan.up ?? []) {
-    const d = defs.get(u)!;
-    if (!unlocked.has(u)) throw new Error(`${u} not unlocked`);
+    const d = defs.get(u);
+    if (!d) throw new Error(`no unit ${u}`);
     if (!d.upgrades?.some((x) => x.id === id)) throw new Error(`no upgrade ${u}.${id}`);
+    if (!unlocked.has(u)) {
+      // like the Unlock button in the shop: pay the unlock, then the upgrade
+      pay(unlockPrice(d), `unlock ${u}`);
+      unlocked.add(u);
+      spentLog.push(`unlock ${d.name} (${unlockPrice(d)})`);
+    }
     const price = upgradePrice(d, (upgrades[u] ?? []).length)!;
     pay(price, `upgrade ${id}`);
     upgrades[u] = [...(upgrades[u] ?? []), id];

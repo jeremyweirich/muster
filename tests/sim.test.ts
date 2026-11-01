@@ -382,7 +382,7 @@ describe("upgrades", () => {
     const b0 = new Battle(defs, [army(0, ["knights"]), army(1, ["knights"])], { towerLevels: [[0, 0], [0, 0]] });
     const b2 = new Battle(defs, [army(0, ["knights"]), army(1, ["knights"])], { towerLevels: [[2, 0], [0, 0]] });
     const keep = (b: Battle) => b.models.find((m) => m.squadUid === "tower-0-0")!.maxHp;
-    expect(keep(b2) - keep(b0)).toBe(600);
+    expect(keep(b2) - keep(b0)).toBe(2 * RULES.towerHpPerLevel);
   });
 });
 

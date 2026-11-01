@@ -48,6 +48,7 @@ Round N
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
  ├─ Battle (automatic, deterministic, up to 120 s; always starts at 1× playback, which is real time)
+ │    └─ once one side can't hurt the other's army, playback runs 10× faster to the end (battlePlayer.ts)
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
@@ -97,8 +98,10 @@ Each side has two Keeps (West and East) near the back of its zone, 2 rows in fro
 | Keep (×2) | ground | 150 | none |
 
 - **Unupgraded towers are fragile.** Almost any squad that reaches one kills it in a second or two.
-- **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +300 HP, so HP
-  grows in a straight line while the price doubles.
+- **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +3,000 HP
+  (about a Giant's worth), so HP grows in a straight line while the price doubles. The first level is the big one: it
+  turns a Keep any squad can topple in a second into one a raid has to work at, so if you go all in on one side, a
+  pack of grunts on the other can't take your Keep for free.
 - **Collapse.** When a tower falls, **its owner's entire army is Dazed**: it deals 10% damage and takes double damage.
   The Daze lasts **4 s at level 0, 0.5 s less per level** (minimum 2 s), in sim time, which is also what you see at 1× playback.
 - Towers don't move and don't count toward winning the round. A side loses when its *army* is gone.
@@ -311,10 +314,16 @@ make it stronger.
 
 - **XP** is damage dealt to enemies plus healing done, added up over every battle the squad fights (stored on the
   placed squad). Squads keep their XP between rounds. Leveling doesn't depend on whether the squad survived.
-- **Unlocking a level.** Total XP of 1,200 / 4,000 / 9,000 / 16,000 unlocks level 2 / 3 / 4 / 5 (`RULES.levelXp`). Each
-  step needs more XP than the last. In a typical battle the MVP deals about 2,000, second place about 1,200 and third
-  about 800, so one good fight usually unlocks a level for the MVP, often for second place, and only sometimes for
-  third. Bigger late-game armies get there faster.
+- **Unlocking a level.** Total XP of 2,500 / 11,250 / 34,200 / 87,800 unlocks level 2 / 3 / 4 / 5 (`RULES.levelXp`).
+  Leveling should feel great but happen rarely, and each level should be much harder than the last. The table comes
+  from two knobs, `veterancyXp(base, growth)`:
+  - **base** (2,500) is the XP for level 2. In a typical battle the MVP deals about 2,000, so the first level usually
+    takes two good fights.
+  - **growth** (1.75) is how many more fights each later level takes than the one before. Because a level-N squad deals
+    N× damage, it also earns N× XP, so step k is also scaled by k to cancel that. Without that factor, every level
+    would take about the same number of fights, which is what the old 1,200 / 4,000 / 9,000 / 16,000 table did. In
+    fights at a fresh squad's strength the steps now cost 1, 1.75, 3.1 and 5.4. Bigger late-game armies still get
+    there faster.
 - **One level at a time.** A squad holds at most one unpaid level: while a level is waiting, its XP stops at that
   level's threshold and the rest is lost (`capXp`). So a squad can't bank levels and be promoted several times in a row.
 - **Promoting.** An unlocked level does nothing until you pay for it. At deployment, a squad with a level waiting shows

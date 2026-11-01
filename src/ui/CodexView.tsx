@@ -232,7 +232,7 @@ export function CodexView({ topic }: { topic?: string }) {
         </p>
         <p>
           Guard your flanks, or buy insurance in the Upgrades tab: each tower level costs {RULES.towerUpgradeCosts.join(" / ")}, adds{" "}
-          {RULES.towerHpPerLevel} HP and shortens the Daze by {RULES.towerDazePerLevel}s (to at least {RULES.towerDazeMin}s).
+          {RULES.towerHpPerLevel.toLocaleString("en-US")} HP and shortens the Daze by {RULES.towerDazePerLevel}s (to at least {RULES.towerDazeMin}s).
         </p>
       </Entry>
       <Entry id="friendly-fire" title="Who gets hurt" focus={topic}>
@@ -260,8 +260,8 @@ export function CodexView({ topic }: { topic?: string }) {
       </Entry>
       <Entry id="veterancy" title="Veterans" focus={topic}>
         <p>
-          Squads earn XP for the damage they deal and the healing they do. At {RULES.levelXp.join(" / ")} total XP a squad earns level 2 /
-          3 / 4 / 5, and a gold ▲ appears over it. Click it and pay half the unit&apos;s price to promote it: a level-N squad has N× the HP
+          Squads earn XP for the damage they deal and the healing they do. At {RULES.levelXp.map((x) => x.toLocaleString("en-US")).join(" / ")}{" "}
+          total XP a squad earns level 2 / 3 / 4 / 5, and a gold ▲ appears over it. Each level takes many more good fights than the last. Click it and pay half the unit&apos;s price to promote it: a level-N squad has N× the HP
           and damage. A squad can only hold one unpaid level, so XP beyond it is lost until you promote.
         </p>
       </Entry>
