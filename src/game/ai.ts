@@ -1,18 +1,23 @@
+import type { OpeningPack } from "../data/openings";
+import { RULES } from "../data/rules";
 import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, UnitDef } from "../sim/types";
 import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
-import { canPromote, promotePrice } from "./match";
+import { canPromote, packSquads, promotePrice } from "./match";
 import { armyValue, autoPlace, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap, type PlacementStyle } from "./army";
 
 export type Difficulty = "easy" | "normal" | "hard";
 
-const CANDIDATES: Record<Difficulty, number> = { easy: 3, normal: 12, hard: 30 };
-const TIME_BUDGET_MS: Record<Difficulty, number> = { easy: 400, normal: 1500, hard: 3500 };
+// Easy and Normal try a fixed number of random plans; Hard keeps searching until its time is up. Planning runs in
+// a worker while the player deploys, so Hard can afford to think for a while.
+const CANDIDATES: Record<Difficulty, number> = { easy: 3, normal: 12, hard: Infinity };
+const TIME_BUDGET_MS: Record<Difficulty, number> = { easy: 400, normal: 2000, hard: 6000 };
 const STYLES: PlacementStyle[] = ["center", "spread", "left", "right"];
 // How much one-time purchases (unlocks, upgrades, tower levels) are worth beyond
 // this round, as a fraction of their price.
 const FUTURE_VALUE = 0.5;
+const MAX_SQUADS = 10;
 
 export interface AiSide {
   army: PlacedSquad[];
@@ -33,21 +38,37 @@ export interface AiPlan {
   bestScore: number | null;
 }
 
-interface Candidate {
-  units: UnitDef[];
-  unlocks: UnitDef[];
+export interface PlayerView {
+  army: PlacedSquad[];
+  upgrades: UpgradeState;
+  towerLevels: number[];
+  unlocked?: string[]; // what the player could buy more of this round
+}
+
+export interface PlanOptions {
+  openingPacks?: OpeningPack[]; // round 1: the packs the player was offered, as stand-ins for an army it hasn't shown
+  budgetMs?: number; // overrides the difficulty's thinking time (scripts and tests)
+}
+
+// Everything a plan buys except the squads: tower levels, promotions and an upgrade.
+interface Extras {
   upgrades: { unitId: string; upgradeId: string }[];
   towerUpgrades: number[];
   promotions: string[];
-  investment: number; // spent on one-time purchases
+  cost: number;
 }
 
-function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef): Candidate {
-  const unlocked = new Set(me.unlocked);
-  const out: Candidate = { units: [], unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], investment: 0 };
+interface Candidate {
+  extras: Extras;
+  units: UnitDef[];
+  squads: PlacedSquad[];
+  score: number;
+}
+
+function randomExtras(units: UnitDef[], me: AiSide, rng: Rng): Extras {
+  const out: Extras = { upgrades: [], towerUpgrades: [], promotions: [], cost: 0 };
   let left = me.supply;
   const levels = [...me.towerLevels];
-
   // sometimes reinforce a tower first
   if (rng.next() < 0.2) {
     const i = rng.int(levels.length);
@@ -56,7 +77,7 @@ function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef)
       out.towerUpgrades.push(i);
       levels[i]++;
       left -= p;
-      out.investment += p;
+      out.cost += p;
     }
   }
   // often promote veterans that have earned a level
@@ -67,7 +88,7 @@ function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef)
     if (p > left * 0.7) continue;
     out.promotions.push(sq.uid);
     left -= p;
-    out.investment += p;
+    out.cost += p;
   }
   // sometimes upgrade something already in the army
   if (rng.next() < 0.35) {
@@ -78,39 +99,82 @@ function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef)
     const price = def ? upgradePrice(def, bought.length) : null;
     if (def && options.length && price !== null && price <= left * 0.6) {
       out.upgrades.push({ unitId: def.id, upgradeId: rng.pick(options).id });
-      left -= price;
-      out.investment += price;
+      out.cost += price;
     }
-  }
-
-  // usually stick with what's already unlocked; sometimes reach for something new (always, with nothing unlocked)
-  const allowNew = unlocked.size === 0 || rng.next() < 0.45;
-  for (let guard = 0; guard < 12; guard++) {
-    const affordable = units.filter((u) => priceOf(u, unlocked) <= left && (allowNew || unlocked.has(u.id)));
-    if (!affordable.length) break;
-    const pick = focus && priceOf(focus, unlocked) <= left && rng.next() < 0.6 ? focus : rng.pick(affordable);
-    const price = priceOf(pick, unlocked);
-    if (!unlocked.has(pick.id)) {
-      unlocked.add(pick.id);
-      out.unlocks.push(pick);
-      out.investment += unlockPrice(pick);
-    }
-    out.units.push(pick);
-    left -= price;
-    if (out.units.length >= 8) break;
   }
   return out;
 }
 
-export interface PlayerView {
-  army: PlacedSquad[];
-  upgrades: UpgradeState;
-  towerLevels: number[];
+const NO_EXTRAS: Extras = { upgrades: [], towerUpgrades: [], promotions: [], cost: 0 };
+
+// What a list of squads costs, unlocks included, on top of what's already unlocked.
+function unitsCost(list: UnitDef[], unlocked: string[]): number {
+  const have = new Set(unlocked);
+  let total = 0;
+  for (const u of list) {
+    total += priceOf(u, have);
+    have.add(u.id);
+  }
+  return total;
 }
 
-// The AI plans by simulation: generate candidate purchases + placements, play
-// each against the army the player fielded last round, keep the best. Since it
-// only uses the simulator, it automatically understands any unit you design.
+// Buy squads with what's left after the extras. `focus` units are picked most of the time when affordable.
+function fillUnits(units: UnitDef[], me: AiSide, left: number, rng: Rng, start: UnitDef[] = [], focus: UnitDef[] = []): UnitDef[] {
+  const list = [...start];
+  const unlocked = new Set([...me.unlocked, ...list.map((u) => u.id)]);
+  left -= unitsCost(list, me.unlocked);
+  // usually stick with what's already unlocked; sometimes reach for something new (always, with nothing unlocked)
+  const allowNew = unlocked.size === 0 || rng.next() < 0.45;
+  for (let guard = 0; guard < 16 && list.length < MAX_SQUADS; guard++) {
+    const ok = (u: UnitDef) => priceOf(u, unlocked) <= left;
+    const affordable = units.filter((u) => ok(u) && (allowNew || unlocked.has(u.id)));
+    if (!affordable.length) break;
+    const focused = focus.filter(ok);
+    const pick = focused.length && rng.next() < 0.7 ? rng.pick(focused) : rng.pick(affordable);
+    left -= priceOf(pick, unlocked);
+    unlocked.add(pick.id);
+    list.push(pick);
+  }
+  return list;
+}
+
+// The armies the player might field this round, to test plans against.
+function opponentScenarios(units: UnitDef[], defs: DefMap, me: AiSide, player: PlayerView, round: number, difficulty: Difficulty, opts: PlanOptions, rng: Rng): PlacedSquad[][] {
+  if (player.army.length === 0) {
+    // round 1: nothing shown yet, so try the openings the player was offered
+    const packs = opts.openingPacks ?? [];
+    if (packs.length) {
+      return packs.map((pack) => {
+        const squads = packSquads(pack, units);
+        const pool = [...new Set(squads)];
+        let left = RULES.openingPackSupply;
+        for (let guard = 0; guard < 6; guard++) {
+          const affordable = pool.filter((u) => u.cost <= left);
+          if (!affordable.length) break;
+          const pick = rng.pick(affordable);
+          squads.push(pick);
+          left -= pick.cost;
+        }
+        return autoPlace(squads, [], 0, defs, round, rng, "center");
+      });
+    }
+    return [autoPlace(fillUnits(units, { ...me, unlocked: [] }, me.supply, rng), [], 0, defs, round, rng, "center")];
+  }
+  const out = [player.army];
+  if (difficulty !== "easy") {
+    // and the same army after a round's income spent on what the player already uses: plan for their answer too
+    const known = [...new Set([...(player.unlocked ?? []), ...player.army.map((s) => s.defId)])];
+    const pool = units.filter((u) => known.includes(u.id));
+    const extra = fillUnits(pool, { ...me, unlocked: known, army: player.army }, RULES.income(round), rng);
+    if (extra.length) out.push([...player.army, ...autoPlace(extra, player.army, 0, defs, round, rng, rng.pick(STYLES))]);
+  }
+  return out;
+}
+
+// The AI plans by simulation: generate candidate purchases and placements, play each against the armies the player
+// might field (its last army, and that army plus a round of purchases), and keep the best. Hard also screens each
+// unit type against the player first, then improves its best plans until its time is up. Since it only uses the
+// simulator, it automatically understands any unit you design.
 export function planAiRound(
   units: UnitDef[],
   defs: DefMap,
@@ -119,86 +183,107 @@ export function planAiRound(
   round: number,
   difficulty: Difficulty,
   seed: number,
+  opts: PlanOptions = {},
 ): AiPlan {
   const rng = new Rng(seed);
-  const n = CANDIDATES[difficulty];
   const start = performance.now();
+  const budget = opts.budgetMs ?? TIME_BUDGET_MS[difficulty];
+  const outOfTime = () => performance.now() - start > budget;
   const playerDefs = upgradedDefs(defs, player.upgrades);
-  const candidates: { squads: PlacedSquad[]; c: Candidate }[] = [];
-
-  for (let i = 0; i < n; i++) {
-    const focus = i % 2 === 0 ? rng.pick(units) : undefined;
-    const c = randomPurchase(units, me, rng, focus);
-    const squads = autoPlace(c.units, me.army, 1, defs, round, rng, rng.pick(STYLES));
-    candidates.push({ squads, c });
-  }
-
-  const planOf = (cand: (typeof candidates)[number] | undefined, tried: number, score: number | null): AiPlan => {
-    if (!cand) return { squads: [], unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], spent: 0, candidatesTried: 0, bestScore: null };
-    // a squad that didn't fit on the field isn't paid for
-    const spent = armyValue(cand.squads, defs) + cand.c.investment;
-    return {
-      squads: cand.squads,
-      unlocks: cand.c.unlocks.map((u) => u.id),
-      upgrades: cand.c.upgrades,
-      towerUpgrades: cand.c.towerUpgrades,
-      promotions: cand.c.promotions,
-      spent,
-      candidatesTried: tried,
-      bestScore: score,
-    };
-  };
-
-  if (units.length === 0) return planOf(candidates[0], 1, null);
-
-  // Before the player has shown anything (round 1), test plans against a stand-in
-  // army of starter units bought with the same supply.
-  let opponent = player.army;
-  if (opponent.length === 0) {
-    const starters = units.filter((u) => !u.unlockCost);
-    const pool = starters.length ? starters : units;
-    const buy: UnitDef[] = [];
-    let left = me.supply;
-    for (let guard = 0; guard < 10; guard++) {
-      const affordable = pool.filter((u) => u.cost <= left);
-      if (!affordable.length) break;
-      const pick = rng.pick(affordable);
-      buy.push(pick);
-      left -= pick.cost;
-    }
-    opponent = autoPlace(buy, [], 0, defs, round, rng, "center");
-  }
-
-  let best = candidates[0];
-  let bestScore = -Infinity;
+  const scenarios = opponentScenarios(units, defs, me, player, round, difficulty, opts, rng);
   let tried = 0;
-  for (const cand of candidates) {
-    if (tried > 0 && performance.now() - start > TIME_BUDGET_MS[difficulty]) break;
+
+  const place = (list: UnitDef[]) => autoPlace(list, me.army, 1, defs, round, rng, rng.pick(STYLES));
+  const evaluate = (extras: Extras, list: UnitDef[], squads: PlacedSquad[]): number => {
     tried++;
     const myUpgrades: UpgradeState = { ...me.upgrades };
-    for (const u of cand.c.upgrades) myUpgrades[u.unitId] = [...(myUpgrades[u.unitId] ?? []), u.upgradeId];
+    for (const u of extras.upgrades) myUpgrades[u.unitId] = [...(myUpgrades[u.unitId] ?? []), u.upgradeId];
     const myLevels = [...me.towerLevels];
-    for (const i of cand.c.towerUpgrades) myLevels[i]++;
-    const myArmy = promoted(me.army, cand.c.promotions);
-    const battle = new Battle([playerDefs, upgradedDefs(defs, myUpgrades)], [opponent, [...myArmy, ...cand.squads]], {
-      seed: seed + tried,
-      towerLevels: [player.towerLevels, myLevels],
+    for (const i of extras.towerUpgrades) myLevels[i]++;
+    const mine = [...promoted(me.army, extras.promotions), ...squads];
+    const myDefs = upgradedDefs(defs, myUpgrades);
+    let total = 0;
+    scenarios.forEach((opponent, k) => {
+      const r = new Battle([playerDefs, myDefs], [opponent, mine], { seed: seed + tried * 7 + k, towerLevels: [player.towerLevels, myLevels] }).run();
+      const value = (side: 0 | 1) => r.survivors[side].reduce((s, q) => s + (defs.get(q.defId)?.cost ?? 0) * (q.alive / q.total), 0);
+      total += value(1) - value(0) + (r.winner === 1 ? 1000 : r.winner === 0 ? -1000 : 0);
     });
-    const r = battle.run();
-    const value = (side: 0 | 1) =>
-      r.survivors[side].reduce((s, q) => s + (defs.get(q.defId)?.cost ?? 0) * (q.alive / q.total), 0);
-    let score = value(1) - value(0);
-    if (r.winner === 1) score += 1000;
-    if (r.winner === 0) score -= 1000;
-    score += cand.c.investment * FUTURE_VALUE;
+    const unlockSpend = list.reduce((t, u, i) => t + (me.unlocked.includes(u.id) || list.slice(0, i).includes(u) ? 0 : unlockPrice(u)), 0);
+    let score = total / scenarios.length + (extras.cost + unlockSpend) * FUTURE_VALUE;
     // a little personality on easier settings
     if (difficulty === "easy") score += rng.range(-800, 800);
-    if (score > bestScore) {
-      bestScore = score;
-      best = cand;
+    return score;
+  };
+  const candidate = (extras: Extras, list: UnitDef[]): Candidate => {
+    const squads = place(list);
+    return { extras, units: list, squads, score: evaluate(extras, list, squads) };
+  };
+
+  const pool: Candidate[] = [];
+  let focus: UnitDef[] = [];
+  if (difficulty === "hard") {
+    // Screening: each affordable unit type alone, as many squads as the supply buys. The best few become the
+    // focus of the plans that follow: a counter found by simulation, not looked up.
+    const types = units.filter((u) => priceOf(u, new Set(me.unlocked)) <= me.supply);
+    for (let i = types.length - 1; i > 0; i--) {
+      const j = rng.int(i + 1);
+      [types[i], types[j]] = [types[j], types[i]];
+    }
+    const screened: { u: UnitDef; score: number }[] = [];
+    for (const u of types) {
+      if (screened.length && outOfTime()) break;
+      const c = candidate(NO_EXTRAS, massOf(u));
+      screened.push({ u, score: c.score });
+      pool.push(c);
+    }
+    focus = screened.sort((a, b) => b.score - a.score).slice(0, 3).map((s) => s.u);
+  }
+  const randoms = Math.min(CANDIDATES[difficulty], difficulty === "hard" ? 16 : CANDIDATES[difficulty]);
+  for (let i = 0; i < randoms; i++) {
+    if (pool.length && outOfTime()) break;
+    const extras = randomExtras(units, me, rng);
+    const unitFocus = focus.length ? focus : i % 2 === 0 ? [rng.pick(units)] : [];
+    pool.push(candidate(extras, fillUnits(units, me, me.supply - extras.cost, rng, [], unitFocus)));
+  }
+  if (difficulty === "hard") {
+    // Local search: tweak one of the best plans (swap, add or drop a squad, or place it again); keep improvements.
+    while (!outOfTime()) {
+      pool.sort((a, b) => b.score - a.score);
+      const base = pool[rng.int(Math.min(3, pool.length))];
+      const list = [...base.units];
+      const move = rng.int(4);
+      if (move === 0 && list.length) list.splice(rng.int(list.length), 1); // drop one, then refill
+      if (move === 1 && list.length) list[rng.int(list.length)] = rng.next() < 0.6 && focus.length ? rng.pick(focus) : rng.pick(units);
+      const refilled = move === 3 ? list : fillUnits(units, me, me.supply - base.extras.cost, rng, list, focus);
+      if (unitsCost(refilled, me.unlocked) + base.extras.cost > me.supply) continue;
+      pool.push(candidate(base.extras, refilled));
     }
   }
-  return planOf(best, tried, bestScore);
+
+  pool.sort((a, b) => b.score - a.score);
+  const best = pool[0];
+  if (!best) return { squads: [], unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], spent: 0, candidatesTried: tried, bestScore: null };
+  // a squad that didn't fit on the field isn't paid for, and neither is the unlock of a unit that didn't fit
+  const placed = best.squads.map((q) => q.defId);
+  const unlocks = [...new Set(placed)].filter((id) => !me.unlocked.includes(id));
+  const spent = armyValue(best.squads, defs) + unlocks.reduce((t, id) => t + unlockPrice(defs.get(id)!), 0) + best.extras.cost;
+  return {
+    squads: best.squads,
+    unlocks,
+    upgrades: best.extras.upgrades,
+    towerUpgrades: best.extras.towerUpgrades,
+    promotions: best.extras.promotions,
+    spent,
+    candidatesTried: tried,
+    bestScore: best.score,
+  };
+
+  // as many squads of one unit as the supply buys, up to the cap
+  function massOf(u: UnitDef): UnitDef[] {
+    const list: UnitDef[] = [];
+    while (list.length < MAX_SQUADS && unitsCost([...list, u], me.unlocked) <= me.supply) list.push(u);
+    return list;
+  }
 }
 
 // An army with the listed squads promoted one level.

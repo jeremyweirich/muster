@@ -43,9 +43,10 @@ function paintBackground(ctx: CanvasRenderingContext2D, tile: number, opts: Back
   base.addColorStop(1, "#1c2a1e");
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, W, H);
-  // mowed stripes, two tiles wide, so distances still read at a glance
+  // mowed stripes, two tiles wide, so distances still read at a glance; mirrored about the centerline (a dark band
+  // straddles it), so the two halves of the field line up when placing
   ctx.fillStyle = "rgba(255,255,255,0.022)";
-  for (let x = 0; x < RULES.fieldW; x += 4) ctx.fillRect(x * tile, 0, 2 * tile, H);
+  for (let x = (RULES.fieldW / 2 + 1) % 4; x < RULES.fieldW; x += 4) ctx.fillRect(x * tile, 0, 2 * tile, H);
   // speckles and grass tufts from a fixed seed, so the field looks the same every time
   let seed = 1234567;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);

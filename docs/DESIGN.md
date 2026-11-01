@@ -436,19 +436,29 @@ Faction weaknesses already work through resistances.
 
 ## 9. AI — Decided (approach)
 
-The AI plans by simulation. At the start of each deployment it generates candidate plans: purchases and placements
-(with rotation and placement styles), and sometimes an upgrade for a unit it already fields or a tower level. It
-often promotes veterans that have earned a level (each about 60% of the time, if it can afford it), and simulates them
-at their new level. It
-simulates each plan against the player's army from last round, including the player's upgrades and tower levels. It
-keeps the best by: win (±1000) + surviving value difference + 50% of the money spent on one-time purchases (unlocks,
-upgrades, tower levels, promotions). Difficulty sets the number of
-candidates and the time budget: Easy is 3 candidates plus random noise, Normal 12, Hard 30.
+The AI plans by simulation, in a Web Worker (`src/game/ai.worker.ts`) that starts when deployment starts, so the page
+stays responsive while the player builds. Fight never blocks: pressed before the AI is done, it waits ("The enemy is
+still deciding…") and starts the moment the plan arrives.
+
+It generates candidate plans: purchases and placements (with rotation and placement styles), and sometimes an upgrade
+for a unit it already fields or a tower level. It often promotes veterans that have earned a level (each about 60% of
+the time, if it can afford it), and simulates them at their new level. It simulates each plan against **the armies the
+player might field**, including the player's upgrades and tower levels:
+- in round 1, before the player has shown anything: each of the three opening packs the player was offered;
+- after that: the player's army from last round, and (Normal and Hard) that army plus a round's income spent on units
+  the player already uses, so it plans for the player's answer, not only their last army.
+
+It keeps the plan with the best average of: win (±1000) + surviving value difference, plus 50% of the money spent on
+one-time purchases (unlocks, upgrades, tower levels, promotions). Difficulty sets the search:
+- **Easy:** 3 random plans, 0.4 s, plus random noise.
+- **Normal:** 12 random plans, 2 s.
+- **Hard:** 6 s. First it screens every affordable unit type alone against the player (a counter found by
+  simulation, not looked up); then random plans built around the best few types; then local search for the rest of
+  its time, tweaking its best plans (swap, add or drop a squad, or place them again) and keeping improvements.
 
 Because the AI only uses the simulator, it handles any unit you design without new code.
 
 **Open:**
-- Predict the player's next additions instead of planning only against their last army.
 - Plan unlocks over several rounds.
 - Learn placement (flanking, tower snipes) instead of using templates.
 

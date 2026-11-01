@@ -437,6 +437,41 @@ describe("match opening", () => {
   });
 });
 
+describe("ai search", () => {
+  it("hard screens, searches and stays within supply, against the offered packs in round 1", () => {
+    const packs = OPENING_PACKS.slice(0, 3);
+    const plan = planAiRound(
+      DEFAULT_UNITS,
+      defs,
+      { army: [], unlocked: ["knights", "crossbowmen"], upgrades: {}, towerLevels: [0, 0], supply: 400 },
+      { army: [], upgrades: {}, towerLevels: [0, 0] },
+      1,
+      "hard",
+      5,
+      { openingPacks: packs, budgetMs: 400 },
+    );
+    expect(plan.candidatesTried).toBeGreaterThan(3);
+    expect(plan.spent).toBeLessThanOrEqual(400);
+    expect(plan.squads.length).toBeGreaterThan(0);
+  });
+
+  it("plans against the player's likely additions as well as its last army", () => {
+    const player = army(0, ["knights", "crossbowmen"]);
+    const plan = planAiRound(
+      DEFAULT_UNITS,
+      defs,
+      { army: [], unlocked: ["grunts", "skirmishers"], upgrades: {}, towerLevels: [0, 0], supply: 500 },
+      { army: player, upgrades: {}, towerLevels: [0, 0], unlocked: ["knights", "crossbowmen"] },
+      2,
+      "normal",
+      3,
+      { budgetMs: 400 },
+    );
+    expect(plan.spent).toBeLessThanOrEqual(500);
+    expect(plan.squads.length).toBeGreaterThan(0);
+  });
+});
+
 describe("ai opening", () => {
   it("round-one plans can actually fight, even with nothing unlocked", () => {
     for (let seed = 1; seed <= 8; seed++) {

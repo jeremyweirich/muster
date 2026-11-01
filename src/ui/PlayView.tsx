@@ -5,6 +5,7 @@ import { RULES } from "../data/rules";
 import { towerDaze, towerDef, towerPlacements, TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import { planAiRound, promoted, type AiPlan, type Difficulty } from "../game/ai";
+import type { AiRequest, AiResponse } from "../game/ai.worker";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
 import { applyRound, battleXp, canPromote, chooseOpening, newMatch, nextRound, packLabel, promotePrice, type MatchState, type OpeningChoice } from "../game/match";
 import { drawBackground, drawPromoteIcon, drawSquad } from "../render/draw";
@@ -71,6 +72,8 @@ export function PlayView() {
   const [hoverSquad, setHoverSquad] = useState<string | null>(null);
   const [actions, setActions] = useState<Action[]>([]);
   const [fightArmed, setFightArmed] = useState(false);
+  const [fightQueued, setFightQueued] = useState(false);
+  const [matchNo, setMatchNo] = useState(0); // a restart in round 1 needs a fresh plan too
   const [portraitOk, setPortraitOk] = useState(false);
   const [sideTab, setSideTab] = useState<"recruit" | "upgrades">("recruit");
   const battleRef = useRef<Battle | null>(null);
@@ -80,31 +83,52 @@ export function PlayView() {
   const myDefs = useMemo(() => upgradedDefs(defs, match.upgrades[0]), [defs, match.upgrades]);
   const enemyDefs = useMemo(() => upgradedDefs(defs, match.upgrades[1]), [defs, match.upgrades]);
 
-  // The AI plans at the start of each deployment, from what it saw last round.
+  // The AI plans at the start of each deployment, from what it saw last round, in a worker so the page stays
+  // responsive while the player builds. Fight only has to wait if the player is done first.
   useEffect(() => {
     if (match.phase !== "deploy") return;
     setAiPlan(null);
-    const id = setTimeout(() => {
-      setAiPlan(
-        planAiRound(
-          units,
-          defs,
-          {
-            army: match.armies[1],
-            unlocked: match.unlocked[1],
-            upgrades: match.upgrades[1],
-            towerLevels: match.towerLevels[1],
-            supply: match.supply[1],
-          },
-          { army: match.armies[0], upgrades: match.upgrades[0], towerLevels: match.towerLevels[0] },
-          match.round,
-          difficulty,
-          match.round * 7919 + 13,
-        ),
-      );
-    }, 30);
-    return () => clearTimeout(id);
-  }, [match.round, match.phase === "deploy"]);
+    const request: AiRequest = {
+      id: match.round,
+      units,
+      me: { army: match.armies[1], unlocked: match.unlocked[1], upgrades: match.upgrades[1], towerLevels: match.towerLevels[1], supply: match.supply[1] },
+      player: { army: match.armies[0], upgrades: match.upgrades[0], towerLevels: match.towerLevels[0], unlocked: match.unlocked[0] },
+      round: match.round,
+      difficulty,
+      seed: match.round * 7919 + 13,
+      opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]) },
+    };
+    const onMainThread = () => planAiRound(units, defs, request.me, request.player, request.round, request.difficulty, request.seed, request.opts);
+    let worker: Worker | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      worker = new Worker(new URL("../game/ai.worker.ts", import.meta.url), { type: "module" });
+      worker.onmessage = (e: MessageEvent<AiResponse>) => {
+        setAiPlan(e.data.plan);
+        worker?.terminate();
+      };
+      worker.onerror = () => {
+        worker?.terminate();
+        setAiPlan(onMainThread());
+      };
+      worker.postMessage(request);
+    } catch {
+      // no workers (old browsers, tests): plan on the page instead
+      timer = setTimeout(() => setAiPlan(onMainThread()), 30);
+    }
+    return () => {
+      worker?.terminate();
+      clearTimeout(timer);
+    };
+  }, [matchNo, match.round, match.phase === "deploy"]);
+
+  // Fight pressed while the AI is still thinking: start as soon as its plan arrives.
+  useEffect(() => {
+    if (fightQueued && aiPlan) {
+      setFightQueued(false);
+      launch();
+    }
+  }, [fightQueued, aiPlan]);
 
   useEffect(() => {
     if (!fightArmed) return;
@@ -320,12 +344,18 @@ export function PlayView() {
   };
 
   const fight = () => {
-    if (!aiPlan || openingPending) return;
+    if (openingPending || fightQueued) return;
     if (!actions.length && match.supply[0] > 0 && !fightArmed) {
       setFightArmed(true);
       return;
     }
     setFightArmed(false);
+    if (!aiPlan) setFightQueued(true);
+    else launch();
+  };
+
+  const launch = () => {
+    if (!aiPlan) return;
     const aiUpgrades = { ...match.upgrades[1] };
     for (const u of aiPlan.upgrades) aiUpgrades[u.unitId] = [...(aiUpgrades[u.unitId] ?? []), u.upgradeId];
     const aiLevels = [...match.towerLevels[1]];
@@ -379,6 +409,8 @@ export function PlayView() {
     setSelected(null);
     setHeld(null);
     setActions([]);
+    setFightQueued(false);
+    setMatchNo((n) => n + 1);
     setMatch(newMatch(units, matchSeed()));
   };
 
@@ -640,8 +672,14 @@ export function PlayView() {
                   ↶ Undo{lastAction ? ` +${lastAction.cost}` : ""}
                 </button>
               </div>
-              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={!aiPlan || openingPending} onClick={fight}>
-                {openingPending ? "Pick your opening first" : !aiPlan ? "Enemy is planning…" : fightArmed ? `Fight without spending ${match.supply[0]}?` : "Fight!"}
+              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || fightQueued} onClick={fight}>
+                {openingPending
+                  ? "Pick your opening first"
+                  : fightQueued
+                    ? "The enemy is still deciding…"
+                    : fightArmed
+                      ? `Fight without spending ${match.supply[0]}?`
+                      : "Fight!"}
               </button>
             </div>
             {openingPending && <OpeningOffer packs={match.openings[0].packs} units={units} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />}
@@ -846,7 +884,11 @@ export function PlayView() {
           </label>
           <button onClick={restart}>Restart</button>
         </div>
-        {aiPlan && deploying && <p className="muted small">AI tested {aiPlan.candidatesTried} plans against your last army.</p>}
+        {deploying && (
+          <p className="muted small">
+            {aiPlan ? `AI tested ${aiPlan.candidatesTried} plans against what it expects you to field.` : "AI is thinking while you build…"}
+          </p>
+        )}
       </aside>
 
       <div className="rotate-hint">
