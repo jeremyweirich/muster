@@ -13,7 +13,8 @@
     "balance": "tsx scripts/balance.ts",
     "roster-table": "tsx scripts/roster-table.ts",
     "playtest": "tsx scripts/playtest.ts",
-    "bench": "tsx scripts/bench.ts"
+    "bench": "tsx scripts/bench.ts",
+    "ai-duel": "tsx scripts/ai-duel.ts"
   },
   "dependencies": {
     "react": "^19.1.0",

@@ -47,7 +47,7 @@ Profile of the benchmark (November 2026, after the first round of fixes):
 
 ## What we learned about spending simulations (the AI)
 
-Measured in full AI-vs-AI matches against the previous Hard planner, 40 matches each, 4 s per plan:
+Measured in full AI-vs-AI matches against the previous Hard planner, 40 matches each, 4 s per plan (`npm run ai-duel`):
 
 | Variant | Wins | Verdict |
 |---|---|---|
@@ -55,6 +55,10 @@ Measured in full AI-vs-AI matches against the previous Hard planner, 40 matches 
 | Average two battle seeds per plan throughout | 2 / 20 | **harmful**: halves the search, and screening ate the whole budget |
 | Phased budget (screen 30%, random 55%, local search 85%), then re-score the top 5 over 2 more seeds | **28 / 40** | kept |
 | Plus common random numbers (every plan fights the same seeds) | 23 / 40 | dropped: with a deterministic simulator the search tunes plans to one roll of the dice |
+
+**How to test an AI change:** `npm run ai-duel -- snapshot` saves the current planner as a gitignored baseline; change
+the AI; `npm run ai-duel -- run` plays 40 full matches against the baseline across threads. Games come in pairs with
+the sides swapped, so luck and side advantages cancel. Sanity check: identical planners come out 21 of 40.
 
 Lessons: give every search stage a time box, so one stage can't starve the rest; reduce noise where the decision is made
 (the finalists), not everywhere; and judge AI changes by full matches with 40 or more games, since 8–20 can't tell a

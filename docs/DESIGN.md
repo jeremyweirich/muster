@@ -493,6 +493,7 @@ The tabs, in order: **Play** (the default: the full game against the AI, every u
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
 | `npm run bench` | Simulator benchmark: time per battle and a fingerprint of every outcome (`docs/SIMULATION.md`) |
+| `npm run ai-duel` | Full AI-vs-AI matches, the current planner against a saved baseline, to judge an AI change (`docs/SIMULATION.md`) |
 | `npm run balance` | The balance harness (section 4, Balance): stats, coverage, the equal-supply matrix, checks against the targets, and the closing-distance, composition, sensitivity and upgrade tests |
 
 ### Codex links — Decided

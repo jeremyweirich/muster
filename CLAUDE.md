@@ -84,6 +84,7 @@ npm run balance -- <mode>  # balance harness (modes listed at the top of scripts
 npm run matrix        # shortcut for the equal-supply matrix: win rate, value margin, Nash mix
 npm run roster-table  # roster tables for DESIGN.md
 npm run bench         # simulator speed, plus a fingerprint of every outcome (docs/SIMULATION.md)
+npm run ai-duel -- snapshot | run   # judge an AI change in full AI-vs-AI matches against a saved baseline
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
 ```
 
@@ -105,31 +106,34 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 ## Where things stand
 
-See DESIGN.md §12 for the roadmap. Open threads:
-- **Balance is being redone (Nov 2026)** following `docs/BALANCE.md`, with Mechabellum as the reference game
-  (`docs/REFERENCE.md`, `docs/REFERENCE_2.md`). `docs/BALANCE-PLAN.md` maps our units onto Mechabellum's and sets out
-  the order of work. The old approach is gone; don't bring it back: the faction triangle as a balance goal, the counter
-  web, faction reference armies, "Wardens are the strongest", "keep every non-goblin attack ≥ 10". Balance per unit at
-  equal supply against the targets in `src/data/balance.ts`. The owner signed off the approach and left the table for Claude to
-  refine. Fights should be **spread out like Mechabellum's** (about 40–60 s, a long approach, not everyone fighting at
-  once), so positioning matters; get there through space and movement, never by inflating HP. The two
-  playtest reports (`docs/PLAYTEST-2026-10*.md`) are kept as history; their balance conclusions are superseded.
-- The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
-- **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer (now three two-unit packs or a war chest), two
-  new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Warden unit
-  (Pikemen), and veterancy (squads earn XP from damage dealt and pay to promote; DESIGN.md §5c). Balance-test at level
-  1 first; `npm run balance -- upgrades <unit>` covers the upgrade and veterancy curve.
-- **Goblin rework done (Oct 2026, from the owner's unit notes):** Greenskins became Goblins (`faction:goblin`):
-  Grunts, Skirmishers (goblin archers that hit air), Wolf Riders, Troll (moved from the independents), Ogre Brute,
-  Giant Bats. Sappers and the Alchemist are gone. Longbowmen became Crossbowmen and Halberdiers became Pikemen. Two
-  upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and Troll
-  *Boulder Toss*. Expect the owner to replace them.
+See DESIGN.md §12 for the roadmap. As of November 2026:
+- **Balance** follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/REFERENCE.md`,
+  `docs/REFERENCE_2.md`). `docs/BALANCE-PLAN.md` has the owner's decisions, the analogue mapping, the current
+  results and the open problems. Balance is per unit at equal supply, against the intent in `src/data/balance.ts`
+  (roles, `RELATIONS` with reasons, an intent per upgrade); the owner left that table to Claude to refine. The old
+  approach is gone; don't bring it back: the faction triangle as a balance goal (it's story only), the counter web,
+  faction reference armies, "Wardens are the strongest", "keep every non-goblin attack ≥ 10". The October playtest
+  reports (`docs/PLAYTEST-2026-10*.md`) are history; their balance conclusions are superseded.
+- **Fight shape:** fights should be spread out like Mechabellum's (about 40–60 s, a long approach, not everyone
+  fighting at once), so positioning matters. Get there through space and movement, never by inflating HP.
+- **Opening:** nothing is unlocked at the start; round 1 offers three two-unit packs or a war chest
+  (`src/data/openings.ts`, DESIGN.md §5). The AI always takes a pack.
+- **AI:** plans in Web Workers while the player deploys; Hard runs a phased search on up to 4 cores (DESIGN.md §9).
+  Judge AI changes with `npm run ai-duel` (40+ paired matches), not by feel.
+- **Simulation speed** matters and will matter more: `docs/SIMULATION.md` has the rules (fingerprint), the profile
+  recipe, what's done and the next levers.
+- The owner playtests and brings revision notes. Expect redesigns, not just tuning.
+- Two upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and
+  Troll *Boulder Toss*. Expect the owner to replace them. History: Greenskins became Goblins; Longbowmen became Elven
+  Archers, then Crossbowmen; Halberdiers became Pikemen.
 - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon Riders
   throw spears; role `skirmisher`). Lean that way when designing new units.
 - Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
   sideways (about 844 × 390).
-- Faction bonuses are designed but not built (DESIGN.md §8).
-- **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Parked
-  idea to keep: the campaign finale's last Drill Book page is generated from the player's own winning board. It needs
-  stored progress, which the owner hasn't decided on yet.
+- Faction bonuses are designed but not built (DESIGN.md §8). Independents cover a faction's holes at a higher unlock
+  cost and lower efficiency; they haven't been rebalanced yet.
+- **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Mission 1's
+  punch ("archers one-shot grunts") no longer matches the roster. Parked idea to keep: the campaign finale's last
+  Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't
+  decided on yet.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.

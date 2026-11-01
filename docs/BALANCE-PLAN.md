@@ -63,11 +63,11 @@ Knights cut down the swarm. The How to Play page says so.
 
 ## 3. Where it stands
 
-`npm run balance -- check` (8 seeds, about 1000 supply, level 1):
+`npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the Grunt speed change:
 
-- **81 of 85 relations hold.** Three misses involve the independents (Frost and Pikemen against the Giant; Dragon against
+- **82 of 86 relations hold.** Three misses involve the independents (Frost and Pikemen against the Giant; Dragon against
   the Golem), which aren't rebalanced yet. The only faction miss is Troll against Ogre, an even fight (50%).
-- **32 of 34 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (13%), Fire Elemental
+- **33 of 35 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (13%), Fire Elemental
   *Living Inferno* against Wolf Riders (38%).
 - **Fight shape** (`density`, mirrored mixed armies): first contact at 4–6 s (was under 2), fights of 31–42 s (were
   21–36), 58–67% of each army fighting at once (was about 75%). Close to Mechabellum's 40–60 s, but the faster
@@ -87,12 +87,12 @@ Knights cut down the swarm. The How to Play page says so.
    Wolf Riders to the top (31–34%). The big bias is gone; the rest may be target tie-breaking or the new geometry.
 4. **The goblin mirror never ends.** Once the Skirmishers are gone, neither side's bats can hit the other's. It times
    out at 120 s.
-5. **Two intents lost their matchup claims**: Griffon *Dive Attack* and *Armored Saddles* can't flip the Crossbowmen or
+5. **Coin-flip intents.** At 16 seeds, Knights *Shield Wall* vs Wolf Riders (44%) and *Veterans* vs Troll (50%) sit on
+   the line; Troll vs Ogre too (50%).
+6. **Two intents lost their matchup claims**: Griffon *Dive Attack* and *Armored Saddles* can't flip the Crossbowmen or
    Air Elementals that hard-counter Griffons. Their intents need a matchup they can move.
-6. **Campaign mission 1** says "Archers one-shot grunts"; with Crossbowmen, grunts now beat them. The mission's punch
+7. **Campaign mission 1** says "Archers one-shot grunts"; with Crossbowmen, grunts now beat them. The mission's punch
    needs rewriting when the campaign is built.
-7. **Playback speed.** Battles are now about twice as long in sim time, and 1× playback is half real time. Worth a look
-   in a playtest.
 
 ## 4. How to tune
 
