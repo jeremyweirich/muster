@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { randomId } from "./game/pvp";
+import { relayUrl } from "./net/config";
 import { CodexView } from "./ui/CodexView";
 import { CountersView } from "./ui/CountersView";
 import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
 import { StoryView } from "./ui/StoryView";
+import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
 
 const TABS = [
   { id: "play", label: "Play" },
@@ -21,11 +24,24 @@ function parseHash(): { tab: Tab; topic?: string } {
   return TABS.some((t) => t.id === tab) ? { tab: tab as Tab, topic } : { tab: "play" };
 }
 
+const relayAvailable = !!relayUrl();
+
 export function App() {
   const [route, setRoute] = useState(parseHash);
   const tab = route.tab;
   // new players land on Play, so greet them there with the walkthrough
   const [intro, setIntro] = useState(() => parseHash().tab === "play");
+  // a PvP match, when the address has one (?join=… or ?match=…); see docs/MULTIPLAYER.md
+  const [pvp, setPvp] = useState<PvpLink | null>(() => parsePvpLink(location.search, () => randomId(16)));
+  const startPvp = () => {
+    const link = { room: randomId(10), token: randomId(16) };
+    setPageQuery(`?match=${link.room}.${link.token}`);
+    setPvp(link);
+  };
+  const leavePvp = () => {
+    setPageQuery("");
+    setPvp(null);
+  };
 
   useEffect(() => {
     const onHash = () => setRoute(parseHash());
@@ -70,7 +86,7 @@ export function App() {
       </header>
       {/* Play stays mounted so following a Codex link mid-game doesn't lose the match */}
       <div style={{ display: tab === "play" ? "contents" : "none" }}>
-        <PlayView />
+        <PlayView key={pvp?.room ?? "ai"} pvp={pvp ? { link: pvp, onLeave: leavePvp } : undefined} onStartPvp={relayAvailable ? startPvp : undefined} />
       </div>
       {tab === "story" && <StoryView />}
       {tab === "codex" && <CodexView topic={route.topic} />}

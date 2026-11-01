@@ -14,7 +14,8 @@
     "roster-table": "tsx scripts/roster-table.ts",
     "playtest": "tsx scripts/playtest.ts",
     "bench": "tsx scripts/bench.ts",
-    "ai-duel": "tsx scripts/ai-duel.ts"
+    "ai-duel": "tsx scripts/ai-duel.ts",
+    "relay": "tsx relay/dev-server.ts"
   },
   "dependencies": {
     "react": "^19.1.0",

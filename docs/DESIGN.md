@@ -497,6 +497,7 @@ The tabs, in order: **Play** (the default: the full game against the AI, every u
 |---|---|
 | **Battle report** | After each battle the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
+| **Play a friend** | PvP by link: starts a match and shows an invite link to send. Each round both players deploy, then both browsers run the same battle. The address carries the player's seat, so a reload resumes the match. How it works and how to set up the relay: `docs/MULTIPLAYER.md` |
 | **How to play** | A five-page walkthrough for new players (header button; opens on the Play tab). The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
 | **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts` |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
@@ -558,7 +559,8 @@ src/ui/      React views
 - **Determinism is load-bearing.** The same armies with the same seed and the same data always produce the same battle.
   Replays, the AI, the Counters tab and tests all depend on this. Playback speed never changes the outcome; the renderer interpolates models and projectiles between the last two ticks so motion stays smooth at any speed.
 - The roster lives in `src/data/units.ts`. There is no in-app editor: unit changes are made in code, by request.
-- The app is fully static (GitHub Pages): no storage, no network calls, no analytics.
+- The app is static (GitHub Pages): no storage, no analytics. Single-player makes no network calls. PvP (section 10, Play a
+  friend) talks only to the owner's relay, and only after a player starts or joins a match.
 
 ## 12. Roadmap
 
@@ -576,4 +578,5 @@ Rough priority order. Everything is open to reshuffling.
 7. **Pathfinding and formations:** move around obstacles, and keep squads together.
 8. **AI improvements** (section 9).
 9. **More elements** (Earth, Poison), only if the complexity budget allows (section 6).
-10. **Multiplayer:** much later. Determinism makes lockstep networking feasible.
+10. **Multiplayer:** play a friend by link is built (`docs/MULTIPLAYER.md`). Ideas: hash-then-reveal turns, spectators,
+    emotes, a turn timer.

@@ -63,4 +63,5 @@ Main design rules in the current prototype (all open to change):
 ## Deploying
 
 Every push to `main` runs `.github/workflows/pages.yml`: it installs, tests, builds and publishes to GitHub Pages. The site is
-fully static, with no storage, network calls or analytics.
+static, with no storage or analytics. Single-player makes no network calls; PvP talks only to the relay in `relay/`
+(`docs/MULTIPLAYER.md`).

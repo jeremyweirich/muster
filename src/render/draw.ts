@@ -118,7 +118,7 @@ function paintBackground(ctx: CanvasRenderingContext2D, tile: number, opts: Back
   ctx.fillRect(0, 0, W, H);
 }
 
-export function drawSurfaces(ctx: CanvasRenderingContext2D, grid: SurfaceGrid, tile: number, time: number) {
+export function drawSurfaces(ctx: CanvasRenderingContext2D, grid: SurfaceGrid, tile: number, time: number, flip = false) {
   const cs = tile / grid.res;
   for (let i = 0; i < grid.type.length; i++) {
     const t = grid.type[i];
@@ -129,8 +129,8 @@ export function drawSurfaces(ctx: CanvasRenderingContext2D, grid: SurfaceGrid, t
     if (def.id === "shockwater") a *= 0.7 + 0.3 * Math.sin(time * 40 + i);
     ctx.globalAlpha = a;
     ctx.fillStyle = def.color;
-    const cx = i % grid.w;
-    const cy = (i / grid.w) | 0;
+    const cx = flip ? grid.w - 1 - (i % grid.w) : i % grid.w;
+    const cy = flip ? grid.h - 1 - ((i / grid.w) | 0) : (i / grid.w) | 0;
     ctx.fillRect(cx * cs, cy * cs, cs + 0.5, cs + 0.5);
   }
   ctx.globalAlpha = 1;
@@ -420,8 +420,10 @@ export class FxLayer {
   items: LiveFx[] = [];
   parts = new Particles();
   shots = new Shots();
-  take(battle: Battle) {
-    for (const fx of battle.fx) {
+  // `flip`: draw the field turned 180° (see drawBattle).
+  take(battle: Battle, flip = false) {
+    for (const raw of battle.fx) {
+      const fx = flip ? flipFx(raw, battle.rules.fieldW, battle.rules.fieldH) : raw;
       // keep reaction labels from piling up on top of each other
       if (fx.kind === "text" && this.items.some((i) => i.fx.kind === "text" && i.fx.text === fx.text && i.age < 0.3 && Math.hypot((i.fx as typeof fx).x - fx.x, (i.fx as typeof fx).y - fx.y) < 2)) continue;
       this.items.push({ fx, age: 0, life: fx.kind === "text" && fx.big ? BIG_TEXT_LIFE : FX_LIFE[fx.kind] });
@@ -557,6 +559,17 @@ export class FxLayer {
 
 type BeamFx = Extract<Fx, { kind: "beam" }>;
 
+function flipFx(fx: Fx, w: number, h: number): Fx {
+  switch (fx.kind) {
+    case "beam":
+      return { ...fx, x1: w - fx.x1, y1: h - fx.y1, x2: w - fx.x2, y2: h - fx.y2, side: fx.side === undefined ? undefined : fx.side === 0 ? 1 : 0 };
+    case "slash":
+      return { ...fx, x: w - fx.x, y: h - fx.y, angle: fx.angle + Math.PI };
+    default:
+      return { ...fx, x: w - fx.x, y: h - fx.y };
+  }
+}
+
 // Lightning crackles (its path re-forks every few frames), fire pours out as a widening stream of flame, anything else
 // is a straight glowing line. All have a team-colored glow underneath.
 function drawBeam(ctx: CanvasRenderingContext2D, fx: BeamFx, tile: number, k: number, age: number) {
@@ -649,9 +662,14 @@ function drawBeam(ctx: CanvasRenderingContext2D, fx: BeamFx, tile: number, k: nu
 // Render interpolation: where each model was one tick ago, and how far (0..1) playback is into the current tick.
 export type Interp = { alpha: number; prev: Map<Model, { x: number; y: number; facing: number }> };
 
-export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: number, fx: FxLayer, realTime: number, interp?: Interp) {
+// `flip` draws the field turned 180° with the team colors swapped: a PvP guest fights as side 1, but sees their own
+// army at the bottom in blue. Positions are turned, not the canvas, so text, health bars and fliers stay upright.
+export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: number, fx: FxLayer, realTime: number, interp?: Interp, flip = false) {
+  const W = battle.rules.fieldW;
+  const H = battle.rules.fieldH;
+  const view = (s: Side): Side => (flip ? (s === 0 ? 1 : 0) : s);
   drawBackground(ctx, tile);
-  drawSurfaces(ctx, battle.surfaces, tile, realTime);
+  drawSurfaces(ctx, battle.surfaces, tile, realTime, flip);
   const a = interp?.alpha ?? 1;
   const draw = (m: Model) => {
     const p = interp?.prev.get(m);
@@ -669,7 +687,14 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
     const t = anim > 0 ? Math.sin((anim / 0.18) * Math.PI) : 0;
     const melee = (m.def.attack?.range ?? 0) <= 1.5;
     const off = t * (melee ? 0.25 : -0.08);
-    return drawUnit(ctx, m.def, m.side, x + Math.cos(facing) * off, y + Math.sin(facing) * off, tile, {
+    x += Math.cos(facing) * off;
+    y += Math.sin(facing) * off;
+    if (flip) {
+      x = W - x;
+      y = H - y;
+      facing += Math.PI;
+    }
+    return drawUnit(ctx, m.def, view(m.side), x, y, tile, {
       facing,
       hpFrac: m.hp / m.maxHp,
       flash: m.flash > 0,
@@ -681,7 +706,7 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);
   // sim time at this frame, so trails freeze on pause and stretch with fast-forward
   const simT = battle.time - (1 - a) * battle.rules.tick;
-  for (const p of battle.projectiles) fx.shots.draw(ctx, p, tile, a, simT, SIDE_COLORS[p.side], fx.parts);
+  for (const p of battle.projectiles) fx.shots.draw(ctx, p, tile, a, simT, SIDE_COLORS[view(p.side)], fx.parts, flip ? { w: W, h: H } : undefined);
   fx.shots.settle(fx.parts);
   for (const m of battle.models) if (m.alive && m.def.layer === "air") draw(m);
   fx.draw(ctx, tile);

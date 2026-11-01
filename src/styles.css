@@ -1571,3 +1571,51 @@ button.primary.warn-btn {
     padding: 0;
   }
 }
+
+/* PvP: invite, connection and the friend's status at the top of the sidebar */
+.pvp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+}
+.pvp-panel.warn,
+.warn-text {
+  color: #ff9f43;
+}
+.pvp-invite {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pvp-link-row {
+  display: flex;
+  gap: 6px;
+}
+.pvp-link-row input {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  padding: 3px 6px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.pvp-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  vertical-align: middle;
+}
+.pvp-dot.on {
+  background: var(--green);
+}
+.pvp-notice {
+  color: var(--accent);
+}

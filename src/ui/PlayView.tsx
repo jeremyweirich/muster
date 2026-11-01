@@ -7,7 +7,24 @@ import { DEFAULT_UNITS } from "../data/units";
 import { planAiRound, promoted, type AiPlan, type Difficulty } from "../game/ai";
 import type { AiRequest, AiResponse } from "../game/ai.worker";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
-import { applyRound, battleXp, canPromote, chooseOpening, newMatch, nextRound, packLabel, promotePrice, type MatchState, type OpeningChoice } from "../game/match";
+import { applyRound, applyTurn, battleXp, canPromote, chooseOpening, newMatch, nextRound, outcomeOf, packLabel, promotePrice, type MatchState, type OpeningChoice, type Turn } from "../game/match";
+import {
+  checkTurn,
+  currentStart,
+  findOutcome,
+  findTurn,
+  latestHello,
+  outcomeSig,
+  prepareBattle,
+  randomId,
+  restore,
+  swapOutcome,
+  swapResult,
+  turnAround,
+  turnFrom,
+  type Fought,
+  type Restored,
+} from "../game/pvp";
 import { drawBackground, drawPromoteIcon, drawSquad } from "../render/draw";
 import { earnedLevel, levelDef, xpForLevel } from "../sim/levels";
 import { Battle, footprintOf, type BattleResult } from "../sim/battle";
@@ -16,21 +33,15 @@ import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
 import { MEDAL_COLORS, MvpBoard, SquadDetail, SquadList, topSquads } from "./BattleReport";
 import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
+import { PvpPanel } from "./PvpPanel";
 import { Swatch, UnitInfo } from "./UnitInfo";
+import { usePvpConnection, type PvpLink } from "./usePvp";
 
 const TILE = 24;
 
 // Each match rolls its own opening offers; the sim itself stays seeded and deterministic.
 const matchSeed = () => Math.floor(Math.random() * 2 ** 31);
 
-// Everything needed to show (and replay) the last battle.
-interface FoughtBattle {
-  armies: [PlacedSquad[], PlacedSquad[]];
-  defs: [DefMap, DefMap];
-  towerLevels: [number[], number[]];
-  seed: number;
-  result: BattleResult | null;
-}
 
 // Spending actions this round, newest last, so they can be undone.
 type Action =
@@ -55,10 +66,16 @@ function actionLabel(a: Action, defs: DefMap): string {
   }
 }
 
-export function PlayView() {
+// A PvP match (docs/MULTIPLAYER.md), or a game against the AI when absent.
+export interface PvpProps {
+  link: PvpLink;
+  onLeave: () => void;
+}
+
+export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () => void }) {
   const units = DEFAULT_UNITS;
   const defs = useMemo(() => defMap(units), [units]);
-  const [match, setMatch] = useState<MatchState>(() => newMatch(units, matchSeed()));
+  const [match, setMatch] = useState<MatchState>(() => (pvp ? newMatch(units, 1, { aiOpening: false }) : newMatch(units, matchSeed())));
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [selected, setSelected] = useState<string | null>(null);
   const [held, setHeld] = useState<string | null>(null);
@@ -66,7 +83,7 @@ export function PlayView() {
   const [hoverInfo, setHoverInfo] = useState<{ def: UnitDef; side: Side; fromShop?: boolean; squad?: PlacedSquad } | null>(null);
   const [speed, setSpeed] = useState(1);
   const [aiPlan, setAiPlan] = useState<AiPlan | null>(null);
-  const [fought, setFought] = useState<FoughtBattle | null>(null);
+  const [fought, setFought] = useState<Fought | null>(null);
   const [view, setView] = useState<"report" | "replay">("report");
   const [pinned, setPinned] = useState<string | null>(null);
   const [hoverSquad, setHoverSquad] = useState<string | null>(null);
@@ -77,6 +94,20 @@ export function PlayView() {
   const [portraitOk, setPortraitOk] = useState(false);
   const [sideTab, setSideTab] = useState<"recruit" | "upgrades">("recruit");
   const battleRef = useRef<Battle | null>(null);
+  // PvP: the connection, which match of the room is on screen (0 until it's rebuilt from the log), and notices
+  const conn = usePvpConnection(pvp?.link ?? null);
+  const seat: Side = conn.snap.seat ?? 0; // the battle runs in the host's view; a guest sees it turned round
+  const other: Side = seat === 0 ? 1 : 0;
+  const [pvpGame, setPvpGame] = useState(0);
+  const [notice, setNotice] = useState<string | null>(null);
+  const roundStart = useRef<MatchState>(match); // the state when this round's deployment began, for building a turn
+  const desyncSeen = useRef(new Set<string>());
+  const pvpReady = !pvp || pvpGame > 0;
+  const entries = conn.entries;
+  const oppTurn = pvp && pvpGame ? findTurn(entries, pvpGame, match.round, other) : null;
+  const committed = !!pvp && pvpGame > 0 && match.phase === "deploy" && !!findTurn(entries, pvpGame, match.round, seat);
+  const friendJoined = !!pvp && (conn.snap.online[other] || entries.some((e) => e.from === other));
+  const theirBuild = pvp ? latestHello(entries, other) : null;
   const hover = useRef<{ x: number; y: number } | null>(null);
   const player = useBattlePlayer();
 
@@ -86,7 +117,7 @@ export function PlayView() {
   // The AI plans at the start of each deployment, from what it saw last round, in a worker so the page stays
   // responsive while the player builds. Fight only has to wait if the player is done first.
   useEffect(() => {
-    if (match.phase !== "deploy") return;
+    if (pvp || match.phase !== "deploy") return;
     setAiPlan(null);
     const request: AiRequest = {
       id: match.round,
@@ -137,13 +168,59 @@ export function PlayView() {
     };
   }, [matchNo, match.round, match.phase === "deploy"]);
 
-  // Fight pressed while the AI is still thinking: start as soon as its plan arrives.
+  // Fight pressed while the AI is still thinking (or the friend is still deploying): start as soon as it's ready.
+  const opponentReady = pvp ? !!oppTurn : !!aiPlan;
   useEffect(() => {
-    if (fightQueued && aiPlan) {
+    if (fightQueued && opponentReady && match.phase === "deploy") {
       setFightQueued(false);
       launch();
     }
-  }, [fightQueued, aiPlan]);
+  }, [fightQueued, opponentReady]);
+
+  // Each deployment's starting point, so the turn sent to a PvP friend is what changed since.
+  useEffect(() => {
+    if (match.phase === "deploy") roundStart.current = match;
+  }, [pvpGame, match.round, match.phase === "deploy"]);
+
+  // PvP: say hello, start the first match (host), and rebuild the match from the log when it first arrives or when a
+  // rematch starts.
+  useEffect(() => {
+    if (!pvp || conn.snap.seat === null || conn.snap.status !== "open") return;
+    if (latestHello(entries, seat) !== __APP_VERSION__) conn.post({ type: "hello", id: randomId(12), build: __APP_VERSION__ });
+    const start = currentStart(entries);
+    if (!start) {
+      if (seat === 0) conn.post({ type: "start", id: randomId(12), game: 1, seed: matchSeed() });
+      return;
+    }
+    if (start.game > pvpGame) {
+      const r = restore(units, entries, seat);
+      if (r) showRestored(r);
+    }
+  }, [entries, conn.snap.seat, conn.snap.status]);
+
+  // PvP: post this browser's battle outcome, so the two can be compared.
+  useEffect(() => {
+    if (!pvp || !pvpGame || !fought?.result || (match.phase !== "result" && match.phase !== "over")) return;
+    if (findOutcome(entries, pvpGame, match.round, seat)) return;
+    const local = outcomeOf(fought.result, defs);
+    const canon = seat === 0 ? local : swapOutcome(local);
+    conn.post({ type: "outcome", id: randomId(12), game: pvpGame, round: match.round, sig: outcomeSig(canon), outcome: canon });
+  }, [fought?.result, entries, match.phase]);
+
+  // PvP: if the two browsers saw different battles (a bug), the host's result stands.
+  useEffect(() => {
+    if (!pvp || !pvpGame || (match.phase !== "result" && match.phase !== "over")) return;
+    const mine = findOutcome(entries, pvpGame, match.round, seat);
+    const theirs = findOutcome(entries, pvpGame, match.round, other);
+    const key = `${pvpGame}:${match.round}`;
+    if (!mine || !theirs || mine.sig === theirs.sig || desyncSeen.current.has(key)) return;
+    desyncSeen.current.add(key);
+    if (seat === 1) {
+      const r = restore(units, entries, seat);
+      if (r) showRestored(r);
+      setNotice("This battle came out differently on your friend's computer, so the round uses their result. That's a bug: please report it.");
+    } else setNotice("This battle came out differently on your friend's computer. Their game now uses your result. That's a bug: please report it.");
+  }, [entries, match.phase]);
 
   useEffect(() => {
     if (!fightArmed) return;
@@ -159,7 +236,7 @@ export function PlayView() {
   const isNew = (sq: PlacedSquad) => !RULES.lockPlacedSquads || sq.round === match.round;
   const heldSquad = held ? myArmy.find((s) => s.uid === held) : undefined;
   const placingDef = heldSquad ? myDefs.get(heldSquad.defId) : selected ? myDefs.get(selected) : undefined;
-  const deploying = match.phase === "deploy";
+  const deploying = match.phase === "deploy" && pvpReady && !committed;
   const reporting = (match.phase === "result" || match.phase === "over") && view === "report" && !!fought?.result;
 
   const spend = (cost: number, action: Action, patch: (m: MatchState) => Partial<MatchState>) => {
@@ -277,8 +354,11 @@ export function PlayView() {
     }
     if (!deploying) {
       if (p.type === "move") {
-        const m = battleRef.current?.models.find((m) => m.alive && Math.hypot(m.x - p.x, m.y - p.y) < Math.max(0.5, m.def.size));
-        setHoverInfo(m ? { def: m.def, side: m.side } : null);
+        // a guest's battle is drawn turned round
+        const bx = seat === 1 ? RULES.fieldW - p.x : p.x;
+        const by = seat === 1 ? RULES.fieldH - p.y : p.y;
+        const m = battleRef.current?.models.find((m) => m.alive && Math.hypot(m.x - bx, m.y - by) < Math.max(0.5, m.def.size));
+        setHoverInfo(m ? { def: m.def, side: seat === 1 ? (m.side === 0 ? 1 : 0) : m.side } : null);
       }
       return;
     }
@@ -359,37 +439,40 @@ export function PlayView() {
   };
 
   const fight = () => {
-    if (openingPending || fightQueued) return;
+    if (openingPending || fightQueued || !deploying) return;
     if (!actions.length && match.supply[0] > 0 && !fightArmed) {
       setFightArmed(true);
       return;
     }
     setFightArmed(false);
-    if (!aiPlan) setFightQueued(true);
+    if (pvp) {
+      // send the turn; the battle starts once the friend's turn is in too
+      conn.post({ type: "turn", id: randomId(12), game: pvpGame, round: match.round, turn: turnFrom(roundStart.current, match) });
+      setFightQueued(true);
+    } else if (!aiPlan) setFightQueued(true);
     else launch();
   };
 
+  // The other side's turn: the friend's, turned into this player's view, or the AI's plan.
+  const opponentTurn = (): { turn: Turn; spent?: number } | null => {
+    if (pvp) return oppTurn ? { turn: turnAround(oppTurn, defs) } : null;
+    if (!aiPlan) return null;
+    const army = [...promoted(match.armies[1], aiPlan.promotions), ...aiPlan.squads];
+    return { turn: { army, unlocks: aiPlan.unlocks, upgrades: aiPlan.upgrades, towerUpgrades: aiPlan.towerUpgrades }, spent: aiPlan.spent };
+  };
+
   const launch = () => {
-    if (!aiPlan) return;
-    const aiUpgrades = { ...match.upgrades[1] };
-    for (const u of aiPlan.upgrades) aiUpgrades[u.unitId] = [...(aiUpgrades[u.unitId] ?? []), u.upgradeId];
-    const aiLevels = [...match.towerLevels[1]];
-    for (const i of aiPlan.towerUpgrades) aiLevels[i]++;
-    const armies: [PlacedSquad[], PlacedSquad[]] = [match.armies[0], [...promoted(match.armies[1], aiPlan.promotions), ...aiPlan.squads]];
-    const towerLevels: [number[], number[]] = [match.towerLevels[0], aiLevels];
-    const sideDefs: [DefMap, DefMap] = [myDefs, upgradedDefs(defs, aiUpgrades)];
-    const seed = match.round * 104729 + 7;
-    setMatch((m) => ({
-      ...m,
-      armies,
-      supply: [m.supply[0], m.supply[1] - aiPlan.spent],
-      unlocked: [m.unlocked[0], [...new Set([...m.unlocked[1], ...aiPlan.unlocks])]],
-      upgrades: [m.upgrades[0], aiUpgrades],
-      towerLevels,
-      phase: "battle",
-    }));
-    battleRef.current = new Battle(sideDefs, armies, { seed, recordFx: true, towerLevels });
-    setFought({ armies, defs: sideDefs, towerLevels, seed, result: null });
+    const opp = opponentTurn();
+    if (!opp) return;
+    if (pvp) {
+      const problems = checkTurn(match, 1, opp.turn, defs);
+      if (problems.length) setNotice(`Your friend's turn didn't add up: they ${problems.join("; ")}.`);
+    }
+    const next = applyTurn(match, 1, opp.turn, defs, opp.spent);
+    const f = prepareBattle(next, defs, seat);
+    setMatch({ ...next, phase: "battle" });
+    battleRef.current = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, recordFx: true, towerLevels: f.canon.towerLevels });
+    setFought(f);
     setActions([]);
     player.reset();
     setSpeed(1); // every battle starts at normal speed, even if the last one was fast-forwarded
@@ -399,14 +482,17 @@ export function PlayView() {
     setPinned(null);
   };
 
-  const onBattleEnd = (r: BattleResult) => {
+  // The battle ran in the host's view; a guest turns the result round to their own.
+  const onBattleEnd = (canonResult: BattleResult) => {
+    const r = seat === 0 ? canonResult : swapResult(canonResult);
     setFought((f) => (f ? { ...f, result: r } : f));
     setMatch((m) => applyRound(m, r, defs));
   };
 
   const replay = () => {
     if (!fought) return;
-    battleRef.current = new Battle(fought.defs, fought.armies, { seed: fought.seed, recordFx: true, towerLevels: fought.towerLevels });
+    const c = fought.canon;
+    battleRef.current = new Battle(c.defs, c.armies, { seed: c.seed, recordFx: true, towerLevels: c.towerLevels });
     player.reset();
     setSpeed(1); // every battle starts at normal speed, even if the last one was fast-forwarded
     setView("replay");
@@ -416,6 +502,30 @@ export function PlayView() {
     battleRef.current = null;
     setFought(null);
     setMatch((m) => nextRound(m));
+  };
+
+  // A PvP match rebuilt from the log (on joining, reloading, a rematch, or after a desync).
+  const showRestored = (r: Restored) => {
+    battleRef.current = null;
+    player.reset();
+    setMatch(r.match);
+    setFought(r.fought);
+    setActions([]);
+    setSelected(null);
+    setHeld(null);
+    setFightArmed(false);
+    setFightQueued(r.committed);
+    setView("report");
+    setPinned(null);
+    setSpeed(1);
+    setPvpGame(r.game);
+  };
+
+  const rematch = () => conn.post({ type: "start", id: randomId(12), game: pvpGame + 1, seed: matchSeed() });
+
+  const playFriend = () => {
+    if ((match.round > 1 || actions.length > 0) && !window.confirm("Leave this game against the AI and start a match with a friend?")) return;
+    onStartPvp?.();
   };
 
   const restart = () => {
@@ -548,7 +658,7 @@ export function PlayView() {
     const b = battleRef.current;
     if (b && !deploying) {
       const live = match.phase === "battle" || view === "replay";
-      player.frame(ctx, b, TILE, dt, time, live ? speed : 0, match.phase === "battle" ? onBattleEnd : undefined);
+      player.frame(ctx, b, TILE, dt, time, live ? speed : 0, match.phase === "battle" ? onBattleEnd : undefined, seat === 1);
       return;
     }
     drawBackground(ctx, TILE, { zones: true, grid: [0] });
@@ -662,7 +772,7 @@ export function PlayView() {
           <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} />
           <HpBar label="You" hp={match.hp[0]} side={0} />
           <div className="round">Round {match.round}</div>
-          <HpBar label="Enemy" hp={match.hp[1]} side={1} />
+          <HpBar label={pvp ? "Friend" : "Enemy"} hp={match.hp[1]} side={1} />
           <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
         </div>
         <div className="field-wrap" style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
@@ -671,6 +781,29 @@ export function PlayView() {
       </main>
 
       <aside className="panel side">
+        {pvp && (
+          <PvpPanel
+            room={pvp.link.room}
+            host={seat === 0 && conn.snap.seat !== null}
+            configured={conn.configured}
+            status={conn.snap.status}
+            error={conn.snap.error}
+            friendJoined={friendJoined}
+            friendOnline={conn.snap.online[other]}
+            friendReady={!!oppTurn}
+            versionMismatch={!!theirBuild && theirBuild !== __APP_VERSION__}
+            notice={notice}
+            onDismissNotice={() => setNotice(null)}
+          />
+        )}
+        {committed && (
+          <div className="deploy-bar">
+            <button className="primary big" disabled>
+              Waiting for your friend…
+            </button>
+            <p className="muted small">Your army is locked in. The battle starts when your friend is ready too.</p>
+          </div>
+        )}
         {deploying && (
           <>
             <div className="deploy-bar">
@@ -691,7 +824,9 @@ export function PlayView() {
                 {openingPending
                   ? "Pick your opening first"
                   : fightQueued
-                    ? "The enemy is still deciding…"
+                    ? pvp
+                      ? "Waiting for your friend…"
+                      : "The enemy is still deciding…"
                     : fightArmed
                       ? `Fight without spending ${match.supply[0]}?`
                       : "Fight!"}
@@ -789,7 +924,7 @@ export function PlayView() {
             )}
             <div className="enemy-unlocks">
               <div className="muted small">
-                Enemy has unlocked
+                {pvp ? "Your friend has unlocked" : "Enemy has unlocked"}
                 {enemyOpening && ` · ${enemyOpening}`}
               </div>
               <div className="swatches">
@@ -830,7 +965,7 @@ export function PlayView() {
               {report.winner === 0 ? "Victory" : report.winner === 1 ? "Defeat" : report.timedOut ? "Time out" : "Draw"}
             </h2>
             <p>
-              You took <b>{report.damage[0]}</b> · Enemy took <b>{report.damage[1]}</b>
+              You took <b>{report.damage[0]}</b> · {pvp ? "Your friend" : "Enemy"} took <b>{report.damage[1]}</b>
             </p>
             {fought?.result && <PromotionsEarned result={fought.result} army={match.armies[0]} defs={defs} />}
             {fought?.result && view === "report" && (
@@ -839,8 +974,8 @@ export function PlayView() {
             {match.phase === "over" ? (
               <>
                 <h2>{match.hp[0] > 0 ? "You win the war!" : match.hp[1] > 0 ? "You have been defeated." : "Mutual ruin."}</h2>
-                <button className="primary big" onClick={restart}>
-                  New game
+                <button className="primary big" onClick={pvp ? rematch : restart}>
+                  {pvp ? "Rematch" : "New game"}
                 </button>
               </>
             ) : (
@@ -888,18 +1023,25 @@ export function PlayView() {
             it; <b>Delete</b> sells it. <b>Ctrl+Z</b> undoes your last purchase. 🔒 units cost a one-time unlock per match. Click a squad with a gold ▲ to promote it.
           </p>
         )}
-        <div className="game-opts">
-          <label>
-            AI{" "}
-            <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
-              <option value="easy">Easy</option>
-              <option value="normal">Normal</option>
-              <option value="hard">Hard</option>
-            </select>
-          </label>
-          <button onClick={restart}>Restart</button>
-        </div>
-        {deploying && (
+        {pvp ? (
+          <div className="game-opts">
+            <button onClick={pvp.onLeave}>Leave match</button>
+          </div>
+        ) : (
+          <div className="game-opts">
+            <label>
+              AI{" "}
+              <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
+                <option value="easy">Easy</option>
+                <option value="normal">Normal</option>
+                <option value="hard">Hard</option>
+              </select>
+            </label>
+            <button onClick={restart}>Restart</button>
+            {onStartPvp && <button onClick={playFriend}>Play a friend</button>}
+          </div>
+        )}
+        {deploying && !pvp && (
           <p className="muted small">
             {aiPlan ? `AI tested ${aiPlan.candidatesTried} plans against what it expects you to field.` : "AI is thinking while you build…"}
           </p>

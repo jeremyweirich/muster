@@ -155,6 +155,15 @@ const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
 const RANGED = 2.5; // attacks longer than this count as ranged (blocked by steam)
 const SURFACE_TICK = 0.5;
 const AURA_TICK = 0.25;
+// Sixteen evenly spaced unit directions, written out: Math.cos and Math.sin can differ in the last bit between
+// browsers, and PvP needs both players' browsers to run exactly the same battle.
+const C = 0.9238795325112867;
+const S = 0.3826834323650898;
+const R = 0.7071067811865476;
+const DIRS16: [number, number][] = [
+  [1, 0], [C, S], [R, R], [S, C], [0, 1], [-S, C], [-R, R], [-C, S],
+  [-1, 0], [-C, -S], [-R, -R], [-S, -C], [0, -1], [S, -C], [R, -R], [C, -S],
+];
 
 export function footprintOf(def: UnitDef, rot?: boolean): { w: number; h: number } {
   return rot ? { w: def.footprint.h, h: def.footprint.w } : def.footprint;
@@ -778,8 +787,8 @@ export class Battle {
         const def = side === null || attr.squad < 0 ? undefined : this.sideDefs[side].get(e.unit);
         if (!def || side === null) break;
         for (let k = 0; k < e.count; k++) {
-          const a = this.rng.range(0, Math.PI * 2);
-          const m = this.addModel(def, attr.squad, side, x + Math.cos(a) * 0.8, y + Math.sin(a) * 0.8, true);
+          const [dx, dy] = DIRS16[this.rng.int(16)];
+          const m = this.addModel(def, attr.squad, side, x + dx * 0.8, y + dy * 0.8, true);
           this.emit({ kind: "burst", x: m.x, y: m.y, r: 0.4, color: def.look.color });
         }
         break;

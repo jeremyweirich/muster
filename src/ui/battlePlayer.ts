@@ -59,6 +59,7 @@ export function useBattlePlayer() {
       time: number,
       speed: number,
       onEnd?: (r: BattleResult) => void,
+      flip = false, // drawn turned 180° (a PvP guest's view)
     ) {
       const tick = battle.rules.tick;
       const now = armyTaken(battle);
@@ -80,11 +81,11 @@ export function useBattlePlayer() {
           battle.step();
         }
         acc.current = steps === 400 ? 0 : acc.current - steps * tick;
-        fx.current.take(battle);
+        fx.current.take(battle, flip);
       }
       interp.current.alpha = battle.over ? 1 : Math.min(1, acc.current / tick);
       fx.current.update(dt * Math.max(1, Math.min(speed, 2)));
-      drawBattle(ctx, battle, tile, fx.current, time, interp.current);
+      drawBattle(ctx, battle, tile, fx.current, time, interp.current, flip);
       if (decided && speed > 0) drawBanner(ctx, (battle.rules.fieldW * tile) / 2, "One side can't fight back · fast-forwarding");
       if (battle.over && ended.current !== battle) {
         ended.current = battle;

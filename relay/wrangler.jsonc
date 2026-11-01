@@ -1,0 +1,16 @@
+// The Common Ground PvP relay (docs/MULTIPLAYER.md). Deploy with `npx wrangler deploy` from this folder.
+{
+  "name": "common-ground-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-01",
+  "durable_objects": {
+    "bindings": [{ "name": "ROOMS", "class_name": "Room" }]
+  },
+  // SQLite-backed Durable Objects are the ones the free plan includes.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Room"] }],
+  "vars": {
+    // pages allowed to connect, comma-separated (localhost is always allowed, for development)
+    "ALLOWED_ORIGINS": "https://jeremyweirich.github.io"
+  },
+  "observability": { "enabled": false }
+}

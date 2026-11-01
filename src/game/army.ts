@@ -4,10 +4,13 @@ import { footprintOf } from "../sim/battle";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 
+// Squad ids only need to be unique, never reproducible: nothing in a battle depends on them. The per-page tag keeps
+// two PvP players' squads from ever sharing an id.
 let uidCounter = 0;
+const pageTag = Math.floor(Math.random() * 36 ** 3).toString(36);
 export function newUid(prefix = "sq"): string {
   uidCounter++;
-  return `${prefix}${Date.now().toString(36)}${uidCounter.toString(36)}`;
+  return `${prefix}${Date.now().toString(36)}${pageTag}${uidCounter.toString(36)}`;
 }
 
 export type DefMap = Map<string, UnitDef>;

@@ -71,7 +71,10 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - Each side fights with its own upgraded unit definitions (`upgradedDefs`, `new Battle([defsA, defsB], …)`).
 - The AI only uses the simulator, so new units must work with it without special-casing.
 - Don't add `localStorage`, analytics, network calls or external scripts. The site is a static page with no data
-  collection.
+  collection. The one exception is PvP (`docs/MULTIPLAYER.md`): it talks to the owner's relay (`relay/`, a Cloudflare
+  Worker), and only after a player starts or joins a match. Single-player stays offline.
+- PvP needs both browsers to run identical battles: in `src/sim`, use only `+ − × ÷`, `sqrt`, `floor` and the like,
+  never `Math.sin`/`cos`/`atan2`/`exp`/`pow` on values that affect the outcome (they can differ between browsers).
 
 ## Commands
 
@@ -85,6 +88,7 @@ npm run matrix        # shortcut for the equal-supply matrix: win rate, value ma
 npm run roster-table  # roster tables for DESIGN.md
 npm run bench         # simulator speed, plus a fingerprint of every outcome (docs/SIMULATION.md)
 npm run ai-duel -- snapshot | run   # judge an AI change in full AI-vs-AI matches against a saved baseline
+npm run relay         # local PvP relay for `npm run dev` (docs/MULTIPLAYER.md); deploy the real one from relay/
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
 ```
 

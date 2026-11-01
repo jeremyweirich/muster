@@ -130,6 +130,8 @@ interface Track {
   y: number;
   dist: number; // tiles flown since the last ember was shed
   spin: number;
+  tx: number; // where it's headed, as drawn
+  ty: number;
 }
 
 // Tracks the shots in flight between frames: their start (for arcs), trails, and where they land.
@@ -137,22 +139,31 @@ export class Shots {
   tracks = new Map<Projectile, Track>();
   private live = new Set<Projectile>();
 
-  draw(ctx: CanvasRenderingContext2D, p: Projectile, tile: number, alpha: number, simT: number, team: string, parts: Particles) {
+  // `flip`: the field is drawn turned 180° (drawBattle), so every position is turned within the field's size.
+  draw(ctx: CanvasRenderingContext2D, p: Projectile, tile: number, alpha: number, simT: number, team: string, parts: Particles, flip?: { w: number; h: number }) {
     this.live.add(p);
+    const fx = (v: number) => (flip ? flip.w - v : v);
+    const fy = (v: number) => (flip ? flip.h - v : v);
+    const ppx = fx(p.px);
+    const ppy = fy(p.py);
+    const tx = fx(p.tx);
+    const ty = fy(p.ty);
     let tr = this.tracks.get(p);
     if (!tr) {
-      tr = { sx: p.px, sy: p.py, kind: shotKind(p.src.def), element: p.src.def.attack?.element ?? "physical", trail: [], x: p.px, y: p.py, dist: 0, spin: Math.random() * 6 };
+      tr = { sx: ppx, sy: ppy, kind: shotKind(p.src.def), element: p.src.def.attack?.element ?? "physical", trail: [], x: ppx, y: ppy, dist: 0, spin: Math.random() * 6, tx, ty };
       this.tracks.set(p, tr);
     }
-    const x = p.px + (p.x - p.px) * alpha;
-    const y = p.py + (p.y - p.py) * alpha;
-    const total = Math.hypot(p.tx - tr.sx, p.ty - tr.sy);
-    const rem = Math.hypot(p.tx - x, p.ty - y);
+    const x = ppx + (fx(p.x) - ppx) * alpha;
+    const y = ppy + (fy(p.y) - ppy) * alpha;
+    const total = Math.hypot(tx - tr.sx, ty - tr.sy);
+    const rem = Math.hypot(tx - x, ty - y);
     const prog = total > 0.05 ? Math.max(0, Math.min(1, 1 - rem / total)) : 1;
     const arc = ARC[tr.kind];
     const lift = arc * total * Math.sin(Math.PI * prog);
-    const ux = rem > 1e-6 ? (p.tx - x) / rem : 0;
-    const uy = rem > 1e-6 ? (p.ty - y) / rem : 0;
+    tr.tx = tx;
+    tr.ty = ty;
+    const ux = rem > 1e-6 ? (tx - x) / rem : 0;
+    const uy = rem > 1e-6 ? (ty - y) / rem : 0;
     const heading = Math.atan2(uy - arc * Math.PI * Math.cos(Math.PI * prog), ux);
     tr.dist += Math.hypot(x - tr.x, y - tr.y);
     tr.x = x;
@@ -311,7 +322,7 @@ export class Shots {
       this.tracks.delete(p);
       if (p.src.def.attack?.splash) continue;
       const big = tr.kind === "boulder" || tr.kind === "bolt";
-      parts.debris(p.tx, p.ty, big ? 6 : 3, tr.element, big ? 2.4 : 1.8, big ? 1 : 0.7);
+      parts.debris(tr.tx, tr.ty, big ? 6 : 3, tr.element, big ? 2.4 : 1.8, big ? 1 : 0.7);
     }
     this.live.clear();
   }
