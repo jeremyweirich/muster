@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, canPlace, defMap, priceOf, upgradePrice } from "../src/game/army";
-import { applyRound, battleXp, canPromote, chooseOpening, newMatch, openingPool, roundDamage, unlockDiscounts } from "../src/game/match";
+import { applyRound, battleXp, canPromote, chooseOpening, newMatch, packLabel, roundDamage } from "../src/game/match";
+import { OPENING_PACKS } from "../src/data/openings";
 import { capXp, earnedLevel, levelDef } from "../src/sim/levels";
 import { ROLES } from "../src/data/roles";
 import { applyUpgrades, upgradedDefs } from "../src/sim/upgrades";
@@ -386,27 +387,61 @@ describe("upgrades", () => {
 });
 
 describe("match opening", () => {
-  it("offers a random unit with a real unlock, or bonus supply", () => {
-    const pool = openingPool(DEFAULT_UNITS).map((u) => u.id);
+  it("every pack is two real units whose squads add up to the same value", () => {
+    for (const pack of OPENING_PACKS) {
+      expect(pack.units).toHaveLength(2);
+      const value = pack.units.reduce((t, u) => t + byId(u.id).cost * u.count, 0);
+      expect(value, packLabel(pack, DEFAULT_UNITS)).toBe(RULES.openingPackValue);
+      for (const u of pack.units) expect(byId(u.id).tags, u.id).not.toContain("faction:independent");
+    }
+  });
+
+  it("nothing starts unlocked; both sides see the same three packs; the AI picks at once", () => {
     for (let seed = 1; seed < 20; seed++) {
       const m = newMatch(DEFAULT_UNITS, seed);
-      expect(pool).toContain(m.openings[0].unitId);
-      expect(m.openings[1].unitId).toBe(m.openings[0].unitId); // both sides see the same unit
+      expect(m.unlocked[0]).toEqual([]);
+      expect(m.armies[0]).toEqual([]);
+      expect(new Set(m.openings[0].packs).size).toBe(RULES.openingChoices);
+      expect(m.openings[1].packs).toEqual(m.openings[0].packs);
       expect(m.openings[0].choice).toBeNull();
-      expect(m.openings[1].choice).not.toBeNull(); // the AI picks at once
-      const bonus = chooseOpening(m, 0, "bonus");
-      expect(bonus.supply[0]).toBe(m.supply[0] + RULES.openingBonus);
-      expect(chooseOpening(bonus, 0, "discount")).toBe(bonus); // one choice only
-      const disc = chooseOpening(m, 0, "discount");
-      const unit = byId(m.openings[0].unitId!);
-      expect(priceOf(unit, new Set(), unlockDiscounts(disc, 0))).toBe(unit.cost + (unit.unlockCost ?? 0) - RULES.openingDiscount);
+      expect(m.openings[1].choice).not.toBeNull();
     }
+  });
+
+  it("a pack unlocks its units, places its squads for free and adds supply; the war chest is flat supply", () => {
+    const m = newMatch(DEFAULT_UNITS, 3);
+    const i = m.openings[0].packs[0];
+    const pack = OPENING_PACKS[i];
+    const took = chooseOpening(m, 0, i, DEFAULT_UNITS);
+    expect(took.supply[0]).toBe(m.supply[0] + RULES.openingPackSupply);
+    expect(took.unlocked[0].sort()).toEqual(pack.units.map((u) => u.id).sort());
+    expect(took.armies[0]).toHaveLength(pack.units.reduce((t, u) => t + u.count, 0));
+    for (const sq of took.armies[0]) {
+      expect(sq.free).toBe(true);
+      expect(canPlace(byId(sq.defId), sq.x, sq.y, 0, took.armies[0], defs, sq.uid, sq.rot)).toBe(true);
+    }
+    expect(chooseOpening(took, 0, "flat", DEFAULT_UNITS)).toBe(took); // one choice only
+    const unoffered = OPENING_PACKS.findIndex((_, j) => !m.openings[0].packs.includes(j));
+    expect(chooseOpening(m, 0, unoffered, DEFAULT_UNITS)).toBe(m);
+    const flat = chooseOpening(m, 0, "flat", DEFAULT_UNITS);
+    expect(flat.supply[0]).toBe(m.supply[0] + RULES.openingFlat);
+    expect(flat.unlocked[0]).toEqual([]);
+    expect(flat.armies[0]).toEqual([]);
+  });
+
+  it("the war chest is a little behind a pack once it pays for two unlocks", () => {
+    const pack = RULES.openingPackValue + RULES.openingPackSupply + 2 * 100;
+    const behind = pack - (RULES.openingFlat);
+    expect(behind).toBeGreaterThanOrEqual(50);
+    expect(behind).toBeLessThanOrEqual(100);
   });
 });
 
 describe("ai opening", () => {
-  it("round-one plans can actually fight", () => {
+  it("round-one plans can actually fight, even with nothing unlocked", () => {
     for (let seed = 1; seed <= 8; seed++) {
+      const fresh = planAiRound(DEFAULT_UNITS, defs, { army: [], unlocked: [], upgrades: {}, towerLevels: [0, 0], supply: RULES.openingFlat }, { army: [], upgrades: {}, towerLevels: [0, 0] }, 1, "normal", seed);
+      expect(fresh.squads.some((s) => defs.get(s.defId)?.attack)).toBe(true);
       const plan = planAiRound(
         DEFAULT_UNITS,
         defs,

@@ -3,9 +3,9 @@ import { drawBattle, FxLayer, type Interp } from "../render/draw";
 import type { Battle, BattleResult } from "../sim/battle";
 
 // Plays a Battle at a chosen speed. The sim always advances in fixed ticks, so playback speed never changes the outcome.
-// "1×" runs the sim at half real time, which reads better; the speed buttons are relative to that.
+// "1×" runs the sim in real time (it used to be half speed, back when fights were faster); the speed buttons are relative to that.
 // Models are drawn interpolated between the last two ticks, so motion stays smooth even when a tick spans several frames.
-export const PLAYBACK_SCALE = 0.5;
+export const PLAYBACK_SCALE = 1;
 export function useBattlePlayer() {
   const fx = useRef(new FxLayer());
   const acc = useRef(0);

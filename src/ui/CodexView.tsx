@@ -116,7 +116,6 @@ function Entry({ id, title, focus, children }: { id: string; title: ReactNode; f
 
 const hasRole = (id: string) => DEFAULT_UNITS.filter((u) => u.tags.includes(`role:${id}`));
 const hitsAir = DEFAULT_UNITS.filter((u) => u.attack?.targets.includes("air"));
-const starters = DEFAULT_UNITS.filter((u) => !u.unlockCost);
 
 const CONTENTS: { title: string; items: [string, string][] }[] = [
   {
@@ -203,7 +202,8 @@ export function CodexView({ topic }: { topic?: string }) {
             what they&apos;re adding right now, and they never see yours. Guess their answer to your army, and answer that.
           </li>
           <li>
-            Supply: {RULES.income(1)} in round 1, {RULES.income(2)} in round 2, {RULES.income(3)} in round 3, and 100 more each round after.
+            Supply: round 1&apos;s comes from your <CodexLink topic="opening">opening</CodexLink>, then {RULES.income(2)} in round 2,{" "}
+            {RULES.income(3)} in round 3, and 100 more each round after.
             Anything you don&apos;t spend carries over.
           </li>
           <li>
@@ -246,11 +246,10 @@ export function CodexView({ topic }: { topic?: string }) {
       <h3>Your army</h3>
       <Entry id="unlocks" title="Unlocks" focus={topic}>
         <p>
-          Starter units can be recruited right away. Every other unit has a one-time <b>unlock</b> price per match (🔒 in the recruit
-          list), and then its normal price per squad. Switching to a perfect counter costs more than adding to what you already have.
-          You can see which units the enemy has unlocked.
+          Every unit has a one-time <b>unlock</b> price per match (🔒 in the recruit list), and then its normal price per squad. Your
+          opening pack unlocks two for free. Switching to a perfect counter costs more than adding to what you already have. You can
+          see which units the enemy has unlocked.
         </p>
-        <UnitChips units={starters} label="Starters:" />
       </Entry>
       <Entry id="upgrades" title="Upgrades" focus={topic}>
         <p>
@@ -268,9 +267,11 @@ export function CodexView({ topic }: { topic?: string }) {
       </Entry>
       <Entry id="opening" title="The opening offer" focus={topic}>
         <p>
-          In round 1 both sides get the same offer: one random unit&apos;s unlock costs {RULES.openingDiscount} less for the whole match,
-          or take {RULES.openingBonus} supply right away. Both sides are offered the same unit, so you can guess what the enemy might
-          build.
+          Nothing is unlocked when a match starts. In round 1 you pick one of {RULES.openingChoices} <b>packs</b>, or the war chest.
+          A pack is two units, both unlocked, with {RULES.openingPackValue} supply&apos;s worth of their squads already placed for you
+          (move them as you like, but they can&apos;t be sold), plus {RULES.openingPackSupply} supply to spend. The war chest is{" "}
+          {RULES.openingFlat} supply and nothing unlocked: a little less once you pay for two unlocks, but you build exactly what
+          you want. Both sides are offered the same packs, so you can guess what the enemy might start with.
         </p>
       </Entry>
 

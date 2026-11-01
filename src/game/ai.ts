@@ -3,7 +3,7 @@ import { Rng } from "../sim/rng";
 import type { PlacedSquad, UnitDef } from "../sim/types";
 import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
 import { canPromote, promotePrice } from "./match";
-import { armyValue, autoPlace, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap, type PlacementStyle, type UnlockDiscounts } from "./army";
+import { armyValue, autoPlace, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap, type PlacementStyle } from "./army";
 
 export type Difficulty = "easy" | "normal" | "hard";
 
@@ -20,7 +20,6 @@ export interface AiSide {
   upgrades: UpgradeState;
   towerLevels: number[];
   supply: number;
-  discounts?: UnlockDiscounts; // cheaper unlocks from its opening
 }
 
 export interface AiPlan {
@@ -84,17 +83,17 @@ function randomPurchase(units: UnitDef[], me: AiSide, rng: Rng, focus?: UnitDef)
     }
   }
 
-  // usually stick with what's already unlocked; sometimes reach for something new
-  const allowNew = rng.next() < 0.45;
+  // usually stick with what's already unlocked; sometimes reach for something new (always, with nothing unlocked)
+  const allowNew = unlocked.size === 0 || rng.next() < 0.45;
   for (let guard = 0; guard < 12; guard++) {
-    const affordable = units.filter((u) => priceOf(u, unlocked, me.discounts) <= left && (allowNew || unlocked.has(u.id)));
+    const affordable = units.filter((u) => priceOf(u, unlocked) <= left && (allowNew || unlocked.has(u.id)));
     if (!affordable.length) break;
-    const pick = focus && priceOf(focus, unlocked, me.discounts) <= left && rng.next() < 0.6 ? focus : rng.pick(affordable);
-    const price = priceOf(pick, unlocked, me.discounts);
+    const pick = focus && priceOf(focus, unlocked) <= left && rng.next() < 0.6 ? focus : rng.pick(affordable);
+    const price = priceOf(pick, unlocked);
     if (!unlocked.has(pick.id)) {
       unlocked.add(pick.id);
       out.unlocks.push(pick);
-      out.investment += unlockPrice(pick, me.discounts);
+      out.investment += unlockPrice(pick);
     }
     out.units.push(pick);
     left -= price;
@@ -127,10 +126,8 @@ export function planAiRound(
   const playerDefs = upgradedDefs(defs, player.upgrades);
   const candidates: { squads: PlacedSquad[]; c: Candidate }[] = [];
 
-  // a unit its opening made cheaper gets tried as a focus more often
-  const bargain = units.find((u) => me.discounts?.[u.id] && !me.unlocked.includes(u.id));
   for (let i = 0; i < n; i++) {
-    const focus = bargain && i % 4 === 0 ? bargain : i % 2 === 0 ? rng.pick(units) : undefined;
+    const focus = i % 2 === 0 ? rng.pick(units) : undefined;
     const c = randomPurchase(units, me, rng, focus);
     const squads = autoPlace(c.units, me.army, 1, defs, round, rng, rng.pick(STYLES));
     candidates.push({ squads, c });

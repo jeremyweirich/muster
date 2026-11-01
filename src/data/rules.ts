@@ -8,7 +8,7 @@ export const RULES: Rules = {
   tick: 0.05,
   battleTimeLimit: 120,
   startHp: 400,
-  income: (round) => (round === 1 ? 400 : 200 + 100 * round), // round 1 starts a little richer
+  income: (round) => (round === 1 ? 0 : 200 + 100 * round), // round 1's income is the opening offer
   damagePerSupply: 0.08,
   damagePerSquad: 4,
   elementalFriendlyFire: true,
@@ -23,9 +23,12 @@ export const RULES: Rules = {
   allyPush: 0.15, // allies squeeze past each other, so melee units can reach the fight
   preferReach: 4, // preferred targets win only among enemies this close (beyond attack range); farther, nearest wins
   upgradeCosts: [200, 400, 600, 800], // flat, whatever the unit: each specialist step costs more
-  openingDiscount: 100,
-  openingBonus: 50,
-  openingMinUnlock: 100,
+  // Opening offer (src/data/openings.ts): three packs, or flat supply. A pack's two unlocks are worth 2 × 100, so
+  // flat 700 ends up 100 behind a pack once you unlock two units yourself: a mild price for choosing freely.
+  openingChoices: 3,
+  openingPackValue: 400, // supply's worth of squads in every pack (unlocks not counted)
+  openingPackSupply: 200, // plus this to spend
+  openingFlat: 700,
   towerUpgradeCosts: [100, 200, 400, 800],
   towerHpPerLevel: 300,
   towerDazeBase: 4,

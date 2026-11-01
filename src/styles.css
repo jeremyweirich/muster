@@ -301,21 +301,6 @@ code {
 .unlock-chip.locked > .swatch {
   opacity: 0.45;
 }
-.discount-badge {
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #6cc46c;
-  color: #0e1a0e;
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 12px;
-  text-align: center;
-  pointer-events: none;
-}
 .unlock-tip {
   display: none;
   position: absolute;
@@ -1169,9 +1154,6 @@ a.reason:hover {
   color: var(--muted);
   font-size: 12px;
 }
-.shop-cost.lock.bargain {
-  color: var(--accent);
-}
 .veterancy {
   display: flex;
   flex-wrap: wrap;
@@ -1225,6 +1207,15 @@ a.reason:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+.opening .pack-units {
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.pack-unit {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 .enemy-unlocks .swatches {
   display: flex;

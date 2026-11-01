@@ -29,7 +29,8 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   - tags: `faction:*` (goblin, warden, elemental, independent), `race:*`, `size:*`, and 2–4 `role:*` tags from
     `src/data/roles.ts`
   - a one-line description
-  - an unlock cost: 0 for starter units only
+  - an unlock cost: 100 (independents 200). Nothing is unlocked at the start; the opening packs (`src/data/openings.ts`)
+    unlock two units each, and a test checks every pack's squads add up to `RULES.openingPackValue`
   - **four upgrades** that make the unit an increasingly expensive specialist, not a jack of all trades. About one should
     deepen an existing path, and pairs should combine in tempting ways. Prices are global and flat by buy order
     (`RULES.upgradeCosts`: 200 / 400 / 600 / 800). Each upgrade has a short player-facing `description`. A test checks
@@ -109,7 +110,7 @@ See DESIGN.md §12 for the roadmap. Open threads:
   once), so positioning matters; get there through space and movement, never by inflating HP. The two
   playtest reports (`docs/PLAYTEST-2026-10*.md`) are kept as history; their balance conclusions are superseded.
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
-- **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
+- **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer (now three two-unit packs or a war chest), two
   new elementals (Frost Elemental, Stone Golem), slightly more elemental interaction, a sixth Warden unit
   (Pikemen), and veterancy (squads earn XP from damage dealt and pay to promote; DESIGN.md §5c). Balance-test at level
   1 first; `npm run balance -- upgrades <unit>` covers the upgrade and veterancy curve.

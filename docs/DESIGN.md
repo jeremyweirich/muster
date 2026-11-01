@@ -36,8 +36,8 @@ on.
 
 ```
 Round N
- ├─ Income: supply += 200 + 100·N, except round 1 which starts at 400 (unspent supply carries over)
- ├─ Opening (round 1 only): take a random unit's unlock 100 cheaper (same unit for both sides), or +50 supply (section 5)
+ ├─ Income: supply += 200 + 100·N from round 2 (unspent supply carries over); round 1's income is the opening
+ ├─ Opening (round 1 only): one of three two-unit packs, unlocked and placed, + 200 supply; or 700 supply (section 5)
  ├─ Deployment (simultaneous, blind)
  │    ├─ see the enemy army as it stood last round, plus their unlocks, upgrades and tower levels
  │    ├─ unlock units (one-time cost per match)
@@ -47,7 +47,7 @@ Round N
  │    ├─ buy squads, place and rotate them in your zone
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
- ├─ Battle (automatic, deterministic, up to 120 s; always starts at 1× playback, which is half real time)
+ ├─ Battle (automatic, deterministic, up to 120 s; always starts at 1× playback, which is real time)
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
@@ -100,7 +100,7 @@ Each side has two Keeps (West and East) near the back of its zone, 2 rows in fro
 - **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +300 HP, so HP
   grows in a straight line while the price doubles.
 - **Collapse.** When a tower falls, **its owner's entire army is Dazed**: it deals 10% damage and takes double damage.
-  The Daze lasts **4 s at level 0, 0.5 s less per level** (minimum 2 s), in sim time; at 1× playback (half real time) that reads as 8 s.
+  The Daze lasts **4 s at level 0, 0.5 s less per level** (minimum 2 s), in sim time, which is also what you see at 1× playback.
 - Towers don't move and don't count toward winning the round. A side loses when its *army* is gone.
 - **Why:** a single strong deathball in the center leaves the flanks open. A cheap raider that slips through and snipes a
   tower can swing the main fight. Tower levels are the counter-investment: you pay supply for insurance instead of army.
@@ -239,28 +239,32 @@ Regenerates, Glass cannon, Raider and Skirmisher. They live in `src/data/roles.t
 
 ## 5. Unlocks — Decided (values open)
 
-- Units with `unlockCost: 0` (Grunts, Knights, Crossbowmen) are available from the start. Every other unit costs a
-  one-time unlock per match, paid from supply, before its first squad.
+- **Nothing is unlocked when a match starts.** Every unit costs a one-time unlock per match, paid from supply, before its
+  first squad: 100 for faction units, 200 for independents. The opening pack unlocks two for free.
 - **Purpose:** to tax a perfect counter-pick and reward sticking with what you already have. Sticking with your units in
   turn makes you easier to read, which is the intended trade-off.
 - Each player sees which units the opponent has unlocked.
 - The AI counts unlock prices in its budget and values a fresh unlock at 50% of its price beyond the current round.
 
-**Open:** whether unlock costs should scale with the round, and whether the opening should offer more than one unit.
+**Open:** whether unlock costs should scale with the round.
 
 ### Opening offer — Decided (values open)
 
-A small, fair bit of variety at the start of each match. In round 1, each player chooses one:
+A small, fair bit of variety at the start of each match, and round 1's income. Both sides are offered the same three
+**packs**, drawn from a curated pool (`src/data/openings.ts`), and each player takes one, or the war chest:
 
-- **A cheaper unlock:** one random unit whose unlock costs at least 100 (`RULES.openingMinUnlock`) gets
-  `RULES.openingDiscount` (100) off its unlock for the whole match, or
-- **War chest:** `RULES.openingBonus` (50) extra supply right away.
+- **A pack:** two units, both unlocked, with exactly 400 supply of their squads (`RULES.openingPackValue`; unlock prices
+  don't count) placed for you, plus 200 supply to spend (`RULES.openingPackSupply`). For example Knights + 2 Crossbowmen,
+  2 Grunts + 2 Skirmishers, or Wolf Riders + Pikemen. Each pair is a working start: something in front, something doing
+  the damage. Pack squads can be moved in round 1 but not sold, since they were free.
+- **War chest:** 700 supply (`RULES.openingFlat`) and nothing unlocked. A pack is worth 600 plus two unlocks (200), so once
+  the war chest pays for two unlocks of its own it ends up 100 behind: a mild price for choosing your units freely.
 
-The discount is worth more but only if you commit to that unit, so the offer nudges a game in a direction without handing
-anyone an edge. Both sides are offered the same unit, so each can guess what the other might build. The player must choose before the first Fight. The AI chooses at random
-when the match starts, and tries its discounted unit more often while planning. The enemy's choice is shown from round 2: a small % badge on the
-discounted unit beside its health bar (dimmed if not unlocked yet), or a "+50 supply" note. Your own discount wears
-the same badge.
+Every pack is the same value, so the offer changes how a match starts, not who is ahead. Both sides see the same packs,
+so each can guess what the other might start with. The player must choose before the first Fight; nothing can be
+bought before that. The AI chooses at random when the match starts. The enemy's pack stays hidden during round 1 (its
+squads and unlocks show from round 2, as everything else does), and from round 2 a note beside its unlocks says what it
+opened with.
 
 ## 5b. Upgrades — Decided (values open)
 

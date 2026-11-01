@@ -228,6 +228,7 @@ export interface PlacedSquad {
   round: number; // round it was placed in
   xp?: number; // damage dealt + healing done, summed over every battle it fought
   level?: number; // promotions paid for; absent = level 1
+  free?: boolean; // came with the opening pack: it can be moved in round 1, but not sold
 }
 
 export interface Rules {
@@ -250,9 +251,10 @@ export interface Rules {
   allyPush: number; // how hard allies push each other apart, 0..1 (enemies always fully block each other)
   preferReach: number; // tiles beyond attack range where `prefers`, towers-first and highest/lowest-HP targeting apply
   upgradeCosts: number[]; // price of the 1st, 2nd... upgrade bought for a unit, whatever the unit
-  openingDiscount: number; // opening offer: this much off one random unit's unlock...
-  openingBonus: number; // ...or this much extra supply in round 1
-  openingMinUnlock: number; // only units whose unlock costs at least this are offered
+  openingChoices: number; // packs offered in round 1 (both sides see the same ones)
+  openingPackValue: number; // squads in a pack add up to this much supply
+  openingPackSupply: number; // supply a pack also gives
+  openingFlat: number; // supply instead of a pack: nothing unlocked
   towerUpgradeCosts: number[]; // price of each tower level
   towerHpPerLevel: number;
   towerDazeBase: number; // seconds of Daze when a level-0 tower falls

@@ -1,5 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { RULES } from "../data/rules";
 import { TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import type { UnitDef } from "../sim/types";
@@ -40,7 +39,8 @@ export function Intro({ onClose }: { onClose: () => void }) {
       body: (
         <>
           <p>
-            Each round you get <b>supply</b> ({RULES.income(1)} to start). Pick a unit in the sidebar, then click inside your{" "}
+            First pick an <b>opening</b>: a pack of two units, placed for you, or a war chest of supply. Each round after that you
+            get more <b>supply</b>. Pick a unit in the sidebar, then click inside your{" "}
             <b className="blue">blue zone</b> to place a squad.
           </p>
           <p>

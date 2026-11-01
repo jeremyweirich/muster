@@ -1,27 +1,28 @@
 // Headless Common Ground: play a full match against the real AI from the command line, one round per call.
 // The AI plans with the same call PlayView uses, so this is the real game minus the canvas.
 // Usage:
-//   npm run playtest -- new <name> [seed] [easy|normal|hard] [discount|bonus]
+//   npm run playtest -- new <name> [seed] [easy|normal|hard] [0|1|2|flat]
 //   npm run playtest -- show <name>
 //   npm run playtest -- play <name> '<plan json>'
 // Plan (every key optional):
-//   opening: "discount" | "bonus"                    round 1 only (default bonus)
+//   opening: 0 | 1 | 2 | "flat"                      round 1 only: an offered pack by position, or the war chest (default 0)
 //   promote: ["all" | uid suffix]                    paid first
 //   up: [[unitId, upgradeId]], tower: [index]        then upgrades and tower levels
 //   buy: [{u, x, y, rot?} | {u, auto: "center" | "spread" | "left" | "right"}]
 //   fill: [unitId, ...], style                       then keep buying these in turn, auto-placed, until broke
-// Your side is the bottom (rows 18-26). `show` prints the field with a legend. State is saved in the OS temp folder.
+// Your side is the bottom (rows 20-26). `show` prints the field with a legend. State is saved in the OS temp folder.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { RULES } from "../src/data/rules";
+import { OPENING_PACKS } from "../src/data/openings";
 import { towerPlacements } from "../src/data/towers";
 import { Battle, footprintOf } from "../src/sim/battle";
 import { upgradedDefs } from "../src/sim/upgrades";
 import { Rng } from "../src/sim/rng";
 import { planAiRound, promoted, type Difficulty } from "../src/game/ai";
 import {
-  applyRound, canPromote, chooseOpening, newMatch, nextRound, promotePrice, unlockDiscounts, type MatchState,
+  applyRound, canPromote, chooseOpening, newMatch, nextRound, packLabel, promotePrice, type MatchState,
 } from "../src/game/match";
 import {
   autoPlace, canPlace, defMap, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type PlacementStyle,
@@ -66,7 +67,9 @@ function show(s: Saved) {
   const st = s.state;
   const lines: string[] = [];
   lines.push(`ROUND ${st.round}  HP me ${st.hp[0]} / ai ${st.hp[1]}   supply me ${st.supply[0]}  (ai ${st.supply[1]})   phase ${st.phase}`);
-  lines.push(`opening: unit ${st.openings[0].unitId} me=${st.openings[0].choice} ai=${st.round > 1 ? st.openings[1].choice : "?"}`);
+  const label = (c: number | "flat" | null) => (c === null ? "-" : c === "flat" ? `war chest (${RULES.openingFlat})` : packLabel(OPENING_PACKS[c], units));
+  lines.push(`opening offer: ${st.openings[0].packs.map((i, k) => `${k}: ${label(i)}`).join(" | ")} | flat: ${label("flat")}`);
+  lines.push(`opening taken: me ${label(st.openings[0].choice)}, ai ${st.round > 1 ? label(st.openings[1].choice) : "?"}`);
   for (const side of [0, 1] as const) {
     const who = side === 0 ? "ME" : "AI";
     const ups = Object.entries(st.upgrades[side]).map(([u, l]) => `${u}:${l.join("+")}`).join(" ");
@@ -77,9 +80,12 @@ function show(s: Saved) {
   console.log(lines.join("\n"));
 }
 
-function cmdNew(name: string, seed = 1, difficulty: Difficulty = "hard", opening?: "discount" | "bonus") {
+// An opening by its position in the offer (0, 1, 2) or "flat".
+const pickOpening = (st: MatchState, o: number | "flat") => chooseOpening(st, 0, o === "flat" ? "flat" : st.openings[0].packs[o], units, 1);
+
+function cmdNew(name: string, seed = 1, difficulty: Difficulty = "hard", opening?: number | "flat") {
   let state = newMatch(units, seed);
-  if (opening) state = chooseOpening(state, 0, opening);
+  if (opening !== undefined) state = pickOpening(state, opening);
   const s: Saved = { state, seed, difficulty, log: [] };
   save(name, s);
   show(s);
@@ -90,7 +96,7 @@ interface Plan {
   up?: [string, string][];
   tower?: number[];
   promote?: string[];
-  opening?: "discount" | "bonus";
+  opening?: number | "flat";
   fill?: string[];
   style?: PlacementStyle;
 }
@@ -99,12 +105,12 @@ function cmdPlay(name: string, plan: Plan) {
   const s = load(name);
   let st = s.state;
   if (st.phase !== "deploy") throw new Error("not in deploy");
-  if (st.round === 1 && !st.openings[0].choice) st = chooseOpening(st, 0, plan.opening ?? "bonus");
+  if (st.round === 1 && st.openings[0].choice === null) st = pickOpening(st, plan.opening ?? 0);
 
   // The AI plans from the state at the start of deployment, like PlayView.
   const aiPlan = planAiRound(
     units, defs,
-    { army: st.armies[1], unlocked: st.unlocked[1], upgrades: st.upgrades[1], towerLevels: st.towerLevels[1], supply: st.supply[1], discounts: unlockDiscounts(st, 1) },
+    { army: st.armies[1], unlocked: st.unlocked[1], upgrades: st.upgrades[1], towerLevels: st.towerLevels[1], supply: st.supply[1] },
     { army: st.armies[0], upgrades: st.upgrades[0], towerLevels: st.towerLevels[0] },
     st.round, s.difficulty, st.round * 7919 + 13 + s.seed * 31,
   );
@@ -149,12 +155,12 @@ function cmdPlay(name: string, plan: Plan) {
   // fill: cycle through these units, auto-placed, until nothing more is affordable
   const buys = [...(plan.buy ?? [])];
   if (plan.fill?.length) {
-    let left = supply - buys.reduce((t, b) => t + priceOf(defs.get(b.u)!, unlocked, unlockDiscounts(st, 0)), 0);
+    let left = supply - buys.reduce((t, b) => t + priceOf(defs.get(b.u)!, unlocked), 0);
     const un = new Set(unlocked);
     for (let i = 0; i < 40; i++) {
       const u = plan.fill[i % plan.fill.length];
-      const p = priceOf(defs.get(u)!, un, unlockDiscounts(st, 0));
-      if (p > left) { if (plan.fill.every((f) => priceOf(defs.get(f)!, un, unlockDiscounts(st, 0)) > left)) break; continue; }
+      const p = priceOf(defs.get(u)!, un);
+      if (p > left) { if (plan.fill.every((f) => priceOf(defs.get(f)!, un) > left)) break; continue; }
       left -= p; un.add(u);
       buys.push({ u, auto: plan.style ?? "spread" });
     }
@@ -162,9 +168,9 @@ function cmdPlay(name: string, plan: Plan) {
   for (const b of buys) {
     const d = defs.get(b.u);
     if (!d) throw new Error(`no unit ${b.u}`);
-    const price = priceOf(d, unlocked, unlockDiscounts(st, 0));
+    const price = priceOf(d, unlocked);
     pay(price, `buy ${b.u}`);
-    if (!unlocked.has(b.u)) { unlocked.add(b.u); spentLog.push(`unlock ${d.name} (${unlockPrice(d, unlockDiscounts(st, 0))})`); }
+    if (!unlocked.has(b.u)) { unlocked.add(b.u); spentLog.push(`unlock ${d.name} (${unlockPrice(d)})`); }
     let sq: PlacedSquad;
     if (b.x === undefined) {
       const placed = autoPlace([d], army, 0, defs, st.round, rng, b.auto ?? "center");
@@ -235,7 +241,7 @@ function cmdPlay(name: string, plan: Plan) {
 }
 
 const [cmd, name, ...rest] = process.argv.slice(2);
-if (cmd === "new") cmdNew(name, Number(rest[0] ?? 1), (rest[1] as Difficulty) ?? "hard", rest[2] as "discount" | "bonus" | undefined);
+if (cmd === "new") cmdNew(name, Number(rest[0] ?? 1), (rest[1] as Difficulty) ?? "hard", rest[2] === undefined ? undefined : rest[2] === "flat" ? "flat" : Number(rest[2]));
 else if (cmd === "show") show(load(name));
 else if (cmd === "play") cmdPlay(name, JSON.parse(rest[0] ?? "{}"));
-else console.log("usage: new <name> [seed] [difficulty] [discount|bonus] | show <name> | play <name> '<plan json>'");
+else console.log("usage: new <name> [seed] [difficulty] [0|1|2|flat] | show <name> | play <name> '<plan json>'");

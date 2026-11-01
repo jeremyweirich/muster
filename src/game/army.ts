@@ -109,20 +109,13 @@ export function autoPlace(
   return placed;
 }
 
-// unit id -> supply knocked off its unlock (the opening offer)
-export type UnlockDiscounts = Record<string, number>;
-
-export function unlockPrice(def: UnitDef, discounts?: UnlockDiscounts): number {
-  return Math.max(0, (def.unlockCost ?? 0) - (discounts?.[def.id] ?? 0));
+export function unlockPrice(def: UnitDef): number {
+  return def.unlockCost ?? 0;
 }
 
 // Total cost of buying `def` given what's already unlocked.
-export function priceOf(def: UnitDef, unlocked: Set<string>, discounts?: UnlockDiscounts): number {
-  return def.cost + (RULES.unlocks && !unlocked.has(def.id) ? unlockPrice(def, discounts) : 0);
-}
-
-export function startingUnlocks(units: UnitDef[]): string[] {
-  return units.filter((u) => !RULES.unlocks || !u.unlockCost).map((u) => u.id);
+export function priceOf(def: UnitDef, unlocked: Set<string>): number {
+  return def.cost + (RULES.unlocks && !unlocked.has(def.id) ? unlockPrice(def) : 0);
 }
 
 // Price of the next upgrade for a unit: flat by how many it already has (200 / 400 / 600 / 800), whatever the unit.
