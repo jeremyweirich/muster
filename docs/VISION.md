@@ -24,7 +24,9 @@ This framing does a lot of work:
 
 ## The triangle
 
-Each campaign ends by exploiting the next faction's weakness, and the following campaign fixes it:
+Each campaign ends by exploiting the next faction's weakness, and the following campaign fixes it. This is a story
+structure: missions build these edges with authored armies. Skirmish balance is per unit and doesn't follow the
+triangle (`docs/BALANCE.md`).
 
 - **Wardens beat Goblins.** Discipline crushes chaos, because the goblins have no answer to the pike line.
 - **Goblins beat Elementals.** The goblins invent an answer and get revenge on the Wardens. Then they find out that

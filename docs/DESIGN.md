@@ -130,7 +130,7 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `structure` | towers only: anchored and not counted toward winning |
 
 **Behavior.** Each model picks a target (nearest, highest HP, lowest HP, towers first, or enemies matching `prefers` first, among layers it can hit),
-walks until it is in range, and attacks. Units with no attack follow the nearest armed ally. Models push each other apart; heavier models get pushed less, and towers never move. Enemies block each other fully, but allies only nudge each other (`RULES.allyPush` = 0.15), so units behind a front line can squeeze through to reach the fight. There is no pathfinding yet.
+walks until it is in range, and attacks. Units with no attack follow the nearest armed ally. Models push each other apart; heavier models get pushed less, and towers never move. Enemies block each other fully, but allies only nudge each other (`RULES.allyPush` = 0.15), so units behind a front line can squeeze through to reach the fight. There is no pathfinding yet. Each tick, models act in a freshly shuffled (seeded) order, so neither side always strikes first, and a squad’s short last row stands at the back of its footprint for both sides.
 
 **Damage pipeline:**
 `attack damage × aura buffs × attacker status (Dazed) → reactions with the target's statuses (Conduct ×2, Shatter ×2, …) → bonusVs → target resist → target status (Dazed ×2)`
@@ -182,101 +182,40 @@ recruit list; faction bonuses come later (section 8).
 | Dragon | 600 | 200 | 1 (4×4, air) | 9 | 4200 | 95 fire / 1.6s, range 3, splash 1.8 | Flier, Splash, Sturdy | **Inferno**: +25% damage, and its breath leaves burning ground.<br>**Ancient Scales**: +40% HP and +30% physical resistance.<br>**Elder Blood**: Regenerates 40 HP/s, except while Chilled.<br>**Dread**: Its breath terrifies: everything it scorches is Dazed for 1.5s (deals 10%, takes double). |
 | Giant | 350 | 150 | 1 (3×3) | 5 | 3000 | 200 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance.<br>**Rockslide**: Bigger rocks, thrown farther: +3 range and a wider blast.<br>**Frost Giant**: Boulders of ice: frost damage that Chills where they land and freezes anything Wet or already chilled. |
 
-### Counter web — Decided (direction), Open (numbers)
+### Balance — Decided (approach), Open (targets and numbers)
 
-Rock-paper-scissors is the main balance goal. Every unit should be strong against some things and clearly weak against
-others, and no army should be a safe default. Knight + archer spam in particular must have several direct answers.
+Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/REFERENCE.md`,
+`docs/REFERENCE_2.md`). `docs/BALANCE-PLAN.md` maps our units onto it and sets out the order of work.
 
-Lethality: fights are meant to be short. A Knight mirror resolves in about 25–30 s; most mixed fights end in 10–45 s.
+- **Units, not factions.** Units are balanced against each other at equal supply. Factions are identity (and, later,
+  bonuses), not a balance target. The story's faction triangle (`docs/VISION.md`) comes from campaign missions with
+  authored armies, not from the skirmish numbers.
+- **Roles.** Every unit has a place in the Mechabellum cycle (chaff soaks carries, chaff clear kills chaff, carries
+  kill chaff clear and everything bigger) or around it (tank, diver, utility, late-game), and a size class read from its
+  `size:*` tag: small = light, medium = medium, large = giant, huge = titan. The damage profile decides what a unit is
+  efficient against: splash and many small hits against light, big single hits against medium, ramping damage against
+  giants and titans.
+- **Targets are data.** `src/data/balance.ts` holds each unit's role, its Mechabellum analogue, a self-TTK band
+  (HP ÷ own DPS per model) and its relationship table (beats / loses to). The current table is a **draft** translated
+  from the reference through the analogues; it needs the owner's sign-off before numbers are tuned to it.
+- **Anchors.** Elven Archers are the neutral baseline (value 1.0); Knights are the second anchor.
+- **Tolerances** (`TOLERANCE` in `src/data/balance.ts`): a mirror is 50%; a soft counter wins at least 60% at equal
+  supply; a hard counter beats twice its own supply of the target; nothing hard-counters more than half the roster;
+  every unit has at least one hard counter.
+- **Harness:** `npm run balance -- <mode>` (`scripts/balance.ts`). Level 1, no Keeps, sides alternated, formations
+  randomized, both sides at the same supply (`equalCostCounts` in `src/game/lab.ts` picks the squad counts).
 
-Wardens:
-
-- **Knights** are the tank: the most effective HP per supply, low damage per supply. Arrows bounce off them. Fire,
-  frost, Ogres, Trolls and grenades answer them; Warded Plate answers the elemental answers.
-- **Elven Archers** are steady single-target arrows: they pick off swarms and Griffons, and lose to armor, Giant Bats and
-  anything big. Skyhunters (hunt fliers first, +2 range vs them) turns them into flier hunters; Volley trades 2 range
-  for rate of fire.
-- The **Ballista** is a single-target sniper (no splash, even fully upgraded) that hunts the biggest unit: Ogre, Giant,
-  Golem, Water Elemental, Dragon. Swarms and raiders beat it.
-- **Griffon Riders** are halflings on griffons: fast fliers that throw spears from just above the fight and hit both
-  layers. Massed arrows, Skirmishers and Air Elementals beat them.
-- The **Cleric** is the Wardens' only utility unit, so it's built to be strong and flexible: a big heal (60 every 2 s,
-  radius 4), and four prayers that each do a different job: Sanctuary (a second, wider heal), Blessing (+35% damage),
-  Purify (cleanses statuses every 1.5 s) and Battle Hymn (+30% attack speed, +25% move speed). Auras reach 4 tiles.
-- **Dwarven Pikemen** are the Wardens' answer to rushes: a pike line with short sweeping splash and ×1.75 damage to
-  cavalry and large units, so goblins, wolves, ogres, trolls and golems run onto it. Pike Wall hurts every melee attacker
-  (each goblin stab costs a goblin, and it is the one thing on the ground that punishes Giant Bats). Archers, fire,
-  fliers and the Troll's Boulder Toss beat it.
-
-Goblins:
-
-- **Grunts** die to any single non-goblin hit (10 HP) but stab very fast (8 damage every 0.25 s). Archers and anything
-  that hits often stop them; a mob that reaches soft or slow units shreds them. Feral Frenzy and Party Time make them
-  much deadlier. Scrap Armor (20 HP plus a shield that blocks the first hit) takes two arrows per goblin, which turns
-  them into chaff that soaks big hitters. Oil Bombs leave oil where they fall.
-- **Skirmishers** are goblin archers: 10 cheap, fragile bodies with short bows (range 3.5) that hit ground and air.
-  Unupgraded they're chaff and the goblins' first answer to fliers. Upgrades make them problem solvers: Ambush (can't be
-  targeted until they shoot), Barbed Arrows, Improvised Bombs (one fire grenade each per battle, on first contact,
-  which burns friend and foe).
-- **Wolf Riders** throw javelins from just outside melee (range 2.5) and run down archers and siege.
-- **Trolls** are the goblins' early bruisers: two big bodies with mild regeneration that stops while Burning. Berserk
-  (faster while unhurt, ramping damage on one target) makes them specialists against big targets.
-- **Giant Bats** fly over the front line and hunt ranged, caster and siege units first (×2 damage to them). They can only
-  hit the ground, so Griffons, Air Elementals, Frost Elementals, Skirmishers and other anti-air swat them.
-
-Elementals: the ranged gradient. From most bodies to fewest, with power concentrated in fewer models: Skirmishers (10),
-Elven Archers (6), Fire Elemental (4), Frost Elemental (3), Air Elemental (2), Ballista (1). Fire and Air are the two
-area-damage casters, kept distinct: Fire is long-range splash on the ground, Air is short-range chain lightning that
-can take to the sky. Frost is the steady single-target shooter whose upgrades are mostly support.
-
-- **Fire Elemental** is four living flames lobbing slow fireballs (range 7, splash 1.5) that leave everyone Burning,
-  your own troops too. Controlled Burn tames the burning, Meteor makes it artillery, Wildfire leaves burning ground.
-  It's immune to fire, so Fire Arrows and grenades do nothing to it.
-- **Water Elemental** is the combo enabler: a big, tough wave that soaks everything Wet, so lightning Conducts and frost
-  freezes. Wellspring makes it the elementals' healer.
-- **Air Elemental** is a pair of whirlwinds on the ground throwing chain lightning (range 4, ×1.5 vs fliers). Knights
-  and pikes can reach it, so it needs a front line. Take Flight makes it a flier (and 40% faster); Eye of the Storm
-  makes it a total counter to fliers. It resists lightning (60%) but isn't immune, so Air mirrors end.
-- **Cloudlings** are a flock of little rainclouds: a fast, fragile flying swarm that pelts the ground with hail
-  (physical). Their upgrades build a storm: Downpour soaks targets Wet and leaves puddles, Freezing Rain turns the hail
-  to frost (through armor, and Wet targets freeze), Thunderstorm calls a lightning strike on its own cooldown (Wet
-  targets Conduct, Frozen ones Shatter), and Overcast adds clouds.
-- **Frost Elemental** is three ice spirits with long-range frost bolts (range 7, hits air): steady single-target damage
-  that goes through armor and freezes anything Wet. Chilling Bolts adds control, Cold Snap adds damage, Hoarfrost chills
-  raiders that reach the back line, and Glacial Reach (+4 range, −25% damage, hunts archers, casters and siege first) is
-  the optional answer to long-range archers. Fire melts it (−50% fire resistance). The Fire Elemental's Meteor is the
-  other way to outrange archers.
-- **Stone Golem** is the elementals' plain front line: one huge body (3×3, size 1.25) that is immune to lightning, hard
-  to burn, worn away by water, and easy for swarms to surround. Magma Core gives it fire fists.
-
-Across factions:
-
-- **Fire** (Fire Elemental, Improvised Bombs, Fire Arrows, Magma Core) and **frost** (Frost Elemental, Freezing Rain)
-  ignore physical armor. Fire stops the Troll's regeneration (until Thick Blood).
-- **Splash** (Ogre, Fire Elemental, Giant, Pikemen) shreds swarms.
-- **Skirmishers** (the goblin Skirmishers, Wolf Riders, Griffon Riders) shoot or throw from just outside melee. There are
-  fewer pure melee units than before, and more short-range attacks, so the fight has a front line, a skirmish line and a
-  back line.
-
-Faction armies at about 900–1000 supply, towers on, level 1, no upgrades, sides alternated, 12 seeds
-(`npm run experiments -- G`; win rate of the row army). Measured after the Oct 2026 elemental redesign; reference
-armies in `scripts/balance-experiments.ts`: Wardens 2 Knights, 3 Elven Archers, Ballista, Pikemen; Goblins 2 Grunts,
-Skirmishers, Wolf Riders, Troll, Giant Bats; Elementals Water, Fire, Air, Cloudlings, Frost; Independents Giant,
-Dragon.
-
-| Army | vs Wardens | vs Goblins | vs Elementals | vs Independents |
-|---|---|---|---|---|
-| Wardens | — | 100% | 75% | 100% |
-| Goblins | 0% | — | 25% | 0% |
-| Elementals | 25% | 67% | — | 58% |
-| Independents | 0% | 100% | 67% | — |
-
-The Wardens are on top without upgrades, as intended. Elementals now take a quarter of their fights against Wardens
-(0% before the redesign) and still beat Goblins, which is the reverse of the story's Goblins > Elementals edge. Goblins
-lose to everything at level 1; see `docs/PLAYTEST-2026-10-31.md`. Upgrades and veterancy haven't been tuned; expect
-balance to move a lot.
-
-One-unit-type fights (the Counters tab, `npm run matrix`) still over-reward fliers, because most ground units can't hit them at all.
+| Mode | Benchmark (docs/BALANCE.md §5) |
+|---|---|
+| `stats` | Self-TTK, HP and DPS per 100 supply, Lanchester value (HP × DPS per supply) against the baseline. No fights |
+| `coverage` | Units per role against the reference template, anti-air per role, and static checks on the target table |
+| `mirror` | Side-bias test: each unit against its own reflection, which should be 50% |
+| `matrix` | Every unit against every unit: win rate, value margin, fight time and the Nash mix. `--scale 1,2,4` for the scale test, `--csv <file>` for a spreadsheet. `npm run matrix` is a shortcut |
+| `check` | Grades the matrix against `src/data/balance.ts`: side bias in true mirrors, targets that hold, unplanned hard counters, and each unit's hard counters |
+| `distance <a> <b>` | Closing-distance test: a starts d tiles from b, to find the crossover |
+| `fight <a> <b>` | Composition test with mixed armies, e.g. `"knights*2,cleric" "frost_elemental*3,cleric"`, optional `--upsA` / `--upsB` |
+| `sensitivity <unit>` | ±10% on HP, damage, attack rate, range and speed; lists matchups that flip |
+| `upgrades <unit>` | The unit's row with each upgrade, all four, and at each veterancy level (paying for the promotions) |
 
 ### Roles
 
@@ -370,7 +309,7 @@ make it stronger.
 - Promoted squads show a gold `LvN` tag on their footprint during deployment and in the report, and one gold ring per
   level on each model in battle. Enemy levels are visible.
 - Code: `src/sim/levels.ts` (`earnedLevel`, `levelDef`), XP is awarded in `applyRound` (`src/game/match.ts`), and the
-  battle builds each squad at its `level`. The Counters tab, the matrix and balance tests run everything at level 1.
+  battle builds each squad at its `level`. The Counters tab and the balance matrix run everything at level 1; `npm run balance -- upgrades <unit>` tests each level, paying for the promotions.
 
 ## 6. The elemental system — Decided (structure), Open (tables)
 
@@ -464,9 +403,9 @@ decision.
 
 | Faction | Identity | Strengths | Weaknesses |
 |---|---|---|---|
-| **Wardens** (human, elf, dwarf, halfling) | discipline and anti-everything; **the strongest and most straightforward faction** | armor, range, anti-air, anti-large, healing, plain stat upgrades | few elemental tools, slow siege |
+| **Wardens** (human, elf, dwarf, halfling) | discipline; **the most straightforward faction** | armor, range, anti-air, anti-large, healing, plain stat upgrades | few elemental tools, slow siege |
 | **Goblins** (goblin, troll, ogre) | numbers, speed, chaos with heart | swarms, raiders, short bows that also hit fliers, bats that hunt archers, regenerating trolls, oil and fire, the ogre warboss | goblins die to any hit, ogres and trolls take extra fire damage |
-| **Elementals** | elemental combos; **harder to use**, with hard weaknesses and some total counters (Air vs fliers, Golem vs lightning) | big splash, Wet + lightning, freezing, stuns, a flying storm swarm | fragile shooters that need a front line, slow ground bodies, weak to the opposite element |
+| **Elementals** | elemental combos; **the most complex to play** | big splash, Wet + lightning, freezing, stuns, a flying storm swarm | fragile shooters that need a front line, slow ground bodies, weak to the opposite element |
 | **Independents** | big, unique monsters | Dragon, Giant (boulders) | expensive unlocks, no faction synergies |
 
 **Still open:** faction bonuses for staying in-faction. The plan is to build them from army modifiers based on tags: a
@@ -519,7 +458,7 @@ The tabs, in order: **Play** (the default: the full game against the AI, every u
 | **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts` |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
-| `npm run matrix` | Every unit against every unit, one-unit armies, as a win-rate matrix in the terminal |
+| `npm run balance` | The balance harness (section 4, Balance): stats, coverage, the equal-supply matrix, checks against the targets, and the closing-distance, composition, sensitivity and upgrade tests |
 
 ### Codex links — Decided
 
@@ -571,14 +510,13 @@ src/ui/      React views
 
 Rough priority order. Everything is open to reshuffling.
 
-1. **Balance pass** using the matrix, the experiments script and battle reports. A first rock-paper-scissors pass is done (section 4, counter
-   web): Knights became low-damage tanks, Longbowmen (now Elven Archers) became anti-swarm and anti-air volleys, and all units move a third
-   faster. Still open: in one-unit-type fights, fliers (Griffons, Cloudlings, Giant Bats) dominate because most
-   ground units can't hit them. Decide whether that's an artifact of one-unit armies or a real problem. Upgrades (four per unit since Oct 2026) haven't been tuned.
+1. **Balance pass** following `docs/BALANCE.md` (section 4, Balance; `docs/BALANCE-PLAN.md`): sign off the
+   relationship table in `src/data/balance.ts`, lock the baseline (Elven Archers) and the anchor (Knights), then add
+   units one at a time until `npm run balance -- check` passes. Only then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
 3. **Campaigns** (docs/CAMPAIGN.md): mission framework, then the Wardens campaign. Parked until stored progress is
    decided: saving the player's winning board from a campaign finale as the Drill Book's last page.
-4. **Mixed armies and upgrades in the experiments script**, to compare upgrade A vs B and test combo pairs.
+4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary.
 7. **Pathfinding and formations:** move around obstacles, and keep squads together.

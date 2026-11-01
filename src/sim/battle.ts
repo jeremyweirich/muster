@@ -161,7 +161,8 @@ export function footprintOf(def: UnitDef, rot?: boolean): { w: number; h: number
 }
 
 // Lay out a squad's models inside its (possibly rotated) footprint.
-export function formation(def: UnitDef, sx: number, sy: number, rot?: boolean): [number, number][] {
+// A short last row goes at the back: the bottom of the footprint for side 0, the top for side 1.
+export function formation(def: UnitDef, sx: number, sy: number, rot?: boolean, side: Side = 0): [number, number][] {
   const { w, h } = footprintOf(def, rot);
   const n = Math.max(1, def.squadSize);
   const cols = Math.max(1, Math.min(n, Math.round(Math.sqrt((n * w) / h))));
@@ -172,7 +173,8 @@ export function formation(def: UnitDef, sx: number, sy: number, rot?: boolean): 
     const r = Math.floor(i / cols);
     const inRow = r === rows - 1 ? n - cols * (rows - 1) : cols;
     const offset = (cols - inRow) / 2;
-    out.push([sx + ((c + offset + 0.5) * w) / cols, sy + ((r + 0.5) * h) / rows]);
+    const row = side === 0 ? r : rows - 1 - r;
+    out.push([sx + ((c + offset + 0.5) * w) / cols, sy + ((row + 0.5) * h) / rows]);
   }
   return out;
 }
@@ -220,6 +222,7 @@ export class Battle {
   readonly fx: Fx[] = [];
   readonly recordFx: boolean;
   time = 0;
+  private orderRng: Rng; // shuffles who updates first each tick
   over = false;
   winner: Side | null = null;
   timedOut = false;
@@ -236,6 +239,7 @@ export class Battle {
     this.rules = opts.rules ?? RULES;
     this.recordFx = opts.recordFx ?? false;
     this.rng = new Rng(opts.seed ?? 1);
+    this.orderRng = new Rng(((opts.seed ?? 1) ^ 0x5bd1e995) >>> 0);
     this.surfaces = new SurfaceGrid(this.rules.fieldW, this.rules.fieldH, this.rules.surfaceRes);
     this.sideDefs = Array.isArray(defs) ? defs : [defs, defs];
     for (const side of [0, 1] as Side[]) {
@@ -256,7 +260,7 @@ export class Battle {
   private addSquad(sq: PlacedSquad, def: UnitDef, side: Side) {
     const squad = this.squads.length;
     this.squads.push({ uid: sq.uid, def, side, stats: emptyStats(sq.uid, def, side) });
-    for (const [x, y] of formation(def, sq.x, sq.y, sq.rot)) this.addModel(def, squad, side, x, y);
+    for (const [x, y] of formation(def, sq.x, sq.y, sq.rot, side)) this.addModel(def, squad, side, x, y);
   }
 
   private addModel(def: UnitDef, squad: number, side: Side, x: number, y: number, summoned = false): Model {
@@ -319,7 +323,14 @@ export class Battle {
       this.applySurfaceTicks();
     }
 
-    for (const m of this.models) if (m.alive) this.updateModel(m, dt);
+    // Hits land at once, so whoever updates first strikes first. Side 0's models were created first, so a fixed
+    // order hands it the first blow in every even exchange. Shuffle the order each tick (its own seeded stream).
+    const order = this.models.filter((m) => m.alive);
+    for (let i = order.length - 1; i > 0; i--) {
+      const j = this.orderRng.int(i + 1);
+      [order[i], order[j]] = [order[j], order[i]];
+    }
+    for (const m of order) if (m.alive) this.updateModel(m, dt);
     this.updateProjectiles(dt);
     this.separate();
     this.processDeaths();

@@ -1,5 +1,9 @@
 # Playtest and balance notes, October 2026
 
+> **Superseded (Nov 2026).** Balance now follows `docs/BALANCE.md`; see `docs/BALANCE-PLAN.md`. This report is kept
+> as history. Its match logs and bug notes still describe the game, but its balance conclusions (the faction triangle,
+> the reference armies, the old experiments script) no longer guide tuning.
+
 A snapshot written for a future session that will combine these notes with the narrative overhaul (now `docs/VISION.md`) and the
 campaign plans. It records what Claude learned by playing full matches against the AI and running controlled fights,
 taken at commit `b958793` (the 21-unit roster in DESIGN.md §4).

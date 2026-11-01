@@ -261,7 +261,7 @@ opening offer and the three AI difficulties.
   states: the Wardens are rigid, the goblins are reckless with fire and numbers, the elementals are dangerous to each
   other. Each campaign's lessons come out of that, not out of a checklist.
 - **Two balance targets, kept apart** (playtest §3): campaign edges come from authored kits and enemies. Skirmish
-  balance aims for the tied standings of the epilogue. The campaign doesn't need the open roster to be lopsided.
+  balance is per unit (`docs/BALANCE.md`) and doesn't follow the triangle. The campaign doesn't need the open roster to be lopsided.
 - **The biggest risk is the elementals**, because their campaign depends on combos that don't work well enough today.
   Their redesign should start early, even though their campaign comes last.
 

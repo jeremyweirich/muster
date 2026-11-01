@@ -348,7 +348,7 @@ export function drawSquad(
     ctx.strokeRect(sq.x * tile + 1, sq.y * tile + 1, w * tile - 2, h * tile - 2);
     ctx.setLineDash([]);
   }
-  formation(def, sq.x, sq.y, sq.rot).forEach(([x, y], i) => {
+  formation(def, sq.x, sq.y, sq.rot, side).forEach(([x, y], i) => {
     const dead = o.alive !== undefined && i >= o.alive;
     drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3 });
   });

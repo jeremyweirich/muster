@@ -157,8 +157,8 @@ export function CountersView({ topic }: { topic?: string }) {
           <CounterGroup title="Even fights" hint="Close either way. Placement and the rest of your army decide it." rows={even} enemy={enemy} kind="even" />
           <CounterGroup title="Don't send these" hint={`${enemy.name} beats them.`} rows={weak} enemy={enemy} kind="weak" />
           <p className="muted small method">
-            How this is tested: {COUNTER_BUDGET} supply of each unit against {COUNTER_BUDGET} supply of {enemy.name}, as many squads as
-            that buys, at level 1 with no upgrades and no <CodexLink topic="keeps">Keeps</CodexLink>. Real armies mix units, so add a
+            How this is tested: about {COUNTER_BUDGET} supply of each unit against the same supply of {enemy.name}, as many squads
+            as that buys, at level 1 with no upgrades and no <CodexLink topic="keeps">Keeps</CodexLink>. Real armies mix units, so add a
             counter to your army rather than building nothing else. Fliers look stronger here than in real matches, where most armies
             bring some <CodexLink topic="role-antiair">anti-air</CodexLink>.
           </p>

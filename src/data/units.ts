@@ -11,7 +11,7 @@ const BACKLINE = ["class:ranged", "class:caster", "class:siege"];
 
 export const DEFAULT_UNITS: UnitDef[] = [
   // --------------------------------------------------------------- Wardens
-  // The most straightforward faction: solid baselines and upgrades that do one clear thing.
+  // The most straightforward faction: upgrades that do one clear thing.
   {
     id: "knights",
     name: "Knights",
@@ -161,7 +161,6 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 8,
     size: 0.3,
     traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 60, radius: 4 }] }],
-    // The only Warden utility unit, so every prayer is strong and they cover different needs.
     upgrades: [
       {
         id: "sanctuary",
@@ -494,7 +493,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   },
 
   // ------------------------------------------------------------- Elementals
-  // Harder to use: strong combos, hard weaknesses, and some total counters.
+  // The most complex to play: their strength is in combos.
   {
     id: "fire_elemental",
     name: "Fire Elemental",
@@ -707,8 +706,6 @@ export const DEFAULT_UNITS: UnitDef[] = [
       damage: 55, element: "frost", cooldown: 1.5, range: 7,
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
-    // The ranged gradient, most bodies to fewest: Skirmishers, Elven Archers, Fire, Frost, Air, Ballista.
-    // Frost is the steady single-target shooter whose upgrades are mostly support.
     upgrades: [
       {
         id: "chilling_bolts",

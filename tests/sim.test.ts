@@ -192,7 +192,7 @@ describe("targeting and self-destruct", () => {
   it("self-destructing attackers die after their first blast", () => {
     const g = byId("grunts");
     const kegs = { ...g, attack: { ...g.attack!, element: "fire" as const, damage: 125, splash: 1.4, selfDestruct: true } };
-    const b = new Battle(new Map(defs).set("grunts", kegs), [army(0, ["grunts"]), army(1, ["knights"])], { seed: 1, towers: false });
+    const b = new Battle(new Map(defs).set("grunts", kegs), [army(0, ["grunts"]), army(1, ["knights", "knights", "knights"])], { seed: 1, towers: false });
     for (let i = 0; i < 400; i++) b.step();
     expect(b.models.filter((m) => m.def.id === "grunts" && m.alive)).toHaveLength(0);
     const knights = b.squads.find((s) => s.def.id === "knights")!.stats;
