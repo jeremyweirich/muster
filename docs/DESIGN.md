@@ -47,7 +47,7 @@ Round N
  │    ├─ buy squads, place and rotate them in your zone
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
- ├─ Battle (automatic, deterministic, up to 90 s; always starts at 1× playback, which is half real time)
+ ├─ Battle (automatic, deterministic, up to 120 s; always starts at 1× playback, which is half real time)
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
@@ -63,7 +63,7 @@ and towers.
 ## 3. Battlefield — Decided
 
 - **48 × 27 tiles**, a 16:9 field shaped like a landscape screen. Armies face each other across the short axis, so
-  the front is wide and there's room to flank. Each side deploys in its back 9 rows. The 9 rows in the middle are
+  the front is wide and there's room to flank. Each side deploys in its back 7 rows. The 13 rows in the middle are
   no-man's-land.
 - **Grid placement.** Each squad has a rectangular footprint in tiles. Footprints can't overlap each other or a tower.
 - **Rotation.** Right-click or press **R** to swap a footprint's width and height when placing. You can also right-click
@@ -105,7 +105,7 @@ Each side has two Keeps (West and East) near the back of its zone, 2 rows in fro
 - **Why:** a single strong deathball in the center leaves the flanks open. A cheap raider that slips through and snipes a
   tower can swing the main fight. Tower levels are the counter-investment: you pay supply for insurance instead of army.
 - Both Keeps are ground structures with no weapons, so any army can reach them and they never shoot back. Wolf Riders
-  can buy *Tower Raiders* to go straight for towers.
+  can buy *Tower Raiders* to pick out a Keep whenever they pass near one; placed on a flank, that is a tower raid.
 
 ## 4. Units — Decided (data model), Open (roster)
 
@@ -119,17 +119,17 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `footprint` | deployment tiles, w × h (rotatable) |
 | `layer` | ground or air |
 | `hp`, `size` | per model; size is the collision radius in tiles |
-| `speed` | speed points, mostly between 5 and 20; tiles/s = points × 0.2 (`RULES.speedScale`), so 10 = 2 tiles/s |
+| `speed` | speed points, mostly between 5 and 20; tiles/s = points × 0.1 (`RULES.speedScale`), so 10 = 1 tile/s |
 | `spacing` | extra distance kept from allies **while advancing**; ranks close once fighting. Reduces splash damage taken |
-| `resist` | per element: 0.3 = takes 30% less, -0.35 = takes 35% more, 1 = immune |
-| `immuneStatuses` | statuses that never apply |
-| `attack` | damage, element, cooldown, range, targets, targeting, delivery, splash, chain, `bonusVs`, `rangeVs` (extra range against matching targets), `prefers` (hunt matching enemies first), `selfDestruct` (dies after its first attack), `onHit` effects |
+| `resist` | per element: 0.3 = takes 30% less, -0.35 = takes 35% more. No unit is immune to an element: an element's own creatures resist it mildly (0.3) |
+| `immuneStatuses` | statuses that never apply (no unit uses this today; see `resist`) |
+| `attack` | damage, element, cooldown, range, targets, targeting, delivery, splash, chain, `bonusVs`, `rangeVs` (extra range against matching targets), `prefers` (pick out matching enemies first, among those nearby), `selfDestruct` (dies after its first attack), `onHit` effects |
 | `traits` | aura, onDeath, regen, periodic, retaliate, charge, onKill |
 | `upgrades` | four upgrades per unit (section 5b); prices are global (`RULES.upgradeCosts`) |
 | `tags` | `category:value` labels used by selectors, including `faction:*` and `role:*` |
 | `structure` | towers only: anchored and not counted toward winning |
 
-**Behavior.** Each model picks a target (nearest, highest HP, lowest HP, towers first, or enemies matching `prefers` first, among layers it can hit),
+**Behavior.** Each model picks a target among the layers it can hit: the nearest, unless a preference applies (highest HP, lowest HP, towers first, or enemies matching `prefers`). **Preferences are local**: they only choose among enemies within attack range + `RULES.preferReach` (4 tiles). Of the enemies in front of it, a unit takes the one it prefers; it never crosses the field for one. Raiders reach the back line by speed, by flying, or by being placed on a flank. Then it
 walks until it is in range, and attacks. Units with no attack follow the nearest armed ally. Models push each other apart; heavier models get pushed less, and towers never move. Enemies block each other fully, but allies only nudge each other (`RULES.allyPush` = 0.15), so units behind a front line can squeeze through to reach the fight. There is no pathfinding yet. Each tick, models act in a freshly shuffled (seeded) order, so neither side always strikes first, and a squad’s short last row stands at the back of its footprint for both sides.
 
 **Damage pipeline:**
@@ -146,41 +146,41 @@ recruit list; faction bonuses come later (section 8).
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Knights | 200 | 0 | 4 (4×1) | 10 | 760 | 60 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage.<br>**Warded Plate**: +40% resistance to fire, frost, lightning and water. The answer to elementals.<br>**Veterans**: Old hands: +25% damage, and each knight shrugs off the first hit it takes. |
-| Elven Archers | 100 | 0 | 6 (3×2) | 8 | 100 | 22 physical / 1.5s, range 8 | Ranged, Anti-air | **Longshot**: +4 range.<br>**Fire Arrows**: Arrows burn: fire damage +25%, and they ignite oiled targets.<br>**Volley**: Shoot 40% faster, but loose arcs reach 2 tiles less.<br>**Skyhunters**: Hunt fliers first, with +2 range against them: they shoot them down before they reach the line. |
-| Ballista | 150 | 75 | 1 (2×2) | 5 | 320 | 340 physical / 3.5s, range 10 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +50% damage. Still one target at a time.<br>**Repeater**: Fires twice as fast for 60% damage per bolt.<br>**Chain Harpoons**: Bolts Chill the target. Hit it again and it freezes; the bolt after that shatters it for double. Pairs with Repeater.<br>**Reinforced Frame**: +100% HP and +30% physical resistance, so raiders can't just walk over it. |
-| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 400 | 55 physical / 1s, range 2 | Flier, Fast, Skirmisher | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Hunt fliers first, with ×1.75 damage to them.<br>**Pride**: +1 griffon per squad. |
-| Cleric | 150 | 75 | 2 (2×1) | 8 | 300 | none | Healer, Support | **Sanctuary**: A second prayer heals 50 more every 2s, in a much wider circle.<br>**Blessing**: Allies nearby deal +35% damage.<br>**Purify**: Every 1.5s, washes every status off nearby allies: Burning, Frozen, Wet, Oiled, Dazed. Combos and Keep collapses barely touch the line.<br>**Battle Hymn**: Allies nearby attack 30% faster and march 25% faster. With Blessing, the line hits much harder. |
-| Dwarven Pikemen | 150 | 75 | 6 (3×2) | 9 | 260 | 40 physical / 1.2s, range 0.9, splash 0.6 | Anti-large, Splash, Melee | **Pike Wall**: Anyone who hits them in melee takes 30 damage back. Goblins die on the pikes.<br>**Long Pikes**: +1 range, so the back rank fights too.<br>**Heavy Halberds**: +60% damage and wider sweeps.<br>**Drilled Ranks**: +2 dwarves per squad. |
+| Knights | 200 | 0 | 4 (4×1) | 12 | 600 | 40 physical / 1s, range 0.6 | Sturdy, Melee | **Shield Wall**: +25% HP and +20% physical resistance.<br>**Lance Charge**: 30% faster, and the first strike deals ×4 damage.<br>**Warded Plate**: +50% resistance to fire, frost, lightning and water. The answer to elementals.<br>**Veterans**: Old hands: +30% damage, and each knight shrugs off the first hit it takes. |
+| Crossbowmen | 100 | 0 | 3 (3×1) | 8 | 220 | 85 physical / 3s, range 7 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Bolts**: Bolts burn: fire damage +25%, and they ignite oiled targets.<br>**Repeaters**: Repeating crossbows: shoot 2.5× as fast for 60% damage per bolt. Built for swarms, not armor.<br>**Skyhunters**: Pick out nearby fliers first, with +2 range against them: they shoot them down before they reach the line. |
+| Ballista | 100 | 100 | 1 (2×2) | 5 | 250 | 260 physical / 3.5s, range 11 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +50% damage. Still one target at a time.<br>**Repeater**: Fires twice as fast for 60% damage per bolt.<br>**Chain Harpoons**: Bolts Chill the target. Hit it again and it freezes; the bolt after that shatters it for double. Pairs with Repeater.<br>**Reinforced Frame**: +100% HP and +30% physical resistance, so raiders can't just walk over it. |
+| Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 360 | 45 physical / 1s, range 2 | Flier, Fast, Skirmisher | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Pick out nearby fliers first, with ×1.75 damage to them.<br>**Giant Slayers**: Hunt big game: ×2.5 damage to large and huge units, and pick them out when they're near. |
+| Cleric | 200 | 100 | 2 (2×1) | 8 | 300 | none | Healer, Support | **Sanctuary**: A second prayer heals 50 more every 2s, in a much wider circle.<br>**Blessing**: Allies nearby deal +35% damage.<br>**Purify**: Every 1.5s, washes every status off nearby allies: Burning, Frozen, Wet, Oiled, Dazed. Combos and Keep collapses barely touch the line.<br>**Battle Hymn**: Allies nearby attack 30% faster and march 25% faster. With Blessing, the line hits much harder. |
+| Dwarven Pikemen | 200 | 100 | 6 (4×2) | 9 | 300 | 36 physical / 1.2s, range 1.5 | Anti-large, Swarm, Melee | **Pike Wall**: Anyone who hits them in melee takes 40 damage back. Goblins don't last long on the pikes.<br>**Long Pikes**: +1 range, so the back rank fights too.<br>**Heavy Halberds**: Halberds instead of pikes: +40% damage, and every blow sweeps a wide arc. Swarms melt.<br>**Drilled Ranks**: +3 dwarves per squad. |
 
 #### Goblins
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Grunts | 100 | 0 | 16 (4×2) | 15 | 10 | 8 physical / 0.25s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Scrap Armor**: Pots and planks: +10 HP, and each goblin shrugs off the first hit it takes, so it takes two arrows to drop one. 15% slower.<br>**Feral Frenzy**: Run 30% faster and stab 40% faster.<br>**Party Time**: Goblins love a big fight: +8 goblins per squad.<br>**Oil Bombs**: Every goblin carries a jug of oil, which spills where it falls. Oil slows anyone in it, and fire turns it to burning ground. |
-| Skirmishers | 100 | 50 | 10 (4×2) | 13 | 10 | 10 physical / 1.2s, range 3.5 | Skirmisher, Anti-air, Swarm | **Ambush**: Hidden in the grass: enemies can't target a skirmisher until it shoots, and only for 2s after each shot. Splash still finds them.<br>**Barbed Arrows**: Nasty barbed heads: +60% damage.<br>**Improvised Bombs**: Each skirmisher carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.<br>**Skyshot**: Hunt fliers first, with ×1.5 damage to them. |
-| Wolf Riders | 150 | 50 | 4 (2×2) | 20 | 320 | 45 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: Ignore the army and go straight for the enemy's towers.<br>**Flankers**: Circle the line and run down archers, casters and siege first, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets. |
-| Troll | 200 | 75 | 2 (2×1) | 10 | 1000 | 90 physical / 1.3s, range 0.6 | Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates 20 HP/s even while Burning. Fire alone won't stop it any more.<br>**Berserk**: Attacks 50% faster while unhurt, and every hit in a row on the same target lands 25% harder, up to ×2.5. Wasted on small fry, brutal on big targets.<br>**Rock Skin**: Hide like a cliff face: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching, so it never has to touch a pike wall. |
-| Ogre Brute | 250 | 100 | 1 (2×2) | 7 | 2400 | 200 physical / 2s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness. When something hits it, 40% of the time a nearby goblin (the smaller the better) takes the blow instead, and dies.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre deal 25% more damage and attack 25% faster, and every 5s it bellows a grunt out of nowhere to join the fight. |
-| Giant Bats | 200 | 100 | 4 (2×2, air) | 20 | 220 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Leather Wings**: Tough hides shrug off arrows: +30% physical resistance. They also burst off the line 40% faster for the first 3s.<br>**Shriek**: Each bat shrieks as it dives in, and again every 10s: enemies around its target are Dazed for 3s, dealing 10% damage and taking double.<br>**Bloodsuckers**: The bats feed as they fight: they heal for 40% of the damage they deal.<br>**Savage Claws**: +15% HP and +60% damage. |
+| Grunts | 100 | 0 | 16 (4×2) | 15 | 40 | 8 physical / 0.6s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Scrap Armor**: Pots and planks: +20 HP, and each goblin shrugs off the first hit it takes, so it takes two bolts to drop one. 15% slower.<br>**Feral Frenzy**: Run 30% faster and stab 40% faster.<br>**Party Time**: Goblins love a big fight: +8 goblins per squad.<br>**Oil Bombs**: Every goblin carries a jug of oil, which spills where it falls. Oil slows anyone in it, and fire turns it to burning ground. |
+| Skirmishers | 100 | 50 | 12 (4×2) | 16 | 30 | 12 physical / 1.2s, range 3.5 | Skirmisher, Anti-air, Swarm | **Ambush**: Hidden in the grass: enemies can't target a skirmisher until it shoots, and only for 2s after each shot. Splash still finds them.<br>**Barbed Arrows**: Nasty barbed heads: +60% damage.<br>**Improvised Bombs**: Each skirmisher carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.<br>**Skyshot**: Hunt fliers first, with ×1.5 damage to them. |
+| Wolf Riders | 200 | 100 | 4 (2×2) | 24 | 540 | 70 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: 15% faster, and they pick out a Keep over the army whenever one is near. Place them on a flank.<br>**Flankers**: Pick out archers, casters and siege when they're near, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets. |
+| Troll | 200 | 100 | 2 (2×1) | 10 | 1100 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates 20 HP/s even while Burning. Fire alone won't stop it any more.<br>**Gorge**: Heals for 30% of the damage it deals. The deeper the rage, the faster it heals.<br>**Rock Skin**: Hide like a cliff face: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching, so it never has to touch a pike wall. |
+| Ogre Brute | 300 | 100 | 1 (2×2) | 7 | 2200 | 200 physical / 1.8s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness. When something hits it, 40% of the time a nearby goblin (the smaller the better) takes the blow instead, and dies.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre deal 25% more damage and attack 25% faster, and every 5s it bellows a grunt out of nowhere to join the fight. |
+| Giant Bats | 200 | 100 | 4 (2×2, air) | 20 | 280 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Leather Wings**: Tough hides shrug off arrows: +30% physical resistance. They also burst off the line 40% faster for the first 3s.<br>**Shriek**: Each bat shrieks as it dives in, and again every 10s: enemies around its target are Dazed for 3s, dealing 10% damage and taking double.<br>**Bloodsuckers**: The bats feed as they fight: they heal for 40% of the damage they deal.<br>**Savage Claws**: +15% HP and +60% damage. |
 
 #### Elementals
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
-| Fire Elemental | 250 | 100 | 4 (2×2) | 7 | 300 | 60 fire / 2.5s, range 7, splash 1.5 | Splash, Ranged, Slow | **Controlled Burn**: Its flames only catch on enemies, so it can fight right beside your army. +20% damage.<br>**Meteor**: Artillery: +4 range, +50% damage and a wider blast, but fires 30% slower.<br>**Wildfire**: Fireballs leave burning ground. Controlled Burn can't tame it, so keep your army out.<br>**Living Inferno**: Each flame scorches enemies within 1.5 tiles (10 fire per second), and melee attackers catch fire. |
-| Water Elemental | 250 | 100 | 1 (2×2) | 6 | 1800 | 60 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles.<br>**Wellspring**: Heals nearby allies 40 every 2s. The only healing the elementals have.<br>**Tsunami**: Waves crash wider: +1 splash radius and +25% damage. Soaks whole formations for lightning. |
-| Air Elemental | 200 | 100 | 2 (2×1) | 10 | 400 | 45 lightning / 2s, range 4, chain ×2 | Ranged, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster.<br>**Eye of the Storm**: Hunts fliers first, with ×2 more damage to them (×3 in all). Nothing in the sky survives.<br>**Take Flight**: Rises on its own winds and becomes a flier, 40% faster: only anti-air can touch it, and it floats over the ground's hazards. |
-| Cloudlings | 100 | 50 | 10 (3×2, air) | 16 | 45 | 12 physical / 1.4s, range 2 | Swarm, Flier, Fast | **Downpour**: Each cloud rains on its first target, and again every 6s: everyone there is soaked Wet, and the ground turns to a puddle.<br>**Thunderstorm**: Each cloud calls down a lightning strike on its first target, and another every 10s. Wet targets take double; Frozen ones shatter.<br>**Overcast**: The sky fills in: +6 clouds per squad.<br>**Freezing Rain**: The hail turns to freezing rain: frost damage that goes through armor and freezes Wet targets solid. |
-| Frost Elemental | 150 | 100 | 3 (3×1) | 8 | 350 | 55 frost / 1.5s, range 7 | Ranged, Anti-air, Combo | **Chilling Bolts**: Bolts Chill the target, slowing its moves and attacks. The next frost hit on a Chilled target freezes it solid.<br>**Cold Snap**: Shoots 50% faster.<br>**Hoarfrost**: A ring of bitter cold: every 2s, enemies within 2.5 tiles are Chilled. Raiders that reach the back line slow to a crawl.<br>**Glacial Reach**: Long, thin icicles that hunt archers, casters and siege first: +4 range (11 in all, past the Elven Archers), but 25% less damage. |
-| Stone Golem | 200 | 75 | 1 (3×3) | 6 | 2400 | 220 physical / 2s, range 0.8 | Sturdy, Melee, Slow | **Granite**: +40% HP and +20% physical resistance.<br>**Quake**: Slams shake the ground: they splash, and stun everything around for 0.5s.<br>**Magma Core**: Fists turn molten: fire damage that sets enemies Burning. Melts armor and stops trolls healing.<br>**Landslide**: Rolls into battle 60% faster, and its first slam deals ×3. |
+| Fire Elemental | 200 | 100 | 4 (2×2) | 7 | 180 | 45 fire / 3s, range 7, splash 1.3 | Splash, Ranged, Slow | **Controlled Burn**: Its flames only catch on enemies, so it can fight right beside your army. +20% damage.<br>**Meteor**: Artillery: +4 range, +50% damage and a wider blast, but fires 30% slower.<br>**Wildfire**: Fireballs leave burning ground. Controlled Burn can't tame it, so keep your army out.<br>**Living Inferno**: Each flame scorches enemies within 1.5 tiles (10 fire per second), and melee attackers catch fire. |
+| Water Elemental | 300 | 100 | 1 (2×2) | 6 | 2400 | 60 water / 2s, range 4, splash 1.2 | Sturdy, Combo | **Glacial Heart**: +40% HP. Enemies that hit it are chilled; hit it twice and they freeze.<br>**Tidal Surge**: +60% damage, +3 range, and hits leave puddles.<br>**Wellspring**: Heals nearby allies 40 every 2s. The only healing the elementals have.<br>**Tsunami**: Waves crash wider: +1 splash radius and +25% damage. Soaks whole formations for lightning. |
+| Air Elemental | 200 | 100 | 2 (2×1) | 10 | 400 | 40 lightning / 1.2s, range 4, chain ×2 | Ranged, Anti-air, Combo | **Thunderhead**: Lightning jumps 3 more times and hits 20% harder.<br>**Tempest**: +40% HP and attacks 40% faster.<br>**Eye of the Storm**: Picks out nearby fliers first, with ×2 more damage to them (×3 in all). Nothing in the sky survives.<br>**Take Flight**: Rises on its own winds and becomes a flier, 40% faster: only anti-air can touch it, and it floats over the ground's hazards. |
+| Cloudlings | 100 | 50 | 14 (3×2, air) | 19 | 50 | 10 physical / 1.5s, range 2 | Swarm, Flier, Fast | **Downpour**: Each cloud rains on its first target, and again every 6s: everyone there is soaked Wet, and the ground turns to a puddle.<br>**Thunderstorm**: Each cloud calls down a lightning strike on its first target, and another every 10s. Wet targets take double; Frozen ones shatter.<br>**Overcast**: The sky fills in: +6 clouds per squad.<br>**Freezing Rain**: The hail turns to freezing rain: frost damage that goes through armor and freezes Wet targets solid. |
+| Frost Elemental | 200 | 100 | 3 (3×1) | 8 | 300 | 60 frost / 1.5s, range 7 | Anti-large, Ranged, Anti-air | **Chilling Bolts**: Bolts Chill the target, slowing its moves and attacks. The next frost hit on a Chilled target freezes it solid.<br>**Cold Snap**: Shoots 50% faster.<br>**Hoarfrost**: A ring of bitter cold: every 2s, enemies within 2.5 tiles are Chilled. Raiders that reach the back line slow to a crawl.<br>**Glacial Reach**: Long, thin icicles that hunt archers, casters and siege first: +4 range (11 in all, past the Crossbowmen), but 25% less damage. |
+| Stone Golem | 300 | 100 | 1 (3×3) | 9 | 3600 | 300 physical / 1.8s, range 0.8 | Sturdy, Melee, Slow | **Granite**: +40% HP and +20% physical resistance.<br>**Quake**: Slams shake the ground: they splash, and stun everything around for 0.5s.<br>**Magma Core**: Fists turn molten: fire damage that sets enemies Burning. Melts armor and stops trolls healing.<br>**Landslide**: Rolls into battle 60% faster, and its first slam deals ×3. |
 
 #### Independents
 
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Dragon | 600 | 200 | 1 (4×4, air) | 9 | 4200 | 95 fire / 1.6s, range 3, splash 1.8 | Flier, Splash, Sturdy | **Inferno**: +25% damage, and its breath leaves burning ground.<br>**Ancient Scales**: +40% HP and +30% physical resistance.<br>**Elder Blood**: Regenerates 40 HP/s, except while Chilled.<br>**Dread**: Its breath terrifies: everything it scorches is Dazed for 1.5s (deals 10%, takes double). |
-| Giant | 350 | 150 | 1 (3×3) | 5 | 3000 | 200 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance.<br>**Rockslide**: Bigger rocks, thrown farther: +3 range and a wider blast.<br>**Frost Giant**: Boulders of ice: frost damage that Chills where they land and freezes anything Wet or already chilled. |
+| Giant | 400 | 200 | 1 (3×3) | 5 | 3200 | 215 physical / 3.2s, range 6, splash 1.8 | Splash, Sturdy, Slow, Ranged | **Earthshaker**: Boulders briefly stun everything they land on.<br>**Thick Hide**: +40% HP and +25% physical resistance.<br>**Rockslide**: Bigger rocks, thrown farther: +3 range and a wider blast.<br>**Frost Giant**: Boulders of ice: frost damage that Chills where they land and freezes anything Wet or already chilled. |
 
 ### Balance — Decided (approach), Open (targets and numbers)
 
@@ -195,10 +195,22 @@ Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs
   `size:*` tag: small = light, medium = medium, large = giant, huge = titan. The damage profile decides what a unit is
   efficient against: splash and many small hits against light, big single hits against medium, ramping damage against
   giants and titans.
-- **Targets are data.** `src/data/balance.ts` holds each unit's role, its Mechabellum analogue, a self-TTK band
-  (HP ÷ own DPS per model) and its relationship table (beats / loses to). The current table is a **draft** translated
-  from the reference through the analogues; it needs the owner's sign-off before numbers are tuned to it.
-- **Anchors.** Elven Archers are the neutral baseline (value 1.0); Knights are the second anchor.
+- **Intent first, as data.** `src/data/balance.ts` holds each unit's role, its Mechabellum analogue and a self-TTK
+  band (HP ÷ own DPS per model), plus `RELATIONS`: who beats whom, one line per pair, each with the reason in words.
+  Every upgrade has an **intent**: what it is for, the role it moves the unit into (if any) and the matchups it should
+  flip. The harness grades the numbers against the intent. When a number and the intent disagree, fix the number; when
+  the intent turns out wrong, change it there first. The owner signed off the approach and left the table to Claude to
+  refine.
+- **Fight shape: like Mechabellum, not one blob.** Fights should run about 40–60 s, and they should get there through
+  space and movement, not extra HP, so placement matters: what stands in front, how deep the line is, which flank
+  meets which. Each side deploys in 7 rows with 13 rows of no-man's-land between them, so nothing starts in range of
+  anything. Units move at half the old speed (`RULES.speedScale` 0.1). `npm run balance -- density` measures time to
+  first contact, fight length and the share of each army fighting at once. Self-TTK bands stay Mechabellum's
+  (`FIGHT_SCALE` = 1).
+- **The closing tax is real.** Slower approaches give shooters many free shots, so melee units, divers and chaff get
+  their value from toughness, speed or numbers. Pikes have reach (1.5) to fight two ranks deep. Ramping units (Troll,
+  Frost Elemental) keep hitting the target they're building on while it stays in reach.
+- **Anchors.** Crossbowmen are the neutral baseline (value 1.0); Knights are the second anchor.
 - **Tolerances** (`TOLERANCE` in `src/data/balance.ts`): a mirror is 50%; a soft counter wins at least 60% at equal
   supply; a hard counter beats twice its own supply of the target; nothing hard-counters more than half the roster;
   every unit has at least one hard counter.
@@ -211,7 +223,9 @@ Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs
 | `coverage` | Units per role against the reference template, anti-air per role, and static checks on the target table |
 | `mirror` | Side-bias test: each unit against its own reflection, which should be 50% |
 | `matrix` | Every unit against every unit: win rate, value margin, fight time and the Nash mix. `--scale 1,2,4` for the scale test, `--csv <file>` for a spreadsheet. `npm run matrix` is a shortcut |
-| `check` | Grades the matrix against `src/data/balance.ts`: side bias in true mirrors, targets that hold, unplanned hard counters, and each unit's hard counters |
+| `check` | Grades the matrix against `src/data/balance.ts`: side bias in true mirrors, relations that hold, upgrade intents that hold, unplanned hard counters, and each unit's hard counters |
+| `targets <unit…>` | The quick loop while tuning: only the relations and upgrade intents that involve these units |
+| `density [armies]` | Fight shape: time to first contact, fight length, share of each army fighting at once, timeouts (mirrored probe armies) |
 | `distance <a> <b>` | Closing-distance test: a starts d tiles from b, to find the crossover |
 | `fight <a> <b>` | Composition test with mixed armies, e.g. `"knights*2,cleric" "frost_elemental*3,cleric"`, optional `--upsA` / `--upsB` |
 | `sensitivity <unit>` | ±10% on HP, damage, attack rate, range and speed; lists matchups that flip |
@@ -225,7 +239,7 @@ Regenerates, Glass cannon, Raider and Skirmisher. They live in `src/data/roles.t
 
 ## 5. Unlocks — Decided (values open)
 
-- Units with `unlockCost: 0` (Grunts, Knights, Elven Archers) are available from the start. Every other unit costs a
+- Units with `unlockCost: 0` (Grunts, Knights, Crossbowmen) are available from the start. Every other unit costs a
   one-time unlock per match, paid from supply, before its first squad.
 - **Purpose:** to tax a perfect counter-pick and reward sticking with what you already have. Sticking with your units in
   turn makes you easier to read, which is the intended trade-off.
@@ -255,12 +269,13 @@ the same badge.
 - **Flat prices by order:** a unit's upgrades cost **200 / 400 / 600 / 800** in the order you buy them, whatever the unit
   (`RULES.upgradeCosts`). Each step makes the unit a deeper, more expensive specialist. The price is the same for
   Grunts and a Dragon, so upgrading a unit you field a lot of is better value.
+- **Each upgrade has a written intent** in `src/data/balance.ts`: what it is for, the role it moves the unit into (if any), and which matchups it should flip. `npm run balance -- check` grades the matchups. Write the intent first, then the numbers.
 - **Specialists, not jacks of all trades.** Roughly: two upgrades set the unit's main paths, one deepens a path, and one
   opens a new direction. Pairs are designed to multiply each other, so the later, pricier buys stay tempting:
   - Grunts *Scrap Armor* + Ogre *Thick Skull* (armored grunts soak the hits the ogre passes on); Ogre *Warboss* near
     grunts (faster, harder stabs, and a fresh grunt every 5 s)
   - Grunts *Oil Bombs* + Skirmisher *Improvised Bombs* (fallen goblins' oil goes up in flames, on both sides)
-  - Troll *Berserk* + *Thick Blood* (regenerating back to full HP brings back the faster attacks)
+  - The Troll's built-in Berserk + *Thick Blood* (regenerating back to full HP brings back the faster attacks), or + *Gorge* (the deeper the rage, the more each hit heals)
   - Wolf Riders *Flankers* + *Bloodthirst* (each kill re-arms the ×3 charge bite)
   - Ballista *Chain Harpoons* + *Repeater* (chill → freeze → shatter for ×2)
   - Air Elemental *Take Flight* + *Thunderhead* (chain lightning from out of reach); Water *Tsunami* next to Air (mass
@@ -271,7 +286,7 @@ the same badge.
 - **Counterpunch upgrades.** Several upgrades answer a specific answer: Knights *Warded Plate* (vs elementals), Troll
   *Thick Blood* (regenerates while burning), Troll *Boulder Toss* (vs Pike Wall), Ballista *Reinforced Frame* (vs
   raiders), Air Elemental *Take Flight* (vs pikes and Knights), Cloudlings *Freezing Rain* (vs armor), Frost Elemental
-  *Glacial Reach* (vs archers), Grunts *Scrap Armor* (vs archers), Skirmishers *Ambush* (vs archers), Cleric *Purify* (vs statuses), Golem *Magma Core* (vs trolls and armor).
+  *Glacial Reach* (vs shooters), Grunts *Scrap Armor* (vs big single hits), Skirmishers *Ambush* (vs shooters), Cleric *Purify* (vs statuses), Golem *Magma Core* (vs trolls and armor).
 - **Warden upgrades stay plain**: armor, damage, range, rate of fire, more bodies. The elementals' and goblins'
   upgrades are where the combos live.
 - **Surfaces come from upgrades.** Inferno, Wildfire, Oil Bombs, Tidal Surge and Downpour are the only things
@@ -388,7 +403,7 @@ decision.
   - `shield`: each model ignores its first N hits in a battle, including damage over time (Scrap Armor, Veterans)
   - `ambush`: can't be targeted except for N seconds after its own attacks; splash and area effects still hit it
     (Skirmishers Ambush)
-  - `ramp`: each hit in a row on the same target deals +X% more, up to a cap (Troll Berserk)
+  - `ramp`: each hit in a row on the same target deals +X% more, up to a cap (Troll Berserk, Frost Elemental)
   - `unhurt`: attacks faster while at full HP (Troll Berserk)
   - `sprint`: moves faster for the first N seconds of a battle (Giant Bats Leather Wings)
   - `lifesteal`: heals for a share of the damage its attacks deal to enemies (Bloodsuckers)
@@ -403,10 +418,10 @@ decision.
 
 | Faction | Identity | Strengths | Weaknesses |
 |---|---|---|---|
-| **Wardens** (human, elf, dwarf, halfling) | discipline; **the most straightforward faction** | armor, range, anti-air, anti-large, healing, plain stat upgrades | few elemental tools, slow siege |
-| **Goblins** (goblin, troll, ogre) | numbers, speed, chaos with heart | swarms, raiders, short bows that also hit fliers, bats that hunt archers, regenerating trolls, oil and fire, the ogre warboss | goblins die to any hit, ogres and trolls take extra fire damage |
+| **Wardens** (human, dwarf, halfling) | discipline; **the most straightforward faction** | armor, range, anti-air, anti-large, healing, plain stat upgrades | few elemental tools, slow siege |
+| **Goblins** (goblin, troll, ogre) | numbers, speed, chaos with heart | swarms, raiders, short bows that also hit fliers, bats that hunt archers, regenerating trolls, oil and fire, the ogre warboss | goblins die to most hits, ogres and trolls take extra fire damage |
 | **Elementals** | elemental combos; **the most complex to play** | big splash, Wet + lightning, freezing, stuns, a flying storm swarm | fragile shooters that need a front line, slow ground bodies, weak to the opposite element |
-| **Independents** | big, unique monsters | Dragon, Giant (boulders) | expensive unlocks, no faction synergies |
+| **Independents** | big, unique monsters that **any faction can use to cover its holes** | Dragon, Giant (boulders) | they cost more to unlock and are less cost-efficient than a faction's own answer; no faction synergies |
 
 **Still open:** faction bonuses for staying in-faction. The plan is to build them from army modifiers based on tags: a
 condition that counts squads by tag, plus a stat change applied through a selector. Examples:
@@ -510,9 +525,9 @@ src/ui/      React views
 
 Rough priority order. Everything is open to reshuffling.
 
-1. **Balance pass** following `docs/BALANCE.md` (section 4, Balance; `docs/BALANCE-PLAN.md`): sign off the
-   relationship table in `src/data/balance.ts`, lock the baseline (Elven Archers) and the anchor (Knights), then add
-   units one at a time until `npm run balance -- check` passes. Only then human playtests (pick rate, win rate when picked).
+1. **Balance pass** following `docs/BALANCE.md` (section 4, Balance; `docs/BALANCE-PLAN.md`). The first pass on the
+   new roster is done (81 of 85 relations, 32 of 34 upgrade intents). Next: fliers in one-unit fights, hard counters for
+   Crossbowmen and Frost, mixed-army tests, then the independents. Then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
 3. **Campaigns** (docs/CAMPAIGN.md): mission framework, then the Wardens campaign. Parked until stored progress is
    decided: saving the player's winning board from a campaign finale as the Drill Book's last page.

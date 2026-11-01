@@ -101,9 +101,9 @@ export const ROLES: Record<string, { name: string; description: string; detail: 
   },
   raider: {
     name: "Raider",
-    description: "Built to slip past armies and hit towers.",
+    description: "Built to reach what's behind the front line.",
     detail:
-      "Built to slip past armies and hit what's behind them: archers, casters, siege and Keeps. Guard your flanks, and keep something tough near your back line.",
+      "Built to reach what's behind the front line: archers, casters, siege and Keeps. A raider picks those out when they're close, so it doesn't cross the field for them: it gets there by speed, by flying, or by being placed on a flank. Guard your flanks, and keep something tough near your back line.",
   },
 };
 

@@ -34,7 +34,7 @@ export function strengths(unit: UnitDef, enemy: UnitDef): Reason[] {
   if (!e) out.push({ text: `${enemy.name} can't fight back` });
   for (const b of a.bonusVs ?? [])
     if (hits(b.selector, enemy)) out.push({ text: `×${b.mult} damage to ${describeSelector(b.selector)}`, topic: hasRole(unit, "antilarge") ? "role-antilarge" : undefined });
-  if (a.prefers && hits(a.prefers, enemy)) out.push({ text: "Goes for it first", topic: "role-raider" });
+  if (a.prefers && hits(a.prefers, enemy)) out.push({ text: "Picks it out when it's close", topic: "role-raider" });
   if (e && range(unit) >= 4 && range(unit) > range(enemy) + 2) out.push({ text: `Outranges it (${range(unit)} vs ${range(enemy)} tiles)`, topic: "role-ranged" });
   if (a.splash && isSwarm(enemy)) out.push({ text: "Splash hits the whole swarm", topic: "role-splash" });
   if (muchFaster(unit, enemy) && isBackLine(enemy)) out.push({ text: "Fast enough to run it down", topic: "role-fast" });
@@ -58,7 +58,7 @@ export function weaknesses(unit: UnitDef, enemy: UnitDef): Reason[] {
   else if (enemy.layer === "air" && !hitsAir(unit)) out.push({ text: "Can't hit fliers", topic: "layers" });
   if (!e) return out;
   for (const b of e.bonusVs ?? []) if (hits(b.selector, unit)) out.push({ text: `Takes ×${b.mult} damage from it`, topic: hasRole(enemy, "antilarge") ? "role-antilarge" : undefined });
-  if (e.prefers && hits(e.prefers, unit)) out.push({ text: "Gets targeted first", topic: "role-raider" });
+  if (e.prefers && hits(e.prefers, unit)) out.push({ text: "Gets picked out when it's close", topic: "role-raider" });
   if (e.splash && isSwarm(unit)) out.push({ text: "Its splash shreds swarms", topic: "role-splash" });
   if (a && range(enemy) >= 4 && range(enemy) > range(unit) + 2) out.push({ text: "Gets shot on the way in", topic: "role-ranged" });
   if (muchFaster(enemy, unit) && isBackLine(unit)) out.push({ text: "Gets run down", topic: "role-fast" });

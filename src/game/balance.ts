@@ -1,4 +1,4 @@
-import { BALANCE_TARGETS, ROLE_INFO, SIZE_CLASS, type SizeClass } from "../data/balance";
+import { BALANCE_TARGETS, FIGHT_SCALE, ROLE_INFO, SIZE_CLASS, type SizeClass } from "../data/balance";
 import type { UnitDef } from "../sim/types";
 
 // Cost-normalized unit metrics and the Nash check from docs/BALANCE.md. They read raw stats only: splash,
@@ -46,10 +46,11 @@ export function sizeClass(def: UnitDef): SizeClass | undefined {
   return undefined;
 }
 
+// The unit's self-TTK band in our seconds: Mechabellum's band × FIGHT_SCALE.
 export function ttkBand(def: UnitDef): [number, number] | null {
   const t = BALANCE_TARGETS[def.id];
-  if (!t) return null;
-  return t.ttk ?? ROLE_INFO[t.role].ttk;
+  const band = t && (t.ttk ?? ROLE_INFO[t.role].ttk);
+  return band ? [band[0] * FIGHT_SCALE, band[1] * FIGHT_SCALE] : null;
 }
 
 // The equilibrium mix of a symmetric zero-sum game, by fictitious play. `payoff[i][j]` is what strategy i

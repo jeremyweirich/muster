@@ -41,7 +41,7 @@ export type Effect =
   | { type: "cleanse"; radius: number } // removes every status from allies in the radius
   | { type: "summon"; unit: string; count: number }; // new models of that unit join the source's squad for this battle
 
-export type Targeting = "nearest" | "highestHp" | "lowestHp" | "towers"; // towers: hunt towers first
+export type Targeting = "nearest" | "highestHp" | "lowestHp" | "towers"; // towers: Keeps first, among nearby targets
 export type Delivery = "instant" | "projectile" | "beam";
 
 export interface AttackDef {
@@ -57,7 +57,7 @@ export interface AttackDef {
   chain?: { count: number; range: number; falloff: number };
   bonusVs?: { selector: Selector; mult: number }[];
   rangeVs?: { selector: Selector; add: number }[]; // extra range (tiles) against matching targets
-  prefers?: Selector; // enemies matching this are targeted first, anywhere on the field
+  prefers?: Selector; // enemies matching this are targeted first, among those within range + RULES.preferReach
   selfDestruct?: boolean; // the model dies after its first attack
   onHit?: Effect[]; // extra effects at the impact point
 }
@@ -248,6 +248,7 @@ export interface Rules {
   towerInset: number; // rows between a tower and its side's back edge
   speedScale: number; // tiles per second per speed point
   allyPush: number; // how hard allies push each other apart, 0..1 (enemies always fully block each other)
+  preferReach: number; // tiles beyond attack range where `prefers`, towers-first and highest/lowest-HP targeting apply
   upgradeCosts: number[]; // price of the 1st, 2nd... upgrade bought for a unit, whatever the unit
   openingDiscount: number; // opening offer: this much off one random unit's unlock...
   openingBonus: number; // ...or this much extra supply in round 1

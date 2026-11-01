@@ -2,8 +2,10 @@
 //   stats                  self-TTK, HP and DPS per 100 supply, Lanchester value vs the baseline (no fights)
 //   coverage               role counts, anti-air per role, and static checks on the target table
 //   mirror                 side-bias test: each unit against its own reflection (should be 50%)
+//   density [armies]       fight shape: time to contact, fight length, share of each army fighting at once
 //   matrix                 equal-cost matrix: win rate, value margin, fight time, Nash mix
 //                          (--scale 1,2,4 reruns it at bigger budgets; --csv <file> saves every matchup)
+//   targets <unit...>      quick check: only the relations and upgrade intents that involve these units
 //   check                  grade the matrix against src/data/balance.ts: mirrors, targets, hard counters, health
 //   distance <a> <b>       closing-distance test: a starts d tiles from b, for d from --from to --to by --step
 //   fight <armyA> <armyB>  composition test, e.g. "knights*2,cleric" "frost_elemental*3,cleric"
@@ -13,7 +15,7 @@
 // Flags: --seeds N (8), --mirrorSeeds N (32), --budget B (1000), --units a,b,c (limit the roster).
 // Level 1, no towers, sides alternated, formations randomized. Win rates move in steps of 1/seeds.
 import { writeFileSync } from "node:fs";
-import { ANCHOR_UNIT, BALANCE_TARGETS, BASELINE_UNIT, ROLE_INFO, TOLERANCE, type BalanceRole } from "../src/data/balance";
+import { ANCHOR_UNIT, BALANCE_TARGETS, BASELINE_UNIT, RELATIONS, ROLE_INFO, TOLERANCE, beatsOf, losesToOf, type BalanceRole } from "../src/data/balance";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { RULES } from "../src/data/rules";
 import { bandTtk, lanchesterValue, modelDps, nashMix, perSupply, selfTtk, sizeClass, ttkBand } from "../src/game/balance";
@@ -126,6 +128,69 @@ function printMirrors(ids: string[], all = false) {
 // ------------------------------------------------------------------ modes
 if (mode === "mirror") printMirrors(roster, true);
 
+if (mode === "targets") {
+  // The quick loop while tuning: only the relations and upgrade intents that involve the named units.
+  const named = pos.map((id) => D(id).id);
+  let held = 0, total = 0;
+  for (const [a, b, why] of RELATIONS) {
+    if (!named.includes(a) && !named.includes(b)) continue;
+    const r = run(a, b);
+    total++;
+    const ok = r.winRate >= TOLERANCE.soft;
+    if (ok) held++;
+    console.log(`${ok ? "  ok  " : "  MISS"} ${`${a} > ${b}`.padEnd(36)} win ${pad(pct(r.winRate), 4)}  margin ${pad(Math.round(margin(r) * 100), 4)}  (${why})`);
+  }
+  for (const a of named)
+    for (const [up, intent] of Object.entries(BALANCE_TARGETS[a]?.upgrades ?? {}))
+      for (const b of intent.beats ?? []) {
+        const r = run(a, b, BUDGET, { defsA: upgradedDefs(defs, { [a]: [up] }) });
+        total++;
+        const ok = r.winRate >= TOLERANCE.soft;
+        if (ok) held++;
+        console.log(`${ok ? "  ok  " : "  MISS"} ${`${a} + ${up} > ${b}`.padEnd(36)} win ${pad(pct(r.winRate), 4)}  margin ${pad(Math.round(margin(r) * 100), 4)}  (${intent.intent})`);
+      }
+  console.log(`${held} of ${total} hold`);
+}
+
+if (mode === "density") {
+  // Fight shape, not balance: how long until first contact, how long the fight lasts, and how much of each army
+  // fights at once. Mechabellum's fights run about 40–60 s and are spread out; ours shouldn't be one blob.
+  // The probes are just mixed armies of about 1000 supply, mirrored so the fight is even.
+  const probes = pos.length ? pos : [
+    "knights*2,crossbowmen*3,ballista,pikemen",
+    "grunts*3,skirmishers,wolf_riders,troll,giant_bats",
+    "stone_golem,fire_elemental,air_elemental,frost_elemental,cloudlings",
+    "knights*2,crossbowmen*2,fire_elemental,troll,wolf_riders",
+  ];
+  const parse = (spec: string) => spec.split(",").flatMap((p) => { const [id, n] = p.trim().split("*"); return Array(Number(n ?? 1)).fill(D(id)); });
+  console.log(`speed ${RULES.speedScale} tiles/s per point, deploy depth ${RULES.deployDepth}, no-man's-land ${RULES.fieldH - 2 * RULES.deployDepth} rows, time limit ${RULES.battleTimeLimit}s`);
+  console.log("probe (mirrored)                                              contact   fight  engaged  timeouts");
+  let all = 0;
+  for (const spec of probes) {
+    let contact = 0, time = 0, engaged = 0, timeouts = 0;
+    for (let s = 0; s < SEEDS; s++) {
+      const rng = new Rng(4000 + s);
+      const army = parse(spec);
+      const b = new Battle(defs, [autoPlace(army, [], 0, defs, 1, rng, pickStyle(rng, "random")), autoPlace(army, [], 1, defs, 1, rng, pickStyle(rng, "random"))], { seed: 600 + s, towers: false });
+      let first = -1, samples = 0, share = 0;
+      while (!b.over) {
+        b.step();
+        const armed = b.models.filter((m) => m.alive && m.def.attack && !m.def.structure);
+        const fighting = armed.filter((m) => m.engaged).length;
+        if (first < 0 && fighting) first = b.time;
+        if (first >= 0 && armed.length) { samples++; share += fighting / armed.length; }
+      }
+      contact += Math.max(0, first);
+      time += b.time;
+      engaged += samples ? share / samples : 0;
+      if (b.timedOut) timeouts++;
+    }
+    all += time / SEEDS;
+    console.log(`${spec.padEnd(62)}${pad(fixed(contact / SEEDS), 6)}s${pad(fixed(time / SEEDS), 7)}s${pad(pct(engaged / SEEDS), 9)}${pad(timeouts, 10)}`);
+  }
+  console.log(`mean fight ${fixed(all / probes.length)}s; "engaged" is the mean share of armed models in range of a target after first contact`);
+}
+
 if (mode === "stats") {
   const base = D(BASELINE_UNIT);
   console.log(`Self-TTK = HP / own DPS per model (armor: counting its resistance to its own element). Value = Lanchester`);
@@ -167,26 +232,35 @@ if (mode === "coverage") {
     const aa = list.filter((id) => D(id).attack?.targets.includes("air")).length;
     console.log(`${ROLE_INFO[role].name.padEnd(18)}${pad(list.length, 5)}${pad(template[role], 11)}${pad(air, 5)}${pad(aa, 10)}  ${list.join(", ")}`);
   }
+  // Roles reachable by upgrade: the holes a unit can fill if you pay for the path.
+  console.log("\nrole shifts by upgrade:");
+  for (const id of ids)
+    for (const [up, intent] of Object.entries(BALANCE_TARGETS[id]?.upgrades ?? {}))
+      if (intent.role) console.log(`  ${id} ${up} -> ${ROLE_INFO[intent.role].name}`);
+
   const issues: string[] = [];
   for (const id of ids) {
     const t = BALANCE_TARGETS[id];
     if (!t || t.role === "utility") continue;
-    if (!t.beats.length) issues.push(`${id} has no listed win`);
-    if (!t.losesTo.length) issues.push(`${id} has no listed loss (every unit needs a counter)`);
-    for (const b of t.beats) if (BALANCE_TARGETS[b]?.beats.includes(id)) issues.push(`${id} and ${b} both list beating each other`);
-    for (const b of [...t.beats, ...t.losesTo]) if (!defs.has(b)) issues.push(`${id} lists unknown unit ${b}`);
+    if (!beatsOf(id).length) issues.push(`${id} has no listed win`);
+    if (!losesToOf(id).length) issues.push(`${id} has no listed loss (every unit needs a counter)`);
   }
-  // The table is read in both directions: "A beats B" also means "B loses to A".
-  for (const id of ids) {
-    const t = BALANCE_TARGETS[id];
-    for (const b of t?.beats ?? []) if (!BALANCE_TARGETS[b]?.losesTo.includes(id)) issues.push(`${id} beats ${b}, but ${b} doesn't list losing to ${id}`);
+  for (const [a, b] of RELATIONS) {
+    if (!defs.has(a) || !defs.has(b)) issues.push(`${a} > ${b} names an unknown unit`);
+    if (RELATIONS.some(([x, y]) => x === b && y === a)) issues.push(`${a} and ${b} both beat each other`);
+    if (RELATIONS.filter(([x, y]) => x === a && y === b).length > 1) issues.push(`${a} > ${b} is listed twice`);
   }
   for (const a of ids)
     for (const b of ids) {
-      const ta = BALANCE_TARGETS[a], tb = BALANCE_TARGETS[b];
-      if (a === b || !ta?.beats.length || D(a).cost !== D(b).cost) continue;
-      if (tb && ta.beats.every((x) => tb.beats.includes(x)) && tb.beats.length > ta.beats.length) issues.push(`${b}'s listed wins are a superset of ${a}'s (same cost)`);
+      if (a === b || !beatsOf(a).length || D(a).cost !== D(b).cost) continue;
+      const wa = beatsOf(a), wb = beatsOf(b);
+      if (wa.every((x) => wb.includes(x)) && wb.length > wa.length) issues.push(`${b}'s listed wins are a superset of ${a}'s (same cost)`);
     }
+  for (const id of ids) {
+    const ups = (D(id).upgrades ?? []).map((u) => u.id), intents = Object.keys(BALANCE_TARGETS[id]?.upgrades ?? {});
+    for (const u of ups) if (!intents.includes(u)) issues.push(`${id} ${u} has no intent`);
+    for (const u of intents) if (!ups.includes(u)) issues.push(`${id} has an intent for unknown upgrade ${u}`);
+  }
   const chaff = byRole.get("chaff")?.length ?? 0, clear = byRole.get("chaffClear")?.length ?? 0;
   if (clear < chaff + 1) issues.push(`chaff clear (${clear}) should outnumber chaff (${chaff}) by at least one`);
   console.log(issues.length ? `\n${issues.length} issues:\n  ${issues.join("\n  ")}` : "\nNo issues.");
@@ -238,20 +312,34 @@ if (mode === "check") {
 
   let held = 0, total = 0;
   const misses: string[] = [];
-  for (const a of ids)
-    for (const b of BALANCE_TARGETS[a]?.beats ?? []) {
-      if (!ids.includes(b)) continue;
-      total++;
-      if (beats(a, b)) held++;
-      else misses.push(`${a} should beat ${b}: ${verdict(a, b)} (${fmt(a, b)})`);
-    }
+  for (const [a, b, why] of RELATIONS) {
+    if (!ids.includes(a) || !ids.includes(b)) continue;
+    total++;
+    if (beats(a, b)) held++;
+    else misses.push(`${a} should beat ${b} (${why}): ${verdict(a, b)} (${fmt(a, b)})`);
+  }
   console.log(`\nTargets (src/data/balance.ts): ${held} of ${total} hold`);
   for (const s of misses) console.log(`  MISS ${s}`);
+
+  // Upgrade intents: with the upgrade bought, the unit should win the matchups its intent lists.
+  let upHeld = 0, upTotal = 0;
+  const upMisses: string[] = [];
+  for (const a of ids)
+    for (const [up, intent] of Object.entries(BALANCE_TARGETS[a]?.upgrades ?? {}))
+      for (const b of intent.beats ?? []) {
+        if (!ids.includes(b)) continue;
+        upTotal++;
+        const r = run(a, b, BUDGET, { defsA: upgradedDefs(defs, { [a]: [up] }) });
+        if (r.winRate >= TOLERANCE.soft) upHeld++;
+        else upMisses.push(`${a} + ${up} should beat ${b}: win ${pct(r.winRate)} (${pct(get(m, a, b).winRate)} without)`);
+      }
+  console.log(`\nUpgrade intents: ${upHeld} of ${upTotal} hold`);
+  for (const s of upMisses) console.log(`  MISS ${s}`);
 
   const unplanned: string[] = [];
   for (const a of ids)
     for (const b of ids)
-      if (a !== b && isHard(a, b) && !BALANCE_TARGETS[a]?.beats.includes(b)) unplanned.push(`${a} > ${b}`);
+      if (a !== b && isHard(a, b) && !beatsOf(a).includes(b)) unplanned.push(`${a} > ${b}`);
   console.log(`\nUnplanned hard counters (not in the table; fine if intended): ${unplanned.length ? unplanned.join(", ") : "none"}`);
 
   console.log("\nRoster health:");
@@ -367,8 +455,11 @@ if (mode === "upgrades") {
     const mm = rs.reduce((t, r) => t + margin(r), 0) / rs.length;
     console.log(name.padEnd(20) + rs.map((r) => pad(pct(r.winRate), 5)).join("") + pad(Math.round(mm * 100), 8));
   }
+  console.log("\nIntents (src/data/balance.ts):");
+  for (const [up, i] of Object.entries(BALANCE_TARGETS[id]?.upgrades ?? {}))
+    console.log(`  ${up.padEnd(18)} ${i.intent}${i.role ? ` [-> ${ROLE_INFO[i.role].name}]` : ""}${i.beats?.length ? ` (should beat ${i.beats.join(", ")})` : ""}`);
 }
 
-if (!mode || !["stats", "coverage", "mirror", "matrix", "check", "distance", "fight", "sensitivity", "upgrades"].includes(mode)) {
+if (!mode || !["stats", "coverage", "mirror", "density", "targets", "matrix", "check", "distance", "fight", "sensitivity", "upgrades"].includes(mode)) {
   console.log("Usage: npm run balance -- <stats|coverage|mirror|matrix|check|distance|fight|sensitivity|upgrades> [args]. See the top of scripts/balance.ts.");
 }

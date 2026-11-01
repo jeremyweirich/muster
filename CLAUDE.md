@@ -34,19 +34,27 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
     deepen an existing path, and pairs should combine in tempting ways. Prices are global and flat by buy order
     (`RULES.upgradeCosts`: 200 / 400 / 600 / 800). Each upgrade has a short player-facing `description`. A test checks
     the count, descriptions and tags.
-- Every unit also needs an entry in `src/data/balance.ts`: its balance role, Mechabellum analogue and relationship
-  table (beats / loses to). Write the relationships in words before choosing numbers (`docs/BALANCE.md` step 1).
+- Every unit also needs an entry in `src/data/balance.ts`: its balance role, Mechabellum analogue, an **intent for
+  each upgrade** (what it's for, any role it moves the unit into, which matchups it should flip), and its lines in
+  `RELATIONS` (who it beats, with the reason in words). Capture intent, not numbers: write these before choosing
+  numbers (`docs/BALANCE.md` step 1), then tune until the harness agrees. A test checks every upgrade has an intent.
+- Elements: an element's own creatures **resist** it mildly (0.3) and are never immune. Weaknesses stay as they are.
+- Target preferences (`prefers`, towers-first, highest/lowest HP) are **local**: they only choose among enemies within
+  attack range + `RULES.preferReach`. Never make a unit cross the field for a preferred target.
+- No independents rebalance for now. Their purpose: any faction can use them to cover its holes, but they cost more to
+  unlock and are less cost-efficient than a faction's own answer.
 - Faction feel: the **Wardens** (formerly the Kingdom) are the most straightforward faction (plain stat upgrades).
   **Elementals** are the most complex to play (combos). Goblins sit between them. This is about feel, not power:
   balance is per unit (see "Where things stand").
 - **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed) and do
   **not** create surfaces. Surfaces come only from specific upgrades. Don't add new statuses, surfaces or elements
   without the owner agreeing.
-- Speed is in points: 10 = 2 tiles/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
+- Speed is in points: 10 = 1 tile/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
 - After changing units:
   - `npm test`
-  - `npm run balance -- check`, which grades the equal-supply matrix against `src/data/balance.ts`. The other modes
-    (stats, coverage, distance, fight, sensitivity, upgrades) are listed at the top of `scripts/balance.ts`.
+  - `npm run balance -- targets <unit…>` while tuning (seconds), then `npm run balance -- check` (minutes), which grades
+    the equal-supply matrix and the upgrade intents against `src/data/balance.ts`. The other modes are listed at the top
+    of `scripts/balance.ts`; `density` checks fight shape.
   - `npm run roster-table`, then paste the output into DESIGN.md §4.
   - If behavior changed, update DESIGN.md.
 
@@ -96,7 +104,9 @@ See DESIGN.md §12 for the roadmap. Open threads:
   (`docs/REFERENCE.md`, `docs/REFERENCE_2.md`). `docs/BALANCE-PLAN.md` maps our units onto Mechabellum's and sets out
   the order of work. The old approach is gone; don't bring it back: the faction triangle as a balance goal, the counter
   web, faction reference armies, "Wardens are the strongest", "keep every non-goblin attack ≥ 10". Balance per unit at
-  equal supply against the targets in `src/data/balance.ts`, which stay a draft until the owner signs them off. The two
+  equal supply against the targets in `src/data/balance.ts`. The owner signed off the approach and left the table for Claude to
+  refine. Fights should be **spread out like Mechabellum's** (about 40–60 s, a long approach, not everyone fighting at
+  once), so positioning matters; get there through space and movement, never by inflating HP. The two
   playtest reports (`docs/PLAYTEST-2026-10*.md`) are kept as history; their balance conclusions are superseded.
 - The owner is playtesting and will bring **major revision notes**. Expect redesigns, not just tuning.
 - **Big changes in progress (Oct 2026):** four upgrades per unit, flat upgrade prices, the round-1 opening offer, two
@@ -105,7 +115,7 @@ See DESIGN.md §12 for the roadmap. Open threads:
   1 first; `npm run balance -- upgrades <unit>` covers the upgrade and veterancy curve.
 - **Goblin rework done (Oct 2026, from the owner's unit notes):** Greenskins became Goblins (`faction:goblin`):
   Grunts, Skirmishers (goblin archers that hit air), Wolf Riders, Troll (moved from the independents), Ogre Brute,
-  Giant Bats. Sappers and the Alchemist are gone. Longbowmen became Elven Archers and Halberdiers became Pikemen. Two
+  Giant Bats. Sappers and the Alchemist are gone. Longbowmen became Crossbowmen and Halberdiers became Pikemen. Two
   upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and Troll
   *Boulder Toss*. Expect the owner to replace them.
 - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon Riders

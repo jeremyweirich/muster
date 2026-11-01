@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BALANCE_TARGETS, BASELINE_UNIT, ROLE_INFO } from "../src/data/balance";
+import { BALANCE_TARGETS, BASELINE_UNIT, RELATIONS, ROLE_INFO } from "../src/data/balance";
 import { RULES } from "../src/data/rules";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, defMap } from "../src/game/army";
@@ -12,14 +12,25 @@ const defs = defMap(DEFAULT_UNITS);
 const byId = (id: string) => defs.get(id)!;
 
 describe("balance targets", () => {
-  it("every unit has a role and only lists real units", () => {
+  it("every unit has a role and every upgrade an intent", () => {
     for (const u of DEFAULT_UNITS) {
       const t = BALANCE_TARGETS[u.id];
       expect(t, u.id).toBeDefined();
       expect(ROLE_INFO[t.role], u.id).toBeDefined();
-      for (const id of [...t.beats, ...t.losesTo]) expect(defs.has(id), `${u.id} lists ${id}`).toBe(true);
+      expect(Object.keys(t.upgrades).sort(), u.id).toEqual((u.upgrades ?? []).map((x) => x.id).sort());
+      for (const i of Object.values(t.upgrades)) for (const id of i.beats ?? []) expect(defs.has(id), `${u.id} upgrade lists ${id}`).toBe(true);
     }
     for (const id of Object.keys(BALANCE_TARGETS)) expect(defs.has(id), id).toBe(true);
+  });
+
+  it("relations name real units, once, in one direction", () => {
+    const seen = new Set<string>();
+    for (const [a, b, why] of RELATIONS) {
+      expect(defs.has(a) && defs.has(b), `${a} > ${b}`).toBe(true);
+      expect(why.length, `${a} > ${b}`).toBeGreaterThan(0);
+      expect(seen.has(`${b}|${a}`) || seen.has(`${a}|${b}`), `${a} > ${b}`).toBe(false);
+      seen.add(`${a}|${b}`);
+    }
   });
 });
 

@@ -44,12 +44,12 @@ describe("counter reasons", () => {
   const texts = (rs: { text: string }[]) => rs.map((r) => r.text);
 
   it("anti-air against fliers, and ground-only units that can't answer them", () => {
-    expect(texts(strengths(byId("elven_archers"), byId("giant_bats")))).toContain("Shoots down fliers");
+    expect(texts(strengths(byId("crossbowmen"), byId("giant_bats")))).toContain("Shoots down fliers");
     expect(texts(weaknesses(byId("knights"), byId("giant_bats")))).toContain("Can't hit fliers");
   });
 
   it("bonus damage and splash", () => {
-    expect(texts(strengths(byId("pikemen"), byId("ogre_brute"))).some((t) => t.startsWith("×1.75 damage"))).toBe(true);
+    expect(texts(strengths(byId("pikemen"), byId("ogre_brute"))).some((t) => t.startsWith("×3.5 damage"))).toBe(true);
     expect(texts(strengths(byId("ogre_brute"), byId("grunts")))).toContain("Splash hits the whole swarm");
     expect(texts(weaknesses(byId("grunts"), byId("ogre_brute")))).toContain("Its splash shreds swarms");
   });

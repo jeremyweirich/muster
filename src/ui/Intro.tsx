@@ -36,7 +36,7 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "1. Recruit and place",
-      art: <Icons defs={[u("knights"), u("elven_archers"), u("grunts")]} />,
+      art: <Icons defs={[u("knights"), u("crossbowmen"), u("grunts")]} />,
       body: (
         <>
           <p>
@@ -51,7 +51,7 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "2. Your army keeps growing",
-      art: <Icons defs={[u("knights"), u("knights"), u("elven_archers"), u("ogre_brute")]} />,
+      art: <Icons defs={[u("knights"), u("knights"), u("crossbowmen"), u("ogre_brute")]} />,
       body: (
         <>
           <p>
@@ -67,15 +67,15 @@ export function Intro({ onClose }: { onClose: () => void }) {
     },
     {
       title: "3. Counter what you see",
-      art: <Triangle a={u("grunts")} b={u("knights")} c={u("elven_archers")} />,
+      art: <Triangle a={u("grunts")} b={u("crossbowmen")} c={u("knights")} />,
       body: (
         <>
           <p>
             Before you build, you can see the enemy&apos;s army from last round. Every unit beats some units and loses to others:
           </p>
           <p className="intro-small">
-            Goblins swarm Knights · Knights shrug off arrows · Elven Archers pick off Goblins. Fire melts armor, Giant Bats hunt
-            archers, and Air Elementals swat fliers.
+            A goblin swarm soaks up crossbow bolts · Crossbow bolts punch through Knights · Knights cut down the swarm. Pikes
+            and trolls bring down giants, Giant Bats land on archers, and Air Elementals swat fliers.
           </p>
           <p>
             Hover any unit to see what it does. The <b>Counters</b> tab shows what beats any unit, and the <b>Codex</b> explains every

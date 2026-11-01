@@ -504,16 +504,18 @@ export class Battle {
     const atk = m.def.attack;
     let best: Model | undefined;
     let bestScore = Infinity;
-    const reach = (atk?.range ?? 0) + 4;
+    // Preferences are local: "of the enemies in front of you, take this one", never "cross the field for it".
+    const reach = (atk?.range ?? 0) + this.rules.preferReach;
     for (const t of this.models) {
       if (t.side === m.side || !this.canTarget(atk, t)) continue;
       // extra range against a target counts as it being that much closer
       const d = Math.sqrt(dist2(m, t)) - t.def.size - this.rangeBonus(m, atk, t);
       let score = d;
-      if (atk?.targeting === "towers" && t.def.structure) score = d - 1000;
+      if (d >= reach) score = d;
+      else if (atk?.targeting === "towers" && t.def.structure) score = d - 1000;
       else if (atk?.prefers && matches(atk.prefers, t.def, t.side, m.side)) score = d - 500;
-      else if (atk?.targeting === "highestHp" && d < reach) score = -t.hp * 1000 + d;
-      else if (atk?.targeting === "lowestHp" && d < reach) score = -1e7 + t.hp * 1000 + d;
+      else if (atk?.targeting === "highestHp") score = -t.hp * 1000 + d;
+      else if (atk?.targeting === "lowestHp") score = -1e7 + t.hp * 1000 + d;
       if (score < bestScore) {
         bestScore = score;
         best = t;
@@ -555,7 +557,9 @@ export class Battle {
     m.retarget -= dt;
     let target = m.targetId >= 0 ? this.byId.get(m.targetId) : undefined;
     const stale = !target || (atk ? !this.canTarget(atk, target) : !target.alive);
-    if (stale || m.retarget <= 0) {
+    // a ramping unit keeps hitting the target it's building on while it's still in reach
+    const locked = m.engaged && m.rampTarget === m.targetId && !!trait(m.def, "ramp");
+    if (stale || (m.retarget <= 0 && !locked)) {
       // units without an attack (support) follow the nearest ally that has one
       target = atk ? this.findTarget(m) : this.findEscort(m);
       m.targetId = target ? target.id : -1;

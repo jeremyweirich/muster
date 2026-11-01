@@ -77,7 +77,7 @@ rule #1.
 
 | # | Mission | Dispute | New for the player | Warden unit | Goblin unit | HP |
 |---|---|---|---|---|---|---|
-| 1 | Hands Off | a goat | placement, Fight, the hands-off rule | Knights, Elven Archers | Grunts | 1 battle |
+| 1 | Hands Off | a goat | placement, Fight, the hands-off rule | Knights, Crossbowmen | Grunts | 1 battle |
 | 2 | The Appeal | the goat, appealed | rounds, locked squads, reading their last army, HP | | Skirmishers | 60 |
 | 3 | Two Keeps | a rude drawing on a Keep | towers, collapse Daze, flanks, tower levels | | Wolf Riders | 100 |
 | 4 | Under the Bridge | the bridge toll | unlocks, big units, regeneration | Ballista | Troll | 140 |
@@ -89,7 +89,7 @@ rule #1.
 ### 1. Hands Off
 - **Dispute.** A goat wandered across the border at Millbrook. Both sides claim it.
 - **Page 1 (the Compact).** "Choose your champions. Place them. When the horn sounds, no hand may touch the Field."
-- **Kit.** A fixed 400 supply, Knights and Elven Archers. **The goblin army is already placed and visible** ("the
+- **Kit.** A fixed 400 supply, Knights and Crossbowmen. **The goblin army is already placed and visible** ("the
   challenger deploys first"), the only time the player gets a full look.
 - **Punch.** Three Grunt mobs charge. Archers one-shot grunts; Knights hold the charge.
 - **Teaches.** Steel in front, arrows behind. Then the horn sounds and you let go.
@@ -133,7 +133,7 @@ rule #1.
 - **Dispute.** "The Compact draws borders on the ground. The goblins have noticed."
 - **Page 6.** "Knights cannot strike what flies. Know which of your champions can."
 - **Punch.** Giant Bats fly over the line and eat the archers.
-- **Teaches.** Two layers. Elven Archers, Ballista and Griffons hit air; Knights, Pikemen and Trolls don't. Skyhunters
+- **Teaches.** Two layers. Crossbowmen, Ballista and Griffons hit air; Knights, Pikemen and Trolls don't. Skyhunters
   is the counter-upgrade. Griffons are fast and good against bats, but weak against massed arrows and skirmishers.
 
 ### 7. Old Grumm

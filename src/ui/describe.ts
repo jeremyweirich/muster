@@ -113,11 +113,11 @@ export function describeUpgrade(u: UpgradeDef): string[] {
   if (u.element) out.push(`attacks become ${u.element}`);
   if (u.targets) out.push(`hits ${u.targets.join(" + ")}`);
   if (u.layer) out.push(u.layer === "air" ? "becomes a flier" : "becomes a ground unit");
-  if (u.targeting) out.push(u.targeting === "towers" ? "hunts towers first" : `targets ${u.targeting}`);
+  if (u.targeting) out.push(u.targeting === "towers" ? "prefers Keeps it gets near" : `targets ${u.targeting}`);
   for (const e of u.onHit ?? []) out.push(`on hit: ${describeEffect(e)}`);
   for (const b of u.bonusVs ?? []) out.push(`×${b.mult} damage vs ${describeSelector(b.selector)}`);
   for (const r of u.rangeVs ?? []) out.push(`+${r.add} range vs ${describeSelector(r.selector)}`);
-  if (u.prefers) out.push(`hunts ${describeSelector(u.prefers)} first`);
+  if (u.prefers) out.push(`prefers ${describeSelector(u.prefers)} nearby`);
   if (u.immuneStatuses?.length) out.push(`immune to ${u.immuneStatuses.map((s) => STATUSES[s].name).join(", ")}`);
   if (u.onHitAffects) out.push(`on-hit statuses only land on ${u.onHitAffects === "all" ? "anyone" : u.onHitAffects}`);
   for (const t of u.traits ?? []) out.push((u.replaceTraits ? "becomes: " : "") + describeTrait(t));
