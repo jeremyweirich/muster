@@ -90,6 +90,21 @@ and towers.
 - **Phones play sideways.** On short landscape screens the header and padding shrink so the field gets the height. In
   portrait, touch devices get a "turn your phone sideways" screen with a full-screen + landscape-lock button (works on
   Android; iOS has to rotate by hand) and a "play in portrait anyway" escape, which stacks the field above the sidebar.
+- **Phone layout (short landscape screens, `COMPACT_QUERY` in `MobileDeploy.tsx`).** Desktop is unchanged. Height is
+  what phones lack, so the field takes the full height and the sidebar takes the width left over; the health bars and
+  round move to the top of the sidebar in one row. While deploying, nothing needs scrolling:
+  - The sidebar is a **rail**: supply beside Fight; the units you've **unlocked** (one column, two when it's wide or
+    you own more than four; a gold dot means an upgrade is affordable); a row with **＋ Unlock**, **Keeps**, **▲**
+    (promotions, when any are waiting) and **↶ Undo**; while placing, a caption plus Rotate, Sell and Done/Cancel; the
+    enemy's unlocks; and **☰** (AI difficulty, Restart, Play a friend).
+  - **Sheets** draw over the field. Most cover exactly **no-man's land**, which is always empty while deploying, so both
+    deploy zones stay in view. Tapping a unit in the rail starts placing it and opens its sheet: a one-line stat summary
+    and its four upgrades as cards with Buy buttons. The description gets as many lines as the sheet has room for
+    (none on the smallest phones), and **Details** opens the full Codex card over the whole field. Unlock (a picker
+    with the full card for the unit you tap), the round-1 opening and Details cover the whole field.
+  - No hover on touch, so **taps inspect**: an enemy squad, an enemy unlock or one of your earlier squads opens its
+    sheet (your veterans' sheet has the Promote button), and a Keep opens the Keeps sheet. A tap on a squad placed this
+    round picks it up, as on desktop. Battle and the report keep the regular sidebar.
 
 ### Towers — Decided (values open)
 

@@ -34,6 +34,7 @@ import { MEDAL_COLORS, MvpBoard, SquadDetail, SquadList, topSquads } from "./Bat
 import { useBattlePlayer } from "./battlePlayer";
 import { DamageTally, type Strike } from "./DamageTally";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
+import { COMPACT_QUERY, DetailsSheet, Sheet, UnitSheet, UnitTile, UnlockSheet, useMedia } from "./MobileDeploy";
 import { PvpPanel } from "./PvpPanel";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
@@ -67,6 +68,11 @@ function actionLabel(a: Action, defs: DefMap): string {
   }
 }
 
+// Phone layout only: what the sheet over the field shows besides the selected unit.
+type SheetKind = "unlock" | "keeps" | "promote" | "menu" | "details";
+// a tapped squad or enemy unit, by id, so its sheet follows upgrades and promotions
+type Inspected = { side: Side; defId: string; uid?: string };
+
 // A PvP match (docs/MULTIPLAYER.md), or a game against the AI when absent.
 export interface PvpProps {
   link: PvpLink;
@@ -94,6 +100,10 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
   const [matchNo, setMatchNo] = useState(0); // a restart in round 1 needs a fresh plan too
   const [portraitOk, setPortraitOk] = useState(false);
   const [sideTab, setSideTab] = useState<"recruit" | "upgrades">("recruit");
+  // phones held sideways deploy from a rail and sheets over the field (MobileDeploy.tsx)
+  const compact = useMedia(COMPACT_QUERY);
+  const [sheet, setSheet] = useState<SheetKind | null>(null);
+  const [inspect, setInspect] = useState<Inspected | null>(null);
   // the survivors' damage flying to the HP bars after a battle; the bars show `before` until each strike lands
   const [tally, setTally] = useState<{ strikes: Strike[]; before: [number, number]; landed: number } | null>(null);
   const battleRef = useRef<Battle | null>(null);
@@ -403,12 +413,20 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
         const uid = newUid("p");
         const sq: PlacedSquad = { uid, defId: placingDef.id, x, y, rot: rot || undefined, round: match.round };
         spend(placingDef.cost, { kind: "place", uid, cost: placingDef.cost }, (m) => ({ armies: [[...m.armies[0], sq], m.armies[1]] }));
-        if (match.supply[0] - placingDef.cost < placingDef.cost) setSelected(null); // can't afford another: stop placing
+        // can't afford another: stop placing (phones keep the unit's sheet open for its upgrades)
+        if (!compact && match.supply[0] - placingDef.cost < placingDef.cost) setSelected(null);
       }
       return;
     }
     if (existing && isNew(existing)) pickUp(existing);
-    else if (existing && canPromote(existing)) promote(existing);
+    else if (compact) {
+      // no hover on touch: a tap shows what's there, and the sheet has the buttons
+      const theirs = hitSquad(enemySeen, p.x, p.y);
+      const tower = hitSquad(allTowers(), p.x, p.y);
+      setSheet(tower ? "keeps" : null);
+      const sq = existing ?? theirs;
+      setInspect(sq ? { side: existing ? 0 : 1, defId: sq.defId, uid: sq.uid } : null);
+    } else if (existing && canPromote(existing)) promote(existing);
   };
 
   const stopPlacing = () => {
@@ -419,6 +437,15 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
   const pickUp = (sq: PlacedSquad) => {
     setHeld(sq.uid);
     setRot(!!sq.rot);
+    setInspect(null);
+  };
+
+  // Phone rail: a tap selects a unit to place and opens its sheet; a second tap closes it.
+  const pickTile = (u: UnitDef) => {
+    setHeld(null);
+    setInspect(null);
+    setSheet(null);
+    setSelected(selected === u.id ? null : u.id);
   };
 
   const clickShop = (u: UnitDef) => {
@@ -500,6 +527,8 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
     setView("report");
     setPinned(null);
     setTally(null);
+    setSheet(null);
+    setInspect(null);
   };
 
   // The battle ran in the host's view; a guest turns the result round to their own.
@@ -564,6 +593,8 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
     setActions([]);
     setFightQueued(false);
     setTally(null);
+    setSheet(null);
+    setInspect(null);
     setMatchNo((n) => n + 1);
     const m = newMatch(units, matchSeed());
     roundStart.current = m;
@@ -579,6 +610,8 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
       if (e.key === "Escape" || e.key === "Esc" || e.keyCode === 27) {
         setSelected(null);
         setHeld(null);
+        setSheet(null);
+        setInspect(null);
         return;
       }
       const el = e.target as HTMLElement;
@@ -797,6 +830,124 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
     );
   };
 
+  const fightLabel = openingPending
+    ? "Pick your opening first"
+    : fightQueued
+      ? pvp
+        ? "Waiting for your friend…"
+        : "The enemy is still deciding…"
+      : fightArmed
+        ? `Fight without spending ${match.supply[0]}?`
+        : "Fight!";
+  const gameOpts = pvp ? (
+    <div className="game-opts">
+      <button onClick={pvp.onLeave}>Leave match</button>
+    </div>
+  ) : (
+    <div className="game-opts">
+      <label>
+        AI{" "}
+        <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
+          <option value="easy">Easy</option>
+          <option value="normal">Normal</option>
+          <option value="hard">Hard</option>
+        </select>
+      </label>
+      <button onClick={restart}>Restart</button>
+      {onStartPvp && <button onClick={playFriend}>Play a friend</button>}
+    </div>
+  );
+  const aiNote = deploying && !pvp && (
+    <p className="muted small">{aiPlan ? `AI tested ${aiPlan.candidatesTried} plans against what it expects you to field.` : "AI is thinking while you build…"}</p>
+  );
+
+  // Phone layout: the sheet over the field. A unit being placed or moved comes first, then a tapped squad.
+  const focus: Inspected | null = heldSquad
+    ? { side: 0, defId: heldSquad.defId, uid: heldSquad.uid }
+    : selected
+      ? { side: 0, defId: selected }
+      : inspect;
+  const mobileSheet = (() => {
+    const close = () => setSheet(null);
+    if (openingPending)
+      return (
+        <Sheet kind="full">
+          <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
+        </Sheet>
+      );
+    if (sheet === "unlock")
+      return (
+        <UnlockSheet
+          units={units.filter((u) => !unlocked.has(u.id)).map((u) => myDefs.get(u.id) ?? u)}
+          supply={match.supply[0]}
+          onUnlock={(u) => {
+            clickShop(u);
+            close();
+          }}
+          onClose={close}
+        />
+      );
+    if (sheet === "menu")
+      return (
+        <Sheet kind="band" title={<b>Game</b>} onClose={close}>
+          {gameOpts}
+          {aiNote}
+        </Sheet>
+      );
+    if (sheet === "keeps")
+      return (
+        <Sheet kind="band" title={<b>Keeps</b>} onClose={close}>
+          <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />
+        </Sheet>
+      );
+    if (sheet === "promote")
+      return (
+        <Sheet kind="band" title={<b>Promotions</b>} onClose={close}>
+          <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} onHover={() => {}} />
+        </Sheet>
+      );
+    const army = focus?.side === 0 ? myArmy : enemySeen;
+    const squad = focus?.uid ? army.find((s) => s.uid === focus.uid) : undefined;
+    const def = focus && (squad ? squadDef(squad, focus.side) : (focus.side === 0 ? myDefs : enemyDefs).get(focus.defId));
+    if (!focus || !def) return <div className="sheet-hint">Tap one of your units on the left to place it and buy its upgrades.</div>;
+    const owned = match.upgrades[focus.side][def.id] ?? [];
+    if (sheet === "details") return <DetailsSheet def={def} owned={owned} onClose={close} />;
+    const base = defs.get(def.id);
+    return (
+      <UnitSheet
+        def={def}
+        owned={owned}
+        rival={focus.side === 1 ? (pvp ? "Your friend's" : "Enemy's") : undefined}
+        extra={
+          squad && focus.side === 0 && canPromote(squad) && !heldSquad ? (
+            <Veterancy squad={squad} canBuy={focus.side === 0} price={promotePrice(base!)} supply={match.supply[0]} onPromote={() => promote(squad)} />
+          ) : null
+        }
+        buy={
+          focus.side === 0 && base
+            ? { price: upgradePrice(base, owned.length), supply: match.supply[0], locked: !unlocked.has(def.id), onBuy: (id) => buyUpgrade(def.id, id) }
+            : null
+        }
+        onDetails={() => setSheet("details")}
+        onClose={() => {
+          stopPlacing();
+          setInspect(null);
+        }}
+      />
+    );
+  })();
+
+  // health and round: above the field, or at the top of the sidebar on phones, where height is scarcer than width
+  const hud = (
+    <div className="hud">
+      <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} />
+      <HpBar label="You" hp={shownHp[0]} side={0} hits={hitsOn[0]} />
+      <div className="round">Round {match.round}</div>
+      <HpBar label={pvp ? "Friend" : "Enemy"} hp={shownHp[1]} side={1} hits={hitsOn[1]} />
+      <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
+    </div>
+  );
+
   const unitCard = card && (
     <>
     {card.squad && !card.def.structure && (
@@ -817,22 +968,17 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
   );
 
   return (
-    <div className={`play ${portraitOk ? "portrait-ok" : ""}`}>
+    <div className={`play ${portraitOk ? "portrait-ok" : ""}`} style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
       <main className="board">
-        <div className="hud">
-          <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} />
-          <HpBar label="You" hp={shownHp[0]} side={0} hits={hitsOn[0]} />
-          <div className="round">Round {match.round}</div>
-          <HpBar label={pvp ? "Friend" : "Enemy"} hp={shownHp[1]} side={1} hits={hitsOn[1]} />
-          <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
-        </div>
+        {!compact && hud}
         <div
           ref={fieldRef}
           className={`field-wrap ${deploying && placingDef ? (held ? "moving" : "placing") : ""}`}
-          style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}
         >
+          <div className="field-box">
           <FieldCanvas tile={TILE} draw={draw} onPointer={onPointer} />
-          {deploying && placingDef && (
+          {compact && deploying && mobileSheet}
+          {deploying && placingDef && !compact && (
             <div className="placing-banner">
               <Swatch def={placingDef} size={18} />
               <span>
@@ -851,6 +997,7 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
               </button>
             </div>
           )}
+          </div>
         </div>
         {tally && (
           <DamageTally
@@ -863,6 +1010,7 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
       </main>
 
       <aside className="panel side">
+        {compact && hud}
         {pvp && (
           <PvpPanel
             room={pvp.link.room}
@@ -889,7 +1037,94 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
             <p className="muted small">The battle starts when your friend is ready too. Until then you can take your army back and change it.</p>
           </div>
         )}
-        {deploying && (
+        {deploying && compact && (
+          <>
+            <div className="rail-fight">
+              <div className="supply">
+                <span className="supply-num">{match.supply[0]}</span> supply
+              </div>
+              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || fightQueued} onClick={fight}>
+                {fightLabel}
+              </button>
+            </div>
+            {/* one column keeps names whole; past four units the rail switches to two and the costs move to the sheet */}
+            <div className={`rail-units ${myUnlocks.length > 4 ? "two" : ""}`}>
+              {myUnlocks.map((d) => {
+                const bought = match.upgrades[0][d.id] ?? [];
+                const price = upgradePrice(defs.get(d.id)!, bought.length);
+                return (
+                  <UnitTile
+                    key={d.id}
+                    def={d}
+                    active={selected === d.id || heldSquad?.defId === d.id}
+                    ups={bought.length}
+                    canUpgrade={price !== null && price <= match.supply[0]}
+                    onClick={() => pickTile(d)}
+                  />
+                );
+              })}
+            </div>
+            <div className="rail-actions">
+              <button className={`rail-tile rail-add ${sheet === "unlock" ? "active" : ""}`} onClick={() => setSheet(sheet === "unlock" ? null : "unlock")}>
+                ＋ Unlock
+              </button>
+              <button className={`rail-tile ${sheet === "keeps" ? "active" : ""}`} onClick={() => setSheet(sheet === "keeps" ? null : "keeps")}>
+                <Swatch def={TOWER_MAP.get(RULES.towers[0].defId)!} size={18} />
+                Keeps
+              </button>
+              {promotable.length > 0 && (
+                <button className={`rail-tile ${sheet === "promote" ? "active" : ""}`} onClick={() => setSheet(sheet === "promote" ? null : "promote")}>
+                  ▲<span className="tab-badge">{promotable.length}</span>
+                </button>
+              )}
+              <button className="rail-tile" disabled={!lastAction} onClick={undo} aria-label="Undo">
+                ↶{lastAction ? ` +${lastAction.cost}` : ""}
+              </button>
+            </div>
+            {placingDef && (
+              <div className="rail-placing">
+                <div className="rail-caption">
+                  {heldSquad ? "Moving: tap a free spot." : placingDef.cost > match.supply[0] ? "Not enough supply for another." : "Tap your blue zone to place."}
+                </div>
+                <div className="rail-actions">
+                  <button className="rail-tile" onClick={() => setRot((r) => !r)}>
+                    ↻ Rotate
+                  </button>
+                  {heldSquad && !heldSquad.free && (
+                    <button
+                      className="rail-tile"
+                      onClick={() => {
+                        sell(heldSquad);
+                        setHeld(null);
+                      }}
+                    >
+                      Sell +{placingDef.cost}
+                    </button>
+                  )}
+                  <button className="rail-tile rail-done" onClick={stopPlacing}>
+                    {heldSquad ? "Cancel" : "Done"}
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="spacer" />
+            <div className="rail-foot">
+              {enemyUnlocks.length > 0 && <span className="muted small">{pvp ? "Friend" : "Enemy"}</span>}
+              <span className="swatches">
+                {enemyUnlocks.map((d) => (
+                  <button key={d.id} className="unlock-chip chip-btn" title={d.name} onClick={() => setInspect({ side: 1, defId: d.id })}>
+                    <Swatch def={d} size={20} />
+                    {(match.upgrades[1][d.id]?.length ?? 0) > 0 && <span className="unlock-count">{match.upgrades[1][d.id].length}</span>}
+                  </button>
+                ))}
+              </span>
+              <button className={`small-btn rail-menu ${sheet === "menu" ? "active" : ""}`} onClick={() => setSheet(sheet === "menu" ? null : "menu")} aria-label="Game menu">
+                ☰
+              </button>
+            </div>
+          </>
+        )}
+        {deploying && !compact && (
           <>
             <div className="deploy-bar">
               <div className="supply-row">
@@ -906,15 +1141,7 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
                 </button>
               </div>
               <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || fightQueued} onClick={fight}>
-                {openingPending
-                  ? "Pick your opening first"
-                  : fightQueued
-                    ? pvp
-                      ? "Waiting for your friend…"
-                      : "The enemy is still deciding…"
-                    : fightArmed
-                      ? `Fight without spending ${match.supply[0]}?`
-                      : "Fight!"}
+                {fightLabel}
               </button>
             </div>
             {openingPending && (
@@ -1106,36 +1333,15 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
           </>
         )}
         {!reporting && !deploying && (unitCard ?? <p className="muted small">Hover a unit on the field to see its stats.</p>)}
-        <div className="spacer" />
-        {deploying && (
+        {!(compact && deploying) && <div className="spacer" />}
+        {deploying && !compact && (
           <p className="hint">
             Click a unit, then click your (blue) zone to place it; <b>Esc</b> stops placing. <b>Right-click</b> or <b>R</b> rotates. Click a green-outlined squad to move
             it; <b>Delete</b> sells it. <b>Ctrl+Z</b> undoes your last purchase. 🔒 units cost a one-time unlock per match. Click a squad with a gold ▲ to promote it.
           </p>
         )}
-        {pvp ? (
-          <div className="game-opts">
-            <button onClick={pvp.onLeave}>Leave match</button>
-          </div>
-        ) : (
-          <div className="game-opts">
-            <label>
-              AI{" "}
-              <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
-                <option value="easy">Easy</option>
-                <option value="normal">Normal</option>
-                <option value="hard">Hard</option>
-              </select>
-            </label>
-            <button onClick={restart}>Restart</button>
-            {onStartPvp && <button onClick={playFriend}>Play a friend</button>}
-          </div>
-        )}
-        {deploying && !pvp && (
-          <p className="muted small">
-            {aiPlan ? `AI tested ${aiPlan.candidatesTried} plans against what it expects you to field.` : "AI is thinking while you build…"}
-          </p>
-        )}
+        {!(compact && deploying) && gameOpts}
+        {!compact && aiNote}
       </aside>
 
       <div className="rotate-hint">

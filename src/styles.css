@@ -252,8 +252,12 @@ code {
   align-items: flex-start;
   justify-content: center;
 }
-.field-wrap .field {
+.field-box {
+  position: relative;
   width: min(100cqw, 100cqh * var(--field-ratio));
+}
+.field-box .field {
+  width: 100%;
   height: auto;
 }
 .hud {
@@ -1178,10 +1182,33 @@ a.reason:hover {
   .version {
     font-size: 10px;
   }
+  /* the field takes the full height it can, and the sidebar takes whatever width is left */
   .play {
     gap: 6px;
     padding: 6px;
-    grid-template-columns: minmax(250px, 1fr) minmax(0, 3fr);
+    grid-template-columns: minmax(200px, 1fr) auto;
+    container-type: size;
+  }
+  .board {
+    width: min(100cqh * var(--field-ratio), 100cqw - 206px);
+  }
+  /* the health bars move to the top of the sidebar, in one row */
+  .side > .hud {
+    gap: 6px;
+    font-size: 12px;
+  }
+  .side > .hud .hp {
+    min-width: 0;
+    gap: 5px;
+  }
+  .side > .hud .hp > span:first-child {
+    display: none;
+  }
+  .side > .hud .hp-0 {
+    flex-direction: row-reverse;
+  }
+  .side > .hud .hp-num {
+    width: auto;
   }
   .board {
     gap: 4px;
@@ -1214,7 +1241,7 @@ a.reason:hover {
   .field-wrap {
     container-type: inline-size;
   }
-  .field-wrap .field {
+  .field-box {
     width: 100%;
   }
 }
@@ -1724,4 +1751,340 @@ button.primary.warn-btn {
 }
 .pvp-notice {
   color: var(--accent);
+}
+
+/* Phones held sideways, while deploying (MobileDeploy.tsx): a rail of the units you own, and sheets over the field */
+.side:has(> .rail-fight) {
+  container-type: inline-size;
+  gap: 6px;
+}
+.rail-fight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rail-fight .supply {
+  line-height: 1.1;
+  text-align: center;
+  font-size: 11px;
+}
+.rail-fight .supply-num {
+  display: block;
+}
+.rail-fight button.primary.big {
+  flex: 1;
+  width: auto;
+}
+/* two columns when the sidebar is wide enough or the units are many; costs give way first */
+.rail-units {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 4px;
+  padding: 3px 3px 0 0; /* room for the upgrade dots */
+}
+.rail-units.two {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+@container (max-width: 279px) {
+  .rail-units.two .shop-cost {
+    display: none;
+  }
+}
+.rail-units .rail-tile {
+  padding: 3px 6px;
+}
+.rail-caption {
+  font-size: 12px;
+  color: var(--blue);
+  line-height: 1.25;
+}
+.rail-actions {
+  display: flex;
+  gap: 4px;
+}
+.rail-actions .rail-tile {
+  flex: none;
+  white-space: nowrap;
+}
+.rail-actions .rail-add,
+.rail-actions .rail-done {
+  flex: 1;
+  justify-content: center;
+}
+.rail-done {
+  border-color: var(--blue);
+}
+.rail-placing {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.rail-tile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 4px 6px;
+  font-size: 12px;
+  text-align: left;
+}
+.rail-tile.active {
+  background: rgba(226, 180, 90, 0.16);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.rail-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* an upgrade for this unit is affordable */
+.rail-up {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--panel);
+}
+.rail-add {
+  justify-content: center;
+  border-style: dashed;
+  color: var(--accent);
+}
+.rail-foot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rail-foot .swatches {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.chip-btn {
+  padding: 0;
+  border: none;
+  background: none;
+}
+.rail-menu {
+  font-size: 15px;
+  padding: 1px 9px;
+}
+
+.sheet {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(16, 20, 25, 0.94);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.sheet-band {
+  container-type: size;
+}
+.sheet-full {
+  top: 4px;
+  bottom: 4px;
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 2px 2px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.sheet-unit {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.sheet-unit b {
+  white-space: nowrap;
+}
+.rival-tag {
+  flex: none;
+  align-self: center;
+  padding: 0 5px;
+  border-radius: 4px;
+  background: var(--red);
+  color: #1a0a0d;
+  font-size: 11px;
+  font-weight: 700;
+}
+.sheet-unit .muted {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sheet-close {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+  padding: 1px 8px;
+}
+.sheet-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 6px;
+}
+.sheet-ups {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.sheet-up {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 3px 6px 5px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.sheet-up.can-buy {
+  border-color: var(--accent);
+  background: rgba(226, 180, 90, 0.08);
+}
+.sheet-up.owned {
+  border-color: rgba(226, 180, 90, 0.5);
+  background: rgba(226, 180, 90, 0.14);
+}
+.sheet-up.owned .up-name {
+  color: var(--accent);
+}
+.sheet-up .buy-btn {
+  margin-top: auto;
+}
+/* As many description lines as no-man's land has room for (none on the smallest phones); Details has the rest. Each
+   line is 15.5px; a card without one is about 92px with the sheet's header, or 110px where narrow cards wrap names. */
+.sheet-ups {
+  --lines: 0;
+}
+.sheet-up .up-desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--lines);
+  line-clamp: var(--lines);
+  max-height: calc(var(--lines) * 1.35em);
+  overflow: hidden;
+}
+@container (min-width: 500px) and (min-height: 108px) { .sheet-ups { --lines: 1; } }
+@container (min-width: 500px) and (min-height: 123px) { .sheet-ups { --lines: 2; } }
+@container (min-width: 500px) and (min-height: 139px) { .sheet-ups { --lines: 3; } }
+@container (min-width: 500px) and (min-height: 154px) { .sheet-ups { --lines: 4; } }
+@container (min-width: 500px) and (min-height: 170px) { .sheet-ups { --lines: 5; } }
+@container (min-width: 500px) and (min-height: 201px) { .sheet-ups { --lines: 7; } }
+@container (max-width: 499px) and (min-height: 126px) { .sheet-ups { --lines: 1; } }
+@container (max-width: 499px) and (min-height: 141px) { .sheet-ups { --lines: 2; } }
+@container (max-width: 499px) and (min-height: 157px) { .sheet-ups { --lines: 3; } }
+@container (max-width: 499px) and (min-height: 172px) { .sheet-ups { --lines: 4; } }
+@container (max-width: 499px) and (min-height: 219px) { .sheet-ups { --lines: 6; } }
+@container (max-width: 380px) {
+  .sheet-ups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    --lines: 0;
+  }
+}
+.buy-btn:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.sheet .veterancy {
+  padding: 3px 7px;
+  font-size: 12px;
+}
+.sheet .opening-buttons {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.sheet .towers > .muted:first-child {
+  display: none;
+}
+.sheet .towers {
+  border: none;
+  padding: 0;
+}
+.sheet .promotions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.sheet .promotions > .muted {
+  grid-column: span 2;
+}
+.sheet .game-opts {
+  justify-content: flex-start;
+}
+/* nothing selected: a quiet pointer in the middle of no-man's land */
+.sheet-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(10, 14, 18, 0.7);
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.unlock-sheet {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+.unlock-list,
+.unlock-preview {
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.unlock-preview p {
+  margin: 0;
+}
+.unlock-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
+  gap: 3px;
+}
+.unlock-grid .shop-item {
+  font-size: 12px;
+  padding: 3px 6px;
+}
+.shop-cost.dim {
+  opacity: 0.5;
 }
