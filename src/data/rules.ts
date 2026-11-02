@@ -30,7 +30,7 @@ export const RULES: Rules = {
   openingPackSupply: 200, // plus this to spend
   openingFlat: 700,
   towerUpgradeCosts: [100, 200, 400, 800],
-  towerHpPerLevel: 3000, // about a Giant's worth: the first level turns a one-hit Keep into one a raid has to work at
+  towerHpPerLevel: 2000, // the first level turns a one-hit Keep into one a raid has to work at
   towerDazeBase: 4,
   towerDazePerLevel: 0.5,
   towerDazeMin: 2,

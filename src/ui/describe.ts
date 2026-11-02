@@ -30,7 +30,7 @@ export function describeTrait(t: TraitDef): string {
     case "regen":
       return `Regenerates ${t.perSecond} hp/s${t.suppressedBy ? ` (not while ${STATUSES[t.suppressedBy].name})` : ""}`;
     case "periodic":
-      if (t.once) return `Once per battle${t.atTarget ? ", at its target as soon as it's in range" : `, after ${t.interval}s`}: ${t.effects.map(describeEffect).join(", ")}`;
+      if (t.once) return `Once per battle${t.perSquad ? " per squad" : ""}${t.atTarget ? ", at its target as soon as it's in range" : `, after ${t.interval}s`}: ${t.effects.map(describeEffect).join(", ")}`;
       return `Every ${t.interval}s${t.atTarget ? ", at its target (the first right away)" : ""}: ${t.effects.map(describeEffect).join(", ")}`;
     case "retaliate":
       return `When hit: ${t.effects.map(describeEffect).join(", ")} on the attacker${t.maxRange !== undefined ? ` (within ${t.maxRange})` : ""}`;

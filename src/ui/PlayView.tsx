@@ -52,7 +52,7 @@ type Action =
   | { kind: "unlock"; unitId: string; cost: number }
   | { kind: "upgrade"; unitId: string; upgradeId: string; cost: number }
   | { kind: "tower"; index: number; cost: number }
-  | { kind: "promote"; uid: string; cost: number };
+  | { kind: "promote"; uids: string[]; cost: number };
 
 function actionLabel(a: Action, defs: DefMap): string {
   switch (a.kind) {
@@ -63,7 +63,7 @@ function actionLabel(a: Action, defs: DefMap): string {
     case "upgrade":
       return `upgrade ${defs.get(a.unitId)?.upgrades?.find((u) => u.id === a.upgradeId)?.name ?? ""}`;
     case "promote":
-      return "promotion";
+      return a.uids.length > 1 ? `${a.uids.length} promotions` : "promotion";
     case "tower":
       return `${RULES.towers[a.index].name ?? TOWER_MAP.get(RULES.towers[a.index].defId)?.name ?? "tower"} upgrade`;
   }
@@ -288,22 +288,30 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
           return { ...m, supply, towerLevels: [levels, m.towerLevels[1]] };
         }
         case "promote": {
-          const demote = (s: PlacedSquad) => (s.uid === last.uid ? { ...s, level: (s.level ?? 2) - 1 > 1 ? (s.level ?? 2) - 1 : undefined } : s);
+          const demote = (s: PlacedSquad) => (last.uids.includes(s.uid) ? { ...s, level: (s.level ?? 2) - 1 > 1 ? (s.level ?? 2) - 1 : undefined } : s);
           return { ...m, supply, armies: [m.armies[0].map(demote), m.armies[1]] };
         }
       }
     });
   };
 
-  const promote = (sq: PlacedSquad) => {
-    const def = defs.get(sq.defId);
-    if (!def || !deploying || !canPromote(sq)) return;
-    const cost = promotePrice(def);
-    if (cost > match.supply[0]) return;
-    spend(cost, { kind: "promote", uid: sq.uid, cost }, (m) => ({
-      armies: [m.armies[0].map((s) => (s.uid === sq.uid ? { ...s, level: (s.level ?? 1) + 1 } : s)), m.armies[1]],
+  // promotes the squads in order while supply lasts, as one action so one undo takes it back
+  const promoteSquads = (squads: PlacedSquad[]) => {
+    if (!deploying) return;
+    const uids: string[] = [];
+    let cost = 0;
+    for (const sq of squads) {
+      const def = defs.get(sq.defId);
+      if (!def || !canPromote(sq) || cost + promotePrice(def) > match.supply[0]) continue;
+      uids.push(sq.uid);
+      cost += promotePrice(def);
+    }
+    if (!uids.length) return;
+    spend(cost, { kind: "promote", uids, cost }, (m) => ({
+      armies: [m.armies[0].map((s) => (uids.includes(s.uid) ? { ...s, level: (s.level ?? 1) + 1 } : s)), m.armies[1]],
     }));
   };
+  const promote = (sq: PlacedSquad) => promoteSquads([sq]);
 
   // A squad as it will fight: its unit with upgrades, then its level.
   const squadDef = (sq: PlacedSquad, side: Side) => {
@@ -819,6 +827,14 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     match.towerLevels[0].filter((l) => (towerUpgradePrice(l) ?? Infinity) <= match.supply[0]).length +
     myArmy.filter((sq) => canPromote(sq) && promotePrice(defs.get(sq.defId)!) <= match.supply[0]).length;
   const promotable = myArmy.filter(canPromote);
+  const promoteAll = promotable.length > 1
+    ? {
+        count: promotable.length,
+        price: promotable.reduce((n, sq) => n + promotePrice(defs.get(sq.defId)!), 0),
+        cheapest: Math.min(...promotable.map((sq) => promotePrice(defs.get(sq.defId)!))),
+        onClick: () => promoteSquads(promotable),
+      }
+    : undefined;
 
   const upgradeAction = (def: UnitDef) => (upId: string) => {
     if (card?.side !== 0 || !deploying || def.structure) return null;
@@ -906,7 +922,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     if (sheet === "promote")
       return (
         <Sheet kind="band" title={<b>Promotions</b>} onClose={close}>
-          <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} onHover={() => {}} />
+          <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} promoteAll={promoteAll} onHover={() => {}} />
         </Sheet>
       );
     const army = focus?.side === 0 ? myArmy : enemySeen;
@@ -923,7 +939,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         rival={focus.side === 1 ? (pvp ? "Your friend's" : "Enemy's") : undefined}
         extra={
           squad && focus.side === 0 && canPromote(squad) && !heldSquad ? (
-            <Veterancy squad={squad} canBuy={focus.side === 0} price={promotePrice(base!)} supply={match.supply[0]} onPromote={() => promote(squad)} />
+            <Veterancy squad={squad} canBuy={focus.side === 0} price={promotePrice(base!)} supply={match.supply[0]} onPromote={() => promote(squad)} promoteAll={promoteAll} />
           ) : null
         }
         buy={
@@ -960,6 +976,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         price={promotePrice(defs.get(card.squad.defId)!)}
         supply={match.supply[0]}
         onPromote={() => promote(card.squad!)}
+        promoteAll={promoteAll}
       />
     )}
     <UnitInfo
@@ -1191,7 +1208,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
                   supply={match.supply[0]}
                   onBuy={buyUpgrade}
                 />
-                <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} onHover={(sq) => setHoverInfo(sq ? { def: squadDef(sq, 0)!, side: 0, squad: sq } : null)} />
+                <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} promoteAll={promoteAll} onHover={(sq) => setHoverInfo(sq ? { def: squadDef(sq, 0)!, side: 0, squad: sq } : null)} />
                 <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />
               </>
             )}
@@ -1371,8 +1388,43 @@ async function goLandscape() {
   }
 }
 
+// Promote every veteran at once, while supply lasts. Only offered when more than one squad has a level waiting.
+interface PromoteAll {
+  count: number;
+  price: number;
+  cheapest: number;
+  onClick: () => void;
+}
+
+function PromoteAllButton({ all, supply }: { all: PromoteAll; supply: number }) {
+  return (
+    <button
+      className="small-btn promote-btn"
+      disabled={all.cheapest > supply}
+      title={all.price > supply ? "Promotes as many as you can afford" : undefined}
+      onClick={all.onClick}
+    >
+      Promote all {all.count} · {all.price}
+    </button>
+  );
+}
+
 // XP and level of a placed squad, with a Promote button when a level is waiting.
-function Veterancy({ squad, canBuy, price, supply, onPromote }: { squad: PlacedSquad; canBuy: boolean; price: number; supply: number; onPromote: () => void }) {
+function Veterancy({
+  squad,
+  canBuy,
+  price,
+  supply,
+  onPromote,
+  promoteAll,
+}: {
+  squad: PlacedSquad;
+  canBuy: boolean;
+  price: number;
+  supply: number;
+  onPromote: () => void;
+  promoteAll?: PromoteAll;
+}) {
   const level = squad.level ?? 1;
   const xp = squad.xp ?? 0;
   const earned = earnedLevel(xp, RULES);
@@ -1388,9 +1440,12 @@ function Veterancy({ squad, canBuy, price, supply, onPromote }: { squad: PlacedS
       </span>
       {earned > level &&
         (canBuy ? (
-          <button className="small-btn promote-btn" disabled={price > supply} onClick={onPromote}>
-            Promote to Lv {level + 1} · {price}
-          </button>
+          <span className="promote-btns">
+            <button className="small-btn promote-btn" disabled={price > supply} onClick={onPromote}>
+              Promote to Lv {level + 1} · {price}
+            </button>
+            {promoteAll && <PromoteAllButton all={promoteAll} supply={supply} />}
+          </span>
         ) : (
           <span className="muted small">can promote</span>
         ))}
@@ -1405,12 +1460,14 @@ function PromotionPanel({
   supply,
   onPromote,
   onHover,
+  promoteAll,
 }: {
   squads: PlacedSquad[];
   defs: DefMap;
   supply: number;
   onPromote: (sq: PlacedSquad) => void;
   onHover: (sq: PlacedSquad | null) => void;
+  promoteAll?: PromoteAll;
 }) {
   if (!squads.length) return null;
   return (
@@ -1419,6 +1476,7 @@ function PromotionPanel({
         Veterans who earned a level. A promotion costs <b>half a new squad</b> and adds as much HP and damage as a whole new one: the cheapest
         way to grow your army.
       </div>
+      {promoteAll && <PromoteAllButton all={promoteAll} supply={supply} />}
       {squads.map((sq) => {
         const def = defs.get(sq.defId)!;
         const price = promotePrice(def);

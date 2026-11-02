@@ -462,7 +462,7 @@ export class Battle {
             // used on the current target: it waits, ready, until there's one in range
             const target = m.engaged ? this.byId.get(m.targetId) : undefined;
             if (!target?.alive) return;
-            m.periodic[i] = t.once ? Infinity : t.interval;
+            this.resetPeriodic(m, t, i);
             const r = Math.max(0.6, ...t.effects.map((e) => ("radius" in e && e.radius) || 0));
             const e0 = t.effects[0];
             const color = e0?.type === "damage" ? ELEMENT_COLORS[e0.element] : e0?.type === "status" ? STATUSES[e0.status].color : "#ffffff";
@@ -470,7 +470,7 @@ export class Battle {
             for (const e of t.effects) this.applyEffect(e, target.x, target.y, target.def.layer, m.side, target, attr);
             return;
           }
-          m.periodic[i] = t.once ? Infinity : t.interval;
+          this.resetPeriodic(m, t, i);
           for (const e of t.effects) {
             // an area status or blast around the unit reaches both layers, so a bat's shriek hits the ground below
             const layers: Layer[] = (e.type === "status" || e.type === "damage") && e.radius ? ["ground", "air"] : [m.def.layer];
@@ -479,6 +479,16 @@ export class Battle {
         }
       });
     }
+  }
+
+  // restarts a periodic trait's timer; a perSquad trait restarts it for the whole squad
+  private resetPeriodic(m: Model, t: Extract<TraitDef, { type: "periodic" }>, i: number) {
+    const next = t.once ? Infinity : t.interval;
+    if (!t.perSquad) {
+      m.periodic[i] = next;
+      return;
+    }
+    for (const o of this.models) if (o.squad === m.squad) o.periodic[i] = next;
   }
 
   private applySurfaceTicks() {

@@ -117,8 +117,8 @@ Each side has two Keeps (West and East) near the back of its zone, 2 rows in fro
 | Keep (×2) | ground | 150 | none |
 
 - **Unupgraded towers are fragile.** Almost any squad that reaches one kills it in a second or two.
-- **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +3,000 HP
-  (about a Giant's worth), so HP grows in a straight line while the price doubles. The first level is the big one: it
+- **Tower upgrades.** Each tower is upgraded separately. Levels cost 100 / 200 / 400 / 800, and each adds +2,000 HP,
+  so HP grows in a straight line while the price doubles. The first level is the big one: it
   turns a Keep any squad can topple in a second into one a raid has to work at, so if you go all in on one side, a
   pack of grunts on the other can't take your Keep for free.
 - **Collapse.** When a tower falls, **its owner's entire army is Dazed**: it deals 10% damage and takes double damage.
@@ -180,7 +180,7 @@ recruit list; faction bonuses come later (section 8).
 | Unit | Cost | Unlock | Squad | Speed | HP | Attack | Roles | Upgrades |
 |---|---|---|---|---|---|---|---|---|
 | Grunts | 100 | 100 | 16 (4×2) | 20 | 40 | 8 physical / 0.6s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Scrap Armor**: Pots and planks: +20 HP, and each goblin shrugs off the first hit it takes, so it takes two bolts to drop one. 15% slower.<br>**Feral Frenzy**: Run 30% faster and stab 40% faster.<br>**Party Time**: Goblins love a big fight: +8 goblins per squad.<br>**Oil Bombs**: Every goblin carries a jug of oil, which spills where it falls. Oil slows anyone in it, and fire turns it to burning ground. |
-| Skirmishers | 100 | 100 | 12 (4×2) | 16 | 30 | 12 physical / 1.2s, range 3.5 | Skirmisher, Anti-air, Swarm | **Ambush**: Hidden in the grass: enemies can't target a skirmisher until it shoots, and only for 2s after each shot. Splash still finds them.<br>**Barbed Arrows**: Nasty barbed heads: +60% damage.<br>**Improvised Bombs**: Each skirmisher carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.<br>**Skyshot**: Hunt fliers first, with ×1.5 damage to them. |
+| Skirmishers | 100 | 100 | 12 (4×2) | 16 | 30 | 12 physical / 1.2s, range 3.5 | Skirmisher, Anti-air, Swarm | **Ambush**: Hidden in the grass: enemies can't target a skirmisher until it shoots, and only for 2s after each shot. Splash still finds them.<br>**Barbed Arrows**: Nasty barbed heads: +60% damage.<br>**Improvised Bombs**: The squad carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.<br>**Skyshot**: Hunt fliers first, with ×1.5 damage to them. |
 | Wolf Riders | 200 | 100 | 4 (2×2) | 24 | 540 | 70 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: 15% faster, and they pick out a Keep over the army whenever one is near. Place them on a flank.<br>**Flankers**: Pick out archers, casters and siege when they're near, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets. |
 | Troll | 200 | 100 | 2 (2×1) | 10 | 1100 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates 20 HP/s even while Burning. Fire alone won't stop it any more.<br>**Gorge**: Heals for 30% of the damage it deals. The deeper the rage, the faster it heals.<br>**Rock Skin**: Hide like a cliff face: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching, so it never has to touch a pike wall. |
 | Ogre Brute | 300 | 100 | 1 (2×2) | 7 | 2200 | 200 physical / 1.8s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness. When something hits it, 40% of the time a nearby goblin (the smaller the better) takes the blow instead, and dies.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre deal 25% more damage and attack 25% faster, and every 5s it bellows a grunt out of nowhere to join the fight. |
@@ -348,6 +348,8 @@ make it stronger.
 - **Promoting.** An unlocked level does nothing until you pay for it. At deployment, a squad with a level waiting shows
   a gold chevron above it. Click the squad, use its card, or use the Promotions list in the Upgrades tab. Each
   promotion costs half the unit's base price (`promotePrice`), a reward for the work of earning it. Undo reverses it.
+  When more than one squad has a level waiting, a **Promote all** button sits next to the card's Promote button and at
+  the top of the Promotions list. It promotes them in order while supply lasts, and one undo reverses the lot.
 - **Effect:** a level-N squad has N× the base HP, attack damage, healing, regeneration and trait damage (on-death,
   periodic, retaliation, on-kill). Speed, range, cooldowns, statuses and surfaces don't change. Upgrades apply first,
   then the level.
@@ -426,7 +428,8 @@ decision.
   - `regen`, optionally stopped while a status is on the unit (`suppressedBy`; Burning stops the Troll)
   - `periodic`: effects every N seconds (the Cleric's heal). Area statuses and blasts around the unit reach both
     layers. With `atTarget` the effects land on its current target while in range, and the first is ready at once
-    (Shriek, Thunderstorm). With `once` it fires a single time per battle (Improvised Bombs). There is no player-facing
+    (Shriek, Thunderstorm). With `once` it fires a single time per battle. With `perSquad` the squad
+    shares one timer, so only one model uses it (Improvised Bombs: one grenade per squad). There is no player-facing
     name for these yet; descriptions say "every N s" or "once"
   - `retaliate`: effects applied to an enemy that hits this unit (Glacial Heart)
   - `charge`: the first attack of the battle deals ×N damage (Wolf Riders, Lance Charge, Dive Attack)

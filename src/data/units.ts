@@ -299,12 +299,13 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "improvised_bombs",
         name: "Improvised Bombs",
-        description: "Each skirmisher carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.",
+        description: "The squad carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.",
         traits: [
           {
             type: "periodic",
             interval: 0,
             once: true,
+            perSquad: true,
             atTarget: true,
             effects: [
               { type: "damage", amount: 40, element: "fire", radius: 1.4 },

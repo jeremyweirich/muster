@@ -147,7 +147,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     upgrades: {
       ambush: { intent: "Hidden until they shoot: beat single-target shooters that outrange them (splash still finds them)", beats: ["crossbowmen"] },
       barbed_arrows: { intent: "More damage" },
-      improvised_bombs: { intent: "One fire grenade each: a burst of chaff clear on contact", beats: ["grunts"] },
+      improvised_bombs: { intent: "One fire grenade per squad: a single burst of chaff clear on contact", beats: ["grunts"] },
       skyshot: { intent: "Placeholder (owner deferred): anti-air", beats: ["griffon_riders"] },
     },
   },

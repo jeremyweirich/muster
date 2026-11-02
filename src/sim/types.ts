@@ -74,8 +74,8 @@ export type TraitDef =
       damage?: number;
     }
   // every `interval` seconds. atTarget: used on the current target while it's in range, and ready from the start.
-  // once: used a single time per battle
-  | { type: "periodic"; interval: number; effects: Effect[]; atTarget?: boolean; once?: boolean }
+  // once: used a single time per battle. perSquad: the squad shares one timer, so one model uses it, not each one
+  | { type: "periodic"; interval: number; effects: Effect[]; atTarget?: boolean; once?: boolean; perSquad?: boolean }
   // effects applied to an enemy that hits this unit with an attack
   | { type: "retaliate"; effects: Effect[]; maxRange?: number }
   // the first attack of the battle deals extra damage

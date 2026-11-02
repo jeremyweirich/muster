@@ -1299,6 +1299,14 @@ a.reason:hover {
   border-color: rgba(245, 197, 66, 0.7);
   background: rgba(245, 197, 66, 0.08);
 }
+.promote-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.promotions > .promote-btn {
+  align-self: flex-start;
+}
 .promote-btn:not(:disabled) {
   border-color: #f5c542;
   color: #f5c542;
