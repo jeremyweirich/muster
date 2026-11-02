@@ -742,14 +742,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     }
     drawBackground(ctx, TILE, { zones: true, grid: [0] });
     for (const side of [0, 1] as Side[]) {
-      towerPlacements(side).forEach((t, i) => {
-        const level = match.towerLevels[side][i] ?? 0;
-        drawSquad(ctx, t, towerDef(t.defId, level), side, TILE);
-        if (level > 0) {
-          const r = squadRect(t, TOWER_MAP.get(t.defId)!);
-          pill(ctx, `Lv ${level}`, (r.x + r.w / 2) * TILE, side === 0 ? r.y * TILE - 4 : (r.y + r.h) * TILE + 14, "#c9d1d9");
-        }
-      });
+      towerPlacements(side).forEach((t, i) => drawSquad(ctx, t, towerDef(t.defId, match.towerLevels[side][i] ?? 0), side, TILE));
     }
     for (const sq of enemySeen) {
       const d = enemyDefs.get(sq.defId);

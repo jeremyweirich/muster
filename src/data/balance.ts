@@ -75,7 +75,8 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
       shield_wall: { intent: "A deeper wall: armor that javelins and claws can't get through", beats: ["wolf_riders"] },
       lance_charge: { intent: "Reach the shooters: a fast charge whose first strike kills", beats: ["crossbowmen"] },
       warded_plate: { intent: "The counterpunch to elementals: resist fire, frost, lightning and water", beats: ["fire_elemental", "air_elemental"] },
-      veterans: { intent: "Plain power: more damage, and a shield against the first hit", beats: ["troll"] },
+      // it used to flip the Troll matchup; the Troll's Nov 2026 HP buff (as a tank) tipped that back on purpose
+      veterans: { intent: "Plain power: more damage, and a shield against the first hit" },
     },
   },
   crossbowmen: {
@@ -164,7 +165,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
   troll: {
     role: "antiGiant",
     analogue: "Steel Ball",
-    ttk: RAMPING,
+    ttk: [5, 20], // ramping, and tankier than the other ramping units: the owner wants it to hold a line like Knights
     upgrades: {
       thick_blood: { intent: "The counterpunch to fire: regenerate while burning, so burning ground and fire arrows stop working on it" },
       gorge: { intent: "Outlast giants: ramping hits heal it more" },

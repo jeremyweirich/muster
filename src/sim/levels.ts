@@ -42,6 +42,12 @@ function scaleTrait(t: TraitDef, k: number): TraitDef {
 }
 
 // A unit at `level`. Pure: returns a new def (or the same one at level 1).
+// The level a token shows, if any: a promoted squad from level 2, an upgraded tower from level 1 (towers start at 0).
+export function shownLevel(def: UnitDef): number | undefined {
+  const level = def.level ?? 0;
+  return level >= (def.structure ? 1 : 2) ? level : undefined;
+}
+
 export function levelDef(def: UnitDef, level: number): UnitDef {
   if (level <= 1) return def;
   const out: UnitDef = { ...def, level, hp: def.hp * level };

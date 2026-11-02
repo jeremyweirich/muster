@@ -40,6 +40,7 @@ export function towerDef(id: string, level: number, rules: Rules = RULES, name?:
     ...base,
     name: name ?? base.name,
     hp: base.hp + level * rules.towerHpPerLevel,
+    level: level || undefined,
     traits: [
       {
         type: "onDeath",

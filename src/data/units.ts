@@ -378,7 +378,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 2,
     footprint: { w: 2, h: 1 },
     layer: "ground",
-    hp: 1100,
+    hp: 1250,
     speed: 10,
     size: 0.5,
     resist: { fire: -0.5 },

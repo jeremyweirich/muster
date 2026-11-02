@@ -163,7 +163,7 @@ export interface UnitDef {
   tags: string[];
   look: { shape: Shape; color: string; icon?: string; glyph?: string; projectile?: ProjectileLook }; // icon: an id from src/render/icons.ts; glyph: emoji fallback
   structure?: boolean; // towers: never move, don't count toward winning the battle
-  level?: number; // set by levelDef for promoted squads; absent = level 1
+  level?: number; // set by levelDef for promoted squads (absent = level 1), and by towerDef for upgraded towers (from 1)
   upgrades?: UpgradeDef[]; // four per unit; prices come from RULES.upgradeCosts, in buy order
 }
 

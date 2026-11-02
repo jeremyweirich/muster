@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { FACTIONS, factionOf } from "../data/roles";
 import { RULES } from "../data/rules";
 import { unlockPrice } from "../game/army";
+import { shownLevel } from "../sim/levels";
 import type { UnitDef } from "../sim/types";
 import { Linked } from "./codexLinks";
 import { Swatch, UnitInfo } from "./UnitInfo";
@@ -77,7 +78,7 @@ export function UnitTile({
 function statLine(def: UnitDef): string {
   const atk = def.attack;
   const parts = [def.structure ? "tower" : `${def.cost} supply`, `${def.squadSize} × ${Math.round(def.hp)} HP`];
-  if ((def.level ?? 1) > 1) parts.unshift(`level ${def.level}`);
+  if (shownLevel(def)) parts.unshift(`level ${def.level}`);
   if (atk) parts.push(`${Math.round(atk.damage)} ${atk.element} / ${+atk.cooldown.toFixed(2)}s`, `range ${+atk.range.toFixed(1)}`);
   parts.push(`speed ${Math.round(def.speed)}`);
   return parts.join(" · ");

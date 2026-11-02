@@ -3,6 +3,7 @@ import { ELEMENT_COLORS } from "../data/elements";
 import { RULES } from "../data/rules";
 import { rolesOf } from "../data/roles";
 import { ICONS, type IconDef, type IconId } from "../render/icons";
+import { shownLevel } from "../sim/levels";
 import { describeSelector } from "../sim/selectors";
 import type { Element, UnitDef } from "../sim/types";
 import { CodexLink, Linked } from "./codexLinks";
@@ -79,7 +80,7 @@ export function UnitInfo({
           <div className="muted">
             {def.structure ? "tower" : `${def.cost} supply`} · {def.squadSize} × <CodexLink topic="layers">{def.layer}</CodexLink>
             {def.unlockCost ? ` · unlock ${def.unlockCost}` : ""}
-            {(def.level ?? 1) > 1 && <span className="vet-level"> · level {def.level}</span>}
+            {shownLevel(def) && <span className="vet-level"> · level {def.level}</span>}
           </div>
         </div>
       </div>

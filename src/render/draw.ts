@@ -2,6 +2,7 @@ import { STATUSES, SURFACES } from "../data/elements";
 import { deployZone, RULES } from "../data/rules";
 import { towerPlacements, TOWER_MAP } from "../data/towers";
 import { footprintOf, formation, type Battle, type Fx, type Model } from "../sim/battle";
+import { shownLevel } from "../sim/levels";
 import { SurfaceGrid } from "../sim/surfaces";
 import { elementOfColor, hexAlpha, Particles, Shots } from "./combat";
 import { drawIcon, ICONS, type IconId } from "./icons";
@@ -225,6 +226,7 @@ export interface UnitDrawOpts {
   hpFrac?: number;
   flash?: boolean;
   statuses?: Partial<Record<StatusId, number>>;
+  noPip?: boolean; // leave out the level number on the token
 }
 
 export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side, x: number, y: number, tile: number, o: UnitDrawOpts = {}) {
@@ -306,7 +308,8 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.fillStyle = "#111";
     ctx.fillText(def.look.glyph, px, py + 1);
   }
-  if ((def.level ?? 1) > 1) drawLevelPip(ctx, px + r * 0.8, py + r * 0.75, r, def.level!);
+  const level = shownLevel(def);
+  if (level && !o.noPip) drawLevelPip(ctx, px + r * 0.8, py + r * 0.75, r, level);
   if (o.hpFrac !== undefined && o.hpFrac < 1 && (def.hp >= 300 || r >= 6)) {
     const w = Math.max(10, r * 2);
     ctx.fillStyle = "rgba(0,0,0,0.6)";
@@ -339,10 +342,12 @@ export function drawSquad(
   }
   formation(def, sq.x, sq.y, sq.rot, side).forEach(([x, y], i) => {
     const dead = o.alive !== undefined && i >= o.alive;
-    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3 });
+    // a tower's level is a property of its def, so it shows as the squad's badge, not on the token as well
+    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3, noPip: def.structure });
   });
   ctx.globalAlpha = 1;
-  if ((sq.level ?? 1) > 1) drawLevelBadge(ctx, sq.x * tile + 1, sq.y * tile + 1, sq.level!);
+  const level = (sq.level ?? 1) > 1 ? sq.level! : def.structure ? shownLevel(def) : undefined;
+  if (level) drawLevelBadge(ctx, sq.x * tile + 1, sq.y * tile + 1, level);
 }
 
 export const VETERAN_GOLD = "#f5c542";

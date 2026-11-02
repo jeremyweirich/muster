@@ -121,6 +121,9 @@ Each side has two Keeps (West and East) near the back of its zone, 2 rows in fro
   so HP grows in a straight line while the price doubles. The first level is the big one: it
   turns a Keep any squad can topple in a second into one a raid has to work at, so if you go all in on one side, a
   pack of grunts on the other can't take your Keep for free.
+- **Showing levels.** An upgraded Keep wears the same gold marks as a veteran squad: an `LvN` tag on its footprint
+  while deploying and in the report, and a gold level number on its token in battle. The enemy's levels are bought
+  in secret, so a new enemy level first shows when the battle starts.
 - **Collapse.** When a tower falls, **its owner's entire army is Dazed**: it deals 10% damage and takes double damage.
   The Daze lasts **4 s at level 0, 0.5 s less per level** (minimum 2 s), in sim time, which is also what you see at 1× playback.
 - Towers don't move and don't count toward winning the round. A side loses when its *army* is gone.
@@ -182,7 +185,7 @@ recruit list; faction bonuses come later (section 8).
 | Grunts | 100 | 100 | 16 (4×2) | 20 | 40 | 8 physical / 0.6s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Scrap Armor**: Pots and planks: +20 HP, and each goblin shrugs off the first hit it takes, so it takes two bolts to drop one. 15% slower.<br>**Feral Frenzy**: Run 30% faster and stab 40% faster.<br>**Party Time**: Goblins love a big fight: +8 goblins per squad.<br>**Oil Bombs**: Every goblin carries a jug of oil, which spills where it falls. Oil slows anyone in it, and fire turns it to burning ground. |
 | Skirmishers | 100 | 100 | 12 (4×2) | 16 | 30 | 12 physical / 1.2s, range 3.5 | Skirmisher, Anti-air, Swarm | **Ambush**: Hidden in the grass: enemies can't target a skirmisher until it shoots, and only for 2s after each shot. Splash still finds them.<br>**Barbed Arrows**: Nasty barbed heads: +60% damage.<br>**Improvised Bombs**: The squad carries one fire grenade and throws it at its first target: a wide blast of fire damage that leaves everyone in it Burning, your own troops too.<br>**Skyshot**: Hunt fliers first, with ×1.5 damage to them. |
 | Wolf Riders | 200 | 100 | 4 (2×2) | 24 | 540 | 70 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: Bigger wolves: +50% HP, +20% damage.<br>**Tower Raiders**: 15% faster, and they pick out a Keep over the army whenever one is near. Place them on a flank.<br>**Flankers**: Pick out archers, casters and siege when they're near, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×3 charge javelin. Deadly with Flankers against soft targets. |
-| Troll | 200 | 100 | 2 (2×1) | 10 | 1100 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates 20 HP/s even while Burning. Fire alone won't stop it any more.<br>**Gorge**: Heals for 30% of the damage it deals. The deeper the rage, the faster it heals.<br>**Rock Skin**: Hide like a cliff face: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching, so it never has to touch a pike wall. |
+| Troll | 200 | 100 | 2 (2×1) | 10 | 1250 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates 20 HP/s even while Burning. Fire alone won't stop it any more.<br>**Gorge**: Heals for 30% of the damage it deals. The deeper the rage, the faster it heals.<br>**Rock Skin**: Hide like a cliff face: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching, so it never has to touch a pike wall. |
 | Ogre Brute | 300 | 100 | 1 (2×2) | 7 | 2200 | 200 physical / 1.8s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP and no more fire weakness. When something hits it, 40% of the time a nearby goblin (the smaller the better) takes the blow instead, and dies.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: A wider swing: +0.8 splash radius and +20% damage. Swarms melt.<br>**Warboss**: Goblins near the ogre deal 25% more damage and attack 25% faster, and every 5s it bellows a grunt out of nowhere to join the fight. |
 | Giant Bats | 200 | 100 | 4 (2×2, air) | 20 | 280 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Leather Wings**: Tough hides shrug off arrows: +30% physical resistance. They also burst off the line 40% faster for the first 3s.<br>**Shriek**: Each bat shrieks as it dives in, and again every 10s: enemies around its target are Dazed for 3s, dealing 10% damage and taking double.<br>**Bloodsuckers**: The bats feed as they fight: they heal for 40% of the damage they deal.<br>**Savage Claws**: +15% HP and +60% damage. |
 
@@ -565,7 +568,8 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
   wings; elemental fliers (Cloudlings, a flying Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.
 - Veterans (level 2+) show their level as a small gold number on the bottom-right corner of each model, and a gold
-  `LvN` tag on their deployment footprint. (Not stars: ★ already means a bought upgrade.)
+  `LvN` tag on their deployment footprint. Upgraded Keeps show theirs the same way, from level 1 (`shownLevel`).
+  (Not stars: ★ already means a bought upgrade.)
   A squad ready for promotion gets a pulsing gold chevron above it.
 
 ## 11. Architecture — Decided
