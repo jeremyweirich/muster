@@ -14,10 +14,11 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   `src/data/units.ts` (and `elements.ts`, `towers.ts`, `rules.ts`). There is no in-app unit editor, by choice.
 - They value: clear unit identities, upgrades with personality, readable battles, and good player-facing tools (battle
   report, Codex, Counters). Keep all of those working.
-- Tabs: **Play** (default, the full game), **Story** (campaigns, coming soon; `docs/CAMPAIGN.md`), **Codex** (the
+- Tabs: **Play** (default, the full game), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Story** (campaigns, coming soon; `docs/CAMPAIGN.md`), **Codex** (the
   rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades). Game screens
   don't explain rules: keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
+- **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
 - **Two computers, one source of truth.** The owner works on a desktop and a laptop. Claude Code's memory is per
   machine and isn't shared, so anything the other machine should know (decisions, preferences, conventions, status,
   how-tos) goes in this file or `docs/`, committed and pushed. Don't rely on memory for that. Keep memory for local

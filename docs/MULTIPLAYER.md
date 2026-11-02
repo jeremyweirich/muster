@@ -5,8 +5,9 @@ Cloudflare account. This doc is the plan, how it works, and the setup steps.
 
 ## What the player sees
 
-1. On the Play tab, **Play a friend** starts a match and shows an invite link with a **Copy** button.
-2. The friend opens the link and lands in round 1. Both are offered the same three opening packs (the seed is shared).
+1. On the **PvP** tab, **Create a match link** starts a match and shows the link with **Copy** (and **Share** where the
+   browser has it). The host waits there, or goes to the board early to deploy.
+2. The friend opens the link and lands on Play in round 1; the host's page moves to Play at the same moment. Both are offered the same three opening packs (the seed is shared).
 3. Each player deploys at their own pace and presses **Fight!**. The sidebar says whether the friend is still deploying
    or ready. Until the friend presses it too, **Not ready: keep deploying** takes the turn back. When both are in, both
    watch the same battle, each with their own army at the bottom.
@@ -69,7 +70,7 @@ duplicate is ignored.
 
 ## Privacy
 
-Single-player makes no network calls. The game connects only after someone clicks **Play a friend** or opens an
+Single-player makes no network calls. The game connects only after someone clicks **Create a match link** or opens an
 invite link, and only to the owner's relay. The relay stores the match messages (armies and purchases) and nothing
 about the players; Cloudflare's own request logs see IP addresses, as any web host does.
 
@@ -93,7 +94,7 @@ under a portable Node 22 through `npx`, so the machine's own Node version doesn'
    The first deploy may ask you to choose a `workers.dev` subdomain (any name, e.g. your username). It prints the
    relay's address, like `https://common-ground-relay.<your-subdomain>.workers.dev`.
 2. Put that address in `src/net/config.ts` (`PROD_RELAY_URL`), commit and push. The site redeploys as usual, and the
-   **Play a friend** button appears on the live site (it's hidden while no relay is set).
+   PvP tab can create matches on the live site (while no relay is set, it says multiplayer isn't set up).
 3. Later relay changes: `cd relay && npm run deploy` again. Game-only changes need nothing here.
 
 To check it's alive, open the relay's address in a browser: it answers "Common Ground relay". The relay only accepts
@@ -107,7 +108,7 @@ connections from `https://jeremyweirich.github.io` and from local development ad
   (`npm --prefix relay run dev`) runs the real Durable Object, but its runtime crashes on the owner's Windows 10 machine
   (it wants a newer Visual C++ runtime), hence the stand-in.
 - `npm run dev` in another terminal. On `localhost` (or a LAN address, for a phone) the game uses the local relay.
-- Click **Play a friend**, then open the invite link in a second window (a private window, or another browser).
+- On the PvP tab click **Create a match link**, then open the link in a second window (a private window, or another browser).
 - A player who reloads before sending their turn comes back to the last battle's result and clicks **Next round**
   again; whatever they had placed but not sent is gone. A turn that was sent is kept.
 

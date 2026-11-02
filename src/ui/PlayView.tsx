@@ -36,6 +36,7 @@ import { DamageTally, type Strike } from "./DamageTally";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
 import { COMPACT_QUERY, DetailsSheet, Sheet, UnitSheet, UnitTile, UnlockSheet, useMedia } from "./MobileDeploy";
 import { PvpPanel } from "./PvpPanel";
+import type { PlayStatus } from "./PvpView";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
 
@@ -79,7 +80,7 @@ export interface PvpProps {
   onLeave: () => void;
 }
 
-export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () => void }) {
+export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: PlayStatus) => void }) {
   const units = DEFAULT_UNITS;
   const defs = useMemo(() => defMap(units), [units]);
   const [match, setMatch] = useState<MatchState>(() => (pvp ? newMatch(units, 1, { aiOpening: false }) : newMatch(units, matchSeed())));
@@ -236,6 +237,13 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
       setNotice("This battle came out differently on your friend's computer, so the round uses their result. That's a bug: please report it.");
     } else setNotice("This battle came out differently on your friend's computer. Their game now uses your result. That's a bug: please report it.");
   }, [entries, match.phase]);
+
+  // the PvP tab shows the match's state, and warns before a new match ends a game against the AI
+  const host = seat === 0 && conn.snap.seat !== null;
+  const aiInProgress = !pvp && (match.round > 1 || actions.length > 0);
+  useEffect(() => {
+    onStatus?.({ pvp: pvp ? { host, friendJoined, status: conn.snap.status, error: conn.snap.error } : null, aiInProgress });
+  }, [host, friendJoined, conn.snap.status, conn.snap.error, aiInProgress]);
 
   useEffect(() => {
     if (!fightArmed) return;
@@ -580,10 +588,6 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
 
   const rematch = () => conn.post({ type: "start", id: randomId(12), game: pvpGame + 1, seed: matchSeed() });
 
-  const playFriend = () => {
-    if ((match.round > 1 || actions.length > 0) && !window.confirm("Leave this game against the AI and start a match with a friend?")) return;
-    onStartPvp?.();
-  };
 
   const restart = () => {
     battleRef.current = null;
@@ -854,7 +858,6 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
         </select>
       </label>
       <button onClick={restart}>Restart</button>
-      {onStartPvp && <button onClick={playFriend}>Play a friend</button>}
     </div>
   );
   const aiNote = deploying && !pvp && (
@@ -1013,8 +1016,6 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
         {compact && hud}
         {pvp && (
           <PvpPanel
-            room={pvp.link.room}
-            host={seat === 0 && conn.snap.seat !== null}
             configured={conn.configured}
             status={conn.snap.status}
             error={conn.snap.error}
@@ -1043,6 +1044,9 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
               <div className="supply">
                 <span className="supply-num">{match.supply[0]}</span> supply
               </div>
+              <button className="rail-undo" disabled={!lastAction} onClick={undo} aria-label="Undo">
+                ↶{lastAction ? <span className="small"> +{lastAction.cost}</span> : null}
+              </button>
               <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || fightQueued} onClick={fight}>
                 {fightLabel}
               </button>
@@ -1064,21 +1068,22 @@ export function PlayView({ pvp, onStartPvp }: { pvp?: PvpProps; onStartPvp?: () 
                 );
               })}
             </div>
+            {/* veterans first: a promotion is the cheapest way to grow an army */}
+            {promotable.length > 0 && (
+              <button className={`rail-promote ${sheet === "promote" ? "active" : ""}`} onClick={() => setSheet(sheet === "promote" ? null : "promote")}>
+                <span>
+                  ▲ Promote {promotable.length} veteran{promotable.length > 1 ? "s" : ""}
+                </span>
+                <span className="small">cheaper than a new squad</span>
+              </button>
+            )}
             <div className="rail-actions">
               <button className={`rail-tile rail-add ${sheet === "unlock" ? "active" : ""}`} onClick={() => setSheet(sheet === "unlock" ? null : "unlock")}>
-                ＋ Unlock
+                ＋ Unlock a unit
               </button>
               <button className={`rail-tile ${sheet === "keeps" ? "active" : ""}`} onClick={() => setSheet(sheet === "keeps" ? null : "keeps")}>
                 <Swatch def={TOWER_MAP.get(RULES.towers[0].defId)!} size={18} />
                 Keeps
-              </button>
-              {promotable.length > 0 && (
-                <button className={`rail-tile ${sheet === "promote" ? "active" : ""}`} onClick={() => setSheet(sheet === "promote" ? null : "promote")}>
-                  ▲<span className="tab-badge">{promotable.length}</span>
-                </button>
-              )}
-              <button className="rail-tile" disabled={!lastAction} onClick={undo} aria-label="Undo">
-                ↶{lastAction ? ` +${lastAction.cost}` : ""}
               </button>
             </div>
             {placingDef && (
@@ -1410,7 +1415,10 @@ function PromotionPanel({
   if (!squads.length) return null;
   return (
     <div className="promotions">
-      <div className="muted small">Promotions: veterans that earned a level. Each level adds the unit's base HP and damage again.</div>
+      <div className="promo-note small">
+        Veterans who earned a level. A promotion costs <b>half a new squad</b> and adds as much HP and damage as a whole new one: the cheapest
+        way to grow your army.
+      </div>
       {squads.map((sq) => {
         const def = defs.get(sq.defId)!;
         const price = promotePrice(def);
@@ -1431,7 +1439,7 @@ function PromotionPanel({
               <span className="up-price">Promote · {price}</span>
             </span>
             <span className="up-desc">
-              ×{level + 1} HP and damage (now ×{level}). {Math.round(sq.xp ?? 0).toLocaleString()} XP.
+              ×{level + 1} HP and damage · a new squad costs {def.cost}
             </span>
           </button>
         );

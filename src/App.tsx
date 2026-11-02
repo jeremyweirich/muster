@@ -5,11 +5,13 @@ import { CodexView } from "./ui/CodexView";
 import { CountersView } from "./ui/CountersView";
 import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
+import { PvpView, type PlayStatus } from "./ui/PvpView";
 import { StoryView } from "./ui/StoryView";
 import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
 
 const TABS = [
   { id: "play", label: "Play" },
+  { id: "pvp", label: "PvP" },
   { id: "story", label: "Story" },
   { id: "codex", label: "Codex" },
   { id: "counters", label: "Counters" },
@@ -33,6 +35,16 @@ export function App() {
   const [intro, setIntro] = useState(() => parseHash().tab === "play");
   // a PvP match, when the address has one (?join=… or ?match=…); see docs/MULTIPLAYER.md
   const [pvp, setPvp] = useState<PvpLink | null>(() => parsePvpLink(location.search, () => randomId(16)));
+  // what Play reports about its match, for the PvP tab
+  const [playStatus, setPlayStatus] = useState<PlayStatus | null>(null);
+  const go = (t: Tab) => {
+    setRoute({ tab: t });
+    try {
+      history.replaceState(null, "", `${location.pathname}${location.search}#${t}`);
+    } catch {
+      // some embedded hosts disallow history changes
+    }
+  };
   const startPvp = () => {
     const link = { room: randomId(10), token: randomId(16) };
     setPageQuery(`?match=${link.room}.${link.token}`);
@@ -48,6 +60,12 @@ export function App() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
+
+  // the host waits on the PvP tab and goes to the board as soon as the friend opens the link
+  const friendJoined = !!playStatus?.pvp?.friendJoined;
+  useEffect(() => {
+    if (friendJoined && tab === "pvp") go("play");
+  }, [friendJoined]);
   return (
     <div className="app">
       <header className="top">
@@ -61,18 +79,7 @@ export function App() {
         </div>
         <nav>
           {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={tab === t.id ? "active" : ""}
-              onClick={() => {
-                setRoute({ tab: t.id });
-                try {
-                  history.replaceState(null, "", `#${t.id}`);
-                } catch {
-                  // some embedded hosts disallow history changes
-                }
-              }}
-            >
+            <button key={t.id} className={tab === t.id ? "active" : ""} onClick={() => go(t.id)}>
               {t.label}
             </button>
           ))}
@@ -86,8 +93,11 @@ export function App() {
       </header>
       {/* Play stays mounted so following a Codex link mid-game doesn't lose the match */}
       <div style={{ display: tab === "play" ? "contents" : "none" }}>
-        <PlayView key={pvp?.room ?? "ai"} pvp={pvp ? { link: pvp, onLeave: leavePvp } : undefined} onStartPvp={relayAvailable ? startPvp : undefined} />
+        <PlayView key={pvp?.room ?? "ai"} pvp={pvp ? { link: pvp, onLeave: leavePvp } : undefined} onStatus={setPlayStatus} />
       </div>
+      {tab === "pvp" && (
+        <PvpView available={relayAvailable} room={pvp?.room ?? null} play={playStatus} onCreate={startPvp} onLeave={leavePvp} onPlay={() => go("play")} />
+      )}
       {tab === "story" && <StoryView />}
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}

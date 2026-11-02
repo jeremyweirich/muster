@@ -93,10 +93,11 @@ and towers.
 - **Phone layout (short landscape screens, `COMPACT_QUERY` in `MobileDeploy.tsx`).** Desktop is unchanged. Height is
   what phones lack, so the field takes the full height and the sidebar takes the width left over; the health bars and
   round move to the top of the sidebar in one row. While deploying, nothing needs scrolling:
-  - The sidebar is a **rail**: supply beside Fight; the units you've **unlocked** (one column, two when it's wide or
-    you own more than four; a gold dot means an upgrade is affordable); a row with **＋ Unlock**, **Keeps**, **▲**
-    (promotions, when any are waiting) and **↶ Undo**; while placing, a caption plus Rotate, Sell and Done/Cancel; the
-    enemy's unlocks; and **☰** (AI difficulty, Restart, Play a friend).
+  - The sidebar is a **rail**: supply, **↶ Undo** and Fight in one row; the units you've **unlocked** (one column, two
+    when it's wide or you own more than four; a gold dot means an upgrade is affordable); when a veteran has earned a
+    level, a glowing gold **Promote N veterans · cheaper than a new squad** button (promotions are the cheapest way to
+    grow, so the rail pushes them); a row with **＋ Unlock a unit** and **Keeps**; while placing, a caption plus Rotate,
+    Sell and Done/Cancel; the enemy's unlocks; and **☰** (AI difficulty, Restart).
   - **Sheets** draw over the field. Most cover exactly **no-man's land**, which is always empty while deploying, so both
     deploy zones stay in view. Tapping a unit in the rail starts placing it and opens its sheet: a one-line stat summary
     and its four upgrades as cards with Buy buttons. The description gets as many lines as the sheet has room for
@@ -508,14 +509,14 @@ The campaign outline (docs/CAMPAIGN.md) casts these as commanders: the goblin Bo
 
 ## 10. Tabs and tools — Decided
 
-The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **Story**, **Codex**,
-**Counters**. The site opens on Play.
+The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **PvP**, **Story**,
+**Codex**, **Counters**. The site opens on Play.
 
 | Tool | What it's for |
 |---|---|
 | **Battle report** | After each battle (and the survivors' damage flying to the HP bars, which a click, a key or Skip cuts short) the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
-| **Play a friend** | PvP by link: starts a match and shows an invite link to send. Each round both players deploy, then both browsers run the same battle. A player who pressed Fight can take it back ("Not ready") until the friend presses it too. The address carries the player's seat, so a reload resumes the match. How it works and how to set up the relay: `docs/MULTIPLAYER.md` |
+| **PvP** | Play a friend by link. The tab has one button, **Create a match link**; then it shows the link with Copy (and Share on phones) and waits. The friend's link opens straight on Play, and the host moves to Play as soon as the friend joins (or earlier, to deploy while waiting). During a match the tab offers Back to the board and Leave match. Each round both players deploy, then both browsers run the same battle. A player who pressed Fight can take it back ("Not ready") until the friend presses it too. The address carries the player's seat, so a reload resumes the match. How it works and how to set up the relay: `docs/MULTIPLAYER.md` |
 | **How to play** | A three-page walkthrough, a line or two each in large type, so new players start fast: build then watch, survivors hit HP, counter what you see (header button; opens on the Play tab). Upgrades, veterans and Keeps are left to the Codex. The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
 | **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts` |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
