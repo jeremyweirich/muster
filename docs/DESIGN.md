@@ -277,12 +277,15 @@ Regenerates, Glass cannon, Raider and Skirmisher. They live in `src/data/roles.t
 ### Opening offer — Decided (values open)
 
 A small, fair bit of variety at the start of each match, and round 1's income. Both sides are offered the same three
-**packs**, drawn from a curated pool (`src/data/openings.ts`), and each player takes one, or the war chest:
+**packs**, drawn from a pool of every pair of faction units, from any factions (`src/data/openings.ts`), and each
+player takes one, or the war chest. Independents stay out, since a pack prices its two unlocks at 100 each. Packs
+limited to one faction are for the campaign.
 
 - **A pack:** two units, both unlocked, with exactly 400 supply of their squads (`RULES.openingPackValue`; unlock prices
   don't count) placed for you, plus 200 supply to spend (`RULES.openingPackSupply`). For example Knights + 2 Crossbowmen,
-  2 Grunts + 2 Skirmishers, or Wolf Riders + Pikemen. Each pair is a working start: something in front, something doing
-  the damage. Pack squads can be moved in round 1 but not sold, since they were free.
+  2 Grunts + 2 Skirmishers, or Wolf Riders + 2 Cloudlings. Each pair that can make exactly 400 is in the pool once, with
+  the counts that split the 400 most evenly (120 packs today). Pack squads can be moved in round 1 but not sold, since
+  they were free.
 - **War chest:** 700 supply (`RULES.openingFlat`) and nothing unlocked. A pack is worth 600 plus two unlocks (200), so once
   the war chest pays for two unlocks of its own it ends up 100 behind: a mild price for choosing your units freely.
 

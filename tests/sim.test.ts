@@ -396,6 +396,18 @@ describe("match opening", () => {
     }
   });
 
+  it("packs mix factions freely, and every pack's squads place legally", () => {
+    const faction = (id: string) => byId(id).tags.find((t) => t.startsWith("faction:"));
+    expect(OPENING_PACKS.some((p) => faction(p.units[0].id) !== faction(p.units[1].id))).toBe(true);
+    OPENING_PACKS.forEach((pack, i) => {
+      const m = newMatch(DEFAULT_UNITS, 1, { aiOpening: false });
+      const took = chooseOpening({ ...m, openings: [{ ...m.openings[0], packs: [i] }, m.openings[1]] }, 0, i, DEFAULT_UNITS);
+      const label = packLabel(pack, DEFAULT_UNITS);
+      expect(took.armies[0], label).toHaveLength(pack.units.reduce((t, u) => t + u.count, 0));
+      for (const sq of took.armies[0]) expect(canPlace(byId(sq.defId), sq.x, sq.y, 0, took.armies[0], defs, sq.uid, sq.rot), label).toBe(true);
+    });
+  });
+
   it("nothing starts unlocked; both sides see the same three packs; the AI picks at once", () => {
     for (let seed = 1; seed < 20; seed++) {
       const m = newMatch(DEFAULT_UNITS, seed);
