@@ -137,13 +137,12 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 ## Where things stand
 
 See DESIGN.md §12 for the roadmap. As of November 2026:
-- **Balance** follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/REFERENCE.md`,
-  `docs/REFERENCE_2.md`). `docs/BALANCE-PLAN.md` has the owner's decisions, the analogue mapping, the current
+- **Balance** follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/MECHABELLUM.md`). `docs/BALANCE-PLAN.md` has the owner's decisions, the analogue mapping, the current
   results and the open problems. Balance is per unit at equal supply, against the intent in `src/data/balance.ts`
   (roles, `RELATIONS` with reasons, an intent per upgrade); the owner left that table to Claude to refine. The old
   approach is gone; don't bring it back: the faction triangle as a balance goal (it's story only), the counter web,
   faction reference armies, "Wardens are the strongest", "keep every non-goblin attack ≥ 10". The October playtest
-  reports (`docs/PLAYTEST-2026-10*.md`) are history; their balance conclusions are superseded.
+  reports (deleted; in git history) are superseded.
 - **Fight shape:** fights should be spread out like Mechabellum's (about 40–60 s, a long approach, not everyone
   fighting at once), so positioning matters. Get there through space and movement, never by inflating HP.
 - **Opening:** nothing is unlocked at the start; round 1 offers three two-unit packs or a war chest
@@ -161,7 +160,7 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
 - Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
   sideways (about 844 × 390).
 - Faction bonuses are designed but not built (DESIGN.md §8).
-- **Independents pass (Nov 2, 2026):** five matches against Hard (`docs/PLAYTEST-2026-11-02.md`) found the missing role
+- **Independents pass (Nov 2, 2026):** five matches against Hard found the missing role
   was anti-medium (the goblins and elementals both lack it), and that the goblins' worst hole is the air. New
   independent: **Bog Toad Riders** (tongue-lash beam, hits air, ×1.8 against medium; Spit Bile makes them chaff clear,
   Gulp **Snares**, a new status that lets melee hit a held flier). The Giant got smaller, faster boulders and less HP;
@@ -172,7 +171,7 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
     **Toughness** (a new rule: a flat cut off every hit, at least a quarter gets through).
   - **Wolf Riders should be swingy**: a huge impact the round they arrive (one dropped on a flank kills a Keep, then the
     archers), countered fairly cheaply. The owner wondered about ×2 → ×3 javelins; the data says ×2 loses to the
-    Crossbowmen it exists to kill, so the ×5 stayed pending the owner's call (`docs/PLAYTEST-2026-11-02.md`).
+    Crossbowmen it exists to kill, so the ×5 stayed pending the owner's call (`docs/BALANCE-PLAN.md` §3).
   - **Bats** can claw fliers with *Bloodsuckers* only: the base bats fly over air units to reach the back line.
   - The "untouchable Ballista park" was really **veterancy** on the screen in front of it (replayed: demote the
     Lv2 Knights and Grunts and the Ballistae all die). Level N is N× HP and N× damage, about 4× the value for half the

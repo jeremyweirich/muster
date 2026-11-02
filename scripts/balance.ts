@@ -222,7 +222,7 @@ if (mode === "coverage") {
     if (!t) { console.log(`no balance target: ${id}`); continue; }
     byRole.set(t.role, [...(byRole.get(t.role) ?? []), id]);
   }
-  // docs/REFERENCE_2.md §2: Mechabellum's early-access roster and the suggested first-pass counts.
+  // docs/MECHABELLUM.md §2: Mechabellum's early-access roster and the suggested first-pass counts.
   const template: Record<BalanceRole, string> = {
     chaff: "2-3", chaffClear: "4", antiMedium: "1-2", antiGiant: "3-4", tank: "3", diver: "(in tanks)", utility: "1", lateGame: "1",
   };

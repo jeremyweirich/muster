@@ -1,12 +1,13 @@
 # Playtesting against the AI: how to
 
 The owner often asks for "a round of playtesting against Hard", with a goal (for example: what should the
-independents do?). This is the recipe. Each round's findings go in their own `docs/PLAYTEST-YYYY-MM-DD.md`; the most
-recent is `docs/PLAYTEST-2026-11-02.md`.
+independents do?). This is the recipe. Each round's report is a working note, `docs/PLAYTEST-YYYY-MM-DD.md`, for the owner to
+read; once they've acted on it, its lasting findings and open items move into `docs/BALANCE-PLAN.md` §3 (or DESIGN.md)
+and the report is deleted. Git history keeps the old ones.
 
 ## Before you start
 
-1. Pull (`git pull --rebase`). Read the latest playtest report's open issues and `docs/BALANCE-PLAN.md` §3.
+1. Pull (`git pull --rebase`). Read `docs/BALANCE-PLAN.md` §3 (open problems) and any playtest report still in `docs/`.
 2. Write down the round's goal and a hypothesis to test ("the goblins have no anti-air"). Matches are slow, so
    aim them.
 3. Know the structure you're testing: `npm run balance -- coverage` (roles), and for faction holes run
@@ -62,7 +63,7 @@ npm run playtest -- log w1 2                       # reprint the last 2 round re
 ## After the matches
 
 1. Write `docs/PLAYTEST-YYYY-MM-DD.md`: the goal, the matches (one table row each), the findings, what changed and why,
-   and the open issues. Earlier reports stay as history.
+   and the open issues.
 2. Changes follow `CLAUDE.md` ("Designing units", "After changing units") and `docs/BALANCE.md`: intent in
    `src/data/balance.ts` first, numbers second, then `npm run balance -- check`, tests, the roster table, DESIGN.md.
 3. Unit and design changes the owner hasn't seen: pitch first, build after (the owner asked to read the Toad Riders'

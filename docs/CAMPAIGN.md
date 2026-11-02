@@ -3,7 +3,7 @@
 The game is now called **Common Ground** (the repo stays `muster`). The Kingdom faction is now the **Wardens**.
 
 Status: **proposal**. Inputs: `docs/VISION.md` (narrative), the owner's unit notes (now built; the AI difficulty plans
-are parked in DESIGN.md §9), DESIGN.md and `docs/PLAYTEST-2026-10.md`. No balancing or playtesting yet. This is about the order in which the game, its mechanics
+are parked in DESIGN.md §9), DESIGN.md and the October 2026 playtests. No balancing or playtesting yet. This is about the order in which the game, its mechanics
 and its factions are introduced. Names in *italics* are placeholders.
 
 ## 1. The big idea: each campaign teaches one layer
@@ -241,11 +241,11 @@ opening offer and the three AI difficulties.
 
 - **The friendly-fire cost has to be visible at base.** Ember's fear only works if unupgraded fire visibly burns
   neighbors. Controlled Burn then becomes the turning point, not a stat line.
-- **The Storm has to beat a shield wall.** Playtest §3: Elementals lose 0% to the Wardens today. Water is too weak to be
+- **The Storm has to beat a shield wall.** The October 2026 playtest: Elementals lost 0% to the Wardens today. Water is too weak to be
   worth fielding and Conduct isn't strong enough. Make Water + Air the headline pair: Water worth fielding at base,
   Conduct strong against clumped targets. Wardens' Warded Plate stays the counterpunch, so the mission-8 AI should buy
   it and force a second answer.
-- **A cheap front line** (playtest §7). A careful faction needs something to stand in front. Stone Golem is weak at
+- **A cheap front line** (October 2026 playtest). A careful faction needs something to stand in front. Stone Golem is weak at
   base; fold in some of Granite, or add a cheaper body.
 - **Frost** is the weakest unit tested. One story-friendly direction: "the careful one". Chill and freeze as
   protection that holds enemies away from allies, rather than a setup for shatter.
@@ -260,7 +260,7 @@ opening offer and the three AI difficulties.
 - The structure holds up because each faction's weakness is the flip side of its strength, which `docs/VISION.md` already
   states: the Wardens are rigid, the goblins are reckless with fire and numbers, the elementals are dangerous to each
   other. Each campaign's lessons come out of that, not out of a checklist.
-- **Two balance targets, kept apart** (playtest §3): campaign edges come from authored kits and enemies. Skirmish
+- **Two balance targets, kept apart** (October 2026 playtest): campaign edges come from authored kits and enemies. Skirmish
   balance is per unit (`docs/BALANCE.md`) and doesn't follow the triangle. The campaign doesn't need the open roster to be lopsided.
 - **The biggest risk is the elementals**, because their campaign depends on combos that don't work well enough today.
   Their redesign should start early, even though their campaign comes last.

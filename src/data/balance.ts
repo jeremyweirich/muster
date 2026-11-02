@@ -13,7 +13,7 @@ export type BalanceRole = "chaff" | "chaffClear" | "antiMedium" | "antiGiant" | 
 // 1 while fights are made as long as Mechabellum's (about 40–60 s) through space and movement, not through HP.
 export const FIGHT_SCALE = 1;
 
-// Self-TTK = HP ÷ own DPS, per model: how long a unit takes to kill a copy of itself. Bands from docs/REFERENCE_2.md §5.
+// Self-TTK = HP ÷ own DPS, per model: how long a unit takes to kill a copy of itself. Bands from docs/MECHABELLUM.md §5.
 export const ROLE_INFO: Record<BalanceRole, { name: string; ttk: [number, number] | null }> = {
   chaff: { name: "Chaff", ttk: [3, 10] },
   chaffClear: { name: "Chaff clear", ttk: [8, 18] },
@@ -263,7 +263,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
 
   // ------------------------------------------------------------------ Independents
   // Anyone can field them, and they cover a faction's holes, but they cost more to unlock and are less
-  // cost-efficient than a faction's own answer. Each one patches particular holes (docs/PLAYTEST-2026-11-02.md):
+  // cost-efficient than a faction's own answer. Each one patches particular holes (docs/BALANCE-PLAN.md §3):
   // the Giant is splash artillery (the Wardens have no splash, the goblins no range), the Toad Riders are the anti-medium
   // the goblins and elementals lack (and real anti-air for the goblins), and the Dragon is the late-game flier.
   toad_riders: {

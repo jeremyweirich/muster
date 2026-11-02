@@ -1,7 +1,6 @@
 # Balance plan: Common Ground against Mechabellum
 
-November 2026. Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/REFERENCE.md`,
-`docs/REFERENCE_2.md`). The owner signed off the approach and the answers below, and left the relationship table to
+November 2026. Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/MECHABELLUM.md`). The owner signed off the approach and the answers below, and left the relationship table to
 Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measures the simulator against them.
 
 ## 1. Decisions (owner, Nov 2026)
@@ -10,7 +9,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 |---|---|
 | Relationship table | Good enough; Claude refines it |
 | The anti-giant gap | Troll gets Berserk as base (Steel Ball). Griffons get a Phoenix upgrade (*Giant Slayers*). Elementals solve it with frost (the Frost Elemental's cold ramps, Melting Point). Independents are the costly fallback |
-| Independents | Their purpose: any faction can use them to cover its holes, but they cost more to unlock and are less cost-efficient than a faction's own answer. Rebalanced Nov 2, 2026, and a third added: the **Bog Toad Riders**, the anti-medium the goblins and elementals lack (owner loved the pitch; fewer archers, a little weird). Snared is the owner's net idea (`docs/PLAYTEST-2026-11-02.md`) |
+| Independents | Their purpose: any faction can use them to cover its holes, but they cost more to unlock and are less cost-efficient than a faction's own answer. Rebalanced Nov 2, 2026, and a third added: the **Bog Toad Riders**, the anti-medium the goblins and elementals lack (owner loved the pitch; fewer archers, a little weird). Snared is the owner's net idea |
 | Upgrades | Capture intent, not numbers: every upgrade has a written intent (`src/data/balance.ts`) |
 | Pikemen | Anti-large, with more models than the shooters |
 | Elven Archers | Became **Crossbowmen**: few models, heavy bolts |
@@ -75,6 +74,11 @@ Knights cut down the swarm. The How to Play page says so.
   Skirmishers 8%, Wolf Riders 4%, Grunts 3%. The Dragon hard-counters 12 of 20, mostly ground units that can't hit
   air; the owner doesn't count that against it (it's late-game, and fliers beating melee is fine). The Toad Riders
   have no 2:1 counter yet.
+- **Faction holes** (Nov 2 playtest, `coverage` split by faction): the Wardens lack chaff and native splash; the
+  Goblins lack anti-medium, long range and real anti-air (Skirmishers are their only anti-air; massed *Barbed*
+  Skirmishers do work against Bats and Cloudlings); the Elementals lack anti-medium and a diver. The goblins' chaff
+  clear and bruiser are both large, so Ballistae and Pikemen shut them down. The Toad Riders patch the anti-medium
+  hole, and with *Gulp* beside Trolls they're the goblins' Dragon answer (`fight "toad_riders,troll*2" dragon`: 100%).
 - The rest of this section predates the independents pass.
 - **Fight shape** (`density`, mirrored mixed armies): first contact at 4–6 s (was under 2), fights of 31–42 s (were
   21–36), 58–67% of each army fighting at once (was about 75%). Close to Mechabellum's 40–60 s, but the faster
@@ -84,7 +88,20 @@ Knights cut down the swarm. The How to Play page says so.
   2 divers, 2 utility, 1 late-game, and six upgrade paths into other roles.
 
 **Open problems, most important first**
-1. **Fliers still win one-unit fights too broadly.** Cloudlings hard-counter 13 of 19 units, Griffons 12, Giant Bats
+1. **Veterancy is worth too much** (Nov 2). Level N is N× HP and N× damage, about 4× the combat value for 1.5× the
+   price (a promotion costs half the unit). It's what made a Ballista park behind a Grunt screen untouchable in a
+   playtest: replayed with everyone demoted to level 1, all 12 Ballistae died. Range 11 from row 0 reaches mid-field,
+   where the screen meets the attackers, and divers' preferences are local, so they fight the screen. Levers:
+   veterancy's value or price first, Ballista range only after. The AI promoting Wolf Riders early is the same
+   problem.
+2. **Wolf Riders: ×5 opening javelin, or ×2 raised to ×3 by an upgrade?** Pending the owner, who wants them swingy
+   (a huge impact the round they arrive, countered fairly cheaply). At equal supply, ×5 has a mean margin of 24 and
+   loses only to fliers, Pikemen (25%) and the Golem (38%); plain ×2 drops to 4 and loses to the Crossbowmen it
+   exists to kill (38%); ×2 with *Bloodthirst* raising it to ×3 gives 18. Left at ×5.
+3. **Titans' self-TTK** runs far above the bands (Giant 52 s, Dragon 63 s, like the Golem). Decide whether they get
+   their own band.
+4. **Not yet tried in a full match:** Gulp + Trolls against a real Dragon, and Elementals using the Toad Riders.
+5. **Fliers still win one-unit fights too broadly.** Cloudlings hard-counter 13 of 19 units, Griffons 12, Giant Bats
    11. Most of it is ground-only units that can't touch air, which one-unit armies exaggerate. Mixed-army tests
    (`fight`) are the better read, and Knights' optional anti-air javelin is the lever we've held back. Nov 1, 2026:
    the owner found Cloudlings too strong; base damage moved into Freezing Rain, attack speed into Downpour, and HP
@@ -95,17 +112,17 @@ Knights cut down the swarm. The How to Play page says so.
    33 to 22, and Stone Golem and Pikemen now beat them, as Fortress beats Rhino. Cutting HP or speed instead flipped
    their back-line wins first. Still open: Troll (Steel Ball, Rhino's main counter) loses to them, and they now lose to
    the Giant (38%, against "too fast for its boulders").
-2. **Crossbowmen and Frost Elementals have soft counters but no hard counter.** Their chaff counters win at equal
+6. **Crossbowmen and Frost Elementals have soft counters but no hard counter.** Their chaff counters win at equal
    supply, but not at 2:1.
-3. **Small leftover side bias.** At 32 seeds, Crossbowmen and Air Elementals lean to the bottom side (63%), Grunts and
+7. **Small leftover side bias.** At 32 seeds, Crossbowmen and Air Elementals lean to the bottom side (63%), Grunts and
    Wolf Riders to the top (31–34%). The big bias is gone; the rest may be target tie-breaking or the new geometry.
-4. **The goblin mirror never ends.** Once the Skirmishers are gone, neither side's bats can hit the other's. It times
+8. **The goblin mirror never ends.** Once the Skirmishers are gone, neither side's bats can hit the other's. It times
    out at 120 s.
-5. **Coin-flip intents.** At 16 seeds, Knights *Shield Wall* vs Wolf Riders (44%) and *Veterans* vs Troll (50%) sit on
+9. **Coin-flip intents.** At 16 seeds, Knights *Shield Wall* vs Wolf Riders (44%) and *Veterans* vs Troll (50%) sit on
    the line; Troll vs Ogre too (50%).
-6. **Two intents lost their matchup claims**: Griffon *Dive Attack* and *Armored Saddles* can't flip the Crossbowmen or
+10. **Two intents lost their matchup claims**: Griffon *Dive Attack* and *Armored Saddles* can't flip the Crossbowmen or
    Air Elementals that hard-counter Griffons. Their intents need a matchup they can move.
-7. **Campaign mission 1** says "Archers one-shot grunts"; with Crossbowmen, grunts now beat them. The mission's punch
+11. **Campaign mission 1** says "Archers one-shot grunts"; with Crossbowmen, grunts now beat them. The mission's punch
    needs rewriting when the campaign is built.
 
 ## 4. How to tune

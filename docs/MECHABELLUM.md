@@ -1,4 +1,7 @@
-# Mechabellum Unit Reference — Roles, Matchups, Benchmarks
+# Mechabellum reference: roles, matchups, benchmarks
+
+Common Ground balances against Mechabellum, an autobattler with the same deploy-then-fight loop (`docs/BALANCE.md`,
+`docs/BALANCE-PLAN.md`). This is our reference sheet for it: its role framework, who beats whom, and its self-TTK numbers.
 
 Patch basis: Mechabellum 2.0 era (Nov 2026). 33 competitive units, plus Centurion (new in 2.0, no matchup data yet).
 Matchup data comes from the official wiki's Good/Bad Against lists, cross-referenced in both directions.
@@ -24,7 +27,7 @@ Supply tiers: 100 / 200 / 300 / 400 / 500 / 800
 
 ## 2. Role counts
 
-| Role | Mechabellum now (33) | Early-access launch roster (16) | Suggested for your v1 (~16) |
+| Role | Mechabellum now (33) | Early-access launch roster (16) | Suggested first pass (~16) |
 |---|---|---|---|
 | Chaff | 3 | 3 | 2–3 |
 | Chaff Clear | 10 | 4 | 4 |
@@ -41,7 +44,7 @@ Fang, Crawler, Overlord, Stormcaller, Sledgehammer, Hacker, Arclight, Phoenix.
 Observations:
 - Chaff Clear grew the most (4 → 10). Answers to chaff are needed at every range and cost tier, and for air.
 - Anti-Medium went from 0 → 4 (Vortex, Void Eye, Scorpion, Phantom Ray). These were added later as answers to medium tanks like Sledgehammer.
-- True chaff stayed at 3. You only need a few, but everything else must respect them.
+- True chaff stayed at 3. Only a few are needed, but everything else must respect them.
 
 ---
 
@@ -146,13 +149,13 @@ Death Knell is left out because its damage ramps.
 
 Takeaways for the knight:
 - **Sledgehammer is the tankiest unit relative to its own damage (~26s).** A Sledgehammer-like knight belongs at roughly 20–26s.
-- Sledgehammer is **mid-range (95m), not melee.** If your knight is melee, Rhino is the other reference: fast (16 m/s), huge HP (19k at 200 cost), and a *low* self-TTK (4.9s). Melee units pay for zero range with very high DPS and speed, because they eat damage while closing.
+- Sledgehammer is **mid-range (95m), not melee.** Our Knights are melee, so Rhino is the other reference: fast (16 m/s), huge HP (19k at 200 cost), and a *low* self-TTK (4.9s). Melee units pay for zero range with very high DPS and speed, because they eat damage while closing.
 - Range trades inversely with self-TTK. The longest-range unit (Marksman, 140m) is the glassiest at 2.2s.
 - Anti-medium specialists cluster at 5–10s. They kill tanks fast but die fast.
 
 ---
 
-## 5. Suggested self-TTK bands for your roster (tune these)
+## 5. Self-TTK bands for Common Ground (tune these)
 
 | Role | Min (s) | Max (s) | Mechabellum reference points |
 |---|---|---|---|
@@ -167,6 +170,8 @@ Takeaways for the knight:
 ---
 
 ## 6. Knight design targets (Sledgehammer analogue)
+
+The first-pass targets for the Knights, our anchor unit.
 
 Role: Tank / Frontline (secondary: anti-light). Self-TTK target: 20–26s if mid-range, 5–10s plus high speed if melee.
 
@@ -186,15 +191,8 @@ Should LOSE TO:
 
 ---
 
-## 7. Your roster template
+## 7. Roster health checks
 
-| Unit | Role | Air? | Cost | HP | ATK | Interval | Weapons | Range | Speed | DPS = ATK/Int×W | Self-TTK = HP/DPS | In band? | Beats | Loses to |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Knight (example) | Tank | Ground | 200 | 4000 | 400 | 2.0 | 1 | 30 | 8 | 200 | 20.0 | Yes (12–26) | | |
-| | | | | | | | | | | | | | | |
-| | | | | | | | | | | | | | | |
-
-Roster health checks:
 - [ ] Every unit has ≥1 listed win and ≥1 listed loss
 - [ ] Every role has an answer that can shoot air
 - [ ] No unit's wins are a superset of another same-cost unit's wins (dominance)

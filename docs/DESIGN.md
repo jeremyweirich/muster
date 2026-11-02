@@ -212,8 +212,7 @@ recruit list; faction bonuses come later (section 8).
 
 ### Balance — Decided (approach), Open (targets and numbers)
 
-Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/REFERENCE.md`,
-`docs/REFERENCE_2.md`). `docs/BALANCE-PLAN.md` maps our units onto it and sets out the order of work.
+Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/MECHABELLUM.md`). `docs/BALANCE-PLAN.md` maps our units onto it and sets out the order of work.
 
 - **Units, not factions.** Units are balanced against each other at equal supply. Factions are identity (and, later,
   bonuses), not a balance target. The story's faction triangle (`docs/VISION.md`) comes from campaign missions with
@@ -624,8 +623,8 @@ src/ui/      React views
 Rough priority order. Everything is open to reshuffling.
 
 1. **Balance pass** following `docs/BALANCE.md` (section 4, Balance; `docs/BALANCE-PLAN.md`). The first pass on the
-   new roster is done (95 of 97 relations, 36 of 38 upgrade intents), and so is the independents pass (Nov 2, 2026:
-   `docs/PLAYTEST-2026-11-02.md`). Next: Ballista parks behind chaff, fliers in one-unit fights, hard counters for
+   new roster is done (95 of 97 relations, 36 of 38 upgrade intents), and so is the independents pass (Nov 2, 2026;
+   open items in `docs/BALANCE-PLAN.md` §3). Next: veterancy's value (the Ballista parks behind chaff), fliers in one-unit fights, hard counters for
    Crossbowmen, Frost and Toad Riders, mixed-army tests. Then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
 3. **Campaigns** (docs/CAMPAIGN.md): mission framework, then the Wardens campaign. Parked until stored progress is
