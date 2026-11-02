@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { RULES } from "../data/rules";
+import { repaintBackground } from "../render/draw";
 
 export interface FieldPointer {
   type: "move" | "down" | "leave";
@@ -15,7 +16,11 @@ interface Props {
   className?: string;
 }
 
-// A canvas sized to the battlefield that redraws every animation frame.
+// Widest pixel buffer the field gets, however big the screen.
+const MAX_PIXELS_W = 4096;
+
+// A canvas sized to the battlefield that redraws every animation frame. Drawing is in field pixels (`tile` per tile);
+// the pixel buffer matches the canvas's size on screen, so a phone doesn't paint pixels it can't show.
 export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const drawRef = useRef(draw);
@@ -24,21 +29,38 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
   useEffect(() => {
     const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = RULES.fieldW * tile * dpr;
-    canvas.height = RULES.fieldH * tile * dpr;
+    const fieldW = RULES.fieldW * tile;
+    let scale = 0;
+    const resize = () => {
+      const shown = canvas.getBoundingClientRect().width || fieldW;
+      const next = Math.min(MAX_PIXELS_W, Math.round(shown * (window.devicePixelRatio || 1))) / fieldW;
+      if (next === scale) return;
+      scale = next;
+      canvas.width = Math.round(fieldW * scale);
+      canvas.height = Math.round(RULES.fieldH * tile * scale);
+    };
+    resize();
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    repaintBackground();
+    const onVisible = () => document.visibilityState === "visible" && repaintBackground();
+    document.addEventListener("visibilitychange", onVisible);
     let raf = 0;
     let last = performance.now();
     const start = last;
     const loop = (now: number) => {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
       drawRef.current(ctx, dt, (now - start) / 1000);
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [tile]);
 
   const toTile = (e: React.PointerEvent | React.MouseEvent) => {

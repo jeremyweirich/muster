@@ -165,3 +165,7 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   Deferred by the owner, don't raise again unprompted: most fights end in 15–25 s, short of the 40–60 s goal; and the
   report doesn't say why a hard-countered squad dealt 0. Not yet checked: whether the AI now buys Keep levels, and
   how the new XP curve plays over a full match.
+- **Phone black-field bug (Nov 1, 2026):** in a big battle on the owner's phone the field turned black and units left
+  trails, until reload. Cause: a GPU reset blanked the cached grass canvas, and nothing else cleared the field.
+  Reproduced on desktop with CDP `Browser.crashGpuProcess` and fixed (DESIGN.md §10b); the field's pixel buffer now
+  matches its on-screen size too (3.5× fewer pixels on a phone), which should ease the lag. Not yet rechecked on the phone.

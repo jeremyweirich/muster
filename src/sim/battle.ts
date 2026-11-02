@@ -120,6 +120,7 @@ export type Fx =
   | { kind: "beam"; x1: number; y1: number; x2: number; y2: number; color: string; side?: Side; width?: number }
   | { kind: "burst"; x: number; y: number; r: number; color: string }
   | { kind: "heal"; x: number; y: number; r: number }
+  | { kind: "aura"; x: number; y: number; r: number }
   | { kind: "slash"; x: number; y: number; angle: number; color: string; size: number }
   | { kind: "text"; x: number; y: number; text: string; color: string; big?: boolean }
   | { kind: "death"; x: number; y: number; color: string; size: number };
@@ -471,6 +472,11 @@ export class Battle {
             return;
           }
           this.resetPeriodic(m, t, i);
+          // a summoner's aura pulses as it calls (Warboss), so its reach shows
+          if (this.recordFx && t.effects.some((e) => e.type === "summon")) {
+            const aura = trait(m.def, "aura");
+            if (aura) this.emit({ kind: "aura", x: m.x, y: m.y, r: aura.radius });
+          }
           for (const e of t.effects) {
             // an area status or blast around the unit reaches both layers, so a bat's shriek hits the ground below
             const layers: Layer[] = (e.type === "status" || e.type === "damage") && e.radius ? ["ground", "air"] : [m.def.layer];

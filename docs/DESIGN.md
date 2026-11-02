@@ -567,6 +567,11 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
   renderer-only and never touches the sim.
 - Size marks *how hard*: projectile size and beam thickness scale with damage per hit.
 - Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
+- A unit with an aura that summons (Ogre *Warboss*) pulses its aura as it calls: a faint red wash over the radius and a
+  ring sweeping out to its edge, so the buff's reach shows.
+- The field's pixel buffer matches its size on screen (a phone doesn't paint pixels it can't show). The grass is
+  cached in an offscreen canvas and repainted if the browser blanks it (a GPU reset under memory pressure); plain grass
+  is filled underneath every frame, so a blanked cache never turns the field black or leaves trails.
 - Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
   wings; elemental fliers (Cloudlings, a flying Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.

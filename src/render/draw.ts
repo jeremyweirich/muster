@@ -14,35 +14,60 @@ const SURFACE_IDS = SurfaceGrid.ids();
 
 type BackgroundOpts = { zones?: boolean; grid?: Side[] };
 
-// The field never changes during a battle, so it's rendered once per size/options into an offscreen canvas.
-const bgCache = new Map<string, HTMLCanvasElement>();
+const GRASS_BASE = "#1c2a1e";
+
+// The grass never changes, so it's painted once into an offscreen canvas; the zones, grid, midline and vignette are
+// drawn over it each frame. A phone short on GPU memory can reset its GPU, which blanks every canvas: the visible
+// one is redrawn next frame, but this one has to be repainted, or the field turns black and smears.
+let grass: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; key: string; painted: boolean } | null = null;
+
+// Repaint the grass on its next use, for browsers that blank a canvas without saying so (called when the field
+// mounts or the page comes back into view).
+export function repaintBackground() {
+  if (grass) grass.painted = false;
+}
+
+function grassLayer(tile: number, scale: number): HTMLCanvasElement | null {
+  const key = `${tile}|${scale}`;
+  if (grass?.key !== key) {
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(RULES.fieldW * tile * scale);
+    canvas.height = Math.round(RULES.fieldH * tile * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    const layer = { canvas, ctx, key, painted: false };
+    canvas.addEventListener("contextlost", () => (layer.painted = false));
+    canvas.addEventListener("contextrestored", () => (layer.painted = false));
+    grass = layer;
+  }
+  if (grass.ctx.isContextLost?.()) return null;
+  if (!grass.painted) {
+    grass.ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    paintGrass(grass.ctx, tile);
+    grass.painted = true;
+  }
+  return grass.canvas;
+}
 
 export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts = {}) {
   const W = RULES.fieldW * tile;
   const H = RULES.fieldH * tile;
-  const dpr = ctx.getTransform().a || 1;
-  const key = `${tile}|${dpr}|${opts.zones ? 1 : 0}|${(opts.grid ?? []).join(",")}`;
-  let bg = bgCache.get(key);
-  if (!bg) {
-    bg = document.createElement("canvas");
-    bg.width = Math.round(W * dpr);
-    bg.height = Math.round(H * dpr);
-    const c = bg.getContext("2d")!;
-    c.scale(dpr, dpr);
-    paintBackground(c, tile, opts);
-    bgCache.set(key, bg);
-  }
-  ctx.drawImage(bg, 0, 0, W, H);
+  // plain grass underneath, so a blanked layer shows an empty field, never the last frame
+  ctx.fillStyle = GRASS_BASE;
+  ctx.fillRect(0, 0, W, H);
+  const layer = grassLayer(tile, ctx.getTransform().a || 1);
+  if (layer) ctx.drawImage(layer, 0, 0, W, H);
+  paintOverlays(ctx, tile, opts);
 }
 
-function paintBackground(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts) {
+function paintGrass(ctx: CanvasRenderingContext2D, tile: number) {
   const W = RULES.fieldW * tile;
   const H = RULES.fieldH * tile;
   // grass: a slightly lighter band through the middle
   const base = ctx.createLinearGradient(0, 0, 0, H);
-  base.addColorStop(0, "#1c2a1e");
+  base.addColorStop(0, GRASS_BASE);
   base.addColorStop(0.5, "#24372a");
-  base.addColorStop(1, "#1c2a1e");
+  base.addColorStop(1, GRASS_BASE);
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, W, H);
   // mowed stripes, two tiles wide, so distances still read at a glance; mirrored about the centerline (a dark band
@@ -69,6 +94,11 @@ function paintBackground(ctx: CanvasRenderingContext2D, tile: number, opts: Back
       ctx.stroke();
     }
   }
+}
+
+function paintOverlays(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts) {
+  const W = RULES.fieldW * tile;
+  const H = RULES.fieldH * tile;
   if (opts.zones) {
     for (const side of [0, 1] as Side[]) {
       const { y0, y1 } = deployZone(side);
@@ -419,7 +449,8 @@ interface LiveFx {
   life: number;
 }
 
-const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.2, burst: 0.35, text: 1.1, death: 0.5, heal: 0.6, slash: 0.2 };
+const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.2, burst: 0.35, text: 1.1, death: 0.5, heal: 0.6, aura: 0.9, slash: 0.2 };
+const AURA_RED = "255,70,50";
 const BIG_TEXT_LIFE = 2.5;
 
 export class FxLayer {
@@ -528,6 +559,22 @@ export class FxLayer {
           ctx.arc(fx.x * tile, fx.y * tile, fx.r * tile * (0.3 + 0.7 * (1 - k)), 0, Math.PI * 2);
           ctx.stroke();
           break;
+        case "aura": {
+          // a faint red wash over the whole aura, and a ring that sweeps out to its edge
+          const R = fx.r * tile;
+          const out = 1 - k * k; // eases out, so the ring settles on the edge
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = `rgba(${AURA_RED},${0.09 * k})`;
+          ctx.beginPath();
+          ctx.arc(fx.x * tile, fx.y * tile, R, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = `rgba(${AURA_RED},${0.4 * k})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(fx.x * tile, fx.y * tile, R * (0.35 + 0.65 * out), 0, Math.PI * 2);
+          ctx.stroke();
+          break;
+        }
         case "text":
           ctx.font = fx.big ? "bold 18px system-ui, sans-serif" : "bold 12px system-ui, sans-serif";
           ctx.textAlign = "center";
