@@ -569,9 +569,15 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
 - Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
 - A unit with an aura that summons (Ogre *Warboss*) pulses its aura as it calls: a faint red wash over the radius and a
   ring sweeping out to its edge, so the buff's reach shows.
-- The field's pixel buffer matches its size on screen (a phone doesn't paint pixels it can't show). The grass is
-  cached in an offscreen canvas and repainted if the browser blanks it (a GPU reset under memory pressure); plain grass
-  is filled underneath every frame, so a blanked cache never turns the field black or leaves trails.
+- The field's pixel buffer matches its size on screen, up to 2× the CSS size (`MAX_DPR` in `FieldCanvas.tsx`): a 3×
+  phone paints 2.25× fewer pixels and looks the same. The background (grass plus the phase's zones, grid, midline and
+  vignette) is cached in an offscreen canvas and repainted if the browser blanks it (a GPU reset under memory
+  pressure); plain grass is filled underneath every frame, so a blanked cache never turns the field black or leaves
+  trails.
+- Unit tokens are stamped from a sprite atlas (`draw.ts`, "unit sprites"): body, shading, outline and icon are drawn
+  once per unit look, so a plain token costs one image copy plus its facing notch. Triangles (they turn) draw their
+  body fresh; frost and veteran numbers sit between body and icon, so those take two stamps. The atlas is rebuilt
+  after a GPU reset, like the background.
 - Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
   wings; elemental fliers (Cloudlings, a flying Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.

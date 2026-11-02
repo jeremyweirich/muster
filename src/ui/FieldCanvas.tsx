@@ -18,9 +18,12 @@ interface Props {
 
 // Widest pixel buffer the field gets, however big the screen.
 const MAX_PIXELS_W = 4096;
+// Densest it gets, in buffer pixels per CSS pixel. Phones are 3× and up; at 2× the field looks the same to the eye,
+// with 2.25× fewer pixels to paint each frame and to hold in GPU memory (short GPU memory once blanked the field).
+const MAX_DPR = 2;
 
 // A canvas sized to the battlefield that redraws every animation frame. Drawing is in field pixels (`tile` per tile);
-// the pixel buffer matches the canvas's size on screen, so a phone doesn't paint pixels it can't show.
+// the pixel buffer matches the canvas's size on screen (up to MAX_DPR), so a phone doesn't paint pixels it can't show.
 export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
   const ref = useRef<HTMLCanvasElement>(null);
   const drawRef = useRef(draw);
@@ -33,7 +36,7 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
     let scale = 0;
     const resize = () => {
       const shown = canvas.getBoundingClientRect().width || fieldW;
-      const next = Math.min(MAX_PIXELS_W, Math.round(shown * (window.devicePixelRatio || 1))) / fieldW;
+      const next = Math.min(MAX_PIXELS_W, Math.round(shown * Math.min(MAX_DPR, window.devicePixelRatio || 1))) / fieldW;
       if (next === scale) return;
       scale = next;
       canvas.width = Math.round(fieldW * scale);

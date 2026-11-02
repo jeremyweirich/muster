@@ -169,3 +169,9 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   trails, until reload. Cause: a GPU reset blanked the cached grass canvas, and nothing else cleared the field.
   Reproduced on desktop with CDP `Browser.crashGpuProcess` and fixed (DESIGN.md §10b); the field's pixel buffer now
   matches its on-screen size too (3.5× fewer pixels on a phone), which should ease the lag. Not yet rechecked on the phone.
+- **Mobile performance pass (Nov 1, 2026):** measured with Playwright at 844 × 390, 3× DPR, CPU throttled 4–6×
+  (scripts kept out of the repo; recipe: play rounds, then record `requestAnimationFrame` intervals). Unit drawing was
+  over half the frame; tokens now come from a sprite atlas, the background bakes its overlays, and the field's buffer
+  is capped at 2× DPR. At 4× throttle, round 5: deploy screen 22–28 → 60 fps, battle 43–47 → 59–60 fps. Next lever if
+  big late-game fights still stutter on a phone: the sim tick (about a third of frames run one; 10–15 ms for 400
+  models at 6× throttle), e.g. stepping the battle in a worker. Not yet checked on a real phone.

@@ -16,34 +16,39 @@ type BackgroundOpts = { zones?: boolean; grid?: Side[] };
 
 const GRASS_BASE = "#1c2a1e";
 
-// The grass never changes, so it's painted once into an offscreen canvas; the zones, grid, midline and vignette are
-// drawn over it each frame. A phone short on GPU memory can reset its GPU, which blanks every canvas: the visible
-// one is redrawn next frame, but this one has to be repainted, or the field turns black and smears.
+// The background (grass, zones, grid, midline, vignette) only changes with the phase, so it's painted once into an
+// offscreen canvas and copied each frame. A phone short on GPU memory can reset its GPU, which blanks every canvas:
+// the visible one is redrawn next frame, but this one has to be repainted, or the field turns black and smears.
 let grass: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; key: string; painted: boolean } | null = null;
 
-// Repaint the grass on its next use, for browsers that blank a canvas without saying so (called when the field
-// mounts or the page comes back into view).
+// Repaint the background and the unit sprites on their next use, for browsers that blank a canvas without saying so
+// (called when the field mounts or the page comes back into view).
 export function repaintBackground() {
   if (grass) grass.painted = false;
+  atlas = null;
 }
 
-function grassLayer(tile: number, scale: number): HTMLCanvasElement | null {
-  const key = `${tile}|${scale}`;
-  if (grass?.key !== key) {
+function backgroundLayer(tile: number, scale: number, opts: BackgroundOpts): HTMLCanvasElement | null {
+  const size = `${tile}|${scale}`;
+  if (grass?.key.split("#")[0] !== size) {
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(RULES.fieldW * tile * scale);
     canvas.height = Math.round(RULES.fieldH * tile * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    const layer = { canvas, ctx, key, painted: false };
+    const layer = { canvas, ctx, key: size, painted: false };
     canvas.addEventListener("contextlost", () => (layer.painted = false));
     canvas.addEventListener("contextrestored", () => (layer.painted = false));
     grass = layer;
   }
   if (grass.ctx.isContextLost?.()) return null;
-  if (!grass.painted) {
+  // one layer, repainted when the phase (and so the overlays) changes
+  const key = `${size}#${opts.zones ? "z" : ""}|${(opts.grid ?? []).join(",")}`;
+  if (!grass.painted || grass.key !== key) {
     grass.ctx.setTransform(scale, 0, 0, scale, 0, 0);
     paintGrass(grass.ctx, tile);
+    paintOverlays(grass.ctx, tile, opts);
+    grass.key = key;
     grass.painted = true;
   }
   return grass.canvas;
@@ -55,9 +60,11 @@ export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts
   // plain grass underneath, so a blanked layer shows an empty field, never the last frame
   ctx.fillStyle = GRASS_BASE;
   ctx.fillRect(0, 0, W, H);
-  const layer = grassLayer(tile, ctx.getTransform().a || 1);
+  // once a frame, since a cached sprite is stamped without going back to the atlas
+  if (atlas?.ctx.isContextLost?.()) atlas = null;
+  const layer = backgroundLayer(tile, ctx.getTransform().a || 1, opts);
   if (layer) ctx.drawImage(layer, 0, 0, W, H);
-  paintOverlays(ctx, tile, opts);
+  else paintOverlays(ctx, tile, opts);
 }
 
 function paintGrass(ctx: CanvasRenderingContext2D, tile: number) {
@@ -135,6 +142,7 @@ function paintOverlays(ctx: CanvasRenderingContext2D, tile: number, opts: Backgr
   }
   // midline
   ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 6]);
   ctx.beginPath();
   ctx.moveTo(0, (RULES.fieldH / 2) * tile);
@@ -236,16 +244,149 @@ function drawWings(ctx: CanvasRenderingContext2D, px: number, py: number, r: num
   }
 }
 
+// ------------------------------------------------------------------- unit sprites
+
+// A token costs a dozen canvas calls (a gradient, an icon path, text), and a late-game battle draws 400 of them a
+// frame: too slow for a phone. What never changes is drawn once into a shared atlas and stamped from it. Like the
+// background layer, a GPU reset blanks the atlas, so it's rebuilt on context loss and on repaintBackground.
+const ATLAS_SIZE = 1024;
+interface Sprite { x: number; y: number; px: number } // a square cell in the atlas, in atlas pixels
+let atlas: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; scale: number; cells: Map<string, Sprite>; x: number; y: number; row: number } | null = null;
+let atlasGen = 0; // bumped whenever the atlas's cells are thrown away
+
+// The cached sprite for `key`, `half` field pixels from its center to its edge, painted around (0, 0) by `paint`.
+// Null when it can't be cached; the caller then draws directly.
+function sprite(key: string, scale: number, half: number, paint: (c: CanvasRenderingContext2D) => void): Sprite | null {
+  if (atlas?.scale !== scale) {
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = ATLAS_SIZE;
+    const c = canvas.getContext("2d");
+    if (!c) return null;
+    const a = { canvas, ctx: c, scale, cells: new Map<string, Sprite>(), x: 0, y: 0, row: 0 };
+    canvas.addEventListener("contextlost", () => atlas === a && (atlas = null));
+    atlas = a;
+    atlasGen++;
+  }
+  const a = atlas;
+  if (a.ctx.isContextLost?.()) return null;
+  const hit = a.cells.get(key);
+  if (hit) return hit;
+  const px = Math.ceil(half * 2 * scale) + 2; // with a clear pixel all round, so neighbors don't bleed in
+  if (px > ATLAS_SIZE) return null;
+  if (a.x + px > ATLAS_SIZE) {
+    a.x = 0;
+    a.y += a.row;
+    a.row = 0;
+  }
+  if (a.y + px > ATLAS_SIZE) {
+    // full: start over (sprites are cheap to repaint)
+    a.cells.clear();
+    a.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    a.ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
+    a.x = a.y = a.row = 0;
+    atlasGen++;
+  }
+  const s = { x: a.x, y: a.y, px };
+  a.x += px;
+  a.row = Math.max(a.row, px);
+  const c = a.ctx;
+  c.save();
+  c.beginPath();
+  c.rect(s.x + 1, s.y + 1, px - 2, px - 2);
+  c.clip();
+  c.setTransform(scale, 0, 0, scale, s.x + px / 2, s.y + px / 2);
+  paint(c);
+  c.restore();
+  a.cells.set(key, s);
+  return s;
+}
+
+// Each def's sprites by slot, so drawing a model doesn't build a key string every frame.
+const tokenCells = new WeakMap<UnitDef, { gen: number; tile: number; cells: (Sprite | undefined)[] }>();
+function tokenSprite(def: UnitDef, tile: number, scale: number, slot: number, make: () => Sprite | null): Sprite | null {
+  let m = tokenCells.get(def);
+  if (!m || m.gen !== atlasGen || m.tile !== tile || atlas?.scale !== scale) tokenCells.set(def, (m = { gen: atlasGen, tile, cells: [] }));
+  const hit = m.cells[slot];
+  if (hit) return hit;
+  const s = make();
+  if (s && m.gen === atlasGen) m.cells[slot] = s;
+  return s;
+}
+
+// tokenSprite slots: the whole token, its body and its top (by side and flash where they differ), and a flier's glow
+const SLOT_WHOLE = 0;
+const SLOT_BODY = 4;
+const SLOT_TOP = 8;
+const SLOT_GLOW = 10;
+
+function stamp(ctx: CanvasRenderingContext2D, s: Sprite, x: number, y: number) {
+  const inner = s.px - 2;
+  const w = inner / atlas!.scale;
+  ctx.drawImage(atlas!.canvas, s.x + 1, s.y + 1, inner, inner, x - w / 2, y - w / 2, w, w);
+}
+
 // A soft, flickering halo for elemental fliers (cloudlings, flying air elementals).
-function drawGlow(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, color: string, time: number, phase: number) {
+function drawGlow(ctx: CanvasRenderingContext2D, def: UnitDef, tile: number, scale: number, px: number, py: number, r: number, time: number, phase: number) {
   const pulse = 0.75 + 0.25 * Math.sin(time * 7 + phase);
-  const g = ctx.createRadialGradient(px, py, r * 0.4, px, py, r * 2.6);
-  g.addColorStop(0, hexAlpha(color, 0.55 * pulse));
-  g.addColorStop(1, hexAlpha(color, 0));
-  ctx.fillStyle = g;
-  ctx.beginPath();
-  ctx.arc(px, py, r * 2.6, 0, Math.PI * 2);
+  const color = def.look.color;
+  const paint = (c: CanvasRenderingContext2D, x: number, y: number, k: number) => {
+    const g = c.createRadialGradient(x, y, r * 0.4, x, y, r * 2.6);
+    g.addColorStop(0, hexAlpha(color, 0.55 * k));
+    g.addColorStop(1, hexAlpha(color, 0));
+    c.fillStyle = g;
+    c.beginPath();
+    c.arc(x, y, r * 2.6, 0, Math.PI * 2);
+    c.fill();
+  };
+  // the pulse only scales the alpha, so one sprite at full strength serves every frame
+  const s = tokenSprite(def, tile, scale, SLOT_GLOW, () => sprite(`glow|${color}|${r}`, scale, r * 2.6 + 1, (c) => paint(c, 0, 0, 1)));
+  if (!s) return paint(ctx, px, py, pulse);
+  const alpha = ctx.globalAlpha;
+  ctx.globalAlpha = alpha * pulse;
+  stamp(ctx, s, px, py);
+  ctx.globalAlpha = alpha;
+}
+
+// A token's body: contact shadow (ground units), shape, shading and the team outline.
+function paintBody(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side, px: number, py: number, r: number, facing: number, flash: boolean, shadow: boolean) {
+  if (shadow) {
+    // contact shadow so ground units sit on the grass
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.beginPath();
+    ctx.ellipse(px + r * 0.15, py + r * 0.55, r * 1.05, r * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  shapePath(ctx, def.look.shape, px, py, r, facing);
+  ctx.fillStyle = flash ? "#ffffff" : def.look.color;
   ctx.fill();
+  if (!flash && r >= 4) {
+    // soft top-left highlight and bottom-right shade for a bit of volume
+    const g = ctx.createRadialGradient(px - r * 0.4, py - r * 0.45, r * 0.1, px, py, r * 1.25);
+    g.addColorStop(0, "rgba(255,255,255,0.35)");
+    g.addColorStop(0.55, "rgba(255,255,255,0)");
+    g.addColorStop(1, "rgba(0,0,0,0.35)");
+    ctx.fillStyle = g;
+    ctx.fill();
+  }
+  ctx.lineWidth = Math.max(1.5, r * 0.22);
+  ctx.strokeStyle = SIDE_COLORS[side];
+  ctx.stroke();
+}
+
+// What sits on top of a token: its icon (or glyph) and a veteran's level number.
+function paintTop(ctx: CanvasRenderingContext2D, def: UnitDef, px: number, py: number, r: number, level: number) {
+  const icon = def.look.icon && def.look.icon in ICONS ? (def.look.icon as IconId) : null;
+  // small tokens too (goblins, skirmishers, cloudlings are r ≈ 5.3): the icon is what tells them apart
+  if (icon && r >= 5) {
+    drawIcon(ctx, icon, px, py + (def.look.shape === "triangle" ? r * 0.08 : 0), r * ICON_FIT[def.look.shape], "rgba(14,17,21,0.82)");
+  } else if (def.look.glyph && r >= 5) {
+    ctx.font = `${Math.round(r * 1.2)}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#111";
+    ctx.fillText(def.look.glyph, px, py + 1);
+  }
+  if (level) drawLevelPip(ctx, px + r * 0.8, py + r * 0.75, r, level);
 }
 
 export interface UnitDrawOpts {
@@ -257,6 +398,7 @@ export interface UnitDrawOpts {
   flash?: boolean;
   statuses?: Partial<Record<StatusId, number>>;
   noPip?: boolean; // leave out the level number on the token
+  scale?: number; // the canvas's scale, when the caller already knows it
 }
 
 export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side, x: number, y: number, tile: number, o: UnitDrawOpts = {}) {
@@ -270,6 +412,8 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
   // fliers hover above their ground position and bob gently
   const lift = air ? Math.max(5, r * 0.9) + Math.sin(time * 2.4 + phase) * r * 0.14 : 0;
   const py = gy - lift;
+  const scale = o.scale ?? (ctx.getTransform().a || 1);
+  const flash = !!o.flash;
   ctx.globalAlpha = o.alpha ?? 1;
   if (air) {
     // shadow on the ground, where the flier really is; fainter the higher it hovers
@@ -277,30 +421,36 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.beginPath();
     ctx.ellipse(px + lift * 0.25, gy + r * 0.25, r * 0.8, r * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
-    if (def.structure || def.tags.includes("race:elemental")) drawGlow(ctx, px, py, r, def.look.color, time, phase);
+    if (def.structure || def.tags.includes("race:elemental")) drawGlow(ctx, def, tile, scale, px, py, r, time, phase);
     else drawWings(ctx, px, py, r, facing, def.look.color, side, time, phase);
-  } else if (r >= 4) {
-    // contact shadow so ground units sit on the grass
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.beginPath();
-    ctx.ellipse(px + r * 0.15, py + r * 0.55, r * 1.05, r * 0.7, 0, 0, Math.PI * 2);
-    ctx.fill();
   }
-  shapePath(ctx, def.look.shape, px, py, r, facing);
-  ctx.fillStyle = o.flash ? "#ffffff" : def.look.color;
-  ctx.fill();
-  if (!o.flash && r >= 4) {
-    // soft top-left highlight and bottom-right shade for a bit of volume
-    const g = ctx.createRadialGradient(px - r * 0.4, py - r * 0.45, r * 0.1, px, py, r * 1.25);
-    g.addColorStop(0, "rgba(255,255,255,0.35)");
-    g.addColorStop(0.55, "rgba(255,255,255,0)");
-    g.addColorStop(1, "rgba(0,0,0,0.35)");
-    ctx.fillStyle = g;
-    ctx.fill();
+  const shadow = !air && r >= 4;
+  const level = o.noPip ? 0 : (shownLevel(def) ?? 0);
+  const st = o.statuses;
+  const frozen = st?.frozen !== undefined;
+  const hasTop = ((def.look.icon || def.look.glyph) && r >= 5) || level > 0;
+  const look = () => `${def.look.shape}|${def.look.color}|${def.look.icon}|${def.look.glyph}|${r}|${side}|${shadow}|${flash}`;
+  const k = side * 2 + (flash ? 1 : 0);
+  // Most tokens are a single stamp: body and icon together. A triangle turns with its facing, so its body is drawn
+  // fresh; frost and a veteran's level number sit between the body and the icon, so those tokens take two stamps.
+  const turns = def.look.shape === "triangle";
+  const whole =
+    turns || level || frozen
+      ? null
+      : tokenSprite(def, tile, scale, SLOT_WHOLE + k, () =>
+          sprite(`whole|${look()}`, scale, r * 1.3 + 1.5, (c) => {
+            paintBody(c, def, side, 0, 0, r, facing, flash, shadow);
+            if (hasTop) paintTop(c, def, 0, 0, r, 0);
+          }),
+        );
+  if (whole) stamp(ctx, whole, px, py);
+  else {
+    const body = turns
+      ? null
+      : tokenSprite(def, tile, scale, SLOT_BODY + k, () => sprite(`body|${look()}`, scale, r * 1.3 + 1.5, (c) => paintBody(c, def, side, 0, 0, r, facing, flash, shadow)));
+    if (body) stamp(ctx, body, px, py);
+    else paintBody(ctx, def, side, px, py, r, facing, flash, shadow);
   }
-  ctx.lineWidth = Math.max(1.5, r * 0.22);
-  ctx.strokeStyle = SIDE_COLORS[side];
-  ctx.stroke();
   if (r >= 3.5 && def.speed > 0) {
     // facing notch in the team color
     ctx.fillStyle = SIDE_COLORS[side];
@@ -308,38 +458,30 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.arc(px + Math.cos(facing) * r * 0.95, py + Math.sin(facing) * r * 0.95, Math.max(1.4, r * 0.22), 0, Math.PI * 2);
     ctx.fill();
   }
-
-  const st = o.statuses;
   if (st) {
-    if (st.frozen !== undefined) {
+    if (frozen) {
       shapePath(ctx, def.look.shape, px, py, r, facing);
       ctx.fillStyle = "rgba(220,247,255,0.7)";
       ctx.fill();
     }
-    let k = 0;
+    let n = 0;
     for (const id of STATUS_IDS) {
       if (st[id] === undefined || id === "frozen") continue;
       ctx.strokeStyle = STATUSES[id].color;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(px, py, r + 2 + k * 2, 0, Math.PI * 2);
+      ctx.arc(px, py, r + 2 + n * 2, 0, Math.PI * 2);
       ctx.stroke();
-      k++;
+      n++;
     }
   }
-  const icon = def.look.icon && def.look.icon in ICONS ? (def.look.icon as IconId) : null;
-  // small tokens too (goblins, skirmishers, cloudlings are r ≈ 5.3): the icon is what tells them apart
-  if (icon && r >= 5) {
-    drawIcon(ctx, icon, px, py + (def.look.shape === "triangle" ? r * 0.08 : 0), r * ICON_FIT[def.look.shape], "rgba(14,17,21,0.82)");
-  } else if (def.look.glyph && r >= 5) {
-    ctx.font = `${Math.round(r * 1.2)}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillStyle = "#111";
-    ctx.fillText(def.look.glyph, px, py + 1);
+  if (!whole && hasTop) {
+    const top = tokenSprite(def, tile, scale, SLOT_TOP + (o.noPip ? 1 : 0), () =>
+      sprite(`top|${def.look.shape}|${def.look.icon}|${def.look.glyph}|${r}|${level}`, scale, r * 0.85 + (level ? 9 : 0) + 2, (c) => paintTop(c, def, 0, 0, r, level)),
+    );
+    if (top) stamp(ctx, top, px, py);
+    else paintTop(ctx, def, px, py, r, level);
   }
-  const level = shownLevel(def);
-  if (level && !o.noPip) drawLevelPip(ctx, px + r * 0.8, py + r * 0.75, r, level);
   if (o.hpFrac !== undefined && o.hpFrac < 1 && (def.hp >= 300 || r >= 6)) {
     const w = Math.max(10, r * 2);
     ctx.fillStyle = "rgba(0,0,0,0.6)";
@@ -724,6 +866,7 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
   drawBackground(ctx, tile);
   drawSurfaces(ctx, battle.surfaces, tile, realTime, flip);
   const a = interp?.alpha ?? 1;
+  const scale = ctx.getTransform().a || 1;
   const draw = (m: Model) => {
     const p = interp?.prev.get(m);
     let x = m.x;
@@ -754,6 +897,7 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
       statuses: m.statuses,
       time: realTime,
       phase: m.id * 1.618,
+      scale,
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);
