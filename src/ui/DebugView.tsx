@@ -9,10 +9,12 @@ import type { PlacedSquad, UnitDef } from "../sim/types";
 import { useBattlePlayer } from "./battlePlayer";
 import { FieldCanvas } from "./FieldCanvas";
 
-// A hidden panel for development, opened by clicking the version in the corner. Its one tool is a performance test:
+// A hidden panel for development, opened by clicking the version in the corner. Its tool is a performance test:
 // it plays fixed armies on this device's field, the same way Play does, and reports the frame times as text to copy or
-// share. That's how numbers get off a phone: the site itself never sends anything anywhere.
+// share. That's how numbers get off a phone: the site itself never sends anything anywhere. It also links to the repo
+// and its CHANGELOG.md (plain links: nothing is fetched).
 
+const REPO = "https://github.com/jeremyweirich/muster";
 const TILE = 24; // as in PlayView
 const defs = defMap(DEFAULT_UNITS);
 
@@ -224,6 +226,15 @@ export function DebugView() {
             <button onClick={copy}>{copied ? "Copied" : "Copy"}</button>
           </>
         )}
+        <p className="small debug-links">
+          <a href={REPO} target="_blank" rel="noreferrer">
+            Source code
+          </a>
+          {" · "}
+          <a href={`${REPO}/blob/main/CHANGELOG.md`} target="_blank" rel="noreferrer">
+            Changelog
+          </a>
+        </p>
       </aside>
     </div>
   );

@@ -21,6 +21,9 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 - **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
+  When a commit carries something big (a new unit, a big rebalance, a new rule, tab or feature), add a line to
+  `CHANGELOG.md` under today's date in the same commit, and keep the date's version range current (vN = commit count,
+  as shown in the game's corner). Small fixes stay in the commit history. The debug panel links to it.
 - **Two computers, one source of truth.** The owner works on a desktop and a laptop. Claude Code's memory is per
   machine and isn't shared, so anything the other machine should know (decisions, preferences, conventions, status,
   how-tos) goes in this file or `docs/`, committed and pushed. Don't rely on memory for that. Keep memory for local
