@@ -34,6 +34,7 @@ import { MEDAL_COLORS, MvpBoard, SquadDetail, SquadList, topSquads } from "./Bat
 import { useBattlePlayer } from "./battlePlayer";
 import { DamageTally, type Strike } from "./DamageTally";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
+import { LoveLetter, loveLetterShown } from "./LoveLetter";
 import { COMPACT_QUERY, DetailsSheet, Sheet, UnitSheet, UnitTile, UnlockSheet, useMedia } from "./MobileDeploy";
 import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
@@ -107,6 +108,9 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   const [inspect, setInspect] = useState<Inspected | null>(null);
   // the survivors' damage flying to the HP bars after a battle; the bars show `before` until each strike lands
   const [tally, setTally] = useState<{ strikes: Strike[]; before: [number, number]; landed: number } | null>(null);
+  // the easter egg for winning a match with the AI on Hard every round (LoveLetter.tsx)
+  const allHard = useRef(true);
+  const [loveLetter, setLoveLetter] = useState(false);
   const battleRef = useRef<Battle | null>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
   // PvP: the connection, which match of the room is on screen (0 until it's rebuilt from the log), and notices
@@ -183,7 +187,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       for (const w of workers) w.terminate();
       clearTimeout(timer);
     };
-  }, [matchNo, match.round, match.phase === "deploy"]);
+  }, [matchNo, match.round, match.phase === "deploy", difficulty]); // a new difficulty replans this round
 
   // Fight pressed while the AI is still thinking: start as soon as it's ready.
   useEffect(() => {
@@ -244,6 +248,12 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   useEffect(() => {
     onStatus?.({ pvp: pvp ? { host, friendJoined, status: conn.snap.status, error: conn.snap.error } : null, aiInProgress });
   }, [host, friendJoined, conn.snap.status, conn.snap.error, aiInProgress]);
+
+  // shown once the survivors' damage has landed
+  const wonOnHard = !pvp && match.phase === "over" && match.hp[0] > 0 && match.hp[1] <= 0 && allHard.current;
+  useEffect(() => {
+    if (wonOnHard && !tally && !loveLetterShown()) setLoveLetter(true);
+  }, [wonOnHard, !!tally]);
 
   useEffect(() => {
     if (!fightArmed) return;
@@ -526,6 +536,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   const launch = () => {
     const opp = sides();
     if (!opp) return;
+    if (!pvp && difficulty !== "hard") allHard.current = false;
     if (pvp) {
       const problems = checkTurn(opp.mine, 1, opp.turn, defs);
       if (problems.length) setNotice(`Your friend's turn didn't add up: they ${problems.join("; ")}.`);
@@ -608,6 +619,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     setSheet(null);
     setInspect(null);
     setMatchNo((n) => n + 1);
+    allHard.current = true;
     const m = newMatch(units, matchSeed());
     roundStart.current = m;
     setMatch(m);
@@ -1358,6 +1370,8 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         {!(compact && deploying) && gameOpts}
         {!compact && aiNote}
       </aside>
+
+      {loveLetter && <LoveLetter onClose={() => setLoveLetter(false)} />}
 
       <div className="rotate-hint">
         <div className="rotate-icon">📱↻</div>

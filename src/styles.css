@@ -1713,6 +1713,27 @@ button.primary.warn-btn {
   }
 }
 
+/* the easter egg for beating Hard (LoveLetter.tsx) */
+.love-letter {
+  width: min(480px, 100%);
+}
+.love-letter-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.love-letter-buttons a.button {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
 /* PvP: invite, connection and the friend's status at the top of the sidebar */
 .pvp-panel {
   display: flex;
