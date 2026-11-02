@@ -5,6 +5,7 @@ import { capXp, earnedLevel } from "../sim/levels";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { OPENING_PACKS, type OpeningPack } from "../data/openings";
+import { MAPS } from "../data/terrain";
 import { autoPlace, defMap, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "./army";
 
 export type Phase = "deploy" | "battle" | "result" | "over";
@@ -35,6 +36,7 @@ export interface MatchState {
   upgrades: [UpgradeState, UpgradeState];
   towerLevels: [number[], number[]];
   towers?: boolean; // false: no Keeps on the Field (some story missions); absent: they stand
+  map?: string; // the map's id (src/data/terrain.ts); absent: the open field
   openings: [Opening, Opening];
   phase: Phase;
   history: RoundReport[];
@@ -67,10 +69,16 @@ export function newMatch(units: UnitDef[], seed = 1, opts: { aiOpening?: boolean
     openings: [{ packs, choice: null }, { packs: [...packs], choice: null }],
     phase: "deploy",
     history: [],
+    map: pickMap(seed),
   };
   const aiPack = rng.pick(packs);
   if (opts.aiOpening !== false) state = chooseOpening(state, 1, aiPack, units, seed);
   return state;
+}
+
+// Each match's map, from its seed (its own stream, so the opening packs don't change). Both PvP browsers get the same.
+export function pickMap(seed: number): string {
+  return MAPS[new Rng((seed ^ 0x2545f491) >>> 0).int(MAPS.length)].id;
 }
 
 // Take an opening: the flat supply, or a pack's supply, unlocks and squads (placed for you, and free, so not sellable).

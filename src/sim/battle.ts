@@ -1,10 +1,12 @@
 import { ELEMENT_COLORS, STATUSES, SURFACES, UNIT_REACTIONS } from "../data/elements";
 import { RULES } from "../data/rules";
+import { GRASS_REVEAL, TERRAIN } from "../data/terrain";
 import { towerDef, towerPlacements } from "../data/towers";
 import { levelDef } from "./levels";
 import { Rng } from "./rng";
 import { matches } from "./selectors";
 import { SurfaceGrid } from "./surfaces";
+import { AREA_GRASS, AREA_ROUGH, Terrain, type TerrainPatch } from "./terrain";
 import type {
   AttackDef,
   BeamLook,
@@ -42,6 +44,7 @@ export interface Model {
   shield: number; // hits it can still ignore (shield trait)
   ambush: number; // ambush trait: seconds it stays targetable after attacking (0 = always targetable)
   revealedUntil: number; // ambush: battle time until which it can be targeted
+  shotAt: number; // battle time of its last attack (tall grass hides it from shooters until it attacks)
   rampTarget: number; // ramp trait: the target of its current streak of hits
   rampHits: number;
   summoned: boolean; // spawned mid-battle (Warboss); not part of the placed squad's survivors
@@ -147,6 +150,7 @@ export interface BattleOptions {
   recordFx?: boolean;
   towers?: boolean; // default true; the lab and sandbox turn them off
   towerLevels?: [number[], number[]]; // upgrade level of each tower, per side
+  terrain?: TerrainPatch[]; // the map's ground (src/data/terrain.ts); none: an open field
 }
 
 export type DefMap = Map<string, UnitDef>;
@@ -236,6 +240,7 @@ export class Battle {
   readonly squads: SquadInfo[] = [];
   readonly projectiles: Projectile[] = [];
   readonly surfaces: SurfaceGrid;
+  readonly terrain: Terrain | null;
   readonly fx: Fx[] = [];
   readonly recordFx: boolean;
   time = 0;
@@ -259,6 +264,7 @@ export class Battle {
     this.rng = new Rng(opts.seed ?? 1);
     this.orderRng = new Rng(((opts.seed ?? 1) ^ 0x5bd1e995) >>> 0);
     this.surfaces = new SurfaceGrid(this.rules.fieldW, this.rules.fieldH, this.rules.surfaceRes);
+    this.terrain = opts.terrain?.length ? new Terrain(opts.terrain, this.rules.fieldW, this.rules.fieldH) : null;
     this.sideDefs = Array.isArray(defs) ? defs : [defs, defs];
     for (const side of [0, 1] as Side[]) {
       const sideDefs = this.sideDefs[side];
@@ -303,6 +309,7 @@ export class Battle {
       shield: trait(def, "shield")?.hits ?? 0,
       ambush: trait(def, "ambush")?.reveal ?? 0,
       revealedUntil: -1,
+      shotAt: -Infinity,
       rampTarget: -1,
       rampHits: 0,
       summoned,
@@ -533,7 +540,8 @@ export class Battle {
     return mult;
   }
 
-  private canTarget(atk: AttackDef | undefined, t: Model): boolean {
+  // `from`: the attacker, when there is one (tall grass hides ground units from ground shooters)
+  private canTarget(atk: AttackDef | undefined, t: Model, from?: Model): boolean {
     if (!t.alive) return false;
     if (t.ambush && this.time > t.revealedUntil) return false;
     // a Snared flier is held low enough for anything that hits the ground to reach it
@@ -541,8 +549,14 @@ export class Battle {
     if (atk && atk.range > RANGED && t.def.layer === "ground") {
       const s = this.surfaces.at(t.x, t.y);
       if (s && SURFACES[s].blocksRanged) return false;
+      if (from && from.def.layer === "ground" && this.hiddenInGrass(t)) return false;
     }
     return true;
+  }
+
+  // A ground unit in tall grass, not seen attacking in the last GRASS_REVEAL seconds.
+  hiddenInGrass(t: Model): boolean {
+    return !!this.terrain && t.def.layer === "ground" && this.time - t.shotAt > GRASS_REVEAL && this.terrain.at(t.x, t.y) === AREA_GRASS;
   }
 
   private findTarget(m: Model): Model | undefined {
@@ -552,7 +566,7 @@ export class Battle {
     // Preferences are local: "of the enemies in front of you, take this one", never "cross the field for it".
     const reach = (atk?.range ?? 0) + this.rules.preferReach;
     for (const t of this.models) {
-      if (t.side === m.side || !this.canTarget(atk, t)) continue;
+      if (t.side === m.side || !this.canTarget(atk, t, m)) continue;
       // extra range against a target counts as it being that much closer
       const d = Math.sqrt(dist2(m, t)) - t.def.size - this.rangeBonus(m, atk, t);
       let score = d;
@@ -606,7 +620,7 @@ export class Battle {
 
     m.retarget -= dt;
     let target = m.targetId >= 0 ? this.byId.get(m.targetId) : undefined;
-    const stale = !target || (atk ? !this.canTarget(atk, target) : !target.alive);
+    const stale = !target || (atk ? !this.canTarget(atk, target, m) : !target.alive);
     // a ramping unit keeps hitting the target it's building on while it's still in reach
     const locked = m.engaged && m.rampTarget === m.targetId && !!trait(m.def, "ramp");
     if (stale || (m.retarget <= 0 && !locked)) {
@@ -640,8 +654,14 @@ export class Battle {
     if (m.def.layer === "ground") {
       const s = this.surfaces.at(m.x, m.y);
       if (s && SURFACES[s].moveMult) speed *= SURFACES[s].moveMult!;
+      if (this.terrain?.at(m.x, m.y) === AREA_ROUGH) speed *= TERRAIN.rough.moveMult!;
     }
     const stepLen = Math.min(speed * dt, gap - range + 0.01);
+    if (this.terrain && m.def.layer === "ground" && this.terrain.obstacles.length) {
+      // rocks and ponds: slide along the edge (head-on, odd and even models go round opposite ways)
+      [m.x, m.y] = this.terrain.slide(m.x, m.y, m.def.size, dx / d, dy / d, stepLen, target.x, target.y, (m.id & 1) === 1);
+      return;
+    }
     m.x += (dx / d) * stepLen;
     m.y += (dy / d) * stepLen;
   }
@@ -654,6 +674,7 @@ export class Battle {
     const src = this.sourceOf(m);
     m.attackAnim = 0.18;
     if (m.ambush) m.revealedUntil = this.time + m.ambush;
+    m.shotAt = this.time;
     const ramp = trait(m.def, "ramp");
     if (ramp) {
       m.rampHits = m.rampTarget === target.id ? m.rampHits + 1 : 0;
@@ -1102,6 +1123,8 @@ export class Battle {
       if (!am) {
         m.x = clamp(m.x, m.def.size, this.rules.fieldW - m.def.size);
         m.y = clamp(m.y, m.def.size, this.rules.fieldH - m.def.size);
+        // pushed into a rock or a pond: back out to its edge
+        if (this.terrain && !air && this.terrain.obstacles.length) [m.x, m.y] = this.terrain.pushOut(m.x, m.y, m.def.size);
       }
     }
   }

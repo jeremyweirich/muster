@@ -35,6 +35,7 @@ export interface MissionDef {
   shop?: string[]; // more units the player may unlock, at the usual price
   hp?: [number, number]; // each side's HP; absent: one battle decides the mission
   towers: boolean; // the Keeps stand
+  map?: string; // a MAPS id (src/data/terrain.ts); absent: the open field
   upgrades: boolean; // the Upgrades tab exists
   enemy: {
     name: string; // on its HP bar and in the sidebar

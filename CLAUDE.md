@@ -14,8 +14,8 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   `src/data/units.ts` (and `elements.ts`, `towers.ts`, `rules.ts`). There is no in-app unit editor, by choice.
 - They value: clear unit identities, upgrades with personality, readable battles, and good player-facing tools (battle
   report, Codex, Counters). Keep all of those working.
-- Tabs: **Play** (default, the full game), **Story** (the campaigns; playable missions open at `#story/<id>`,
-  `docs/CAMPAIGN.md`), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Units** (browse the
+- Tabs: **Story** (left-most and the default: the campaigns; playable missions open at `#story/<id>`,
+  `docs/CAMPAIGN.md`), **Play** (the full game), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Units** (browse the
   roster; each unit has a small showcase fight from `src/data/showcases.ts`, links are `#units/<id>`), **Codex** (the
   rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades), **Spectate**
   (the AI plays itself, round by round, for watching unit interactions; Copy round exports a battle's setup to
@@ -94,7 +94,9 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - Each side fights with its own upgraded unit definitions (`upgradedDefs`, `new Battle([defsA, defsB], …)`).
 - The AI only uses the simulator, so new units must work with it without special-casing.
 - Don't add `localStorage`, analytics, network calls or external scripts. The site is a static page with no data
-  collection. The one exception is PvP (`docs/MULTIPLAYER.md`): it talks to the owner's relay (`relay/`, a Cloudflare
+  collection. Two exceptions, both owner decisions: **story progress** (missions won, commendations earned) and the
+  love letter's "already shown" flag live in this browser's `localStorage` (`src/ui/progress.ts`,
+  `src/ui/LoveLetter.tsx`), guarded so the game works when storage is blocked; nothing else is stored. And PvP (`docs/MULTIPLAYER.md`): it talks to the owner's relay (`relay/`, a Cloudflare
   Worker), and only after a player starts or joins a match. Single-player stays offline.
 - PvP needs both browsers to run identical battles: in `src/sim`, use only `+ − × ÷`, `sqrt`, `floor` and the like,
   never `Math.sin`/`cos`/`atan2`/`exp`/`pow` on values that affect the outcome (they can differ between browsers).
@@ -186,10 +188,16 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   **Wardens mission 1, *Hands Off*, is built** (Nov 2, 2026): a mission is a `MissionDef` in `src/data/campaign.ts`
   played on the ordinary Play board (`PlayView`'s `mission` prop; framework in CAMPAIGN.md §6). Each mission lists
   reference armies that must win and must lose, and `tests/campaign.test.tsx` fights them, so a rebalance that breaks
-  a mission's lesson fails the tests. Next: missions 2–3. Parked idea to keep: the campaign finale's last
-  Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't
-  decided on yet. When it lands, the Hard-win easter egg (`src/ui/LoveLetter.tsx`, DESIGN.md §10) must
-  remember it was shown and never show again; for now it shows once per visit.
+  a mission's lesson fails the tests. Story progress is stored (owner, Nov 2): missions open one by one, each
+  after the one before is won, with a victory banner and a commendation star per mission and a Reset button; the
+  debug panel can open every mission for testing. The site opens on Story (left-most tab), with "Play the full game
+  now" at the very top for impatient players. Next: missions 2–3. Parked idea to keep: the campaign finale's last
+  Drill Book page is generated from the player's own winning board (storage now exists for it).
+- **Terrain and maps (Nov 2, 2026):** rocks and ponds (impassable for ground units, who slide along the edge),
+  rough ground (half speed) and tall grass (hides ground units from ground shooters until they attack); fliers ignore
+  all of it. Six point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule:
+  **units and the AI never plan around terrain** (no pathfinding); it's for map variety and a step toward spells cast
+  on no-man's land, which are out of scope until the owner asks.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.
 - **PvP (Nov 1, 2026):** play a friend by link is live (`docs/MULTIPLAYER.md`). The relay is deployed on the owner's
   Cloudflare account and needs no upkeep; redeploy only when `relay/` changes. Tested with two scripted Chrome windows

@@ -40,9 +40,11 @@ authored armies (a test per mission, §6), not by bending the open roster.
 - **No army carries over between missions.** Every Field match is a new match under the Compact. That avoids the
   veterancy snowball and needs no saved state. Progress is the *book*: each mission adds a page, and a page makes a
   unit or mechanic available in later missions.
-- **No storage** (decided). The mission list is fully open, with a recommended order and a "start here". There's no
-  locked progression to save. A mission won during this visit shows a check in the list, which is forgotten on
-  reload.
+- **Progress is stored, and missions are played in order** (owner, Nov 2, 2026). This browser remembers which
+  missions were won and which commendations earned (`localStorage`, `src/ui/progress.ts`), and nothing else. A
+  mission opens once the one before it is won; each shows a victory banner and a commendation star, empty until
+  earned, so there's always something left to finish. The Story page has Reset all progress. Armies still never carry
+  over between missions.
 - **Authored enemies, then the AI.** The planner won't reliably produce a story beat, so early missions use scripted
   rounds (fixed squads and placements per round). Later ones use the AI limited to a themed pool. The commanders map
   onto the difficulty personalities that are parked in DESIGN.md §9 (today's Easy, Normal and Hard differ only in
@@ -62,7 +64,7 @@ authored armies (a test per mission, §6), not by bending the open roster.
   scripted **punch**: a round where the enemy does something the player's current army can't handle. The new
   mechanic or unit is the counterpunch.
 - **Optional commendations** (one per mission, e.g. "no Keep falls") give replay value without gating anything. The
-  debrief says whether you earned it; nothing is kept.
+  debrief says whether you earned it, and the mission list keeps the star.
 - **Game screens still don't explain rules.** Briefings and pages tell the story and give the drill; keywords in them
   link to the Codex like everywhere else.
 
@@ -271,10 +273,7 @@ still holds, as requirements for the missions rather than for skirmish balance:
 - **Wardens epilogue drill.** "Against storms, spread out" fits as a **faction doctrine** (DESIGN.md §8 faction
   bonuses, not built yet). Wardens doctrines could literally be drill pages: pick one per match. That gives faction
   bonuses a story and an interface.
-- **Independents.** The Giant, the Dragon and the Bog Toad Riders aren't cast yet. Ideas: the Toad Riders as goblin
-  hirelings (§3, mission 5); the Dragon, which is late-game by design, as the Compact's referee in cutscenes or a
-  finale guest; the Giant as an Elementals hire (they lack nothing it covers, so maybe a Wardens one: splash
-  artillery is the Wardens' hole).
+- **Independents** are cast in §9: each is introduced by one mission, on a map that makes it the natural hire.
 
 ### Final reflection
 
@@ -290,11 +289,9 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
 
 - **The player's winning board becomes the Drill Book's last page** (Wardens mission 8). Record the player's army from
   the finale's deciding round and draw it as a formation diagram: "Page 9, in the Marshal's hand." The owner called it
-  "genius" but doesn't want to work out stored progress yet. The site stores nothing, so the page can only be shown
-  at the end of that session's finale. Keeping it, and letting later campaigns refer back to it (for example the
-  goblin campaign opening against *your* page-9 army), needs a storage decision first. The same storage would also
-  let the goblin opener replay the player's real finale instead of an authored one, and let the Hard-win easter egg
-  (`src/ui/LoveLetter.tsx`) show only once ever.
+  "genius". Story progress is stored now, so the page could be kept alongside it, and later campaigns could refer back
+  to it (for example the goblin campaign opening against *your* page-9 army, replaying the player's real finale
+  instead of an authored one). Check with the owner before storing more than progress.
 
 ## 6. The mission framework (built for mission 1)
 
@@ -308,6 +305,7 @@ the report and replays all work unchanged. The sim is untouched.
 | `units` | the player's units, unlocked and free; `shop` lists more the player may unlock (mission 4 on) |
 | `hp` | each side's HP; absent means **one battle decides it**, and the HP bars and damage tally are hidden |
 | `towers`, `upgrades` | whether the Keeps stand and whether the Upgrades tab exists (both off in mission 1) |
+| `map` | the map (`src/data/terrain.ts`); absent: the open field |
 | `enemy.units` | the enemy's unlocks, shown like the AI's |
 | `enemy.rounds` | scripted squads added each round, in field coordinates (the enemy deploys at the top) |
 | `enemy.revealed` | round 1's squads are placed and visible before the player deploys |
@@ -339,15 +337,31 @@ veterancy off, a "topple a Keep" win condition, a two-phase enemy (mission 8), a
    from the other side, since nothing is stored between missions).
 5. Goblin campaign. Simulate the elementals' authored fights at the same time, then build their campaign.
 
-## 8. Open questions for the owner
+## 8. Owner decisions
 
-Decided: Skirmishers are goblin archers that hit air; the mission list is open with no stored progress; *Boulder Toss*
-exists as a placeholder until after the campaign.
+- Skirmishers are goblin archers that hit air. *Boulder Toss* exists as a placeholder until after the campaign.
+- **Pikemen arrive in mission 7** (left to Claude): one new unit per mission, and the player learns the pikes before
+  the finale leans on them.
+- **The goblin player is the Boss**, with the Tinker advising.
+- **Independents** (Nov 2, 2026): a mission has to show the player when and how to use each one, and in play they're
+  there to add map-to-map variety. The rest was left to Claude (§9).
+- **Story is the left-most tab and where the site opens**, with a "Play the full game now" shortcut at the very top
+  for impatient players. Progress is stored and missions are played in order (§1).
+- **Terrain** (Nov 2, 2026): new ground conditions for map variety, and a first step toward spells cast on no-man's
+  land between rounds (spells themselves are out of scope for now). Units and the AI don't plan around terrain.
 
-1. **Pikemen in mission 7 or 8?** Mission 7 gives the player a mission to learn pikes before the finale
-   (recommended, and the plan above). Mission 8 is more dramatic but untested.
-2. **Who the goblin player is:** the Boss (recommended, with the Tinker advising), or a new goblin?
-3. **The independents** (Dragon, Giant, Bog Toad Riders): hirelings, cameo, referee or cut? (Suggestions in §3 and
-   §4.)
-4. **Story tab placement:** it sits second, after Play. Should new players be sent to mission 1 instead of the How to
-   Play pages once missions 1–3 exist?
+## 9. Independents and maps
+
+Each independent is introduced by one mission, on a map whose ground or enemy makes it the natural hire. The mission
+puts it in the shop (`shop`, at the independents' unlock price), and the briefing says what hole it fills, so the
+player learns *when* to reach for it, not just that it exists. After that it's in every later mission's shop, and maps
+keep the matches different from each other. Plan (checked by simulation when each mission is built):
+
+| Independent | Hole it fills | Introduced in | Map and why |
+|---|---|---|---|
+| **Giant** | splash artillery: the Wardens have none | Wardens 8, *The Marches* | a rocky border pass. The Boss throws swarms at the pike line, and the Marshal hires outside the book for the first time: the book can grow |
+| **Bog Toad Riders** | anti-air and anti-medium for the goblins | Goblins 5, *Snobs* | a marsh of ponds and rough ground. Cloudlings and a flying Air Elemental own the sky until the toads pull them down (*Gulp*) |
+| **Dragon** | the late-game flier | Elementals 7, *The Field Is a Weapon* | Long Grass: the Wardens' crossbows hide in it from every ground shooter, but fliers see into grass, and the Dragon's breath splashes |
+
+Terrain itself (rocks, ponds, rough ground, tall grass) is in DESIGN.md; missions name their map (`map`), and skirmish
+matches draw one at random.

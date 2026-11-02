@@ -2,6 +2,7 @@ import type { OpeningPack } from "../data/openings";
 import { RULES } from "../data/rules";
 import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
+import type { TerrainPatch } from "../sim/terrain";
 import type { PlacedSquad, UnitDef } from "../sim/types";
 import { upgradedDefs, type UpgradeState } from "../sim/upgrades";
 import { canPromote, packSquads, promotePrice, roundDamage } from "./match";
@@ -54,6 +55,7 @@ export interface PlanOptions {
   openingPacks?: OpeningPack[]; // round 1: the packs the player was offered, as stand-ins for an army it hasn't shown
   budgetMs?: number; // overrides the difficulty's thinking time (scripts and tests)
   searchSeed?: number; // parallel searches use different search seeds against the same scenarios
+  terrain?: TerrainPatch[]; // the map: its plans are simulated on the real ground (it doesn't reason about it)
 }
 
 // Everything a plan buys except the squads: tower levels, promotions and an upgrade.
@@ -218,7 +220,7 @@ export function planAiRound(
       for (let s = 0; s < seeds; s++) {
         // a fresh seed per evaluation: a fixed seed lets the search tune plans to one roll of the dice
         const battleSeed = seed + tried * 7 + k * 101 + (s + seedBase) * 7919 + (opts.searchSeed ?? 0) * 104729;
-        const r = new Battle([playerDefs, myDefs], [opponent, mine], { seed: battleSeed, towerLevels: [player.towerLevels, myLevels] }).run();
+        const r = new Battle([playerDefs, myDefs], [opponent, mine], { seed: battleSeed, towerLevels: [player.towerLevels, myLevels], terrain: opts.terrain }).run();
         const [toPlayer, toMe] = roundDamage(r, defs);
         total += toPlayer - toMe;
         runs++;

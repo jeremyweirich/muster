@@ -1,17 +1,29 @@
 import { useEffect } from "react";
 
 // The easter egg for beating the AI on Hard: this game is a love letter to Mechabellum, so point the winner at it.
-// The site stores nothing yet, so "once" means once per visit. When stored progress lands, remember that it was shown
-// and never show it again (DESIGN.md §10).
+// It shows once ever: this browser remembers it (its own key, so resetting story progress doesn't bring it back).
+// Where storage is blocked, once per visit (DESIGN.md §10).
 
 export const MECHABELLUM_URL = "https://store.steampowered.com/app/669330/Mechabellum/";
 
+const KEY = "common-ground:love-letter";
 let shown = false;
-export const loveLetterShown = () => shown;
+export function loveLetterShown(): boolean {
+  try {
+    return shown || localStorage.getItem(KEY) === "shown";
+  } catch {
+    return shown;
+  }
+}
 
 export function LoveLetter({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     shown = true;
+    try {
+      localStorage.setItem(KEY, "shown");
+    } catch {
+      // blocked: once per visit
+    }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape" || e.key === "Enter") onClose();
     };

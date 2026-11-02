@@ -1,6 +1,8 @@
 import { OPENING_PACKS } from "../data/openings";
 import { deployZone, RULES } from "../data/rules";
+import { mapTerrain } from "../data/terrain";
 import { Battle, footprintOf, type BattleResult, type SquadStats } from "../sim/battle";
+import type { TerrainPatch } from "../sim/terrain";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { upgradedDefs } from "../sim/upgrades";
 import { defMap, type DefMap } from "./army";
@@ -126,6 +128,7 @@ export interface BattleSetup {
   defs: [DefMap, DefMap];
   towerLevels: [number[], number[]];
   towers?: boolean; // false: no Keeps (a story mission)
+  terrain?: TerrainPatch[]; // the map's ground; maps are point-symmetric, so it's the same in both views
   seed: number;
 }
 
@@ -143,6 +146,7 @@ export function prepareBattle(state: MatchState, defs: DefMap, seat: Side): Foug
     defs: [upgradedDefs(defs, state.upgrades[0]), upgradedDefs(defs, state.upgrades[1])],
     towerLevels: state.towerLevels,
     towers: state.towers,
+    terrain: mapTerrain(state.map),
     seed: roundSeed(state.round),
   };
   const canon: BattleSetup =
@@ -153,6 +157,7 @@ export function prepareBattle(state: MatchState, defs: DefMap, seat: Side): Foug
           defs: [local.defs[1], local.defs[0]],
           towerLevels: [state.towerLevels[1], state.towerLevels[0]],
           towers: local.towers,
+          terrain: local.terrain,
           seed: local.seed,
         };
   return { ...local, canon, result: null };
@@ -241,7 +246,7 @@ export function restore(units: UnitDef[], log: Entry[], seat: Side): Restored | 
     if (!locked) return done(true);
     match = applyTurn(match, 1, turnAround(locked[other], defs), defs);
     const f = prepareBattle(match, defs, seat);
-    const canonResult = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, towerLevels: f.canon.towerLevels }).run();
+    const canonResult = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, towerLevels: f.canon.towerLevels, towers: f.canon.towers, terrain: f.canon.terrain }).run();
     let outcome = outcomeOf(canonResult, defs);
     const host = findOutcome(log, start.game, round, 0);
     if (seat === 1 && host && host.sig !== outcomeSig(outcome)) {

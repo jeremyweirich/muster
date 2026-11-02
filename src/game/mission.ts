@@ -24,6 +24,7 @@ export function newMissionMatch(m: MissionDef): MatchState {
     upgrades: [{}, {}],
     towerLevels: [RULES.towers.map(() => 0), RULES.towers.map(() => 0)],
     towers: m.towers,
+    map: m.map,
     openings: [
       { packs: [], choice: null },
       { packs: [], choice: null },

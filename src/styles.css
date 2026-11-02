@@ -2368,9 +2368,78 @@ button.primary.warn-btn {
   color: var(--accent);
   font-weight: 600;
 }
-.mission-won {
-  color: var(--green);
-  font-weight: 600;
+.mission-link {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mission-link.locked {
+  border-color: var(--border);
+  opacity: 0.6;
+  cursor: default;
+}
+.mission-link.locked:hover {
+  background: var(--panel-2);
+}
+.mission-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.mission-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.mission-lock,
+.mission-todo {
+  font-size: 12px;
+  color: var(--muted);
+}
+.mission-todo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+/* a won mission's banner and its commendation star; empty dashed slots until earned */
+.mark {
+  fill: none;
+  stroke: var(--muted);
+  vertical-align: -3px;
+}
+.mark:not(.on) path:last-child {
+  stroke-dasharray: 2 2;
+}
+.mark.victory.on {
+  stroke: var(--green);
+}
+.mark.victory.on path:last-child {
+  fill: var(--green);
+}
+.mark.star.on {
+  stroke: var(--accent);
+  fill: var(--accent);
+}
+.skip-story {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  width: fit-content;
+  max-width: 100%;
+}
+.reset-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
 }
 .mission {
   display: flex;
@@ -2508,4 +2577,12 @@ button.primary.warn-btn {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+/* the map's name under the round, linking to its terrain in the Codex */
+.round .map-name {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  text-align: center;
+  color: var(--muted);
 }

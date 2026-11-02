@@ -4,6 +4,7 @@ import { towerPlacements, TOWER_MAP } from "../data/towers";
 import { footprintOf, formation, type Battle, type Fx, type Model } from "../sim/battle";
 import { shownLevel } from "../sim/levels";
 import { SurfaceGrid } from "../sim/surfaces";
+import type { TerrainPatch } from "../sim/terrain";
 import { elementOfColor, hexAlpha, Particles, Shots } from "./combat";
 import { drawIcon, ICONS, type IconId } from "./icons";
 import type { PlacedSquad, Shape, Side, StatusId, UnitDef } from "../sim/types";
@@ -13,7 +14,8 @@ const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
 const SURFACE_IDS = SurfaceGrid.ids();
 
 // size: the field in tiles (default RULES). sideways: the sides face each other left and right (the Units tab's arena).
-type BackgroundOpts = { zones?: boolean; grid?: Side[]; size?: { w: number; h: number }; sideways?: boolean };
+// terrain: the map's ground (maps are point-symmetric, so a turned-round view draws it unchanged).
+type BackgroundOpts = { zones?: boolean; grid?: Side[]; size?: { w: number; h: number }; sideways?: boolean; terrain?: TerrainPatch[] };
 const fieldSize = (opts: BackgroundOpts) => opts.size ?? { w: RULES.fieldW, h: RULES.fieldH };
 
 const GRASS_BASE = "#1c2a1e";
@@ -46,10 +48,12 @@ function backgroundLayer(tile: number, scale: number, opts: BackgroundOpts): HTM
   }
   if (grass.ctx.isContextLost?.()) return null;
   // one layer, repainted when the phase (and so the overlays) changes
-  const key = `${size}#${opts.zones ? "z" : ""}|${(opts.grid ?? []).join(",")}|${opts.sideways ? "s" : ""}`;
+  const terrainKey = (opts.terrain ?? []).map((p) => `${p.kind}${p.x},${p.y},${p.r},${p.ry ?? ""}`).join(";");
+  const key = `${size}#${opts.zones ? "z" : ""}|${(opts.grid ?? []).join(",")}|${opts.sideways ? "s" : ""}|${terrainKey}`;
   if (!grass.painted || grass.key !== key) {
     grass.ctx.setTransform(scale, 0, 0, scale, 0, 0);
     paintGrass(grass.ctx, tile, field);
+    paintTerrain(grass.ctx, tile, opts.terrain ?? []);
     paintOverlays(grass.ctx, tile, opts);
     grass.key = key;
     grass.painted = true;
@@ -67,7 +71,10 @@ export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts
   if (atlas?.ctx.isContextLost?.()) atlas = null;
   const layer = backgroundLayer(tile, ctx.getTransform().a || 1, opts);
   if (layer) ctx.drawImage(layer, 0, 0, W, H);
-  else paintOverlays(ctx, tile, opts);
+  else {
+    paintTerrain(ctx, tile, opts.terrain ?? []);
+    paintOverlays(ctx, tile, opts);
+  }
 }
 
 function paintGrass(ctx: CanvasRenderingContext2D, tile: number, field: { w: number; h: number }) {
@@ -101,6 +108,112 @@ function paintGrass(ctx: CanvasRenderingContext2D, tile: number, field: { w: num
       ctx.beginPath();
       ctx.moveTo(x, y);
       ctx.lineTo(x + (rnd() - 0.5) * tile * 0.25, y - tile * (0.15 + rnd() * 0.2));
+      ctx.stroke();
+    }
+  }
+}
+
+// Terrain under the overlays (src/data/terrain.ts). Areas get soft edges; ponds and rocks are drawn inside their
+// collision circle, so units brush the edge rather than overlapping it. Each patch's details come from its own seed.
+function paintTerrain(ctx: CanvasRenderingContext2D, tile: number, patches: TerrainPatch[]) {
+  const order = { rough: 0, grass: 1, pond: 2, rocks: 3 } as const;
+  for (const p of [...patches].sort((a, b) => order[a.kind] - order[b.kind])) {
+    let seed = Math.floor(p.x * 7919 + p.y * 104729 + p.r * 31) % 2147483646 || 1;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const cx = p.x * tile;
+    const cy = p.y * tile;
+    const rx = p.r * tile;
+    const ry = (p.ry ?? p.r) * tile;
+    // a point at angle a on a slightly wobbly outline
+    const wobble = Array.from({ length: 5 }, () => rnd() * Math.PI * 2);
+    const edge = (a: number, k: number) => 1 - k + k * 0.5 * (1 + Math.sin(a * 3 + wobble[0]) * 0.6 + Math.sin(a * 5 + wobble[1]) * 0.4);
+    const blob = (sx: number, sy: number, k: number) => {
+      ctx.beginPath();
+      for (let i = 0; i <= 48; i++) {
+        const a = (i / 48) * Math.PI * 2;
+        const e = edge(a, k);
+        const x = cx + Math.cos(a) * sx * e;
+        const y = cy + Math.sin(a) * sy * e;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.closePath();
+    };
+    if (p.kind === "rough") {
+      blob(rx, ry, 0.12);
+      ctx.fillStyle = "rgba(112, 88, 56, 0.42)";
+      ctx.fill();
+      // pebbles and ruts
+      const n = Math.round(p.r * (p.ry ?? p.r) * 9);
+      for (let i = 0; i < n; i++) {
+        const a = rnd() * Math.PI * 2;
+        const d = Math.sqrt(rnd()) * 0.85;
+        const x = cx + Math.cos(a) * rx * d;
+        const y = cy + Math.sin(a) * ry * d;
+        ctx.fillStyle = rnd() < 0.5 ? "rgba(170, 150, 120, 0.35)" : "rgba(40, 30, 20, 0.35)";
+        const s = (0.06 + rnd() * 0.1) * tile;
+        ctx.fillRect(x, y, s, s * 0.8);
+      }
+    } else if (p.kind === "grass") {
+      blob(rx, ry, 0.12);
+      ctx.fillStyle = "rgba(52, 96, 40, 0.5)";
+      ctx.fill();
+      // tall blades, leaning a little
+      const n = Math.round(p.r * (p.ry ?? p.r) * 26);
+      ctx.lineWidth = Math.max(1, tile * 0.05);
+      for (let i = 0; i < n; i++) {
+        const a = rnd() * Math.PI * 2;
+        const d = Math.sqrt(rnd()) * 0.92;
+        const x = cx + Math.cos(a) * rx * d;
+        const y = cy + Math.sin(a) * ry * d;
+        const h = tile * (0.35 + rnd() * 0.35);
+        ctx.strokeStyle = rnd() < 0.5 ? "rgba(140, 190, 90, 0.45)" : "rgba(30, 60, 25, 0.5)";
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + (rnd() - 0.5) * tile * 0.3, y - h);
+        ctx.stroke();
+      }
+    } else if (p.kind === "pond") {
+      blob(rx * 0.98, ry * 0.98, 0.1);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
+      g.addColorStop(0, "#16324a");
+      g.addColorStop(1, "#24506f");
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(160, 200, 220, 0.45)";
+      ctx.lineWidth = Math.max(1, tile * 0.08);
+      ctx.stroke();
+      // a few glints
+      ctx.strokeStyle = "rgba(200, 230, 255, 0.25)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 4; i++) {
+        const x = cx + (rnd() - 0.5) * rx;
+        const y = cy + (rnd() - 0.5) * ry;
+        ctx.beginPath();
+        ctx.moveTo(x - tile * 0.25, y);
+        ctx.lineTo(x + tile * 0.25, y);
+        ctx.stroke();
+      }
+    } else {
+      // a boulder with a lit top-left, and a shadow on the grass
+      ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+      ctx.beginPath();
+      ctx.ellipse(cx + rx * 0.12, cy + rx * 0.18, rx * 0.95, rx * 0.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      blob(rx * 0.95, rx * 0.95, 0.16);
+      const g = ctx.createRadialGradient(cx - rx * 0.35, cy - rx * 0.4, rx * 0.1, cx, cy, rx);
+      g.addColorStop(0, "#a3a39a");
+      g.addColorStop(1, "#55574f");
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(20, 22, 18, 0.7)";
+      ctx.lineWidth = Math.max(1, tile * 0.06);
+      ctx.stroke();
+      // a crack
+      ctx.strokeStyle = "rgba(40, 40, 36, 0.6)";
+      ctx.beginPath();
+      ctx.moveTo(cx - rx * 0.3, cy - rx * 0.1);
+      ctx.lineTo(cx + rx * 0.05, cy + rx * 0.15);
+      ctx.lineTo(cx + rx * 0.35, cy + rx * 0.05);
       ctx.stroke();
     }
   }
@@ -952,7 +1065,7 @@ export function drawBattle(
   const W = battle.rules.fieldW;
   const H = battle.rules.fieldH;
   const view = (s: Side): Side => (flip ? (s === 0 ? 1 : 0) : s);
-  drawBackground(ctx, tile, { size: { w: W, h: H }, sideways: opts.sideways });
+  drawBackground(ctx, tile, { size: { w: W, h: H }, sideways: opts.sideways, terrain: battle.terrain?.patches });
   drawSurfaces(ctx, battle.surfaces, tile, realTime, flip);
   const a = interp?.alpha ?? 1;
   const scale = ctx.getTransform().a || 1;
@@ -988,6 +1101,7 @@ export function drawBattle(
       time: realTime,
       phase: m.id * 1.618,
       scale,
+      alpha: battle.hiddenInGrass(m) ? 0.45 : undefined, // hidden from shooters in tall grass
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);

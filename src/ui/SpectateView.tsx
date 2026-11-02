@@ -80,7 +80,7 @@ export function SpectateView() {
     const r = rounds[i];
     if (!r) return;
     const f = r.fought;
-    battleRef.current = new Battle(f.defs, f.armies, { seed: f.seed, recordFx: true, towerLevels: f.towerLevels });
+    battleRef.current = new Battle(f.defs, f.armies, { seed: f.seed, recordFx: true, towerLevels: f.towerLevels, terrain: f.terrain });
     player.reset();
     clock.current.startAt = clock.current.now + HOLD;
     clock.current.countFrom = null;
@@ -149,7 +149,7 @@ export function SpectateView() {
   const copyRound = () => {
     if (!round) return;
     const f = round.fought;
-    const setup = { round: round.start.round, seed: f.seed, armies: f.armies, upgrades: round.after.upgrades, towerLevels: f.towerLevels };
+    const setup = { round: round.start.round, seed: f.seed, armies: f.armies, upgrades: round.after.upgrades, towerLevels: f.towerLevels, map: round.start.map };
     navigator.clipboard?.writeText(JSON.stringify(setup)).then(
       () => setCopied(true),
       () => setCopied(false),

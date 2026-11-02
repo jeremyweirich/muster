@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { ELEMENT_COLORS, STATUSES, SURFACES, SURFACE_REACTIONS, UNIT_REACTIONS } from "../data/elements";
 import { ROLES } from "../data/roles";
 import { RULES } from "../data/rules";
+import { MAPS, TERRAIN } from "../data/terrain";
 import { TOWER_DEFS, towerDaze } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import { ELEMENTS, type Element, type StatusDef, type SurfaceDef, type UnitDef, type UnitReaction } from "../sim/types";
@@ -130,6 +131,7 @@ const CONTENTS: { title: string; items: [string, string][] }[] = [
       ["friendly-fire", "Who gets hurt"],
     ],
   },
+  { title: "Terrain", items: [["terrain", "Maps"], ...Object.entries(TERRAIN).map(([id, t]): [string, string] => [`terrain-${id}`, t.name])] },
   {
     title: "Your army",
     items: [
@@ -246,6 +248,23 @@ export function CodexView({ topic }: { topic?: string }) {
           electrify a puddle you made. The battle report counts this as friendly fire.
         </p>
       </Entry>
+
+      <h3>Terrain</h3>
+      <Entry id="terrain" title="Maps" focus={topic}>
+        <p>
+          Every Field has its own ground. Terrain lies only in no-man&apos;s land, and each map is the same from both sides, turned
+          round. Your champions don&apos;t plan around it: they head straight for their target and walk round whatever is in the way.
+          Fliers ignore the ground entirely. Placing your squads so the ground works for you, and not for them, is up to you.
+        </p>
+        <p className="muted small">Maps: {MAPS.map((m) => m.name).join(", ")}.</p>
+      </Entry>
+      {Object.entries(TERRAIN).map(([id, t]) => (
+        <Entry key={id} id={`terrain-${id}`} title={t.name} focus={topic}>
+          <p>
+            <Linked text={t.rule} except={`terrain-${id}`} />
+          </p>
+        </Entry>
+      ))}
 
       <h3>Your army</h3>
       <Entry id="unlocks" title="Unlocks" focus={topic}>

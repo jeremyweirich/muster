@@ -45,6 +45,8 @@ export const KEYWORDS: [RegExp, string][] = [
   [/\bdaze(d|s)?\b/i, "status-dazed"],
   [/\bsnared?\b/i, "status-snared"],
   [/\btoughness\b/i, "toughness"],
+  [/\btall grass\b/i, "terrain-grass"],
+  [/\brough ground\b/i, "terrain-rough"],
   [/\boil\b/i, "surface-oil"],
   [/\bpuddles?\b/i, "surface-puddle"],
   [/\bsteam\b/i, "surface-steam"],

@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { OPENING_PACKS } from "../data/openings";
 import { FACTIONS, factionOf } from "../data/roles";
 import { deployZone, RULES } from "../data/rules";
+import { MAP_BY_ID, mapTerrain } from "../data/terrain";
 import { towerDaze, towerDef, towerPlacements, TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import { promoted, type AiPlan, type Difficulty } from "../game/ai";
@@ -41,6 +42,7 @@ import { COMPACT_QUERY, DetailsSheet, Sheet, UnitSheet, UnitTile, UnlockSheet, u
 import { planInWorkers } from "./planInWorkers";
 import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
+import { CodexLink } from "./codexLinks";
 import { Debrief } from "./Mission";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
@@ -90,7 +92,7 @@ export interface MissionProps {
   def: MissionDef;
   title: string;
   onLeave: () => void;
-  onWon: () => void;
+  onWon: (commended: boolean) => void;
 }
 
 export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?: MissionProps; onStatus?: (s: PlayStatus) => void }) {
@@ -153,6 +155,8 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const singleBattle = !!mission && !mission.def.hp; // one battle decides it: no HP bars
   const shopUnits = mission ? units.filter((u) => mission.def.units.includes(u.id) || mission.def.shop?.includes(u.id)) : units;
   const rival = pvp ? "Friend" : (mission?.def.enemy.name ?? "Enemy");
+  const terrain = useMemo(() => mapTerrain(match.map), [match.map]);
+  const mapName = match.map ? MAP_BY_ID.get(match.map)?.name : undefined;
 
   // The AI plans at the start of each deployment, from what it saw last round, in a worker so the page stays
   // responsive while the player builds. Fight only has to wait if the player is done first. A mission's enemy
@@ -172,7 +176,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       round: match.round,
       difficulty,
       seed: match.round * 7919 + 13,
-      opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]) },
+      opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]), terrain },
     };
     return planInWorkers(request, setAiPlan);
   }, [matchNo, match.round, match.phase === "deploy", difficulty]); // a new difficulty replans this round
@@ -245,7 +249,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
 
   const outcome = mission && match.phase === "over" && fought?.result ? missionOutcome(mission.def, match, fought.result) : null;
   useEffect(() => {
-    if (outcome?.won) mission?.onWon();
+    if (outcome?.won) mission?.onWon(outcome.commended);
   }, [outcome?.won]);
 
   useEffect(() => {
@@ -536,7 +540,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     const next = applyTurn(opp.mine, 1, opp.turn, defs, opp.spent);
     const f = prepareBattle(next, defs, seat);
     setMatch({ ...next, phase: "battle" });
-    battleRef.current = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, recordFx: true, towerLevels: f.canon.towerLevels, towers: f.canon.towers });
+    battleRef.current = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, recordFx: true, towerLevels: f.canon.towerLevels, towers: f.canon.towers, terrain: f.canon.terrain });
     setFought(f);
     setActions([]);
     player.reset();
@@ -563,7 +567,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const replay = () => {
     if (!fought) return;
     const c = fought.canon;
-    battleRef.current = new Battle(c.defs, c.armies, { seed: c.seed, recordFx: true, towerLevels: c.towerLevels, towers: c.towers });
+    battleRef.current = new Battle(c.defs, c.armies, { seed: c.seed, recordFx: true, towerLevels: c.towerLevels, towers: c.towers, terrain: c.terrain });
     player.reset();
     setSpeed(1); // every battle starts at normal speed, even if the last one was fast-forwarded
     setView("replay");
@@ -651,7 +655,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const drawReport = (ctx: CanvasRenderingContext2D) => {
     const f = fought!;
     const stats = f.result!.stats;
-    drawBackground(ctx, TILE, { zones: true });
+    drawBackground(ctx, TILE, { zones: true, terrain: f.terrain });
     const focus = hoverSquad ?? pinned;
     const focusStats = focus ? stats[focus] : undefined;
     const squads = reportSquads();
@@ -748,7 +752,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       player.frame(ctx, b, TILE, dt, time, live ? speed : 0, match.phase === "battle" ? onBattleEnd : undefined, seat === 1);
       return;
     }
-    drawBackground(ctx, TILE, { zones: true, grid: [0] });
+    drawBackground(ctx, TILE, { zones: true, grid: [0], terrain });
     if (towersOn)
       for (const side of [0, 1] as Side[]) {
         towerPlacements(side).forEach((t, i) => drawSquad(ctx, t, towerDef(t.defId, match.towerLevels[side][i] ?? 0), side, TILE));
@@ -982,7 +986,14 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       ) : (
         <>
           <HpBar label="You" hp={shownHp[0]} side={0} hits={hitsOn[0]} />
-          <div className="round">Round {match.round}</div>
+          <div className="round">
+            Round {match.round}
+            {mapName && terrain.length > 0 && (
+              <CodexLink topic="terrain" className="map-name">
+                {mapName}
+              </CodexLink>
+            )}
+          </div>
           <HpBar label={rival} hp={shownHp[1]} side={1} hits={hitsOn[1]} />
         </>
       )}

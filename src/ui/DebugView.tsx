@@ -103,7 +103,8 @@ interface Run {
   lines: string[];
 }
 
-export function DebugView() {
+// `allMissions` opens every story mission for this visit, without winning the ones before (for testing missions).
+export function DebugView({ allMissions, onAllMissions }: { allMissions: boolean; onAllMissions: (on: boolean) => void }) {
   const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
   const [progress, setProgress] = useState("");
   const [report, setReport] = useState("");
@@ -226,6 +227,9 @@ export function DebugView() {
             <button onClick={copy}>{copied ? "Copied" : "Copy"}</button>
           </>
         )}
+        <label className="small">
+          <input type="checkbox" checked={allMissions} onChange={(e) => onAllMissions(e.target.checked)} /> Open every story mission (this visit)
+        </label>
         <p className="small debug-links">
           <a href={REPO} target="_blank" rel="noreferrer">
             Source code

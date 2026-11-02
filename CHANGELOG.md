@@ -3,8 +3,14 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v72)
+## 2 November 2026 (v58–v73)
 
+- **Terrain and maps.** Every skirmish is fought on one of six maps: rocks and ponds to walk round, rough ground that
+  slows, and tall grass that hides units from archers until they attack. Fliers ignore it all. The map's name sits
+  under the round number.
+- **Story comes first.** The site now opens on Story, with a "Play the full game now" button at the top for anyone who
+  wants to skip it. Your progress is remembered in this browser: missions open one after another, each shows a
+  victory banner and a commendation star once earned, and the Story page can reset it all.
 - **Story: the first mission.** The Story tab is back, with the Wardens' first mission, *Hands Off*: a new Marshal, a
   disputed goat and three mobs of goblins. A briefing, a page of the Drill Book, one battle and a debrief, with a hint
   if you lose and a commendation to earn. The rest of the campaign is on the way.

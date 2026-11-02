@@ -18,6 +18,7 @@ import { tmpdir } from "node:os";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { RULES } from "../src/data/rules";
 import { OPENING_PACKS } from "../src/data/openings";
+import { mapTerrain } from "../src/data/terrain";
 import { towerPlacements } from "../src/data/towers";
 import { Battle, footprintOf } from "../src/sim/battle";
 import { upgradedDefs } from "../src/sim/upgrades";
@@ -117,7 +118,7 @@ function cmdPlay(name: string, plan: Plan) {
     units, defs,
     { army: st.armies[1], unlocked: st.unlocked[1], upgrades: st.upgrades[1], towerLevels: st.towerLevels[1], supply: st.supply[1] },
     { army: st.armies[0], upgrades: st.upgrades[0], towerLevels: st.towerLevels[0] },
-    st.round, s.difficulty, st.round * 7919 + 13 + s.seed * 31,
+    st.round, s.difficulty, st.round * 7919 + 13 + s.seed * 31, { terrain: mapTerrain(st.map) },
   );
 
   // My purchases, in order: promotions, upgrades, towers, squads.
@@ -216,7 +217,7 @@ function cmdPlay(name: string, plan: Plan) {
     upgrades: [upgrades, aiUpgrades],
     towerLevels,
   };
-  const battle = new Battle([sideDefs[0], sideDefs[1]], armies, { seed: st.round * 104729 + 7 + s.seed, towerLevels });
+  const battle = new Battle([sideDefs[0], sideDefs[1]], armies, { seed: st.round * 104729 + 7 + s.seed, towerLevels, terrain: mapTerrain(st.map) });
   const r = battle.run();
   const round = st.round;
   st = applyRound(st, r, defs);

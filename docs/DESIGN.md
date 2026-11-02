@@ -108,6 +108,34 @@ and towers.
     sheet (your veterans' sheet has the Promote button), and a Keep opens the Keeps sheet. A tap on a squad placed this
     round picks it up, as on desktop. Battle and the report keep the regular sidebar.
 
+### Terrain and maps — Decided (values open)
+
+Owner, Nov 2, 2026: new ground conditions for map-to-map variety, and a first experiment toward spells (cast on
+no-man's land between rounds; spells themselves are out of scope for now). Data in `src/data/terrain.ts`, the sim in
+`src/sim/terrain.ts`.
+
+| Terrain | Effect (ground units only; fliers ignore all terrain) |
+|---|---|
+| **Rocks**, **Pond** | Can't be crossed. A unit walks straight at its target as always; when its step would enter one, it slides along the edge instead (head-on, it goes round on the side its target is on; dead behind, odd and even models split). Anything pushed into one is pushed back out to the edge |
+| **Rough ground** | Half speed while on it |
+| **Tall grass** | Hides a unit standing in it from ground shooters (attacks longer than 2.5 tiles), until 2 s after its own last attack. Melee, fliers' attacks, splash and chain lightning still find it. Drawn at half opacity while hidden |
+
+- **Units don't plan around terrain** (owner): no pathfinding, no avoiding rough ground, no seeking grass. They do what
+  they always do, and the ground changes how it plays out. The AI planner simulates its plans on the real map (it
+  passes the terrain to the battles it tries), but its code knows nothing about terrain.
+- **Patches** are circles (rocks, ponds) or ellipses (rough ground, grass) in tiles, and lie only in no-man's land.
+  Rough ground and grass are looked up on a half-tile grid; obstacles are a short list of circles. With no terrain the
+  sim takes none of these paths (the bench fingerprint is unchanged).
+- **Maps** (`MAPS`): Open Field, Millbrook Ford (a pond between two rough patches), Standing Stones (scattered rocks),
+  Long Grass (grass on both flanks, a rock in the middle), The Mire (a wide band of rough ground with two ponds), Broken
+  Hills (grass in the middle, rocks and rough ground off-center). Every map is **point-symmetric** (turned 180° it's the
+  same), so both sides face the same ground and a PvP guest's turned-round view needs nothing special. A test checks
+  this and the no-man's-land rule.
+- **Which map:** a skirmish draws one from the match seed (`pickMap`, its own random stream, so the opening packs don't
+  change), so both PvP browsers get the same; Spectate too. Story missions name theirs (`map`). The map's name shows
+  under the round number and links to the Codex's Terrain entries.
+- The balance harness, Counters and the Units showcases stay on the open field: terrain is variety, not a balance input.
+
 ### Towers — Decided (values open)
 
 Each side has two Keeps (West and East) near the back of its zone, 2 rows in from the back edge
@@ -526,8 +554,10 @@ The campaign outline (docs/CAMPAIGN.md) casts these as commanders: the goblin Bo
 
 ## 10. Tabs and tools — Decided
 
-The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **Story**, **PvP**,
-**Units**, **Codex**, **Counters**, **Spectate**. The site opens on Play. Play stays mounted behind the other tabs (a Codex
+The tabs, in order: **Story** (the campaigns), **Play** (the full game against the AI, every unit available), **PvP**,
+**Units**, **Codex**, **Counters**, **Spectate**. The site opens on Story (owner, Nov 2, 2026: new players start with
+the first mission), and the first thing on it is **Play the full game now**, for players who'd rather skip the story. A
+PvP link (`?join=…`) still opens on Play. Play stays mounted behind the other tabs (a Codex
 link mid-game keeps the match), but its field doesn't draw while hidden, so a battle waits until you come back. Story
 and Spectate stay mounted the same way once opened. A mission is a second board, so only the board on screen listens
 to the keyboard.
@@ -540,10 +570,10 @@ marks only units whose price differs (the independents), so tiles have room for 
 | **Battle report** | After each battle (and the survivors' damage flying to the HP bars, which a click, a key or Skip cuts short) the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
 | **PvP** | Play a friend by link. The tab has one button, **Create a match link**; then it shows the link with Copy (and Share on phones) and waits. The friend's link opens straight on Play, and the host moves to Play as soon as the friend joins (or earlier, to deploy while waiting). During a match the tab offers Back to the board and Leave match. Each round both players deploy, then both browsers run the same battle. A player who pressed Fight can take it back ("Not ready") until the friend presses it too. The address carries the player's seat, so a reload resumes the match. How it works and how to set up the relay: `docs/MULTIPLAYER.md` |
-| **How to play** | A three-page walkthrough, a line or two each in large type, so new players start fast: build then watch, survivors hit HP, counter what you see (header button; opens on the Play tab). Upgrades, veterans and Keeps are left to the Codex. The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
-| **Love letter** | An easter egg: winning a match against the AI with it on Hard every round shows a popup ("This game is a love letter to Mechabellum. If you liked this game, you'll love the real thing.") with a link to Mechabellum's Steam page (`src/ui/LoveLetter.tsx`). It shows once per visit; **when stored progress lands, remember it and show it only once ever**. Changing the AI difficulty mid-deployment replans that round, so switching to Hard in round 1 still counts |
+| **How to play** | A three-page walkthrough, a line or two each in large type, so new players start fast: build then watch, survivors hit HP, counter what you see (header button; it also opens when Story's Play the full game now is pressed, or when a link lands on `#play`). Upgrades, veterans and Keeps are left to the Codex. Skip closes it. The AI defaults to Easy |
+| **Love letter** | An easter egg: winning a match against the AI with it on Hard every round shows a popup ("This game is a love letter to Mechabellum. If you liked this game, you'll love the real thing.") with a link to Mechabellum's Steam page (`src/ui/LoveLetter.tsx`). It shows once ever: the browser remembers it (its own `localStorage` key, so a story reset doesn't bring it back; once per visit where storage is blocked). Changing the AI difficulty mid-deployment replans that round, so switching to Hard in round 1 still counts |
 | **Units** | Browse the roster: pick a unit for its card (stats, effects, upgrades) and a small looping fight that shows it doing its thing, with the unit haloed in gold. Each fight is curated in `src/data/showcases.ts` (who it fights and a one-line caption) and runs in a small left-vs-right arena (`src/game/showcase.ts`). "Try it" on an upgrade restarts the fight with it. A test checks the featured side wins every showcase at level 1 with no upgrades. `#units/<unit>` links to one unit; Codex unit chips, Counters rows and the Play unit card link there |
-| **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md). Playable missions open at `#story/<mission>`: a briefing (the cast's lines and a Drill Book page with its formation drawn), then the ordinary Play board with the mission's setup (its supply, units, HP, Keeps on or off, a scripted enemy, an objective line above the shop), then a debrief in the sidebar (lines on a win, a hint read from your army on a loss, the commendation, Try again). One-battle missions hide the HP bars. Nothing is stored: a mission won this visit gets a check in the list. Data in `src/data/campaign.ts`, match setup in `src/game/mission.ts`, the framework in docs/CAMPAIGN.md §6. Only Wardens mission 1, *Hands Off*, is built |
+| **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md). Playable missions open at `#story/<mission>`: a briefing (the cast's lines and a Drill Book page with its formation drawn), then the ordinary Play board with the mission's setup (its supply, units, HP, Keeps on or off, a scripted enemy, an objective line above the shop), then a debrief in the sidebar (lines on a win, a hint read from your army on a loss, the commendation, Try again). One-battle missions hide the HP bars. **Progress is stored** in this browser (`src/ui/progress.ts`): missions open in order, each once the one before is won (a lock says which to win first); every mission shows a victory banner and, if it has one, a commendation star, each an empty dashed slot until earned, and each campaign counts both. Reset all progress (with a confirm step) sits at the bottom. The debug panel can open every mission for the visit. Data in `src/data/campaign.ts`, match setup in `src/game/mission.ts`, the framework in docs/CAMPAIGN.md §6. Only Wardens mission 1, *Hands Off*, is built |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
 | **Spectate** | Watch the AI play itself (`#spectate`, `src/ui/SpectateView.tsx`, logic in `src/game/spectate.ts`): a whole match, Blue at the bottom and Red at the top, each side's difficulty set apart (Hard by default), for watching unit interactions. Both sides take an opening pack. Each round's battle is fought headless as soon as both have planned, and the next round is planned while it plays (never more than one round ahead), so watching doesn't wait. Every round starts at 1×, as in Play. The sidebar logs what each side bought, shows the result with MVPs and every squad's stats, and lists past rounds to watch again. Auto-advance counts down 3, 2, 1 after a battle (on the field and the Next round button); New match sits beside Next round. Hovering a unit shows its card. **Copy round** copies the battle's exact setup (armies, upgrades, Keep levels, seed) as JSON, to reproduce it in a script. Once opened it stays mounted, like Play, so a Codex link doesn't lose the match |
@@ -617,7 +647,7 @@ src/ui/      React views
 - **Determinism is load-bearing.** The same armies with the same seed and the same data always produce the same battle.
   Replays, the AI, the Counters tab and tests all depend on this. Playback speed never changes the outcome; the renderer interpolates models and projectiles between the last two ticks so motion stays smooth at any speed.
 - The roster lives in `src/data/units.ts`. There is no in-app editor: unit changes are made in code, by request.
-- The app is static (GitHub Pages): no storage, no analytics. Single-player makes no network calls. PvP (section 10, Play a
+- The app is static (GitHub Pages): no analytics, and the only things stored are story progress and the love letter's flag, in `localStorage`. Single-player makes no network calls. PvP (section 10, Play a
   friend) talks only to the owner's relay, and only after a player starts or joins a match.
 
 ## 12. Roadmap
@@ -634,7 +664,8 @@ Rough priority order. Everything is open to reshuffling.
    winning board from a campaign finale as the Drill Book's last page.
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
-6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary.
+6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary. The owner's plan: cast
+   between rounds on no-man's land. Terrain patches (section 3) are the first step: a spell could add one.
 7. **Pathfinding and formations:** move around obstacles, and keep squads together.
 8. **AI improvements** (section 9).
 9. **More elements** (Earth, Poison), only if the complexity budget allows (section 6).
