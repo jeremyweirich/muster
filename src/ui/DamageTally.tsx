@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { RULES } from "../data/rules";
 import type { Side } from "../sim/types";
 
@@ -33,7 +33,6 @@ export function DamageTally({
   onDone: () => void;
 }) {
   const orbs = useRef<(HTMLDivElement | null)[]>([]);
-  const [box, setBox] = useState<DOMRect | null>(null);
   const done = useRef(onDone);
   done.current = onDone;
   const land = useRef(onLand);
@@ -43,7 +42,6 @@ export function DamageTally({
     const canvas = field();
     if (!canvas) return done.current();
     const rect = canvas.getBoundingClientRect();
-    setBox(rect);
     const { gap, total } = tallyTimes(strikes.length);
     const anims: Animation[] = [];
     let landed = 0;
@@ -80,6 +78,7 @@ export function DamageTally({
     };
   }, [strikes]);
 
+  // any key, click or tap skips it
   useEffect(() => {
     const onKey = () => done.current();
     window.addEventListener("keydown", onKey);
@@ -87,15 +86,7 @@ export function DamageTally({
   }, []);
 
   return (
-    <div className="tally" aria-live="polite">
-      {box && (
-        <div className="tally-caption" style={{ left: box.left + box.width / 2, top: box.top + 10 }}>
-          Every squad still standing hits the other side&apos;s HP. Keeps don&apos;t count.
-          <button className="small-btn" onClick={() => done.current()}>
-            Skip
-          </button>
-        </div>
-      )}
+    <div className="tally" onPointerDown={() => done.current()}>
       {strikes.map((s, i) => (
         <div
           key={i}

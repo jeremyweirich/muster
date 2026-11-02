@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { OPENING_PACKS } from "../data/openings";
 import { FACTIONS, factionOf } from "../data/roles";
 import { deployZone, RULES } from "../data/rules";
@@ -832,14 +832,13 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     match.towerLevels[0].filter((l) => (towerUpgradePrice(l) ?? Infinity) <= match.supply[0]).length +
     myArmy.filter((sq) => canPromote(sq) && promotePrice(defs.get(sq.defId)!) <= match.supply[0]).length;
   const promotable = myArmy.filter(canPromote);
-  const promoteAll = promotable.length > 1
-    ? {
-        count: promotable.length,
-        price: promotable.reduce((n, sq) => n + promotePrice(defs.get(sq.defId)!), 0),
-        cheapest: Math.min(...promotable.map((sq) => promotePrice(defs.get(sq.defId)!))),
-        onClick: () => promoteSquads(promotable),
-      }
-    : undefined;
+  // Promote all is per unit type: the squads of one unit, when more than one has a level waiting
+  const promoteAll = (defId: string): PromoteAll | undefined => {
+    const squads = promotable.filter((sq) => sq.defId === defId);
+    if (squads.length < 2) return undefined;
+    const price = promotePrice(defs.get(defId)!);
+    return { count: squads.length, price: price * squads.length, cheapest: price, onClick: () => promoteSquads(squads) };
+  };
 
   const upgradeAction = (def: UnitDef) => (upId: string) => {
     if (card?.side !== 0 || !deploying || def.structure) return null;
@@ -944,7 +943,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         rival={focus.side === 1 ? (pvp ? "Your friend's" : "Enemy's") : undefined}
         extra={
           squad && focus.side === 0 && canPromote(squad) && !heldSquad ? (
-            <Veterancy squad={squad} canBuy={focus.side === 0} price={promotePrice(base!)} supply={match.supply[0]} onPromote={() => promote(squad)} promoteAll={promoteAll} />
+            <Veterancy squad={squad} canBuy={focus.side === 0} price={promotePrice(base!)} supply={match.supply[0]} onPromote={() => promote(squad)} promoteAll={promoteAll(squad.defId)} />
           ) : null
         }
         buy={
@@ -981,7 +980,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         price={promotePrice(defs.get(card.squad.defId)!)}
         supply={match.supply[0]}
         onPromote={() => promote(card.squad!)}
-        promoteAll={promoteAll}
+        promoteAll={promoteAll(card.squad.defId)}
       />
     )}
     <UnitInfo
@@ -1395,7 +1394,7 @@ async function goLandscape() {
   }
 }
 
-// Promote every veteran at once, while supply lasts. Only offered when more than one squad has a level waiting.
+// Promote every veteran of one unit at once, while supply lasts. Only offered when more than one of its squads has a level waiting.
 interface PromoteAll {
   count: number;
   price: number;
@@ -1403,7 +1402,8 @@ interface PromoteAll {
   onClick: () => void;
 }
 
-function PromoteAllButton({ all, supply }: { all: PromoteAll; supply: number }) {
+// In the Promotions list, `def` shows which unit it promotes.
+function PromoteAllButton({ all, supply, def }: { all: PromoteAll; supply: number; def?: UnitDef }) {
   return (
     <button
       className="small-btn promote-btn"
@@ -1411,7 +1411,14 @@ function PromoteAllButton({ all, supply }: { all: PromoteAll; supply: number }) 
       title={all.price > supply ? "Promotes as many as you can afford" : undefined}
       onClick={all.onClick}
     >
-      Promote all {all.count} · {all.price}
+      {def ? (
+        <>
+          <Swatch def={def} size={14} /> Promote all {def.name} ×{all.count}
+        </>
+      ) : (
+        `Promote all ${all.count}`
+      )}{" "}
+      · {all.price}
     </button>
   );
 }
@@ -1474,23 +1481,27 @@ function PromotionPanel({
   supply: number;
   onPromote: (sq: PlacedSquad) => void;
   onHover: (sq: PlacedSquad | null) => void;
-  promoteAll?: PromoteAll;
+  promoteAll: (defId: string) => PromoteAll | undefined;
 }) {
   if (!squads.length) return null;
+  // grouped by unit, each group led by its Promote all
+  const order = [...new Set(squads.map((sq) => sq.defId))];
+  const grouped = [...squads].sort((a, b) => order.indexOf(a.defId) - order.indexOf(b.defId));
   return (
     <div className="promotions">
       <div className="promo-note small">
         Veterans who earned a level. A promotion costs <b>half a new squad</b> and adds as much HP and damage as a whole new one: the cheapest
         way to grow your army.
       </div>
-      {promoteAll && <PromoteAllButton all={promoteAll} supply={supply} />}
-      {squads.map((sq) => {
+      {grouped.map((sq, i) => {
         const def = defs.get(sq.defId)!;
         const price = promotePrice(def);
         const level = sq.level ?? 1;
+        const all = grouped[i - 1]?.defId !== sq.defId ? promoteAll(sq.defId) : undefined;
         return (
+          <Fragment key={sq.uid}>
+          {all && <PromoteAllButton all={all} supply={supply} def={def} />}
           <button
-            key={sq.uid}
             className={`up-btn ${price <= supply ? "can-buy" : ""}`}
             disabled={price > supply}
             onClick={() => onPromote(sq)}
@@ -1507,6 +1518,7 @@ function PromotionPanel({
               ×{level + 1} HP and damage · a new squad costs {def.cost}
             </span>
           </button>
+          </Fragment>
         );
       })}
     </div>

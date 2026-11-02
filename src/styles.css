@@ -426,7 +426,6 @@ code {
   position: fixed;
   inset: 0;
   z-index: 15;
-  pointer-events: none;
 }
 .tally-orb {
   position: fixed;
@@ -449,22 +448,6 @@ code {
 }
 .tally-orb-1 {
   border-color: var(--red);
-}
-.tally-caption {
-  position: fixed;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px 6px 12px;
-  border-radius: 8px;
-  background: rgba(10, 14, 18, 0.88);
-  border: 1px solid var(--border);
-  color: #e8d48a;
-  font-weight: 600;
-  width: max-content;
-  max-width: 90vw;
-  pointer-events: auto;
 }
 
 /* while placing: what a click on the field does, and how to stop */
@@ -1306,6 +1289,9 @@ a.reason:hover {
 }
 .promotions > .promote-btn {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 .promote-btn:not(:disabled) {
   border-color: #f5c542;
@@ -2069,8 +2055,12 @@ button.primary.warn-btn {
   grid-template-columns: 1fr 1fr;
   gap: 5px;
 }
-.sheet .promotions > .promo-note {
+.sheet .promotions > .promo-note,
+.sheet .promotions > .promote-btn {
   grid-column: span 2;
+}
+.sheet .promotions > .promote-btn {
+  justify-self: start;
 }
 .sheet .game-opts {
   justify-content: flex-start;

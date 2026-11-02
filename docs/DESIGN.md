@@ -54,7 +54,8 @@ Round N
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
       ├─ shown, not explained: the battle's last frame stays up while each surviving squad flies its damage to the
-      │  other side's HP bar, smallest first (DamageTally.tsx). Keeps fly nothing, because they don't count
+      │  other side's HP bar, smallest first (DamageTally.tsx), with no caption. Keeps fly nothing, because they
+      │  don't count. Any key, click or tap skips it
       ├─ every squad gains XP = damage dealt + healing done; enough XP unlocks a level (section 5c)
       ├─ every unit is restored for the next round (armies are permanent; battles are not)
       └─ battle report and replay
@@ -351,8 +352,9 @@ make it stronger.
 - **Promoting.** An unlocked level does nothing until you pay for it. At deployment, a squad with a level waiting shows
   a gold chevron above it. Click the squad, use its card, or use the Promotions list in the Upgrades tab. Each
   promotion costs half the unit's base price (`promotePrice`), a reward for the work of earning it. Undo reverses it.
-  When more than one squad has a level waiting, a **Promote all** button sits next to the card's Promote button and at
-  the top of the Promotions list. It promotes them in order while supply lasts, and one undo reverses the lot.
+  **Promote all** works per unit type: when more than one squad of a unit has a level waiting, a Promote all button sits
+  next to that unit's card Promote button and leads that unit's group in the Promotions list. It promotes only that
+  unit's squads, in order while supply lasts, and one undo reverses the lot.
 - **Effect:** a level-N squad has N× the base HP, attack damage, healing, regeneration and trait damage (on-death,
   periodic, retaliation, on-kill). Speed, range, cooldowns, statuses and surfaces don't change. Upgrades apply first,
   then the level.
