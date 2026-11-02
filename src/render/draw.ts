@@ -488,6 +488,19 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
       ctx.fillStyle = "rgba(220,247,255,0.7)";
       ctx.fill();
     }
+    if (st.snared !== undefined) {
+      // sticky strands across the token: held in place
+      ctx.strokeStyle = "rgba(164,198,57,0.9)";
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      for (const a of [0.4, 1.45, 2.5]) {
+        const c = Math.cos(a) * r * 1.1;
+        const s = Math.sin(a) * r * 1.1;
+        ctx.moveTo(px - c, py - s);
+        ctx.lineTo(px + c, py + s);
+      }
+      ctx.stroke();
+    }
     let n = 0;
     for (const id of STATUS_IDS) {
       if (st[id] === undefined || id === "frozen") continue;
@@ -619,6 +632,7 @@ interface LiveFx {
 const FX_LIFE: Record<Fx["kind"], number> = { beam: 0.2, burst: 0.35, text: 1.1, death: 0.5, heal: 0.6, aura: 0.9, slash: 0.2 };
 const AURA_RED = "255,70,50";
 const BIG_TEXT_LIFE = 2.5;
+const TONGUE_LIFE = 0.32; // out and back: long enough to see the lick
 
 export class FxLayer {
   items: LiveFx[] = [];
@@ -630,7 +644,8 @@ export class FxLayer {
       const fx = flip ? flipFx(raw, battle.rules.fieldW, battle.rules.fieldH) : raw;
       // keep reaction labels from piling up on top of each other
       if (fx.kind === "text" && this.items.some((i) => i.fx.kind === "text" && i.fx.text === fx.text && i.age < 0.3 && Math.hypot((i.fx as typeof fx).x - fx.x, (i.fx as typeof fx).y - fx.y) < 2)) continue;
-      this.items.push({ fx, age: 0, life: fx.kind === "text" && fx.big ? BIG_TEXT_LIFE : FX_LIFE[fx.kind] });
+      const life = fx.kind === "text" && fx.big ? BIG_TEXT_LIFE : fx.kind === "beam" && fx.look === "tongue" ? TONGUE_LIFE : FX_LIFE[fx.kind];
+      this.items.push({ fx, age: 0, life });
       this.spark(fx);
     }
     battle.fx.length = 0;
@@ -779,6 +794,42 @@ export class FxLayer {
 
 type BeamFx = Extract<Fx, { kind: "beam" }>;
 
+// A toad's tongue: shoots out fast, snaps back slower, with a sticky tip. Solid, not glowing, and no fade.
+function drawTongue(ctx: CanvasRenderingContext2D, fx: BeamFx, tile: number, k: number) {
+  const t = 1 - k;
+  const reach = t < 0.3 ? t / 0.3 : Math.max(0, 1 - (t - 0.3) / 0.7);
+  const x1 = fx.x1 * tile;
+  const y1 = fx.y1 * tile;
+  const x2 = x1 + (fx.x2 * tile - x1) * reach;
+  const y2 = y1 + (fx.y2 * tile - y1) * reach;
+  const w = Math.max(2, (fx.width ?? 2.5) * 0.9);
+  const line = () => {
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+  };
+  ctx.lineCap = "round";
+  if (fx.side !== undefined) {
+    ctx.strokeStyle = SIDE_COLORS[fx.side];
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = w + 3.5;
+    line();
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = "#8c2f4a";
+  ctx.lineWidth = w + 1.4;
+  line();
+  ctx.strokeStyle = "#e8708f";
+  ctx.lineWidth = w;
+  line();
+  ctx.fillStyle = "#f6a5b8";
+  ctx.beginPath();
+  ctx.arc(x2, y2, w * 0.95, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineCap = "butt";
+}
+
 function flipFx(fx: Fx, w: number, h: number): Fx {
   switch (fx.kind) {
     case "beam":
@@ -793,6 +844,7 @@ function flipFx(fx: Fx, w: number, h: number): Fx {
 // Lightning crackles (its path re-forks every few frames), fire pours out as a widening stream of flame, anything else
 // is a straight glowing line. All have a team-colored glow underneath.
 function drawBeam(ctx: CanvasRenderingContext2D, fx: BeamFx, tile: number, k: number, age: number) {
+  if (fx.look === "tongue") return drawTongue(ctx, fx, tile, k);
   const w = fx.width ?? 2.5;
   const el = elementOfColor(fx.color);
   const x1 = fx.x1 * tile;

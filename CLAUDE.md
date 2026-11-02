@@ -57,12 +57,15 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - Elements: an element's own creatures **resist** it mildly (0.3) and are never immune. Weaknesses stay as they are.
 - Target preferences (`prefers`, towers-first, highest/lowest HP) are **local**: they only choose among enemies within
   attack range + `RULES.preferReach`. Never make a unit cross the field for a preferred target.
-- No independents rebalance for now. Their purpose: any faction can use them to cover its holes, but they cost more to
-  unlock and are less cost-efficient than a faction's own answer.
+- Independents: any faction can use them to cover its holes, but they cost more to unlock and are less cost-efficient
+  than a faction's own answer. Each patches named holes (DESIGN.md §8). Their flavor can be a little weird (the owner
+  loves the Bog Toad Riders), and the owner wants **fewer archers**: give new units a fresh attack style, not another
+  plain projectile.
 - Faction feel: the **Wardens** (formerly the Kingdom) are the most straightforward faction (plain stat upgrades).
   **Elementals** are the most complex to play (combos). Goblins sit between them. This is about feel, not power:
   balance is per unit (see "Where things stand").
-- **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed) and do
+- **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed; Snared
+  only from the Toad Riders' Gulp) and do
   **not** create surfaces. Surfaces come only from specific upgrades. Don't add new statuses, surfaces or elements
   without the owner agreeing.
 - Speed is in points: 10 = 1 tile/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
@@ -105,7 +108,12 @@ npm run bench         # simulator speed, plus a fingerprint of every outcome (do
 npm run ai-duel -- snapshot | run   # judge an AI change in full AI-vs-AI matches against a saved baseline
 npm run relay         # local PvP relay for `npm run dev` (docs/MULTIPLAYER.md); deploy the real one from relay/
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
+npx tsx scripts/faction-holes.ts <csv>   # each faction's best answer to every unit, from `balance -- matrix --csv`
 ```
+
+**Playtesting rounds:** when the owner asks for "a round of playtesting against Hard", follow `docs/PLAYTESTING.md`
+(goal and hypothesis, pure-faction matches, reading the AI, writing `docs/PLAYTEST-YYYY-MM-DD.md`). Smooth the tooling
+as you go and note the change there.
 
 **npm note:** npm 10 (the version bundled with Node 22) crashes resolving vitest 4's optional peer dependencies
 ("Cannot read properties of null (reading 'edgesOut')"). To **change dependencies**, use `npx -y npm@11 install …`.
@@ -149,8 +157,13 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   throw spears; role `skirmisher`). Lean that way when designing new units.
 - Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
   sideways (about 844 × 390).
-- Faction bonuses are designed but not built (DESIGN.md §8). Independents cover a faction's holes at a higher unlock
-  cost and lower efficiency; they haven't been rebalanced yet.
+- Faction bonuses are designed but not built (DESIGN.md §8).
+- **Independents pass (Nov 2, 2026):** five matches against Hard (`docs/PLAYTEST-2026-11-02.md`) found the missing role
+  was anti-medium (the goblins and elementals both lack it), and that the goblins' worst hole is the air. New
+  independent: **Bog Toad Riders** (tongue-lash beam, hits air, ×1.8 against medium; Spit Bile makes them chaff clear,
+  Gulp **Snares**, a new status that lets melee hit a held flier). The Giant got smaller, faster boulders and less HP;
+  the Dragon traded HP for damage. Open: Ballista parks behind chaff took 0 damage for three rounds, the Dragon is too
+  broad in one-unit fights, and Gulp + Trolls against a real Dragon hasn't been tried in a full match.
 - **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Mission 1's
   punch ("archers one-shot grunts") no longer matches the roster. Parked idea to keep: the campaign finale's last
   Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't

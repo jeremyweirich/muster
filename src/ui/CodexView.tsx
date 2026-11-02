@@ -29,6 +29,7 @@ const STATUS_INFO: Record<string, string> = {
   shocked: "A flicker of stun from lightning.",
   oiled: "Covered in oil. Fire or lightning ignites it for a burst of extra fire damage.",
   dazed: "Shaken. When a Keep falls its whole army is Dazed, and a few attacks daze whatever they hit.",
+  snared: "Stuck fast, by a toad's tongue for one. A Snared flier is held so low that even swords and claws can reach it.",
 };
 
 const SURFACE_INFO: Record<string, string> = {
@@ -46,7 +47,8 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 function statusSummary(s: StatusDef): string {
   const bits: string[] = [];
   if (s.stun) bits.push("can't move or attack");
-  if (s.moveMult) bits.push(`moves at ${pct(s.moveMult)} speed`);
+  if (s.moveMult !== undefined) bits.push(s.moveMult === 0 ? "can't move" : `moves at ${pct(s.moveMult)} speed`);
+  if (s.grounded) bits.push("and a flier can be hit by attacks that only reach the ground");
   if (s.attackMult) bits.push(`attacks at ${pct(s.attackMult)} speed`);
   if (s.dps) bits.push(`takes ${s.dps.amount} ${s.dps.element} damage a second`);
   if (s.damageDealtMult !== undefined) bits.push(`deals only ${pct(s.damageDealtMult)} damage`);

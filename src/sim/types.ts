@@ -7,7 +7,7 @@ export const ELEMENTS: Element[] = ["physical", "fire", "water", "frost", "light
 export type Layer = "ground" | "air";
 export type Side = 0 | 1; // 0 = player (bottom), 1 = enemy (top)
 
-export type StatusId = "wet" | "burning" | "chilled" | "frozen" | "shocked" | "oiled" | "dazed";
+export type StatusId = "wet" | "burning" | "chilled" | "frozen" | "shocked" | "oiled" | "dazed" | "snared";
 export type SurfaceId = "puddle" | "fire" | "ice" | "shockwater" | "steam" | "oil";
 
 // ---------------------------------------------------------------------------
@@ -142,6 +142,7 @@ export interface UpgradeDef {
 export type Shape = "circle" | "square" | "triangle" | "diamond" | "hex";
 // How a unit's projectiles are drawn. Unset: by element (fireball, water blob, ice shard, spark; arrows for physical).
 export type ProjectileLook = "arrow" | "bolt" | "javelin" | "boulder" | "hail";
+export type BeamLook = "tongue"; // a beam drawn as something other than its element (default: lightning, flame or a glowing line)
 
 export interface UnitDef {
   id: string;
@@ -161,7 +162,7 @@ export interface UnitDef {
   attack?: AttackDef;
   traits?: TraitDef[];
   tags: string[];
-  look: { shape: Shape; color: string; icon?: string; glyph?: string; projectile?: ProjectileLook }; // icon: an id from src/render/icons.ts; glyph: emoji fallback
+  look: { shape: Shape; color: string; icon?: string; glyph?: string; projectile?: ProjectileLook; beam?: BeamLook }; // icon: an id from src/render/icons.ts; glyph: emoji fallback
   structure?: boolean; // towers: never move, don't count toward winning the battle
   level?: number; // set by levelDef for promoted squads (absent = level 1), and by towerDef for upgraded towers (from 1)
   upgrades?: UpgradeDef[]; // four per unit; prices come from RULES.upgradeCosts, in buy order
@@ -182,6 +183,7 @@ export interface StatusDef {
   dps?: { amount: number; element: Element };
   damageDealtMult?: number; // multiplies the unit's outgoing attack damage
   damageTakenMult?: number;
+  grounded?: boolean; // a flier with it can be hit by attacks that only reach the ground (Snared)
 }
 
 export interface SurfaceDef {

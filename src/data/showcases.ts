@@ -38,4 +38,5 @@ export const SHOWCASES: Record<string, Showcase> = {
   // Independents
   dragon: { vs: ["pikemen", "pikemen", "pikemen"], caption: "Fire splashes the ranks from the air, where pikes can't reach." },
   giant: { vs: ["grunts", "grunts", "grunts", "grunts"], caption: "Boulders land on the mob and flatten goblins by the handful." },
+  toad_riders: { vs: ["griffon_riders"], caption: "Sticky tongues snatch fliers out of the air, and medium units taste best: the Griffons never land a spear." },
 };

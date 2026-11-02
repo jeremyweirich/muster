@@ -7,6 +7,7 @@ import { matches } from "./selectors";
 import { SurfaceGrid } from "./surfaces";
 import type {
   AttackDef,
+  BeamLook,
   Effect,
   Element,
   Layer,
@@ -117,7 +118,7 @@ export interface Projectile {
 }
 
 export type Fx =
-  | { kind: "beam"; x1: number; y1: number; x2: number; y2: number; color: string; side?: Side; width?: number }
+  | { kind: "beam"; x1: number; y1: number; x2: number; y2: number; color: string; side?: Side; width?: number; look?: BeamLook }
   | { kind: "burst"; x: number; y: number; r: number; color: string }
   | { kind: "heal"; x: number; y: number; r: number }
   | { kind: "aura"; x: number; y: number; r: number }
@@ -515,6 +516,12 @@ export class Battle {
     return false;
   }
 
+  private isGrounded(m: Model): boolean {
+    if (!anyStatus(m)) return false;
+    for (const id of STATUS_IDS) if (m.statuses[id] !== undefined && STATUSES[id].grounded) return true;
+    return false;
+  }
+
   private statusMult(m: Model, key: keyof Pick<StatusDef, "moveMult" | "attackMult" | "damageDealtMult" | "damageTakenMult">): number {
     let mult = 1;
     if (!anyStatus(m)) return mult;
@@ -529,7 +536,8 @@ export class Battle {
   private canTarget(atk: AttackDef | undefined, t: Model): boolean {
     if (!t.alive) return false;
     if (t.ambush && this.time > t.revealedUntil) return false;
-    if (atk && !atk.targets.includes(t.def.layer)) return false;
+    // a Snared flier is held low enough for anything that hits the ground to reach it
+    if (atk && !atk.targets.includes(t.def.layer) && !(atk.targets.includes("ground") && this.isGrounded(t))) return false;
     if (atk && atk.range > RANGED && t.def.layer === "ground") {
       const s = this.surfaces.at(t.x, t.y);
       if (s && SURFACES[s].blocksRanged) return false;
@@ -676,7 +684,7 @@ export class Battle {
       return;
     }
     if (atk.delivery === "beam") {
-      this.emit({ kind: "beam", x1: m.x, y1: m.y, x2: target.x, y2: target.y, color: ELEMENT_COLORS[atk.element], side: m.side, width: beamWidth(atk.damage * src.dmgMult) });
+      this.emit({ kind: "beam", x1: m.x, y1: m.y, x2: target.x, y2: target.y, color: ELEMENT_COLORS[atk.element], side: m.side, width: beamWidth(atk.damage * src.dmgMult), look: m.def.look.beam });
     } else {
       this.emit({ kind: "slash", x: target.x, y: target.y, angle: m.facing, color: ELEMENT_COLORS[atk.element], size: Math.max(0.35, target.def.size + 0.15) });
     }

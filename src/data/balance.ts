@@ -261,7 +261,21 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
 
   // ------------------------------------------------------------------ Independents
   // Anyone can field them, and they cover a faction's holes, but they cost more to unlock and are less
-  // cost-efficient than a faction's own answer. Not rebalanced yet.
+  // cost-efficient than a faction's own answer. Each one patches particular holes (docs/PLAYTEST-2026-11-02.md):
+  // the Giant is splash artillery (the Wardens have no splash, the goblins no range), the Toad Riders are the anti-medium
+  // the goblins and elementals lack (and real anti-air for the goblins), and the Dragon is the late-game flier.
+  toad_riders: {
+    role: "antiMedium",
+    analogue: "", // a mounted anti-medium that hits air (no exact match); Spit Bile turns it into Mustang
+    upgrades: {
+      fat_toads: { intent: "Deeper anti-medium: fewer licks per kill" },
+      spit_bile: { intent: "Mustang: splashing bile clears flocks and swarms, in the air too", role: "chaffClear", beats: ["cloudlings", "skirmishers"] },
+      // its Dragon half needs melee beside it: `fight "toad_riders,troll*2" dragon --upsA toad_riders:gulp` goes from
+      // 0% to 100%. It doesn't flip Wolf Riders: twenty ×5 javelins land before the snares matter (Rhino beats shooters)
+      gulp: { intent: "Hold melee at tongue's length, and pull fliers down for your own melee (with Trolls, the goblins' answer to the Dragon)", beats: ["knights"] },
+      long_tongues: { intent: "Outreach the casters", beats: ["fire_elemental"] },
+    },
+  },
   dragon: {
     role: "lateGame",
     analogue: "Overlord",
@@ -348,7 +362,7 @@ export const RELATIONS: [string, string, string][] = [
   ["frost_elemental", "dragon", "the cold sinks in, and it hits fliers"],
   ["pikemen", "stone_golem", "×3.5 against huge"],
   ["pikemen", "ogre_brute", "×3.5 against large"],
-  ["pikemen", "giant", "×3.5 against huge"],
+  ["giant", "pikemen", "boulders through the packed ranks before the pikes arrive"],
   ["pikemen", "troll", "×3.5 against large, and many bodies to waste its rage"],
 
   // Tanks hold the line and kill what reaches them.
@@ -387,6 +401,19 @@ export const RELATIONS: [string, string, string][] = [
   ["dragon", "cloudlings", "splash, in the air"],
   ["dragon", "troll", "it can't hit fliers"],
   ["dragon", "stone_golem", "it can't hit fliers"],
+
+  // Bog Toad Riders: medium units and fliers are their prey, swarms and pikes their problem, and the Wardens' own
+  // Crossbowmen do the job better.
+  ["wolf_riders", "toad_riders", "they get there first"],
+  ["toad_riders", "griffon_riders", "tongues that snatch fliers"],
+  ["toad_riders", "giant_bats", "tongues that snatch fliers"],
+  ["toad_riders", "air_elemental", "they outreach the lightning"],
+  ["pikemen", "toad_riders", "×3.5 against cavalry"],
+  ["grunts", "toad_riders", "one goblin per lick, and there are always more"],
+  ["skirmishers", "toad_riders", "too many bodies for a few tongues"],
+  ["cloudlings", "toad_riders", "a flock the tongues can't thin"],
+  ["crossbowmen", "toad_riders", "they outrange them, and bolts punch through"],
+  ["stone_golem", "toad_riders", "a titan too big to swallow"],
 ];
 
 export const beatsOf = (id: string) => RELATIONS.filter(([a]) => a === id).map(([, b]) => b);

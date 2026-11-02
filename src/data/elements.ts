@@ -47,6 +47,8 @@ export const STATUSES: Record<StatusId, StatusDef> = {
     damageDealtMult: 0.1,
     damageTakenMult: 2,
   },
+  // held in place by something sticky; a snared flier is pulled low enough for ground attacks to reach (Toad Gulp)
+  snared: { id: "snared", name: "Snared", element: null, duration: 2.5, color: "#a4c639", moveMult: 0, grounded: true },
 };
 
 export const SURFACES: Record<SurfaceId, SurfaceDef> = {

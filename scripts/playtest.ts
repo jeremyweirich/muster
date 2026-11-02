@@ -1,9 +1,11 @@
 // Headless Common Ground: play a full match against the real AI from the command line, one round per call.
 // The AI plans with the same call PlayView uses, so this is the real game minus the canvas.
+// How to run a playtesting round with it, and how the AI plays: docs/PLAYTESTING.md.
 // Usage:
 //   npm run playtest -- new <name> [seed] [easy|normal|hard] [0|1|2|flat]
-//   npm run playtest -- show <name>
-//   npm run playtest -- play <name> '<plan json>'
+//   npm run playtest -- show <name>                the field, its legend and the shop state
+//   npm run playtest -- play <name> '<plan json>'  fight a round: its report, then next round's state (no field map)
+//   npm run playtest -- log <name> [n]             reprint the last n round reports (default: all)
 // Plan (every key optional):
 //   opening: 0 | 1 | 2 | "flat"                      round 1 only: an offered pack by position, or the war chest (default 0)
 //   promote: ["all" | uid suffix]                    paid first
@@ -43,12 +45,13 @@ const short = (uid: string) => uid.slice(-3);
 const nm = (id: string) => defs.get(id)?.name ?? id;
 
 // `hideAi`: round 1 hides the AI's opening pack until you fight, as the game does.
-function grid(state: MatchState, hideAi = false): string {
+function grid(state: MatchState, hideAi = false, field = true): string {
   const g: string[][] = Array.from({ length: RULES.fieldH }, () => Array(RULES.fieldW).fill("."));
   const legend: string[] = [];
   let ch = 0;
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (const side of [1, 0] as const) {
+    ch = 0; // letters per side: uppercase is me, lowercase the AI
     for (const t of towerPlacements(side)) for (let y = t.y; y < t.y + 2; y++) for (let x = t.x; x < t.x + 2; x++) g[y][x] = "#";
     for (const sq of side === 1 && hideAi ? [] : state.armies[side]) {
       const d = defs.get(sq.defId)!;
@@ -61,10 +64,10 @@ function grid(state: MatchState, hideAi = false): string {
   }
   const head = "   " + Array.from({ length: RULES.fieldW }, (_, i) => (i % 10 === 0 ? String(i / 10) : " ")).join("");
   const rows = g.map((r, y) => String(y).padStart(2) + " " + r.join(""));
-  return [head, ...rows, legend.join("\n")].join("\n");
+  return [...(field ? [head, ...rows] : []), legend.join("\n")].join("\n");
 }
 
-function show(s: Saved) {
+function show(s: Saved, field = true) {
   const st = s.state;
   const lines: string[] = [];
   lines.push(`ROUND ${st.round}  HP me ${st.hp[0]} / ai ${st.hp[1]}   supply me ${st.supply[0]}  (ai ${st.round === 1 ? "?" : st.supply[1]})   phase ${st.phase}`);
@@ -78,7 +81,7 @@ function show(s: Saved) {
     lines.push(`${who} unlocked: ${hidden ? "?" : st.unlocked[side].join(", ")}`);
     lines.push(`${who} upgrades: ${ups || "-"}   towers: ${st.towerLevels[side].join("/")}`);
   }
-  lines.push(grid(st, st.round === 1));
+  lines.push(grid(st, st.round === 1, field));
   console.log(lines.join("\n"));
 }
 
@@ -185,7 +188,12 @@ function cmdPlay(name: string, plan: Plan) {
       if (!placed.length) throw new Error(`no room for ${b.u}`);
       sq = placed[0];
     } else {
-      if (!canPlace(d, b.x, b.y!, 0, army, defs, undefined, b.rot)) throw new Error(`can't place ${b.u} at ${b.x},${b.y}${b.rot ? "r" : ""}`);
+      if (!canPlace(d, b.x, b.y!, 0, army, defs, undefined, b.rot)) {
+        // show my deploy rows as they stand (squads bought so far this round included), so the next try can aim
+        const rows = grid({ ...st, armies: [army, st.armies[1]] }, true).split("\n").slice(RULES.fieldH - RULES.deployDepth + 1, RULES.fieldH + 1);
+        const { w, h } = footprintOf(d, b.rot);
+        throw new Error(`can't place ${b.u} (${w}x${h}) at ${b.x},${b.y}${b.rot ? "r" : ""}; my rows now (# = Keep):\n${rows.join("\n")}`);
+      }
       sq = { uid: `p${st.round}${army.length}${Math.floor(rng.next() * 1e6)}`, defId: b.u, x: b.x, y: b.y!, rot: b.rot || undefined, round: st.round };
     }
     army.push(sq);
@@ -245,11 +253,12 @@ function cmdPlay(name: string, plan: Plan) {
   }
   save(name, s);
   console.log(out.join("\n"));
-  if (s.state.phase === "deploy") { console.log(""); show(s); }
+  if (s.state.phase === "deploy") { console.log(""); show(s, false); }
 }
 
 const [cmd, name, ...rest] = process.argv.slice(2);
 if (cmd === "new") cmdNew(name, Number(rest[0] ?? 1), (rest[1] as Difficulty) ?? "hard", rest[2] === undefined ? undefined : rest[2] === "flat" ? "flat" : Number(rest[2]));
 else if (cmd === "show") show(load(name));
+else if (cmd === "log") console.log(load(name).log.slice(-(Number(rest[0]) || Infinity)).join("\n\n"));
 else if (cmd === "play") cmdPlay(name, JSON.parse(rest[0] ?? "{}"));
-else console.log("usage: new <name> [seed] [difficulty] [0|1|2|flat] | show <name> | play <name> '<plan json>'");
+else console.log("usage: new <name> [seed] [difficulty] [0|1|2|flat] | show <name> | play <name> '<plan json>' | log <name> [n]");

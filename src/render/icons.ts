@@ -56,6 +56,19 @@ export const ICONS = {
       { d: "M17 17 L17 20.4 M17 17 L20.4 17 M15.4 15.4 L15.4 18.8 M15.4 15.4 L18.8 15.4", w: 1.3 },
     ],
   },
+  // a toad from above, bulging eyes forward: the Bog Toad Riders
+  toad: {
+    fill: [
+      ellipse(12, 15, 6.4, 6),
+      ellipse(12, 9.6, 5.2, 3.6),
+      ellipse(8.4, 6.2, 2.3, 2.3) + " " + ellipse(8.4, 5.8, 0.9, 0.9),
+      ellipse(15.6, 6.2, 2.3, 2.3) + " " + ellipse(15.6, 5.8, 0.9, 0.9),
+      "M6.4 16.5 C2.2 17 1.2 21 3.8 22.4 L8 19.6 Z",
+      "M17.6 16.5 C21.8 17 22.8 21 20.2 22.4 L16 19.6 Z",
+      "M7.6 11.6 L3 10 L3.6 13 Z",
+      "M16.4 11.6 L21 10 L20.4 13 Z",
+    ],
+  },
   crossbow: {
     fill: ["M12 1 L14.6 5.4 H9.4 Z"],
     stroke: [

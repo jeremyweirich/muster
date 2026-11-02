@@ -10,7 +10,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 |---|---|
 | Relationship table | Good enough; Claude refines it |
 | The anti-giant gap | Troll gets Berserk as base (Steel Ball). Griffons get a Phoenix upgrade (*Giant Slayers*). Elementals solve it with frost (the Frost Elemental's cold ramps, Melting Point). Independents are the costly fallback |
-| Independents | Their purpose: any faction can use them to cover its holes, but they cost more to unlock and are less cost-efficient than a faction's own answer. Not rebalanced yet |
+| Independents | Their purpose: any faction can use them to cover its holes, but they cost more to unlock and are less cost-efficient than a faction's own answer. Rebalanced Nov 2, 2026, and a third added: the **Bog Toad Riders**, the anti-medium the goblins and elementals lack (owner loved the pitch; fewer archers, a little weird). Snared is the owner's net idea (`docs/PLAYTEST-2026-11-02.md`) |
 | Upgrades | Capture intent, not numbers: every upgrade has a written intent (`src/data/balance.ts`) |
 | Pikemen | Anti-large, with more models than the shooters |
 | Elven Archers | Became **Crossbowmen**: few models, heavy bolts |
@@ -56,19 +56,24 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Cloudlings | Chaff (Wasp) | 14 per flock, 40 HP, speed 19 |
 | Frost Elemental | Anti-giant (Melting Point) | 200 cost, ramping cold (+25% per hit, up to ×3), frost resist 0.3 (was immune) |
 | Stone Golem | Tank (Fortress) | 300 cost, 3600 HP, 300 damage, speed 9, physical resist 0.4, lightning and fire 0.3 (were immune) |
-| Dragon, Giant | Independents | Fire resist 0.3 (was immune). Giant 400 cost, stats scaled with it. Not rebalanced |
+| Dragon | Late-game power (Overlord), independent | Fire resist 0.3 (was immune). Nov 2: 4200 → 3600 HP, breath 95 → 130 |
+| Giant | Chaff clear (Vulcan), independent | 400 cost. Nov 2: 3200 → 2600 HP, boulders 215 / 3.2 s → 120 / 2.4 s, so its counters work again |
+| Bog Toad Riders | Anti-medium (no exact match; *Spit Bile* → Mustang), independent | New Nov 2: 200 cost, tongue-lash beam, hits air, ×1.8 against medium |
 
 **The starter triangle** follows the cycle: a goblin swarm soaks Crossbow bolts, the bolts punch through Knights, and
 Knights cut down the swarm. The How to Play page says so.
 
 ## 3. Where it stands
 
-`npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the Grunt speed change:
+`npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the independents pass (Nov 2, 2026):
 
-- **82 of 86 relations hold.** Three misses involve the independents (Frost and Pikemen against the Giant; Dragon against
-  the Golem), which aren't rebalanced yet. The only faction miss is Troll against Ogre, an even fight (50%).
-- **33 of 35 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (13%), Fire Elemental
+- **95 of 97 relations hold.** Both misses are even fights (50%): Troll against Ogre, and Frost against the Giant
+  (63% at 16 seeds).
+- **36 of 38 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (13%), Fire Elemental
   *Living Inferno* against Wolf Riders (38%).
+- Nash mix: Crossbowmen 52%, Cloudlings 16%, Dragon 14%, Skirmishers 9%, Grunts 5%, Wolf Riders 3%. The Dragon
+  hard-counters 12 of 20 (mostly ground units that can't hit air); the Toad Riders have no 2:1 counter yet.
+- The rest of this section predates the independents pass.
 - **Fight shape** (`density`, mirrored mixed armies): first contact at 4–6 s (was under 2), fights of 31–42 s (were
   21–36), 58–67% of each army fighting at once (was about 75%). Close to Mechabellum's 40–60 s, but the faster
   armies are still short of it.
