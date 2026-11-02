@@ -3,8 +3,10 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v68)
+## 2 November 2026 (v58–v71)
 
+- **Veterancy comes sooner:** level 2 now takes 2,000 XP (was 2,500), and every later level is cheaper by the same
+  fifth (9,000 / 27,400 / 70,300). The shop shows every unlock price again.
 - **Spectate tab:** watch the AI play itself, a whole match round by round, with what each side bought, the results,
   and any earlier round to watch again.
 - **New independent: Bog Toad Riders.** Swamp folk on giant toads whose sticky tongues lash out, snatch fliers from

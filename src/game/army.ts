@@ -119,16 +119,6 @@ export function unlockPrice(def: UnitDef): number {
   return def.unlockCost ?? 0;
 }
 
-// The unlock price most of these units share: the shop states it once and prices only the units that differ.
-export function usualUnlockPrice(units: UnitDef[]): number {
-  const counts = new Map<number, number>();
-  for (const u of units) counts.set(unlockPrice(u), (counts.get(unlockPrice(u)) ?? 0) + 1);
-  let best = 0;
-  let most = 0;
-  for (const [price, n] of counts) if (n > most) [best, most] = [price, n];
-  return best;
-}
-
 // Total cost of buying `def` given what's already unlocked.
 export function priceOf(def: UnitDef, unlocked: Set<string>): number {
   return def.cost + (RULES.unlocks && !unlocked.has(def.id) ? unlockPrice(def) : 0);

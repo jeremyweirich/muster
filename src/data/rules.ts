@@ -37,13 +37,13 @@ export const RULES: Rules = {
   towerDazeMin: 2,
   toughnessFloor: 0.25, // toughness never takes a hit below a quarter: no unit is immune to chaff
   // Veterancy: total XP (damage dealt + healing) that unlocks level 2, 3, 4, 5. See veterancyXp below.
-  levelXp: veterancyXp(2500, 1.75),
+  levelXp: veterancyXp(2000, 1.75),
 };
 
 // The veterancy XP table from two knobs. `base` is the XP for level 2: a typical battle's MVP deals about 2000, so
-// it usually takes two good fights. `growth` is how many more fights each later level takes than the one before.
+// it takes one great fight or two good ones. `growth` is how many more fights each later level takes than the one before.
 // A level-N squad deals N× damage, so it also earns N× XP; step k is scaled by k to cancel that, or the levels
-// would all take about the same number of fights. With 2500 / 1.75: 2500 / 11,250 / 34,200 / 87,800 total XP, and
+// would all take about the same number of fights. With 2000 / 1.75: 2000 / 9000 / 27,400 / 70,300 total XP, and
 // the last level takes about 5× the fights of the first.
 export function veterancyXp(base: number, growth: number, levels = 4): number[] {
   const out: number[] = [];

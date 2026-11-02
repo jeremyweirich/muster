@@ -6,7 +6,7 @@ import { towerDaze, towerDef, towerPlacements, TOWER_MAP } from "../data/towers"
 import { DEFAULT_UNITS } from "../data/units";
 import { promoted, type AiPlan, type Difficulty } from "../game/ai";
 import type { AiRequest } from "../game/ai.worker";
-import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, usualUnlockPrice, type DefMap } from "../game/army";
+import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
 import { applyRound, applyTurn, battleXp, canPromote, chooseOpening, newMatch, nextRound, outcomeOf, packLabel, promotePrice, survivorDamage, type MatchState, type OpeningChoice, type Turn } from "../game/match";
 import {
   checkTurn,
@@ -230,7 +230,6 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   // You see the enemy as it stood last round: its opening pack, placed in round 1, stays hidden until the battle.
   const enemySeen = match.armies[1].filter((sq) => sq.round < match.round);
   const unlocked = useMemo(() => new Set(match.unlocked[0]), [match.unlocked]);
-  const usualUnlock = useMemo(() => usualUnlockPrice(units), [units]);
   const openingPending = match.round === 1 && match.openings[0].choice === null;
   const isNew = (sq: PlacedSquad) => !RULES.lockPlacedSquads || sq.round === match.round;
   const heldSquad = held ? myArmy.find((s) => s.uid === held) : undefined;
@@ -1185,9 +1184,6 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
             )}
             {sideTab === "recruit" && (
             <div className="recruit">
-              {RULES.unlocks && units.some((u) => !unlocked.has(u.id)) && (
-                <p className="shop-note muted small">🔒 Unlock once per match: {usualUnlock} supply each, unless marked</p>
-              )}
               <div className="shop-list">
                 {FACTIONS.map((f) => {
                   const list = units.filter((u) => factionOf(u.tags) === f.id);
@@ -1217,7 +1213,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
                               </span>
                               {locked ? (
                                 <span className="shop-cost lock" title={`Unlock ${unlockCost}, then ${u.cost} per squad`}>
-                                  🔒{unlockCost !== usualUnlock && ` ${unlockCost}`}
+                                  🔒 {unlockCost}
                                 </span>
                               ) : (
                                 <span className="shop-cost">{u.cost}</span>

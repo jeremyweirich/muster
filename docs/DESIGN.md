@@ -341,11 +341,11 @@ make it stronger.
 
 - **XP** is damage dealt to enemies plus healing done, added up over every battle the squad fights (stored on the
   placed squad). Squads keep their XP between rounds. Leveling doesn't depend on whether the squad survived.
-- **Unlocking a level.** Total XP of 2,500 / 11,250 / 34,200 / 87,800 unlocks level 2 / 3 / 4 / 5 (`RULES.levelXp`).
+- **Unlocking a level.** Total XP of 2,000 / 9,000 / 27,400 / 70,300 unlocks level 2 / 3 / 4 / 5 (`RULES.levelXp`).
   Leveling should feel great but happen rarely, and each level should be much harder than the last. The table comes
   from two knobs, `veterancyXp(base, growth)`:
-  - **base** (2,500) is the XP for level 2. In a typical battle the MVP deals about 2,000, so the first level usually
-    takes two good fights.
+  - **base** (2,000) is the XP for level 2. In a typical battle the MVP deals about 2,000, so the first level takes
+    one great fight or two good ones (it was 2,500 until Nov 2, 2026).
   - **growth** (1.75) is how many more fights each later level takes than the one before. Because a level-N squad deals
     N× damage, it also earns N× XP, so step k is also scaled by k to cancel that. Without that factor, every level
     would take about the same number of fights, which is what the old 1,200 / 4,000 / 9,000 / 16,000 table did. In
