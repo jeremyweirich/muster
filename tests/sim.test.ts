@@ -210,6 +210,30 @@ describe("targeting and self-destruct", () => {
     expect(targets(11)).toEqual(Array(4).fill("crossbowmen")); // just behind the knights
     expect(targets(0)).toEqual(Array(4).fill("knights")); // the far side of the field
   });
+
+  it("a Snared flier can be hit by attacks that only reach the ground", () => {
+    const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${y}`, defId, x, y, round: 1 });
+    const b = new Battle(defs, [[sq("knights", 20, 14)], [sq("giant_bats", 21, 12)]], { seed: 1, towers: false });
+    b.step();
+    const knights = () => b.models.filter((m) => m.def.id === "knights");
+    expect(knights().every((m) => m.targetId < 0)).toBe(true); // knights can't hit fliers
+    for (const m of b.models) if (m.def.id === "giant_bats") m.statuses.snared = 5;
+    for (const m of knights()) m.retarget = 0;
+    b.step();
+    expect(knights().every((m) => b.get(m.targetId)?.def.id === "giant_bats")).toBe(true);
+  });
+
+  it("toughness takes a flat amount off every hit, but a quarter always gets through", () => {
+    const taken = (ups: string[]) => {
+      const b = new Battle([defs, upgradedDefs(defs, { dragon: ups })], [army(0, ["skirmishers"]), army(1, ["dragon"])], { seed: 1, towers: false });
+      for (let i = 0; i < 300; i++) b.step();
+      return b.squads.find((s) => s.def.id === "dragon")!.stats.taken;
+    };
+    const plain = taken([]);
+    expect(plain).toBeGreaterThan(0);
+    // a 12-damage arrow against toughness 15 does the floor, a quarter
+    expect(taken(["ancient_scales"]) / plain).toBeCloseTo(RULES.toughnessFloor, 5);
+  });
 });
 
 describe("rotation and unlocks", () => {
@@ -276,7 +300,8 @@ describe("upgrades", () => {
   it("apply stat mods, effects and traits", () => {
     const dragon = byId("dragon");
     const up = applyUpgrades(dragon, ["inferno", "ancient_scales"]);
-    expect(up.hp).toBe(Math.round(dragon.hp * 1.4));
+    expect(up.toughness).toBe(15);
+    expect(dragon.toughness).toBeUndefined(); // base def untouched
     expect(up.attack!.onHit!.some((e) => e.type === "surface" && e.surface === "fire")).toBe(true);
     expect(dragon.attack!.onHit!.some((e) => e.type === "surface")).toBe(false); // base def untouched
     expect(applyUpgrades(byId("cloudlings"), ["downpour"]).traits!.some((t) => t.type === "periodic")).toBe(true);

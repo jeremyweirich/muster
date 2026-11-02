@@ -35,6 +35,7 @@ export const RULES: Rules = {
   towerDazeBase: 4,
   towerDazePerLevel: 0.5,
   towerDazeMin: 2,
+  toughnessFloor: 0.25, // toughness never takes a hit below a quarter: no unit is immune to chaff
   // Veterancy: total XP (damage dealt + healing) that unlocks level 2, 3, 4, 5. See veterancyXp below.
   levelXp: veterancyXp(2500, 1.75),
 };

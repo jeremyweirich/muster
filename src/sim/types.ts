@@ -108,7 +108,8 @@ export type ModStat =
   | "cooldown"
   | "range"
   | "splash"
-  | "chainCount";
+  | "chainCount"
+  | "toughness";
 
 export interface StatMod {
   stat: ModStat;
@@ -158,6 +159,7 @@ export interface UnitDef {
   spacing?: number; // extra distance kept from allies (tiles); spreads squads out
   size: number; // model radius in tiles
   resist?: Partial<Record<Element, number>>; // 0.3 = takes 30% less, -0.5 = takes 50% more
+  toughness?: number; // every hit it takes is this much lower, after resistance (but RULES.toughnessFloor always gets through)
   immuneStatuses?: StatusId[];
   attack?: AttackDef;
   traits?: TraitDef[];
@@ -265,5 +267,6 @@ export interface Rules {
   towerDazeBase: number; // seconds of Daze when a level-0 tower falls
   towerDazePerLevel: number; // Daze seconds removed per tower level
   towerDazeMin: number;
+  toughnessFloor: number; // share of a hit that always gets through toughness
   levelXp: number[]; // total XP that unlocks level 2, 3, 4...
 }

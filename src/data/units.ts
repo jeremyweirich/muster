@@ -500,7 +500,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "bloodsuckers",
         name: "Bloodsuckers",
-        description: "Heal for 40% of the damage they deal.",
+        description: "Heal for 40% of the damage they deal, and latch onto fliers too.",
+        targets: ["ground", "air"],
         traits: [{ type: "lifesteal", fraction: 0.4 }],
       },
       { id: "savage_claws", name: "Savage Claws", description: "+15% HP and +60% damage.", mods: [{ stat: "hp", mult: 1.15 }, { stat: "damage", mult: 1.6 }] },
@@ -807,7 +808,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 1,
     footprint: { w: 4, h: 4 },
     layer: "air",
-    hp: 3600,
+    hp: 4200,
     speed: 9,
     size: 1.6,
     resist: { fire: 0.3 },
@@ -818,7 +819,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     },
     upgrades: [
       { id: "inferno", name: "Inferno", description: "+25% damage, and its breath leaves burning ground.", mods: [{ stat: "damage", mult: 1.25 }], onHit: [{ type: "surface", surface: "fire", radius: 1.2 }] },
-      { id: "ancient_scales", name: "Ancient Scales", description: "+40% HP and +30% physical resistance.", mods: [{ stat: "hp", mult: 1.4 }], resist: { physical: 0.3 } },
+      { id: "ancient_scales", name: "Ancient Scales", description: "Toughness 15: every hit it takes is 15 lower, so arrows and claws barely scratch it.", mods: [{ stat: "toughness", add: 15 }] },
       {
         id: "elder_blood",
         name: "Elder Blood",

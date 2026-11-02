@@ -56,7 +56,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Cloudlings | Chaff (Wasp) | 14 per flock, 40 HP, speed 19 |
 | Frost Elemental | Anti-giant (Melting Point) | 200 cost, ramping cold (+25% per hit, up to ×3), frost resist 0.3 (was immune) |
 | Stone Golem | Tank (Fortress) | 300 cost, 3600 HP, 300 damage, speed 9, physical resist 0.4, lightning and fire 0.3 (were immune) |
-| Dragon | Late-game power (Overlord), independent | Fire resist 0.3 (was immune). Nov 2: 4200 → 3600 HP, breath 95 → 130 |
+| Dragon | Late-game power (Overlord), independent | Fire resist 0.3 (was immune). Nov 2: 4200 HP, breath 95 → 130; *Ancient Scales* became Toughness 15. Late-game only: one-unit results don't matter (owner) |
 | Giant | Chaff clear (Vulcan), independent | 400 cost. Nov 2: 3200 → 2600 HP, boulders 215 / 3.2 s → 120 / 2.4 s, so its counters work again |
 | Bog Toad Riders | Anti-medium (no exact match; *Spit Bile* → Mustang), independent | New Nov 2: 200 cost, tongue-lash beam, hits air, ×1.8 against medium |
 
@@ -69,10 +69,12 @@ Knights cut down the swarm. The How to Play page says so.
 
 - **95 of 97 relations hold.** Both misses are even fights (50%): Troll against Ogre, and Frost against the Giant
   (63% at 16 seeds).
-- **36 of 38 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (13%), Fire Elemental
+- **39 of 41 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (13%), Fire Elemental
   *Living Inferno* against Wolf Riders (38%).
-- Nash mix: Crossbowmen 52%, Cloudlings 16%, Dragon 14%, Skirmishers 9%, Grunts 5%, Wolf Riders 3%. The Dragon
-  hard-counters 12 of 20 (mostly ground units that can't hit air); the Toad Riders have no 2:1 counter yet.
+- Nash mix (after the Dragon's HP went back to 4200): Crossbowmen 45%, Dragon 19%, Cloudlings 12%, Ballista 8%,
+  Skirmishers 8%, Wolf Riders 4%, Grunts 3%. The Dragon hard-counters 12 of 20, mostly ground units that can't hit
+  air; the owner doesn't count that against it (it's late-game, and fliers beating melee is fine). The Toad Riders
+  have no 2:1 counter yet.
 - The rest of this section predates the independents pass.
 - **Fight shape** (`density`, mirrored mixed armies): first contact at 4–6 s (was under 2), fights of 31–42 s (were
   21–36), 58–67% of each army fighting at once (was about 75%). Close to Mechabellum's 40–60 s, but the faster

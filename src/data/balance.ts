@@ -190,7 +190,9 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     upgrades: {
       leather_wings: { intent: "Survive arrows on the way in", beats: ["skirmishers"] },
       shriek: { intent: "Disrupt: Daze the back line it lands on" },
-      bloodsuckers: { intent: "Sustain: heal while feeding" },
+      // its claws reach fliers too, so the bats can stop for air units on the way in: the price of the upgrade.
+      // Alone they still lose to a Dragon (its breath splashes the whole squad)
+      bloodsuckers: { intent: "Sustain, and claws for fliers: feed on the air units that used to hunt them", beats: ["griffon_riders", "cloudlings"] },
       savage_claws: { intent: "More damage" },
     },
   },
@@ -281,7 +283,8 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     analogue: "Overlord",
     upgrades: {
       inferno: { intent: "More damage and burning ground" },
-      ancient_scales: { intent: "Tougher" },
+      // toughness 15: a 12-damage arrow does 3, a crossbow bolt 70, a ballista bolt barely notices. It flips Frost (88%), not Ballistae
+      ancient_scales: { intent: "Toughness: chaff, short bows and claws barely scratch it", beats: ["frost_elemental"] },
       elder_blood: { intent: "Sustain, unless chilled" },
       dread: { intent: "Disrupt: Daze everything it breathes on" },
     },

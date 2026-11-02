@@ -140,7 +140,7 @@ const CONTENTS: { title: string; items: [string, string][] }[] = [
     ],
   },
   { title: "Roles", items: Object.entries(ROLES).map(([id, r]) => [`role-${id}`, r.name]) },
-  { title: "Elements", items: [["resistance", "Resistance"], ...ELEMENTS.map((e): [string, string] => [`element-${e}`, cap(e)])] },
+  { title: "Elements", items: [["resistance", "Resistance"], ["toughness", "Toughness"], ...ELEMENTS.map((e): [string, string] => [`element-${e}`, cap(e)])] },
   { title: "Statuses", items: Object.values(STATUSES).map((s): [string, string] => [`status-${s.id}`, s.name]) },
   { title: "Surfaces", items: [...Object.values(SURFACES).map((s): [string, string] => [`surface-${s.id}`, s.name]), ["reactions", "Reactions"]] },
 ];
@@ -295,6 +295,14 @@ export function CodexView({ topic }: { topic?: string }) {
         <p>
           Every hit has an element. A unit&apos;s card lists its <b>resistances</b> (it takes less of that element) and{" "}
           <b>weaknesses</b> (it takes more). Armor is physical resistance: arrows bounce off Knights, but fire goes straight through.
+        </p>
+      </Entry>
+      <Entry id="toughness" title="Toughness" focus={topic}>
+        <p>
+          A few great beasts are so tough that every hit they take is a flat amount lower, whatever its element. Small hits,
+          like a goblin&apos;s arrow, barely scratch them, while a ballista bolt hardly notices the difference. Even the
+          smallest hit always does at least {Math.round(RULES.toughnessFloor * 100)}% of its damage. Burning and other damage
+          over time aren&apos;t hits, so toughness doesn&apos;t stop them.
         </p>
       </Entry>
       <div className="codex-cards">

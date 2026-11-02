@@ -858,7 +858,7 @@ export class Battle {
       for (const b of src.def.attack.bonusVs) if (matches(b.selector, m.def, m.side, src.side)) bonus *= b.mult;
     }
     const share = rmult > 1 && reacted.length ? { names: reacted, share: 1 - 1 / rmult } : undefined;
-    this.rawDamage(m, amount * bonus * rmult, element, attr, share);
+    this.rawDamage(m, amount * bonus * rmult, element, attr, share, true);
     if (src && src.side !== m.side) this.retaliate(m, src);
   }
 
@@ -922,10 +922,12 @@ export class Battle {
     }
   }
 
-  private rawDamage(m: Model, amount: number, element: Element, attr: Attr, reaction?: { names: string[]; share: number }) {
+  // `isHit`: an attack or a damage effect landing (toughness applies), not damage over time or a reaction's bonus
+  private rawDamage(m: Model, amount: number, element: Element, attr: Attr, reaction?: { names: string[]; share: number }, isHit = false) {
     if (!m.alive) return;
     const resist = m.def.resist?.[element] ?? 0;
-    const dmg = amount * (1 - resist) * this.statusMult(m, "damageTakenMult");
+    let dmg = amount * (1 - resist) * this.statusMult(m, "damageTakenMult");
+    if (isHit && m.def.toughness) dmg = Math.max(dmg - m.def.toughness, dmg * this.rules.toughnessFloor);
     if (dmg <= 0) return;
     if (m.shield > 0) {
       m.shield--;

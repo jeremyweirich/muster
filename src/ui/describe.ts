@@ -97,6 +97,7 @@ const STAT_NAMES: Record<StatMod["stat"], string> = {
   range: "range",
   splash: "splash",
   chainCount: "chain jumps",
+  toughness: "toughness",
 };
 
 function describeMod(m: StatMod): string {

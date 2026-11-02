@@ -18,6 +18,7 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
     out.size = modValue(out.size, mods("size"));
     out.spacing = modValue(out.spacing ?? 0, mods("spacing")) || undefined;
     out.squadSize = Math.max(1, Math.round(modValue(out.squadSize, mods("squadSize"))));
+    out.toughness = modValue(out.toughness ?? 0, mods("toughness")) || undefined;
     if (up.layer) out.layer = up.layer;
     if (out.attack) {
       const a = out.attack;

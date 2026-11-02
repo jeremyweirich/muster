@@ -162,8 +162,18 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   was anti-medium (the goblins and elementals both lack it), and that the goblins' worst hole is the air. New
   independent: **Bog Toad Riders** (tongue-lash beam, hits air, ×1.8 against medium; Spit Bile makes them chaff clear,
   Gulp **Snares**, a new status that lets melee hit a held flier). The Giant got smaller, faster boulders and less HP;
-  the Dragon traded HP for damage. Open: Ballista parks behind chaff took 0 damage for three rounds, the Dragon is too
-  broad in one-unit fights, and Gulp + Trolls against a real Dragon hasn't been tried in a full match.
+  the Dragon got more damage. Open: Gulp + Trolls against a real Dragon hasn't been tried in a full match.
+- **Owner's notes after that pass (Nov 2, 2026):**
+  - **Dragons are late-game** and never meet one-unit fights in play, and fliers beating melee that can't hit up is
+    fine. Don't flag those matchups. It was too squishy: base HP is back to 4200, and *Ancient Scales* gives
+    **Toughness** (a new rule: a flat cut off every hit, at least a quarter gets through).
+  - **Wolf Riders should be swingy**: a huge impact the round they arrive (one dropped on a flank kills a Keep, then the
+    archers), countered fairly cheaply. The owner wondered about ×2 → ×3 javelins; the data says ×2 loses to the
+    Crossbowmen it exists to kill, so the ×5 stayed pending the owner's call (`docs/PLAYTEST-2026-11-02.md`).
+  - **Bats** can claw fliers with *Bloodsuckers* only: the base bats fly over air units to reach the back line.
+  - The "untouchable Ballista park" was really **veterancy** on the screen in front of it (replayed: demote the
+    Lv2 Knights and Grunts and the Ballistae all die). Level N is N× HP and N× damage, about 4× the value for half the
+    price; that's where to look next.
 - **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Mission 1's
   punch ("archers one-shot grunts") no longer matches the roster. Parked idea to keep: the campaign finale's last
   Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't

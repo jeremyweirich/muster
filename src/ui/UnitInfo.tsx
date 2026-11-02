@@ -188,6 +188,14 @@ export function UnitInfo({
             </dd>
           </>
         )}
+        {def.toughness ? (
+          <>
+            <dt>
+              <CodexLink topic="toughness">Toughness</CodexLink>
+            </dt>
+            <dd>{def.toughness} off every hit</dd>
+          </>
+        ) : null}
         {weaknesses.length > 0 && (
           <>
             <dt>Weak to</dt>
