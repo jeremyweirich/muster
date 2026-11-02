@@ -147,7 +147,8 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
 - **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Mission 1's
   punch ("archers one-shot grunts") no longer matches the roster. Parked idea to keep: the campaign finale's last
   Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't
-  decided on yet.
+  decided on yet. When it lands, the Hard-win easter egg (`src/ui/LoveLetter.tsx`, DESIGN.md §10) must
+  remember it was shown and never show again; for now it shows once per visit.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.
 - **PvP (Nov 1, 2026):** play a friend by link is live (`docs/MULTIPLAYER.md`). The relay is deployed on the owner's
   Cloudflare account and needs no upkeep; redeploy only when `relay/` changes. Tested with two scripted Chrome windows
