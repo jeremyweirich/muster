@@ -339,10 +339,10 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 24,
     size: 0.38,
     attack: {
-      damage: 70, element: "physical", cooldown: 1, range: 2.5,
+      damage: 45, element: "physical", cooldown: 1, range: 2.5,
       targets: ["ground"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
     },
-    traits: [{ type: "charge", mult: 3 }],
+    traits: [{ type: "charge", mult: 5 }],
     upgrades: [
       { id: "dire_wolves", name: "Dire Wolves", description: "+50% HP and +20% damage.", mods: [{ stat: "hp", mult: 1.5 }, { stat: "size", add: 0.08 }, { stat: "damage", mult: 1.2 }] },
       {
@@ -362,7 +362,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "bloodthirst",
         name: "Bloodthirst",
-        description: "Every kill readies another ×3 charge javelin.",
+        description: "Every kill readies another ×5 charge javelin.",
         traits: [{ type: "onKill", effects: [], recharge: true }],
       },
     ],

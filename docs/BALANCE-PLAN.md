@@ -46,7 +46,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Pikemen | Anti-giant: an anti-large line | 6 × 300 HP, reach 1.5, ×3.5 against large units and cavalry, no splash. *Heavy Halberds* (→ chaff clear), *Long Pikes* (→ beats Wolf Riders) |
 | Grunts | Chaff (Crawler) | 40 HP, 8 damage every 0.6 s, speed 20 |
 | Skirmishers | Chaff (Fang) | 12 per squad, 30 HP, speed 16 |
-| Wolf Riders | Diver (Rhino) | 200 cost, 540 HP, 70 damage, speed 24 |
+| Wolf Riders | Diver (Rhino) | 200 cost, 540 HP, 45 damage with a ×5 opening javelin, speed 24 |
 | Troll | Anti-giant (Steel Ball) | Berserk is built in (+35% per hit in a row, up to ×3). *Gorge* (heal 30% of damage dealt) takes its slot |
 | Ogre Brute | Chaff clear (Fire Badger) | 300 cost, 2200 HP, 200 damage every 1.8 s |
 | Giant Bats | Diver (none) | 280 HP, 45 damage |
@@ -83,6 +83,11 @@ Knights cut down the swarm. The How to Play page says so.
    the owner found Cloudlings too strong; base damage moved into Freezing Rain, attack speed into Downpour, and HP
    50 → 40 so a cloud falls to four arrows. Skirmishers now beat them (87%), and the Nash mix's Cloudling weight
    fell from 31% to 14% (now Crossbowmen 53%, Dragon 16%, Cloudlings 14%, Skirmishers 8%).
+   Wolf Riders were the strongest unit per supply (Lanchester 2.70) and beat every ground unit. Sustained damage moved
+   into the opening javelin (70 ×3 → 45 ×5, so it still one-shots a 220 HP Crossbowman): their mean margin fell from
+   33 to 22, and Stone Golem and Pikemen now beat them, as Fortress beats Rhino. Cutting HP or speed instead flipped
+   their back-line wins first. Still open: Troll (Steel Ball, Rhino's main counter) loses to them, and they now lose to
+   the Giant (38%, against "too fast for its boulders").
 2. **Crossbowmen and Frost Elementals have soft counters but no hard counter.** Their chaff counters win at equal
    supply, but not at 2:1.
 3. **Small leftover side bias.** At 32 seeds, Crossbowmen and Air Elementals lean to the bottom side (63%), Grunts and
