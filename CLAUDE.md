@@ -127,7 +127,11 @@ as you go and note the change there.
 
 Playwright and Chromium are available in the cloud environment (`require('playwright')`). On the owner's Windows machine,
 install `playwright-core` in a scratch directory and launch the installed Chrome via `executablePath`. Drive
-`npm run dev` and take screenshots. **Write screenshots and scratch scripts outside the repo.** Two stray PNGs were committed once by
+`npm run dev` and take screenshots. **On Windows, stopping a background dev server leaves vite running** (only the
+shell dies), and the next start fails on a busy port. Before starting one, check the port
+(`netstat -ano | grep ':PORT .*LISTENING'`): a vite already there can just be reused, since it serves the current files.
+When done, kill whatever holds the port:
+`for p in $(netstat -ano | grep ':PORT .*LISTENING' | awk '{print $5}' | sort -u); do taskkill //PID $p //F; done`. **Write screenshots and scratch scripts outside the repo.** Two stray PNGs were committed once by
 accident.
 
 ## Deploying
