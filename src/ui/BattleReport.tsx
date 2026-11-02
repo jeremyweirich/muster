@@ -10,6 +10,10 @@ for (const s of Object.values(STATUSES)) KEY_COLORS[s.name] = s.color;
 for (const s of Object.values(SURFACES)) KEY_COLORS[s.name] = s.color;
 KEY_COLORS.Attack = "#e2b45a";
 
+// What the report calls each side: the player's view by default; Spectate names them by color.
+export type SideNames = [string, string];
+const PLAYER_VIEW: SideNames = ["Yours", "Enemy"];
+
 function fmt(n: number) {
   return n >= 10000 ? `${(n / 1000).toFixed(1)}k` : Math.round(n).toLocaleString();
 }
@@ -35,7 +39,7 @@ function Bars({ data, unitColors }: { data: Record<string, number>; unitColors?:
   );
 }
 
-export function SquadDetail({ stats, def }: { stats: SquadStats; def?: UnitDef }) {
+export function SquadDetail({ stats, def, names = PLAYER_VIEW }: { stats: SquadStats; def?: UnitDef; names?: SideNames }) {
   return (
     <div className="squad-detail">
       <div className="unit-info-head">
@@ -43,7 +47,7 @@ export function SquadDetail({ stats, def }: { stats: SquadStats; def?: UnitDef }
         <div>
           <div className="unit-name">{stats.name}</div>
           <div className="muted small">
-            {stats.side === 0 ? "Yours" : "Enemy"} · {stats.alive}/{stats.total} survived
+            {names[stats.side]} · {stats.alive}/{stats.total} survived
           </div>
         </div>
       </div>
@@ -98,18 +102,20 @@ export function MvpBoard({
   selected,
   onSelect,
   onHover,
+  names,
 }: {
   result: BattleResult;
   defs: Map<string, UnitDef>;
   selected: string | null;
   onSelect: (uid: string | null) => void;
   onHover: (uid: string | null) => void;
+  names?: SideNames;
 }) {
   return (
     <div className="mvp-board">
       {([0, 1] as Side[]).map((side) => (
         <div key={side} className={`mvp-col mvp-${side}`}>
-          <div className="mvp-head">{side === 0 ? "Your MVPs" : "Enemy MVPs"}</div>
+          <div className="mvp-head">{names ? `${names[side]} MVPs` : side === 0 ? "Your MVPs" : "Enemy MVPs"}</div>
           {topSquads(result, side).map((s, i) => {
             const def = defs.get(s.defId);
             return (
@@ -143,12 +149,14 @@ export function SquadList({
   selected,
   onSelect,
   onHover,
+  names,
 }: {
   result: BattleResult;
   defs: Map<string, UnitDef>;
   selected: string | null;
   onSelect: (uid: string | null) => void;
   onHover: (uid: string | null) => void;
+  names?: SideNames;
 }) {
   const [side, setSide] = useState<Side>(0);
   const rows = Object.values(result.stats)
@@ -159,10 +167,10 @@ export function SquadList({
     <div className="squad-list">
       <div className="seg">
         <button className={side === 0 ? "active" : ""} onClick={() => setSide(0)}>
-          Your squads
+          {names ? names[0] : "Your squads"}
         </button>
         <button className={side === 1 ? "active" : ""} onClick={() => setSide(1)}>
-          Enemy squads
+          {names ? names[1] : "Enemy squads"}
         </button>
       </div>
       <div className="squad-rows">

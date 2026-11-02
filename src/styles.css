@@ -2285,3 +2285,69 @@ button.primary.warn-btn {
   flex-wrap: wrap;
   gap: 8px;
 }
+
+/* ----------------------------------------------------------------- spectate (debug: the AI plays itself) */
+
+.spectate-side h3,
+.spectate-side p {
+  margin: 0;
+}
+.spectate-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.spectate .result h2.blue,
+.spectate-rounds .blue {
+  color: var(--blue);
+}
+.spectate .result h2.red,
+.spectate-rounds .red {
+  color: var(--red);
+}
+.spectate-turns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.turn-log {
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-left-width: 3px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.turn-log-0 {
+  border-left-color: var(--blue);
+}
+.turn-log-1 {
+  border-left-color: var(--red);
+}
+.turn-log-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.turn-log-army {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.turn-log-army span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.spectate-rounds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.spectate-rounds .active {
+  border-color: var(--accent);
+}

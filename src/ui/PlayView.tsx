@@ -4,8 +4,8 @@ import { FACTIONS, factionOf } from "../data/roles";
 import { deployZone, RULES } from "../data/rules";
 import { towerDaze, towerDef, towerPlacements, TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
-import { planAiRound, promoted, type AiPlan, type Difficulty } from "../game/ai";
-import type { AiRequest, AiResponse } from "../game/ai.worker";
+import { promoted, type AiPlan, type Difficulty } from "../game/ai";
+import type { AiRequest } from "../game/ai.worker";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, usualUnlockPrice, type DefMap } from "../game/army";
 import { applyRound, applyTurn, battleXp, canPromote, chooseOpening, newMatch, nextRound, outcomeOf, packLabel, promotePrice, survivorDamage, type MatchState, type OpeningChoice, type Turn } from "../game/match";
 import {
@@ -36,6 +36,7 @@ import { DamageTally, type Strike } from "./DamageTally";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
 import { LoveLetter, loveLetterShown } from "./LoveLetter";
 import { COMPACT_QUERY, DetailsSheet, Sheet, UnitSheet, UnitTile, UnlockSheet, useMedia } from "./MobileDeploy";
+import { planInWorkers } from "./planInWorkers";
 import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
 import { Swatch, UnitInfo } from "./UnitInfo";
@@ -150,43 +151,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       seed: match.round * 7919 + 13,
       opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]) },
     };
-    const onMainThread = () => planAiRound(units, defs, request.me, request.player, request.round, request.difficulty, request.seed, request.opts);
-    // Hard searches on several cores at once: each worker uses its own search seed against the same armies, and the
-    // best plan wins. Easier settings use one.
-    const cores = typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 2 : 2;
-    const searches = difficulty === "hard" ? Math.max(1, Math.min(4, cores - 1)) : 1;
-    const workers: Worker[] = [];
-    const plans: AiPlan[] = [];
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const finish = () => {
-      plans.sort((a, b) => (b.bestScore ?? -Infinity) - (a.bestScore ?? -Infinity));
-      setAiPlan({ ...plans[0], candidatesTried: plans.reduce((t, p) => t + p.candidatesTried, 0) });
-    };
-    try {
-      for (let i = 0; i < searches; i++) {
-        const worker = new Worker(new URL("../game/ai.worker.ts", import.meta.url), { type: "module" });
-        workers.push(worker);
-        worker.onmessage = (e: MessageEvent<AiResponse>) => {
-          worker.terminate();
-          plans.push(e.data.plan);
-          if (plans.length === searches) finish();
-        };
-        worker.onerror = () => {
-          worker.terminate();
-          plans.push(onMainThread());
-          if (plans.length === searches) finish();
-        };
-        worker.postMessage({ ...request, opts: { ...request.opts, searchSeed: i } } satisfies AiRequest);
-      }
-    } catch {
-      // no workers (old browsers, tests): plan on the page instead
-      for (const w of workers) w.terminate();
-      timer = setTimeout(() => setAiPlan(onMainThread()), 30);
-    }
-    return () => {
-      for (const w of workers) w.terminate();
-      clearTimeout(timer);
-    };
+    return planInWorkers(request, setAiPlan);
   }, [matchNo, match.round, match.phase === "deploy", difficulty]); // a new difficulty replans this round
 
   // Fight pressed while the AI is still thinking: start as soon as it's ready.
@@ -1697,7 +1662,7 @@ function pill(ctx: CanvasRenderingContext2D, text: string, cx: number, y: number
 }
 
 // A side's unlocked units beside its health bar. Hovering one shows its name and which upgrades it has.
-function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; owned: UpgradeState; side: Side; note?: string | null }) {
+export function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; owned: UpgradeState; side: Side; note?: string | null }) {
   return (
     <div className={`hud-unlocks hud-unlocks-${side}`} aria-label={side === 0 ? "Your unlocks" : "Enemy unlocks"}>
       {units.map((d) => {
@@ -1730,7 +1695,7 @@ function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; owned: Up
 }
 
 // `hits` counts the strikes that have landed on it this tally; each one restarts the flash.
-function HpBar({ label, hp, side, hits = 0 }: { label: string; hp: number; side: Side; hits?: number }) {
+export function HpBar({ label, hp, side, hits = 0 }: { label: string; hp: number; side: Side; hits?: number }) {
   const frac = Math.max(0, hp / RULES.startHp);
   return (
     <div className={`hp hp-${side}`}>

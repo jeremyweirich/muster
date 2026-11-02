@@ -7,6 +7,7 @@ import { DebugView } from "./ui/DebugView";
 import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
 import { PvpView, type PlayStatus } from "./ui/PvpView";
+import { SpectateView } from "./ui/SpectateView";
 import { UnitsView } from "./ui/UnitsView";
 import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
 
@@ -19,14 +20,15 @@ const TABS = [
   { id: "counters", label: "Counters" },
 ] as const;
 
-// "debug" is a hidden tab for development, opened by clicking the version in the corner.
+// "debug" is a hidden tab for development, opened by clicking the version in the corner; #debug/spectate watches the AI
+// play itself.
 type Tab = (typeof TABS)[number]["id"] | "debug";
 
 // The hash is #tab or #tab/topic: keyword links elsewhere in the game open #codex/<topic>,
 // #units/<unit> opens a unit's page, and #counters/<unit> opens the counter guide for that unit.
 function parseHash(): { tab: Tab; topic?: string } {
   const [tab, topic] = location.hash.slice(1).split("/");
-  if (tab === "debug") return { tab };
+  if (tab === "debug") return { tab, topic };
   return TABS.some((t) => t.id === tab) ? { tab: tab as Tab, topic } : { tab: "play" };
 }
 
@@ -35,6 +37,12 @@ const relayAvailable = !!relayUrl();
 export function App() {
   const [route, setRoute] = useState(parseHash);
   const tab = route.tab;
+  const spectating = tab === "debug" && route.topic === "spectate";
+  // once opened, Spectate stays mounted like Play, so following a Codex link doesn't lose the match
+  const [spectateOpened, setSpectateOpened] = useState(spectating);
+  useEffect(() => {
+    if (spectating) setSpectateOpened(true);
+  }, [spectating]);
   // new players land on Play, so greet them there with the walkthrough
   const [intro, setIntro] = useState(() => parseHash().tab === "play");
   // a PvP match, when the address has one (?join=… or ?match=…); see docs/MULTIPLAYER.md
@@ -105,7 +113,12 @@ export function App() {
       {tab === "units" && <UnitsView topic={route.topic} />}
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}
-      {tab === "debug" && <DebugView />}
+      {tab === "debug" && !spectating && <DebugView />}
+      {spectateOpened && (
+        <div style={{ display: spectating ? "contents" : "none" }}>
+          <SpectateView />
+        </div>
+      )}
       {intro && <Intro onClose={() => setIntro(false)} />}
     </div>
   );
