@@ -116,6 +116,7 @@ export function MvpBoard({
               <button
                 key={s.uid}
                 className={`mvp-row ${selected === s.uid ? "active" : ""}`}
+                title={s.name}
                 onClick={() => onSelect(selected === s.uid ? null : s.uid)}
                 onMouseEnter={() => onHover(s.uid)}
                 onMouseLeave={() => onHover(null)}

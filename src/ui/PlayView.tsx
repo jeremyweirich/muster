@@ -396,13 +396,12 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     }
     if (!deploying) {
       if (p.type === "down" && tally) setTally(null);
-      if (p.type === "move") {
-        // a guest's battle is drawn turned round
-        const bx = seat === 1 ? RULES.fieldW - p.x : p.x;
-        const by = seat === 1 ? RULES.fieldH - p.y : p.y;
-        const m = battleRef.current?.models.find((m) => m.alive && Math.hypot(m.x - bx, m.y - by) < Math.max(0.5, m.def.size));
-        setHoverInfo(m ? { def: m.def, side: seat === 1 ? (m.side === 0 ? 1 : 0) : m.side } : null);
-      }
+      // a tap counts as hovering, so touch screens can look at units mid-battle too.
+      // A guest's battle is drawn turned round.
+      const bx = seat === 1 ? RULES.fieldW - p.x : p.x;
+      const by = seat === 1 ? RULES.fieldH - p.y : p.y;
+      const m = battleRef.current?.models.find((m) => m.alive && Math.hypot(m.x - bx, m.y - by) < Math.max(0.5, m.def.size));
+      setHoverInfo(m ? { def: m.def, side: seat === 1 ? (m.side === 0 ? 1 : 0) : m.side } : null);
       return;
     }
     if (p.type === "move") {
@@ -724,8 +723,9 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       const def = st && defOf(sq, st.side);
       if (medal === undefined || !def) continue;
       const r = squadRect(sq, def);
-      const mx = (r.x + r.w) * TILE - 2;
-      const my = r.y * TILE + 2;
+      // kept inside the field, so a squad on the back row or the edge still shows its whole medal
+      const mx = Math.min((r.x + r.w) * TILE - 2, RULES.fieldW * TILE - 11);
+      const my = Math.max(r.y * TILE + 2, 11);
       ctx.beginPath();
       ctx.arc(mx, my, 9, 0, Math.PI * 2);
       ctx.fillStyle = MEDAL_COLORS[medal];
@@ -1363,7 +1363,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
             />
           </>
         )}
-        {!reporting && !deploying && (unitCard ?? <p className="muted small">Hover a unit on the field to see its stats.</p>)}
+        {!reporting && !deploying && (unitCard ?? <p className="muted small">Hover over or tap a unit on the field to see its stats.</p>)}
         {!(compact && deploying) && <div className="spacer" />}
         {deploying && !compact && (
           <p className="hint">
@@ -1561,8 +1561,11 @@ function OpeningOffer({ packs, units, rival, onChoose }: { packs: number[]; unit
                   const d = units.find((x) => x.id === u.id)!;
                   return (
                     <span key={u.id} className="pack-unit">
-                      <Swatch def={d} size={14} /> {u.count > 1 ? `${u.count}× ` : ""}
-                      {d.name}
+                      <Swatch def={d} size={14} />
+                      <span>
+                        {u.count > 1 && <>{u.count}×&nbsp;</>}
+                        {d.name}
+                      </span>
                     </span>
                   );
                 })}

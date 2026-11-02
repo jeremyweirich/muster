@@ -73,6 +73,14 @@ export function RoleChips({ tags }: { tags: string[] }) {
   );
 }
 
+// A tag as a player reads it: "faction:warden" is "Wardens", "size:medium" is "Medium size", "class:cavalry" is "Cavalry".
+function tagLabel(tag: string): string {
+  const [category, value] = tag.split(":");
+  if (category === "faction") return FACTIONS.find((f) => f.id === value)?.name ?? value;
+  const word = value.charAt(0).toUpperCase() + value.slice(1);
+  return category === "size" ? `${word} size` : word;
+}
+
 function El({ e, children }: { e: Element; children: ReactNode }) {
   return (
     <CodexLink topic={`element-${e}`} className="kw el-link">
@@ -258,7 +266,7 @@ export function UnitInfo({
           .filter((t) => !t.startsWith("role:"))
           .map((t) => (
             <span key={t} className="tag">
-              {t}
+              {tagLabel(t)}
             </span>
           ))}
       </div>

@@ -164,11 +164,13 @@ export function CodexView({ topic }: { topic?: string }) {
         {CONTENTS.map((g) => (
           <div key={g.title} className="toc-group">
             <span className="toc-title">{g.title}</span>
-            {g.items.map(([id, label]) => (
-              <CodexLink key={id} topic={id} className={`toc-link ${topic === id ? "active" : ""}`}>
-                {label}
-              </CodexLink>
-            ))}
+            <span className="toc-items">
+              {g.items.map(([id, label]) => (
+                <CodexLink key={id} topic={id} className={`toc-link ${topic === id ? "active" : ""}`}>
+                  {label}
+                </CodexLink>
+              ))}
+            </span>
           </div>
         ))}
       </nav>

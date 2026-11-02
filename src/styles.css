@@ -874,10 +874,16 @@ a {
   border-radius: 10px;
   padding: 10px 12px;
 }
+/* a label column, then links that wrap within their own column */
 .toc-group {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+}
+.toc-items {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
   gap: 4px 10px;
 }
 .toc-title {
@@ -885,7 +891,6 @@ a {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--muted);
-  min-width: 90px;
 }
 .toc-link {
   font-size: 13px;
@@ -966,8 +971,8 @@ kbd {
   margin-bottom: 16px;
 }
 .picker-group {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
   align-items: center;
   gap: 6px;
 }
@@ -976,7 +981,6 @@ kbd {
   text-transform: uppercase;
   letter-spacing: 1px;
   color: var(--muted);
-  min-width: 96px;
 }
 .picker-items {
   display: flex;
@@ -1056,8 +1060,10 @@ a.unit-chip {
     padding: 1px 7px 1px 3px;
     font-size: 12px;
   }
+  .units .picker-group {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
   .units .picker-faction {
-    min-width: 76px;
     font-size: 10px;
   }
 }
@@ -1288,6 +1294,13 @@ a.reason:hover {
     padding: 6px;
     font-size: 15px;
   }
+  /* two MVP columns fit only as medal, icon and damage; the medals match the badges on the field */
+  .mvp-name {
+    display: none;
+  }
+  .mvp-dmg {
+    margin-left: auto;
+  }
 }
 
 /* Portrait: the game is meant to be played sideways. Touch devices get a prompt to rotate;
@@ -1405,7 +1418,7 @@ a.reason:hover {
 }
 .opening-buttons {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 5px;
 }
 .opening .up-name {
