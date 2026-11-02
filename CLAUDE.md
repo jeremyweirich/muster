@@ -172,9 +172,10 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
 - **Mobile performance pass (Nov 1, 2026):** measured with Playwright at 844 × 390, 3× DPR, CPU throttled 4–6×
   (scripts kept out of the repo; recipe: play rounds, then record `requestAnimationFrame` intervals). Unit drawing was
   over half the frame; tokens now come from a sprite atlas, the background bakes its overlays, and the field's buffer
-  is capped at 2× DPR. At 4× throttle, round 5: deploy screen 22–28 → 60 fps, battle 43–47 → 59–60 fps. Next lever if
-  big late-game fights still stutter on a phone: the sim tick (about a third of frames run one; 10–15 ms for 400
-  models at 6× throttle), e.g. stepping the battle in a worker. Not yet checked on a real phone.
+  is capped at 2× DPR. At 4× throttle, round 5: deploy screen 22–28 → 60 fps, battle 43–47 → 59–60 fps.
+  **On the owner's phone** (Android 10, Chrome 156, 1.88× DPR, 8 cores; debug-panel report, Nov 1): 60 fps in every
+  scenario, ≤ 0.7% slow frames, 4–6 ms JS per frame (p95 ≤ 8.6) with 436 models, sim 0.6 ms per tick. No more
+  rendering work needed; moving the sim to a worker (the next lever) is shelved unless a slower device needs it.
   **Getting numbers from the owner's phone:** the hidden debug panel (click the version in the header, or `#debug`)
   runs a one-minute performance test and shows a text report with Copy/Share; ask the owner to run it on the live
   site and paste the report. Same scenarios as the desktop scripts, plus sprite-atlas stats. Desktop result at 4×
