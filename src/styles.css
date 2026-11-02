@@ -2348,3 +2348,164 @@ button.primary.warn-btn {
 .spectate-rounds .active {
   border-color: var(--accent);
 }
+
+/* ---------------------------------------------------------------- story missions (Mission.tsx, StoryView.tsx) */
+
+.mission-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--panel-2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.mission-link:hover {
+  background: #2a333d;
+}
+.mission-play {
+  color: var(--accent);
+  font-weight: 600;
+}
+.mission-won {
+  color: var(--green);
+  font-weight: 600;
+}
+.mission {
+  display: flex;
+  justify-content: center;
+}
+.mission-card {
+  width: min(640px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mission-card h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--accent);
+  font-size: 30px;
+  margin: 0;
+}
+.mission-card > .primary {
+  align-self: flex-start;
+}
+.mission-back {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--muted);
+  cursor: pointer;
+}
+.mission-back:hover {
+  color: var(--text);
+}
+.brief-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.say {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+}
+.say b {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+.say-warden b {
+  color: var(--blue);
+}
+.say-goblin b {
+  color: var(--red);
+}
+.brief-kit {
+  margin: 0;
+  font-size: 15px;
+}
+.brief-kit + .muted {
+  margin: -6px 0 0;
+}
+/* a page of the Drill Book: old paper, a serif hand, the drill drawn in ranks */
+.drill-page {
+  background: #2b2619;
+  border: 1px solid #5c4d2b;
+  border-radius: 6px;
+  padding: 14px 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #eadfc4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+.drill-title {
+  color: var(--accent);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.drill-text {
+  margin: 0;
+  font-size: 18px;
+  font-style: italic;
+}
+.drill-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 0;
+}
+.drill-enemy {
+  font-size: 11px;
+  color: #b9a77d;
+}
+.drill-enemy::after {
+  content: " ↑";
+}
+.drill-rank {
+  display: flex;
+  gap: 8px;
+}
+.drill-line {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+/* in the Play sidebar: the mission's task, and the debrief once it's over */
+.objective {
+  border-left: 3px solid var(--accent);
+  padding: 2px 0 2px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hud-mission {
+  flex: 1;
+  text-align: center;
+}
+.debrief {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.debrief .say {
+  font-size: 14px;
+}
+.commendation {
+  margin: 0;
+}
+.commendation.earned {
+  color: var(--accent);
+}
+.debrief-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

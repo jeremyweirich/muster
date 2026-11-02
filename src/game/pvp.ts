@@ -125,6 +125,7 @@ export interface BattleSetup {
   armies: [PlacedSquad[], PlacedSquad[]];
   defs: [DefMap, DefMap];
   towerLevels: [number[], number[]];
+  towers?: boolean; // false: no Keeps (a story mission)
   seed: number;
 }
 
@@ -141,6 +142,7 @@ export function prepareBattle(state: MatchState, defs: DefMap, seat: Side): Foug
     armies: state.armies,
     defs: [upgradedDefs(defs, state.upgrades[0]), upgradedDefs(defs, state.upgrades[1])],
     towerLevels: state.towerLevels,
+    towers: state.towers,
     seed: roundSeed(state.round),
   };
   const canon: BattleSetup =
@@ -150,6 +152,7 @@ export function prepareBattle(state: MatchState, defs: DefMap, seat: Side): Foug
           armies: [turnArmy(state.armies[1], defs), turnArmy(state.armies[0], defs)],
           defs: [local.defs[1], local.defs[0]],
           towerLevels: [state.towerLevels[1], state.towerLevels[0]],
+          towers: local.towers,
           seed: local.seed,
         };
   return { ...local, canon, result: null };

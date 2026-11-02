@@ -14,11 +14,12 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   `src/data/units.ts` (and `elements.ts`, `towers.ts`, `rules.ts`). There is no in-app unit editor, by choice.
 - They value: clear unit identities, upgrades with personality, readable battles, and good player-facing tools (battle
   report, Codex, Counters). Keep all of those working.
-- Tabs: **Play** (default, the full game), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Units** (browse the
+- Tabs: **Play** (default, the full game), **Story** (the campaigns; playable missions open at `#story/<id>`,
+  `docs/CAMPAIGN.md`), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Units** (browse the
   roster; each unit has a small showcase fight from `src/data/showcases.ts`, links are `#units/<id>`), **Codex** (the
   rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades), **Spectate**
   (the AI plays itself, round by round, for watching unit interactions; Copy round exports a battle's setup to
-  reproduce). The Story tab is parked (not mounted) until the campaigns are built. Game screens don't explain rules:
+  reproduce). Game screens don't explain rules:
   keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 - **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
@@ -181,8 +182,11 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   - The "untouchable Ballista park" was really **veterancy** on the screen in front of it (replayed: demote the
     Lv2 Knights and Grunts and the Ballistae all die). Level N is N× HP and N× damage, about 4× the value for half the
     price; that's where to look next.
-- **Campaigns** are outlined in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals). Not built yet. Mission 1's
-  punch ("archers one-shot grunts") no longer matches the roster. Parked idea to keep: the campaign finale's last
+- **Campaigns** are planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; updated Nov 2, 2026).
+  **Wardens mission 1, *Hands Off*, is built** (Nov 2, 2026): a mission is a `MissionDef` in `src/data/campaign.ts`
+  played on the ordinary Play board (`PlayView`'s `mission` prop; framework in CAMPAIGN.md §6). Each mission lists
+  reference armies that must win and must lose, and `tests/campaign.test.tsx` fights them, so a rebalance that breaks
+  a mission's lesson fails the tests. Next: missions 2–3. Parked idea to keep: the campaign finale's last
   Drill Book page is generated from the player's own winning board. It needs stored progress, which the owner hasn't
   decided on yet. When it lands, the Hard-win easter egg (`src/ui/LoveLetter.tsx`, DESIGN.md §10) must
   remember it was shown and never show again; for now it shows once per visit.

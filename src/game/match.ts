@@ -34,6 +34,7 @@ export interface MatchState {
   unlocked: [string[], string[]];
   upgrades: [UpgradeState, UpgradeState];
   towerLevels: [number[], number[]];
+  towers?: boolean; // false: no Keeps on the Field (some story missions); absent: they stand
   openings: [Opening, Opening];
   phase: Phase;
   history: RoundReport[];

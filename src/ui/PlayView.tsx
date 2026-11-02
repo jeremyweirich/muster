@@ -8,6 +8,8 @@ import { promoted, type AiPlan, type Difficulty } from "../game/ai";
 import type { AiRequest } from "../game/ai.worker";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
 import { applyRound, applyTurn, battleXp, canPromote, chooseOpening, newMatch, nextRound, outcomeOf, packLabel, promotePrice, survivorDamage, type MatchState, type OpeningChoice, type Turn } from "../game/match";
+import type { MissionDef } from "../data/campaign";
+import { missionOutcome, missionPlan, newMissionMatch } from "../game/mission";
 import {
   checkTurn,
   currentStart,
@@ -39,6 +41,7 @@ import { COMPACT_QUERY, DetailsSheet, Sheet, UnitSheet, UnitTile, UnlockSheet, u
 import { planInWorkers } from "./planInWorkers";
 import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
+import { Debrief } from "./Mission";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
 
@@ -82,10 +85,19 @@ export interface PvpProps {
   onLeave: () => void;
 }
 
-export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: PlayStatus) => void }) {
+// A story mission (docs/CAMPAIGN.md §6): its setup, and a scripted enemy instead of the AI.
+export interface MissionProps {
+  def: MissionDef;
+  title: string;
+  onLeave: () => void;
+  onWon: () => void;
+}
+
+export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?: MissionProps; onStatus?: (s: PlayStatus) => void }) {
   const units = DEFAULT_UNITS;
   const defs = useMemo(() => defMap(units), [units]);
-  const [match, setMatch] = useState<MatchState>(() => (pvp ? newMatch(units, 1, { aiOpening: false }) : newMatch(units, matchSeed())));
+  const freshMatch = () => (mission ? newMissionMatch(mission.def) : newMatch(units, matchSeed()));
+  const [match, setMatch] = useState<MatchState>(() => (pvp ? newMatch(units, 1, { aiOpening: false }) : freshMatch()));
   const [difficulty, setDifficulty] = useState<Difficulty>("easy");
   const [selected, setSelected] = useState<string | null>(null);
   const [held, setHeld] = useState<string | null>(null);
@@ -135,11 +147,22 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
 
   const myDefs = useMemo(() => upgradedDefs(defs, match.upgrades[0]), [defs, match.upgrades]);
   const enemyDefs = useMemo(() => upgradedDefs(defs, match.upgrades[1]), [defs, match.upgrades]);
+  // what a mission switches off; a skirmish has it all
+  const towersOn = match.towers !== false;
+  const upgradesOn = !mission || mission.def.upgrades;
+  const singleBattle = !!mission && !mission.def.hp; // one battle decides it: no HP bars
+  const shopUnits = mission ? units.filter((u) => mission.def.units.includes(u.id) || mission.def.shop?.includes(u.id)) : units;
+  const rival = pvp ? "Friend" : (mission?.def.enemy.name ?? "Enemy");
 
   // The AI plans at the start of each deployment, from what it saw last round, in a worker so the page stays
-  // responsive while the player builds. Fight only has to wait if the player is done first.
+  // responsive while the player builds. Fight only has to wait if the player is done first. A mission's enemy
+  // follows its script instead.
   useEffect(() => {
     if (pvp || match.phase !== "deploy") return;
+    if (mission) {
+      setAiPlan(missionPlan(mission.def, match.round));
+      return;
+    }
     setAiPlan(null);
     const request: AiRequest = {
       id: match.round,
@@ -220,6 +243,11 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     if (wonOnHard && !tally && !loveLetterShown()) setLoveLetter(true);
   }, [wonOnHard, !!tally]);
 
+  const outcome = mission && match.phase === "over" && fought?.result ? missionOutcome(mission.def, match, fought.result) : null;
+  useEffect(() => {
+    if (outcome?.won) mission?.onWon();
+  }, [outcome?.won]);
+
   useEffect(() => {
     if (!fightArmed) return;
     const t = setTimeout(() => setFightArmed(false), 3000);
@@ -230,7 +258,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   // You see the enemy as it stood last round: its opening pack, placed in round 1, stays hidden until the battle.
   const enemySeen = match.armies[1].filter((sq) => sq.round < match.round);
   const unlocked = useMemo(() => new Set(match.unlocked[0]), [match.unlocked]);
-  const openingPending = match.round === 1 && match.openings[0].choice === null;
+  const openingPending = !mission && match.round === 1 && match.openings[0].choice === null;
   const isNew = (sq: PlacedSquad) => !RULES.lockPlacedSquads || sq.round === match.round;
   const heldSquad = held ? myArmy.find((s) => s.uid === held) : undefined;
   const placingDef = heldSquad ? myDefs.get(heldSquad.defId) : selected ? myDefs.get(selected) : undefined;
@@ -318,7 +346,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       return x >= r.x && x < r.x + r.w && y >= r.y && y < r.y + r.h;
     });
 
-  const allTowers = () => [...towerPlacements(0), ...towerPlacements(1)];
+  const allTowers = () => (towersOn ? [...towerPlacements(0), ...towerPlacements(1)] : []);
   const reportSquads = (): PlacedSquad[] => (fought ? [...fought.armies[0], ...fought.armies[1], ...allTowers()] : []);
 
   const towerInfo = (uid: string, levels: [number[], number[]]) => {
@@ -337,7 +365,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     const x = Math.round(sq.x + (before.w - after.w) / 2);
     const y = Math.round(sq.y + (before.h - after.h) / 2);
     for (const [px, py] of [[x, y], [sq.x, sq.y]]) {
-      if (canPlace(d, px, py, 0, myArmy, defs, sq.uid, next)) {
+      if (canPlace(d, px, py, 0, myArmy, defs, sq.uid, next, towersOn)) {
         setMatch((m) => ({ ...m, armies: [m.armies[0].map((s) => (s.uid === sq.uid ? { ...s, x: px, y: py, rot: next || undefined } : s)), m.armies[1]] }));
         return;
       }
@@ -389,7 +417,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     if (placingDef) {
       const { x, y } = ghostPos(placingDef, p);
       if (held) {
-        if (canPlace(placingDef, x, y, 0, myArmy, defs, held, rot)) {
+        if (canPlace(placingDef, x, y, 0, myArmy, defs, held, rot, towersOn)) {
           setMatch((m) => ({ ...m, armies: [m.armies[0].map((s) => (s.uid === held ? { ...s, x, y, rot: rot || undefined } : s)), m.armies[1]] }));
           setHeld(null);
         }
@@ -399,7 +427,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         pickUp(existing);
         return;
       }
-      if (placingDef.cost <= match.supply[0] && canPlace(placingDef, x, y, 0, myArmy, defs, undefined, rot)) {
+      if (placingDef.cost <= match.supply[0] && canPlace(placingDef, x, y, 0, myArmy, defs, undefined, rot, towersOn)) {
         const uid = newUid("p");
         const sq: PlacedSquad = { uid, defId: placingDef.id, x, y, rot: rot || undefined, round: match.round };
         spend(placingDef.cost, { kind: "place", uid, cost: placingDef.cost }, (m) => ({ armies: [[...m.armies[0], sq], m.armies[1]] }));
@@ -508,7 +536,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     const next = applyTurn(opp.mine, 1, opp.turn, defs, opp.spent);
     const f = prepareBattle(next, defs, seat);
     setMatch({ ...next, phase: "battle" });
-    battleRef.current = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, recordFx: true, towerLevels: f.canon.towerLevels });
+    battleRef.current = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, recordFx: true, towerLevels: f.canon.towerLevels, towers: f.canon.towers });
     setFought(f);
     setActions([]);
     player.reset();
@@ -525,7 +553,8 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   // The battle ran in the host's view; a guest turns the result round to their own.
   const onBattleEnd = (canonResult: BattleResult) => {
     const r = seat === 0 ? canonResult : swapResult(canonResult);
-    const strikes = battleRef.current ? survivorStrikes(battleRef.current, canonResult, defs, seat === 1) : [];
+    // with no HP bars (a one-battle mission) there's nothing for the survivors' damage to fly to
+    const strikes = battleRef.current && !singleBattle ? survivorStrikes(battleRef.current, canonResult, defs, seat === 1) : [];
     if (strikes.length) setTally({ strikes, before: match.hp, landed: 0 });
     setFought((f) => (f ? { ...f, result: r } : f));
     setMatch((m) => applyRound(m, r, defs));
@@ -534,7 +563,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   const replay = () => {
     if (!fought) return;
     const c = fought.canon;
-    battleRef.current = new Battle(c.defs, c.armies, { seed: c.seed, recordFx: true, towerLevels: c.towerLevels });
+    battleRef.current = new Battle(c.defs, c.armies, { seed: c.seed, recordFx: true, towerLevels: c.towerLevels, towers: c.towers });
     player.reset();
     setSpeed(1); // every battle starts at normal speed, even if the last one was fast-forwarded
     setView("replay");
@@ -584,7 +613,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     setInspect(null);
     setMatchNo((n) => n + 1);
     allHard.current = true;
-    const m = newMatch(units, matchSeed());
+    const m = freshMatch();
     roundStart.current = m;
     setMatch(m);
   };
@@ -594,6 +623,8 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   keyState.current = { undo, heldSquad, sell };
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // Play stays mounted behind the Story tab's mission, which is a second board: only the one on screen listens
+      if (!fieldRef.current?.getClientRects().length) return;
       // Esc always stops placing, wherever focus is (a focused shop button, the invite link, a menu)
       if (e.key === "Escape" || e.key === "Esc" || e.keyCode === 27) {
         setSelected(null);
@@ -718,9 +749,10 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       return;
     }
     drawBackground(ctx, TILE, { zones: true, grid: [0] });
-    for (const side of [0, 1] as Side[]) {
-      towerPlacements(side).forEach((t, i) => drawSquad(ctx, t, towerDef(t.defId, match.towerLevels[side][i] ?? 0), side, TILE));
-    }
+    if (towersOn)
+      for (const side of [0, 1] as Side[]) {
+        towerPlacements(side).forEach((t, i) => drawSquad(ctx, t, towerDef(t.defId, match.towerLevels[side][i] ?? 0), side, TILE));
+      }
     for (const sq of enemySeen) {
       const d = enemyDefs.get(sq.defId);
       if (d) drawSquad(ctx, sq, d, 1, TILE, { alpha: 0.75, time });
@@ -747,7 +779,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     if (h && placingDef) {
       const { x, y } = ghostPos(placingDef, h);
       const { w, h: fh } = footprintOf(placingDef, rot);
-      const ok = canPlace(placingDef, x, y, 0, myArmy, defs, held ?? undefined, rot) && (held || placingDef.cost <= match.supply[0]);
+      const ok = canPlace(placingDef, x, y, 0, myArmy, defs, held ?? undefined, rot, towersOn) && (held || placingDef.cost <= match.supply[0]);
       ctx.fillStyle = ok ? "rgba(120,230,120,0.18)" : "rgba(255,80,80,0.22)";
       ctx.fillRect(x * TILE, y * TILE, w * TILE, fh * TILE);
       drawSquad(ctx, { uid: "ghost", defId: placingDef.id, x, y, rot, round: 0 }, placingDef, 0, TILE, { alpha: 0.55, time });
@@ -776,8 +808,8 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     for (const side of [0, 1] as Side[]) shownHp[side] = Math.max(match.hp[side], tally.before[side] - Math.round(landed[side]));
   }
   const focusStats = fought?.result ? fought.result.stats[hoverSquad ?? pinned ?? ""] : undefined;
-  // the AI's unlocks join when it fights, except its opening pack's, so hide round 1's
-  const enemyUnlocks = (match.round > 1 ? match.unlocked[1] : []).map((id) => enemyDefs.get(id)).filter((d): d is UnitDef => !!d);
+  // the AI's unlocks join when it fights, except its opening pack's, so hide round 1's (unless a mission shows its army)
+  const enemyUnlocks = (match.round > 1 || mission?.def.enemy.revealed ? match.unlocked[1] : []).map((id) => enemyDefs.get(id)).filter((d): d is UnitDef => !!d);
   const myUnlocks = match.unlocked[0].map((id) => myDefs.get(id)).filter((d): d is UnitDef => !!d);
   // the enemy's opening shows once round 1 is over
   const enemyChoice = match.round > 1 ? match.openings[1].choice : null;
@@ -806,7 +838,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   };
 
   const upgradeAction = (def: UnitDef) => (upId: string) => {
-    if (card?.side !== 0 || !deploying || def.structure) return null;
+    if (card?.side !== 0 || !deploying || def.structure || !upgradesOn) return null;
     const bought = match.upgrades[0][def.id] ?? [];
     if (bought.includes(upId)) return <span className="owned-tag">Owned</span>;
     if (!unlocked.has(def.id)) return <span className="muted small">unlock first</span>;
@@ -832,6 +864,11 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     <div className="game-opts">
       <button onClick={pvp.onLeave}>Leave match</button>
     </div>
+  ) : mission ? (
+    <div className="game-opts">
+      <button onClick={restart}>Restart mission</button>
+      <button onClick={mission.onLeave}>Leave mission</button>
+    </div>
   ) : (
     <div className="game-opts">
       <label>
@@ -845,9 +882,16 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       <button onClick={restart}>Restart</button>
     </div>
   );
-  const aiNote = deploying && !pvp && (
+  const aiNote = deploying && !pvp && !mission && (
     <p className="muted small">{aiPlan ? `AI tested ${aiPlan.candidatesTried} plans against what it expects you to field.` : "AI is thinking while you build…"}</p>
   );
+  // a mission's task, above the shop while deploying (in the menu sheet on phones)
+  const objective = mission && deploying && (
+    <div className="objective">
+      <b>{mission.title}</b> <span className="small">{mission.def.objective}</span>
+    </div>
+  );
+  const toUnlock = shopUnits.filter((u) => !unlocked.has(u.id));
 
   // Phone layout: the sheet over the field. A unit being placed or moved comes first, then a tapped squad.
   const focus: Inspected | null = heldSquad
@@ -866,7 +910,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
     if (sheet === "unlock")
       return (
         <UnlockSheet
-          units={units.filter((u) => !unlocked.has(u.id)).map((u) => myDefs.get(u.id) ?? u)}
+          units={toUnlock.map((u) => myDefs.get(u.id) ?? u)}
           supply={match.supply[0]}
           onUnlock={(u) => {
             clickShop(u);
@@ -877,7 +921,8 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       );
     if (sheet === "menu")
       return (
-        <Sheet kind="band" title={<b>Game</b>} onClose={close}>
+        <Sheet kind="band" title={<b>{mission ? "Mission" : "Game"}</b>} onClose={close}>
+          {objective}
           {gameOpts}
           {aiNote}
         </Sheet>
@@ -905,14 +950,14 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       <UnitSheet
         def={def}
         owned={owned}
-        rival={focus.side === 1 ? (pvp ? "Your friend's" : "Enemy's") : undefined}
+        rival={focus.side === 1 ? (pvp ? "Your friend's" : mission ? `${mission.def.enemy.name}'s` : "Enemy's") : undefined}
         extra={
           squad && focus.side === 0 && canPromote(squad) && !heldSquad ? (
             <Veterancy squad={squad} canBuy={focus.side === 0} price={promotePrice(base!)} supply={match.supply[0]} onPromote={() => promote(squad)} promoteAll={promoteAll(squad.defId)} />
           ) : null
         }
         buy={
-          focus.side === 0 && base
+          focus.side === 0 && base && upgradesOn
             ? { price: upgradePrice(base, owned.length), supply: match.supply[0], locked: !unlocked.has(def.id), onBuy: (id) => buyUpgrade(def.id, id) }
             : null
         }
@@ -929,9 +974,18 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
   const hud = (
     <div className="hud">
       <UnlockStrip units={myUnlocks} owned={match.upgrades[0]} side={0} />
-      <HpBar label="You" hp={shownHp[0]} side={0} hits={hitsOn[0]} />
-      <div className="round">Round {match.round}</div>
-      <HpBar label={pvp ? "Friend" : "Enemy"} hp={shownHp[1]} side={1} hits={hitsOn[1]} />
+      {singleBattle ? (
+        <div className="round hud-mission">
+          {mission?.title}
+          <span className="muted small"> · one battle</span>
+        </div>
+      ) : (
+        <>
+          <HpBar label="You" hp={shownHp[0]} side={0} hits={hitsOn[0]} />
+          <div className="round">Round {match.round}</div>
+          <HpBar label={rival} hp={shownHp[1]} side={1} hits={hitsOn[1]} />
+        </>
+      )}
       <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
     </div>
   );
@@ -1049,7 +1103,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
                     def={d}
                     active={selected === d.id || heldSquad?.defId === d.id}
                     ups={bought.length}
-                    canUpgrade={price !== null && price <= match.supply[0]}
+                    canUpgrade={upgradesOn && price !== null && price <= match.supply[0]}
                     onClick={() => pickTile(d)}
                   />
                 );
@@ -1064,15 +1118,21 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
                 <span className="small">cheaper than a new squad</span>
               </button>
             )}
-            <div className="rail-actions">
-              <button className={`rail-tile rail-add ${sheet === "unlock" ? "active" : ""}`} onClick={() => setSheet(sheet === "unlock" ? null : "unlock")}>
-                ＋ Unlock a unit
-              </button>
-              <button className={`rail-tile ${sheet === "keeps" ? "active" : ""}`} onClick={() => setSheet(sheet === "keeps" ? null : "keeps")}>
-                <Swatch def={TOWER_MAP.get(RULES.towers[0].defId)!} size={18} />
-                Keeps
-              </button>
-            </div>
+            {(toUnlock.length > 0 || towersOn) && (
+              <div className="rail-actions">
+                {toUnlock.length > 0 && (
+                  <button className={`rail-tile rail-add ${sheet === "unlock" ? "active" : ""}`} onClick={() => setSheet(sheet === "unlock" ? null : "unlock")}>
+                    ＋ Unlock a unit
+                  </button>
+                )}
+                {towersOn && (
+                  <button className={`rail-tile ${sheet === "keeps" ? "active" : ""}`} onClick={() => setSheet(sheet === "keeps" ? null : "keeps")}>
+                    <Swatch def={TOWER_MAP.get(RULES.towers[0].defId)!} size={18} />
+                    Keeps
+                  </button>
+                )}
+              </div>
+            )}
             {placingDef && (
               <div className="rail-placing">
                 <div className="rail-caption">
@@ -1101,7 +1161,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
             )}
             <div className="spacer" />
             <div className="rail-foot">
-              {enemyUnlocks.length > 0 && <span className="muted small">{pvp ? "Friend" : "Enemy"}</span>}
+              {enemyUnlocks.length > 0 && <span className="muted small">{rival}</span>}
               <span className="swatches">
                 {enemyUnlocks.map((d) => (
                   <button key={d.id} className="unlock-chip chip-btn" title={d.name} onClick={() => setInspect({ side: 1, defId: d.id })}>
@@ -1118,6 +1178,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         )}
         {deploying && !compact && (
           <>
+            {objective}
             <div className="deploy-bar">
               <div className="supply-row">
                 <div className="supply">
@@ -1162,15 +1223,17 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
                 </div>
               </div>
             )}
-            <div className="side-tabs">
-              <button className={sideTab === "recruit" ? "active" : ""} onClick={() => setSideTab("recruit")}>
-                Recruit
-              </button>
-              <button className={sideTab === "upgrades" ? "active" : ""} onClick={() => setSideTab("upgrades")}>
-                Upgrades{affordableUpgrades > 0 && <span className="tab-badge">{affordableUpgrades}</span>}
-              </button>
-            </div>
-            {sideTab === "upgrades" && (
+            {upgradesOn && (
+              <div className="side-tabs">
+                <button className={sideTab === "recruit" ? "active" : ""} onClick={() => setSideTab("recruit")}>
+                  Recruit
+                </button>
+                <button className={sideTab === "upgrades" ? "active" : ""} onClick={() => setSideTab("upgrades")}>
+                  Upgrades{affordableUpgrades > 0 && <span className="tab-badge">{affordableUpgrades}</span>}
+                </button>
+              </div>
+            )}
+            {upgradesOn && sideTab === "upgrades" && (
               <>
                 <UpgradePanel
                   units={units.filter((u) => unlocked.has(u.id) && u.upgrades?.length)}
@@ -1179,14 +1242,14 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
                   onBuy={buyUpgrade}
                 />
                 <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} promoteAll={promoteAll} onHover={(sq) => setHoverInfo(sq ? { def: squadDef(sq, 0)!, side: 0, squad: sq } : null)} />
-                <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />
+                {towersOn && <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />}
               </>
             )}
-            {sideTab === "recruit" && (
+            {(!upgradesOn || sideTab === "recruit") && (
             <div className="recruit">
               <div className="shop-list">
                 {FACTIONS.map((f) => {
-                  const list = units.filter((u) => factionOf(u.tags) === f.id);
+                  const list = shopUnits.filter((u) => factionOf(u.tags) === f.id);
                   if (!list.length) return null;
                   return (
                     <div key={f.id} className="shop-group">
@@ -1233,7 +1296,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
             )}
             <div className="enemy-unlocks">
               <div className="muted small">
-                {pvp ? "Your friend has unlocked" : "Enemy has unlocked"}
+                {pvp ? "Your friend has unlocked" : `${rival} has unlocked`}
                 {enemyOpening && ` · ${enemyOpening}`}
               </div>
               <div className="swatches">
@@ -1273,14 +1336,17 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
             <h2 className={report.winner === 0 ? "win" : report.winner === 1 ? "lose" : ""}>
               {report.winner === 0 ? "Victory" : report.winner === 1 ? "Defeat" : report.timedOut ? "Time out" : "Draw"}
             </h2>
-            <p>
-              You took <b>{report.damage[0]}</b> · {pvp ? "Your friend" : "Enemy"} took <b>{report.damage[1]}</b>
-            </p>
-            {fought?.result && <PromotionsEarned result={fought.result} army={match.armies[0]} defs={defs} />}
+            {!singleBattle && (
+              <p>
+                You took <b>{report.damage[0]}</b> · {pvp ? "Your friend" : rival} took <b>{report.damage[1]}</b>
+              </p>
+            )}
+            {outcome && mission && <Debrief def={mission.def} outcome={outcome} onRetry={restart} onLeave={mission.onLeave} />}
+            {fought?.result && !singleBattle && <PromotionsEarned result={fought.result} army={match.armies[0]} defs={defs} />}
             {fought?.result && view === "report" && (
               <MvpBoard result={fought.result} defs={defs} selected={pinned} onSelect={setPinned} onHover={setHoverSquad} />
             )}
-            {match.phase === "over" ? (
+            {outcome ? null : match.phase === "over" ? (
               <>
                 <h2>{match.hp[0] > 0 ? "You win the war!" : match.hp[1] > 0 ? "You have been defeated." : "Mutual ruin."}</h2>
                 <button className="primary big" onClick={pvp ? rematch : restart}>
@@ -1329,7 +1395,8 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
         {deploying && !compact && (
           <p className="hint">
             Click a unit, then click your (blue) zone to place it; <b>Esc</b> stops placing. <b>Right-click</b> or <b>R</b> rotates. Click a green-outlined squad to move
-            it; <b>Delete</b> sells it. <b>Ctrl+Z</b> undoes your last purchase. 🔒 units cost a one-time unlock per match. Click a squad with a gold ▲ to promote it.
+            it; <b>Delete</b> sells it. <b>Ctrl+Z</b> undoes your last purchase.
+            {!mission && " 🔒 units cost a one-time unlock per match. Click a squad with a gold ▲ to promote it."}
           </p>
         )}
         {!(compact && deploying) && gameOpts}

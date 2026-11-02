@@ -526,10 +526,11 @@ The campaign outline (docs/CAMPAIGN.md) casts these as commanders: the goblin Bo
 
 ## 10. Tabs and tools — Decided
 
-The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **PvP**, **Units**,
-**Codex**, **Counters**, **Spectate**. The site opens on Play. The Story tab (the campaigns, `StoryView.tsx`) is parked until the
-campaigns are built; Units took its place. Play stays mounted behind the other tabs (a Codex link mid-game keeps
-the match), but its field doesn't draw while hidden, so a battle waits until you come back.
+The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **Story**, **PvP**,
+**Units**, **Codex**, **Counters**, **Spectate**. The site opens on Play. Play stays mounted behind the other tabs (a Codex
+link mid-game keeps the match), but its field doesn't draw while hidden, so a battle waits until you come back. Story
+and Spectate stay mounted the same way once opened. A mission is a second board, so only the board on screen listens
+to the keyboard.
 
 The shop states the usual unlock price once (the unlock sheet's title on phones, a line above the shop on desktop) and
 marks only units whose price differs (the independents), so tiles have room for names.
@@ -542,7 +543,7 @@ marks only units whose price differs (the independents), so tiles have room for 
 | **How to play** | A three-page walkthrough, a line or two each in large type, so new players start fast: build then watch, survivors hit HP, counter what you see (header button; opens on the Play tab). Upgrades, veterans and Keeps are left to the Codex. The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
 | **Love letter** | An easter egg: winning a match against the AI with it on Hard every round shows a popup ("This game is a love letter to Mechabellum. If you liked this game, you'll love the real thing.") with a link to Mechabellum's Steam page (`src/ui/LoveLetter.tsx`). It shows once per visit; **when stored progress lands, remember it and show it only once ever**. Changing the AI difficulty mid-deployment replans that round, so switching to Hard in round 1 still counts |
 | **Units** | Browse the roster: pick a unit for its card (stats, effects, upgrades) and a small looping fight that shows it doing its thing, with the unit haloed in gold. Each fight is curated in `src/data/showcases.ts` (who it fights and a one-line caption) and runs in a small left-vs-right arena (`src/game/showcase.ts`). "Try it" on an upgrade restarts the fight with it. A test checks the featured side wins every showcase at level 1 with no upgrades. `#units/<unit>` links to one unit; Codex unit chips, Counters rows and the Play unit card link there |
-| **Story** (parked) | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts`. Not mounted for now |
+| **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md). Playable missions open at `#story/<mission>`: a briefing (the cast's lines and a Drill Book page with its formation drawn), then the ordinary Play board with the mission's setup (its supply, units, HP, Keeps on or off, a scripted enemy, an objective line above the shop), then a debrief in the sidebar (lines on a win, a hint read from your army on a loss, the commendation, Try again). One-battle missions hide the HP bars. Nothing is stored: a mission won this visit gets a check in the list. Data in `src/data/campaign.ts`, match setup in `src/game/mission.ts`, the framework in docs/CAMPAIGN.md §6. Only Wardens mission 1, *Hands Off*, is built |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
 | **Spectate** | Watch the AI play itself (`#spectate`, `src/ui/SpectateView.tsx`, logic in `src/game/spectate.ts`): a whole match, Blue at the bottom and Red at the top, each side's difficulty set apart (Hard by default), for watching unit interactions. Both sides take an opening pack. Each round's battle is fought headless as soon as both have planned, and the next round is planned while it plays (never more than one round ahead), so watching doesn't wait. Every round starts at 1×, as in Play. The sidebar logs what each side bought, shows the result with MVPs and every squad's stats, and lists past rounds to watch again. Auto-advance counts down 3, 2, 1 after a battle (on the field and the Next round button); New match sits beside Next round. Hovering a unit shows its card. **Copy round** copies the battle's exact setup (armies, upgrades, Keep levels, seed) as JSON, to reproduce it in a script. Once opened it stays mounted, like Play, so a Codex link doesn't lose the match |
@@ -628,8 +629,9 @@ Rough priority order. Everything is open to reshuffling.
    open items in `docs/BALANCE-PLAN.md` §3). Next: veterancy's value (the Ballista parks behind chaff), fliers in one-unit fights, hard counters for
    Crossbowmen, Frost and Toad Riders, mixed-army tests. Then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
-3. **Campaigns** (docs/CAMPAIGN.md): mission framework, then the Wardens campaign. Parked until stored progress is
-   decided: saving the player's winning board from a campaign finale as the Drill Book's last page.
+3. **Campaigns** (docs/CAMPAIGN.md): the mission framework and Wardens mission 1 are built (Nov 2, 2026); next,
+   missions 2–3 (scripted later rounds, HP, Keeps). Parked until stored progress is decided: saving the player's
+   winning board from a campaign finale as the Drill Book's last page.
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary.

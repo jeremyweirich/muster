@@ -8,13 +8,14 @@ import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
 import { PvpView, type PlayStatus } from "./ui/PvpView";
 import { SpectateView } from "./ui/SpectateView";
+import { StoryView } from "./ui/StoryView";
 import { UnitsView } from "./ui/UnitsView";
 import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
 
 const TABS = [
   { id: "play", label: "Play" },
+  { id: "story", label: "Story" },
   { id: "pvp", label: "PvP" },
-  // Story (StoryView, the campaigns) is parked until the campaigns are built; Units took its place.
   { id: "units", label: "Units" },
   { id: "codex", label: "Codex" },
   { id: "counters", label: "Counters" },
@@ -25,7 +26,8 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"] | "debug";
 
 // The hash is #tab or #tab/topic: keyword links elsewhere in the game open #codex/<topic>,
-// #units/<unit> opens a unit's page, and #counters/<unit> opens the counter guide for that unit.
+// #units/<unit> opens a unit's page, #counters/<unit> opens the counter guide for that unit, and #story/<mission>
+// opens a story mission.
 function parseHash(): { tab: Tab; topic?: string } {
   const [tab, topic] = location.hash.slice(1).split("/");
   if (tab === "debug") return { tab };
@@ -43,16 +45,28 @@ export function App() {
   useEffect(() => {
     if (spectating) setSpectateOpened(true);
   }, [spectating]);
+  // Story stays mounted too, and remembers its open mission, so the Story tab (or Back from a Codex link) returns to it
+  const storying = tab === "story";
+  const [storyOpened, setStoryOpened] = useState(storying);
+  const [storyTopic, setStoryTopic] = useState<string | undefined>(storying ? route.topic : undefined);
+  useEffect(() => {
+    if (!storying) return;
+    setStoryOpened(true);
+    setStoryTopic(route.topic);
+  }, [storying, route.topic]);
+  // missions won during this visit, for a check in the list; nothing is stored
+  const [won, setWon] = useState<Set<string>>(() => new Set());
   // new players land on Play, so greet them there with the walkthrough
   const [intro, setIntro] = useState(() => parseHash().tab === "play");
   // a PvP match, when the address has one (?join=… or ?match=…); see docs/MULTIPLAYER.md
   const [pvp, setPvp] = useState<PvpLink | null>(() => parsePvpLink(location.search, () => randomId(16)));
   // what Play reports about its match, for the PvP tab
   const [playStatus, setPlayStatus] = useState<PlayStatus | null>(null);
-  const go = (t: Tab) => {
-    setRoute({ tab: t });
+  // `topic` null opens the tab bare; left out, Story goes back to its open mission
+  const go = (t: Tab, topic: string | null = (t === "story" && storyTopic) || null) => {
+    setRoute({ tab: t, topic: topic ?? undefined });
     try {
-      history.replaceState(null, "", `${location.pathname}${location.search}#${t}`);
+      history.replaceState(null, "", `${location.pathname}${location.search}#${t}${topic ? `/${topic}` : ""}`);
     } catch {
       // some embedded hosts disallow history changes
     }
@@ -114,6 +128,16 @@ export function App() {
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}
       {tab === "debug" && <DebugView />}
+      {storyOpened && (
+        <div style={{ display: storying ? "contents" : "none" }}>
+          <StoryView
+            topic={storyTopic}
+            won={won}
+            onWon={(id) => setWon((w) => new Set(w).add(id))}
+            onOpen={(id) => go("story", id)}
+          />
+        </div>
+      )}
       {spectateOpened && (
         <div style={{ display: spectating ? "contents" : "none" }}>
           <SpectateView />

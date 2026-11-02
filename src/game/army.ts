@@ -47,11 +47,12 @@ export function canPlace(
   defs: DefMap,
   ignoreUid?: string,
   rot?: boolean,
+  towers = true, // false: a Field without Keeps
 ): boolean {
   const { y0, y1 } = deployZone(side);
   const { w, h } = footprintOf(def, rot);
   if (x < 0 || x + w > RULES.fieldW || y < y0 || y + h > y1) return false;
-  for (const r of keepRects(side)) if (overlaps(x, y, w, h, r.x, r.y, r.w, r.h)) return false;
+  if (towers) for (const r of keepRects(side)) if (overlaps(x, y, w, h, r.x, r.y, r.w, r.h)) return false;
   for (const s of squads) {
     if (s.uid === ignoreUid) continue;
     const d = defs.get(s.defId);
