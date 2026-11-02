@@ -16,9 +16,10 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   report, Codex, Counters). Keep all of those working.
 - Tabs: **Play** (default, the full game), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Units** (browse the
   roster; each unit has a small showcase fight from `src/data/showcases.ts`, links are `#units/<id>`), **Codex** (the
-  rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades). The Story
-  tab is parked (not mounted) until the campaigns are built. Game screens don't explain rules: keywords link to Codex
-  entries (DESIGN.md §10, "Codex links").
+  rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades), **Spectate**
+  (the AI plays itself, round by round, for watching unit interactions; Copy round exports a battle's setup to
+  reproduce). The Story tab is parked (not mounted) until the campaigns are built. Game screens don't explain rules:
+  keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 - **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
   When a commit carries something big (a new unit, a big rebalance, a new rule, tab or feature), add a line to

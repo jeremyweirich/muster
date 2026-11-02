@@ -3,10 +3,10 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v67)
+## 2 November 2026 (v58–v68)
 
-- **Spectate** (debug panel): watch the AI play itself, a whole match round by round, with what each side bought,
-  the results, and any earlier round to watch again.
+- **Spectate tab:** watch the AI play itself, a whole match round by round, with what each side bought, the results,
+  and any earlier round to watch again.
 - **New independent: Bog Toad Riders.** Swamp folk on giant toads whose sticky tongues lash out, snatch fliers from
   the air and hit medium units hardest. Upgrades: *Spit Bile* (splashing bile that clears swarms, in the air too) and
   *Gulp*, which **Snares** its target: held in place, and a snared flier can be hit by swords and claws.

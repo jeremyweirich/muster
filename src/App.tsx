@@ -18,17 +18,17 @@ const TABS = [
   { id: "units", label: "Units" },
   { id: "codex", label: "Codex" },
   { id: "counters", label: "Counters" },
+  { id: "spectate", label: "Spectate" },
 ] as const;
 
-// "debug" is a hidden tab for development, opened by clicking the version in the corner; #debug/spectate watches the AI
-// play itself.
+// "debug" is a hidden tab for development, opened by clicking the version in the corner.
 type Tab = (typeof TABS)[number]["id"] | "debug";
 
 // The hash is #tab or #tab/topic: keyword links elsewhere in the game open #codex/<topic>,
 // #units/<unit> opens a unit's page, and #counters/<unit> opens the counter guide for that unit.
 function parseHash(): { tab: Tab; topic?: string } {
   const [tab, topic] = location.hash.slice(1).split("/");
-  if (tab === "debug") return { tab, topic };
+  if (tab === "debug") return { tab };
   return TABS.some((t) => t.id === tab) ? { tab: tab as Tab, topic } : { tab: "play" };
 }
 
@@ -37,8 +37,8 @@ const relayAvailable = !!relayUrl();
 export function App() {
   const [route, setRoute] = useState(parseHash);
   const tab = route.tab;
-  const spectating = tab === "debug" && route.topic === "spectate";
-  // once opened, Spectate stays mounted like Play, so following a Codex link doesn't lose the match
+  const spectating = tab === "spectate";
+  // once opened, Spectate (the AI playing itself) stays mounted like Play, so following a Codex link doesn't lose the match
   const [spectateOpened, setSpectateOpened] = useState(spectating);
   useEffect(() => {
     if (spectating) setSpectateOpened(true);
@@ -113,7 +113,7 @@ export function App() {
       {tab === "units" && <UnitsView topic={route.topic} />}
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}
-      {tab === "debug" && !spectating && <DebugView />}
+      {tab === "debug" && <DebugView />}
       {spectateOpened && (
         <div style={{ display: spectating ? "contents" : "none" }}>
           <SpectateView />

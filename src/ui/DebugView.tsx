@@ -12,7 +12,7 @@ import { FieldCanvas } from "./FieldCanvas";
 // A hidden panel for development, opened by clicking the version in the corner. Its tool is a performance test:
 // it plays fixed armies on this device's field, the same way Play does, and reports the frame times as text to copy or
 // share. That's how numbers get off a phone: the site itself never sends anything anywhere. It also links to the repo
-// and its CHANGELOG.md (plain links: nothing is fetched). Spectate (SpectateView.tsx) watches the AI play itself.
+// and its CHANGELOG.md (plain links: nothing is fetched).
 
 const REPO = "https://github.com/jeremyweirich/muster";
 const TILE = 24; // as in PlayView
@@ -211,9 +211,6 @@ export function DebugView() {
         {status === "idle" && <p className="muted small">Tools for development. Back to the game with the tabs above.</p>}
         <button className="primary" disabled={status === "running"} onClick={start}>
           Performance test
-        </button>
-        <button disabled={status === "running"} onClick={() => (location.hash = "debug/spectate")}>
-          Spectate: AI vs AI
         </button>
         {status === "running" && (
           <p className="small">

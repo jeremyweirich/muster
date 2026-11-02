@@ -17,7 +17,7 @@ import { planInWorkers } from "./planInWorkers";
 import { HpBar, UnlockStrip } from "./PlayView";
 import { Swatch, UnitInfo } from "./UnitInfo";
 
-// The AI playing itself, from the debug panel: a full match, round by round, for watching unit interactions. Each
+// The AI playing itself (the Spectate tab): a full match, round by round, for watching unit interactions. Each
 // round's battle is fought headless as soon as both sides have planned, and the next round is planned while this one
 // plays, so there is no waiting between rounds. Any earlier round can be watched again. "Copy round" puts the battle's
 // exact setup on the clipboard, to reproduce it in a script.
@@ -28,7 +28,7 @@ const defs = defMap(units);
 const allDefs = new Map([...defs, ...TOWER_MAP]);
 const NAMES: SideNames = ["Blue", "Red"];
 const HOLD = 1.5; // seconds the armies stand before each battle, to take in the deployment
-const LINGER = 4; // seconds a result shows before the next round starts, with auto-advance on
+const LINGER = 3; // seconds a result shows before the next round starts, with auto-advance on: a 3, 2, 1 countdown
 const MAX_ROUNDS = 30; // a safety stop for a match that never ends
 const matchSeed = () => Math.floor(Math.random() * 2 ** 31);
 
@@ -48,8 +48,9 @@ export function SpectateView() {
   const [hoverInfo, setHoverInfo] = useState<{ def: UnitDef; side: Side } | null>(null);
   const [pinned, setPinned] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null); // seconds until auto-advance starts the next round
   const battleRef = useRef<Battle | null>(null);
-  const clock = useRef({ now: 0, startAt: 0, endedAt: 0 });
+  const clock = useRef({ now: 0, startAt: 0, countFrom: null as number | null, shown: null as number | null });
   const player = useBattlePlayer();
 
   const last = rounds[rounds.length - 1];
@@ -82,6 +83,8 @@ export function SpectateView() {
     battleRef.current = new Battle(f.defs, f.armies, { seed: f.seed, recordFx: true, towerLevels: f.towerLevels });
     player.reset();
     clock.current.startAt = clock.current.now + HOLD;
+    clock.current.countFrom = null;
+    setSpeed(1); // every round starts at normal speed, as in Play
     setWatching(i);
     setFurthest((n) => Math.max(n, i));
     setEnded(false);
@@ -106,13 +109,24 @@ export function SpectateView() {
       return;
     }
     const holding = time < c.startAt;
-    player.frame(ctx, b, TILE, dt, time, holding ? 0 : speed, () => {
-      c.endedAt = time;
-      setEnded(true);
-    });
+    player.frame(ctx, b, TILE, dt, time, holding ? 0 : speed, () => setEnded(true));
     if (holding) drawBanner(ctx, (RULES.fieldW * TILE) / 2, `Round ${round?.start.round}`);
-    // auto-advance runs on the field's clock, so it waits while this tab is hidden
-    if (b.over && auto && speed > 0 && next && time - c.endedAt > LINGER / Math.min(speed, 2)) watch(watching + 1);
+    // Auto-advance counts down on the field's clock, so it waits while this tab is hidden. It starts over if paused,
+    // switched off, or when the next round is still being planned as the battle ends.
+    let left: number | null = null;
+    if (b.over && auto && speed > 0 && next) {
+      c.countFrom ??= time;
+      left = Math.ceil(LINGER - (time - c.countFrom));
+      if (left > 0) {
+        drawBanner(ctx, (RULES.fieldW * TILE) / 2, `Round ${next.start.round} starts in ${left}`);
+        drawCountdown(ctx, left, (time - c.countFrom) % 1);
+      }
+    } else c.countFrom = null;
+    if (left !== c.shown) {
+      c.shown = left;
+      setCountdown(left);
+    }
+    if (left !== null && left <= 0) watch(watching + 1);
   };
 
   const onPointer = (p: FieldPointer) => {
@@ -124,6 +138,7 @@ export function SpectateView() {
 
   const newMatch = () => {
     battleRef.current = null;
+    clock.current.countFrom = null;
     setRounds([]);
     setWatching(0);
     setFurthest(0);
@@ -180,16 +195,17 @@ export function SpectateView() {
             Skip
           </button>
         </div>
+        <label className="small">
+          <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto-advance
+        </label>
         <div className="spectate-row">
-          <label className="small">
-            <input type="checkbox" checked={auto} onChange={(e) => setAuto(e.target.checked)} /> Auto-advance
-          </label>
           <button disabled={!round} onClick={() => watch(watching)}>
             ↺ Replay
           </button>
           <button className="primary" disabled={!next} onClick={() => watch(watching + 1)}>
-            {next ? "Next round" : over && watching === rounds.length - 1 ? "Match over" : "Planning…"}
+            {next ? `Next round${countdown ? ` (${countdown})` : ""}` : over && watching === rounds.length - 1 ? "Match over" : "Planning…"}
           </button>
+          <button onClick={newMatch}>New match</button>
         </div>
 
         {report && (
@@ -256,18 +272,32 @@ export function SpectateView() {
           ))}
         </div>
         <div className="spectate-row">
-          <button onClick={newMatch}>New match</button>
           <button disabled={!round} onClick={copyRound} title="The battle's exact setup as JSON, to reproduce it in a script">
             {copied ? "Copied" : "Copy round"}
           </button>
-          <a className="small" href="#debug">
-            Back to debug
-          </a>
         </div>
         <p className="muted small">A difficulty change applies from the next round that hasn't been planned yet.</p>
       </aside>
     </div>
   );
+}
+
+// The auto-advance countdown, big in the middle of the field; each number fades as its second runs out.
+function drawCountdown(ctx: CanvasRenderingContext2D, n: number, elapsed: number) {
+  const cx = (RULES.fieldW * TILE) / 2;
+  const cy = (RULES.fieldH * TILE) / 2;
+  ctx.save();
+  ctx.globalAlpha = 1 - 0.6 * elapsed;
+  ctx.fillStyle = "rgba(10,14,18,0.7)";
+  ctx.beginPath();
+  ctx.arc(cx, cy, 52, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e8d48a";
+  ctx.font = "bold 64px system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(String(n), cx, cy + 3);
+  ctx.restore();
 }
 
 // What one side did this round: its opening, what it bought, and how hard it looked.
