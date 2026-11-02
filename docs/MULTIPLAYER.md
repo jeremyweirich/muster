@@ -8,7 +8,8 @@ Cloudflare account. This doc is the plan, how it works, and the setup steps.
 1. On the Play tab, **Play a friend** starts a match and shows an invite link with a **Copy** button.
 2. The friend opens the link and lands in round 1. Both are offered the same three opening packs (the seed is shared).
 3. Each player deploys at their own pace and presses **Fight!**. The sidebar says whether the friend is still deploying
-   or ready. When both are in, both watch the same battle, each with their own army at the bottom.
+   or ready. Until the friend presses it too, **Not ready: keep deploying** takes the turn back. When both are in, both
+   watch the same battle, each with their own army at the bottom.
 4. Reloading, or closing the tab and coming back later through the browser history, resumes the match: the page
    address carries the player's seat token (no `localStorage`), and the relay keeps the match's messages. A slow match
    (a round a day) works too.
@@ -39,6 +40,11 @@ duplicate is ignored.
 - `start { game, seed }`: a new match (the host's first, or a rematch from either player).
 - `turn { game, round, turn }`: the sender's whole army in their own view of the field, plus their opening choice,
   unlocks, upgrades and tower levels bought this round. The receiver turns the army round 180° into its own view.
+- `cancel { game, round }`: takes the sender's turn back. A seat's turn counts until it cancels; a turn after that
+  counts again. Once the relay's log holds both seats' turns the round is **locked**, and later cancels change nothing
+  (`roundTurns` in `src/game/pvp.ts`). Only messages the relay has confirmed can lock a round, so if a cancel and the
+  friend's turn cross, the relay's order decides for both browsers. A player whose cancel lost that race fights the
+  turn they sent: the battle is rebuilt from the log, not from what's on their screen.
 - `outcome { game, round, sig, … }`: the battle's result and a signature of it, so the two browsers can compare.
 
 ### Seats and the view
@@ -107,12 +113,11 @@ connections from `https://jeremyweirich.github.io` and from local development ad
 
 ## Not yet checked
 
-- A real match between two people on separate devices and networks (so far: two scripted Chrome windows on one
-  machine, against the deployed relay).
+- First real match (Nov 1, 2026): the owner and a friend on their own machines (the friend's a Mac). Their notes asked
+  for taking back Fight (now built) and reported no desync.
 - Cross-browser determinism: Firefox and Safari running the same battle as Chrome. Playwright's Firefox and WebKit
   could run `npm run bench`'s fights in each engine and compare fingerprints. A mismatch in play shows a notice and the
   host's result wins.
-- The round-1 opening text still says "the enemy is offered the same" in PvP.
 
 ## Not built (ideas)
 

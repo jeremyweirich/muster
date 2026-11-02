@@ -9,6 +9,7 @@ import {
   checkTurn,
   outcomeSig,
   restore,
+  roundTurns,
   swapOutcome,
   swapResult,
   turnArmy,
@@ -186,6 +187,32 @@ describe("pvp", () => {
     expect(r.game).toBe(2);
     expect(r.committed).toBe(false);
     expect(r.match.armies[0]).toEqual([]);
+  });
+
+  it("a turn can be taken back until the relay has both, and then the round is locked", () => {
+    const log: Entry[] = [];
+    post(log, 0, { type: "start", id: "s", game: 1, seed: 9 });
+    const start = restore(units, log, 0)!.match;
+    const first = turnFrom(start, deploy(start, new Rng(1)));
+    const second = turnFrom(start, deploy(start, new Rng(2)));
+    const theirs = turnFrom(start, deploy(start, new Rng(3)));
+    post(log, 0, { type: "turn", id: "a", game: 1, round: 1, turn: first });
+    post(log, 0, { type: "cancel", id: "c", game: 1, round: 1 });
+    expect(roundTurns(log, 1, 1).turns[0]).toBeNull();
+    const back = restore(units, log, 0)!;
+    expect(back.committed).toBe(false);
+    expect(back.match.armies[0]).toEqual([]);
+    post(log, 0, { type: "turn", id: "b", game: 1, round: 1, turn: second });
+    const waiting = restore(units, log, 0)!;
+    expect(waiting.committed).toBe(true);
+    expect(waiting.start.armies[0]).toEqual([]); // a second cancel and resend builds the turn from the round's start
+    // the friend's turn still on its way doesn't lock the round, so a cancel can still beat it to the relay
+    const pending = [...log, { seq: -1, from: 1 as Side, body: { type: "turn", id: "t", game: 1, round: 1, turn: theirs } as PvpBody }];
+    expect(roundTurns(pending, 1, 1).locked).toBeNull();
+    post(log, 1, { type: "turn", id: "t", game: 1, round: 1, turn: theirs });
+    post(log, 0, { type: "cancel", id: "late", game: 1, round: 1 });
+    expect(roundTurns(log, 1, 1).locked).toEqual([second, theirs]);
+    expect(restore(units, log, 0)!.fought).toBeTruthy();
   });
 
   it("every opening pack can be rebuilt from a turn", () => {

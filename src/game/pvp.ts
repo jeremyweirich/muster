@@ -15,6 +15,7 @@ export type PvpBody =
   | { type: "hello"; id: string; build: string }
   | { type: "start"; id: string; game: number; seed: number }
   | { type: "turn"; id: string; game: number; round: number; turn: Turn } // the turn is in the sender's view
+  | { type: "cancel"; id: string; game: number; round: number } // takes the sender's turn back, if the round hasn't started
   | { type: "outcome"; id: string; game: number; round: number; sig: string; outcome: RoundOutcome }; // host's view
 
 export interface Entry {
@@ -163,10 +164,25 @@ export function currentStart(log: Entry[]): Extract<PvpBody, { type: "start" }> 
   return best;
 }
 
-// A seat's turn for a round. The first one counts; a duplicate (a resend) is ignored.
-export function findTurn(log: Entry[], game: number, round: number, seat: Side): Turn | null {
-  for (const e of log) if (e.from === seat && e.body.type === "turn" && e.body.game === game && e.body.round === round) return e.body.turn;
-  return null;
+export interface RoundTurns {
+  turns: [Turn | null, Turn | null]; // each seat's turn as it stands, counting messages still on their way
+  locked: [Turn, Turn] | null; // the turns the battle uses, once the relay has both
+}
+
+// A round's turns. A seat's first turn counts (a duplicate, a resend, is ignored) until that seat cancels it; a turn
+// after a cancel counts again. Once the relay has both seats' turns the round is locked, and later cancels and turns
+// change nothing. Only messages the relay has (seq ≥ 0) can lock a round, so both browsers agree on which turns were
+// fought, whatever order the messages reach them in.
+export function roundTurns(log: Entry[], game: number, round: number): RoundTurns {
+  const turns: [Turn | null, Turn | null] = [null, null];
+  for (const e of log) {
+    const b = e.body;
+    if ((b.type !== "turn" && b.type !== "cancel") || b.game !== game || b.round !== round) continue;
+    if (b.type === "turn") turns[e.from] ??= b.turn;
+    else turns[e.from] = null;
+    if (e.seq >= 0 && turns[0] && turns[1]) return { turns, locked: [turns[0], turns[1]] };
+  }
+  return { turns, locked: null };
 }
 
 export function findOutcome(log: Entry[], game: number, round: number, seat: Side): Extract<PvpBody, { type: "outcome" }> | null {
@@ -184,6 +200,7 @@ export interface Restored {
   game: number;
   match: MatchState;
   committed: boolean; // the local player's turn for the current round is in
+  start: MatchState; // the state when the current deployment began (before a committed turn), for building a turn
   fought: Fought | null; // the last battle, while its result is on screen
   resynced: number[]; // rounds where this browser's battle differed from the host's, and the host's result was used
 }
@@ -198,19 +215,28 @@ export function restore(units: UnitDef[], log: Entry[], seat: Side): Restored | 
   const resynced: number[] = [];
   let match = newMatch(units, start.seed, { aiOpening: false });
   let fought: Fought | null = null;
-  const done = (committed: boolean): Restored => ({ game: start.game, match, committed, fought: committed ? null : fought, resynced });
+  let deployStart = match;
+  const done = (committed: boolean): Restored => ({
+    game: start.game,
+    match,
+    committed,
+    start: committed ? deployStart : match,
+    fought: committed ? null : fought,
+    resynced,
+  });
   for (let round = 1; ; round++) {
-    const mine = findTurn(log, start.game, round, seat);
-    const theirs = findTurn(log, start.game, round, other);
+    const { turns, locked } = roundTurns(log, start.game, round);
+    const mine = locked?.[seat] ?? turns[seat];
     if (round > 1) {
       if (!mine) return done(false); // still looking at the last battle's result
       match = nextRound(match);
       fought = null;
     }
     if (!mine) return done(false);
+    deployStart = match;
     match = applyTurn(match, 0, mine, defs);
-    if (!theirs) return done(true);
-    match = applyTurn(match, 1, turnAround(theirs, defs), defs);
+    if (!locked) return done(true);
+    match = applyTurn(match, 1, turnAround(locked[other], defs), defs);
     const f = prepareBattle(match, defs, seat);
     const canonResult = new Battle(f.canon.defs, f.canon.armies, { seed: f.canon.seed, towerLevels: f.canon.towerLevels }).run();
     let outcome = outcomeOf(canonResult, defs);

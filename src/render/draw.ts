@@ -296,7 +296,8 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     }
   }
   const icon = def.look.icon && def.look.icon in ICONS ? (def.look.icon as IconId) : null;
-  if (icon && r >= 5.5) {
+  // small tokens too (goblins, skirmishers, cloudlings are r ≈ 5.3): the icon is what tells them apart
+  if (icon && r >= 5) {
     drawIcon(ctx, icon, px, py + (def.look.shape === "triangle" ? r * 0.08 : 0), r * ICON_FIT[def.look.shape], "rgba(14,17,21,0.82)");
   } else if (def.look.glyph && r >= 5) {
     ctx.font = `${Math.round(r * 1.2)}px system-ui, "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;

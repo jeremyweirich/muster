@@ -1,5 +1,5 @@
 import { RULES } from "../data/rules";
-import type { BattleResult } from "../sim/battle";
+import type { BattleResult, SquadSurvival } from "../sim/battle";
 import type { UpgradeState } from "../sim/upgrades";
 import { capXp, earnedLevel } from "../sim/levels";
 import { Rng } from "../sim/rng";
@@ -97,14 +97,17 @@ export function roundSeed(round: number): number {
   return round * 104729 + 7;
 }
 
+// The damage one surviving squad does to the other side's HP. Keeps never count.
+export function survivorDamage(s: SquadSurvival, defs: DefMap): number {
+  const cost = defs.get(s.defId)?.cost ?? 0;
+  return cost * (s.alive / s.total) * RULES.damagePerSupply + RULES.damagePerSquad;
+}
+
 // Damage each side takes from the other's survivors.
 export function roundDamage(result: BattleResult, defs: DefMap): [number, number] {
   const dmgFrom = (side: Side) => {
     let total = 0;
-    for (const s of result.survivors[side]) {
-      const cost = defs.get(s.defId)?.cost ?? 0;
-      total += cost * (s.alive / s.total) * RULES.damagePerSupply + RULES.damagePerSquad;
-    }
+    for (const s of result.survivors[side]) total += survivorDamage(s, defs);
     return Math.round(total);
   };
   return [dmgFrom(1), dmgFrom(0)];

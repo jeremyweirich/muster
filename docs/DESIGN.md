@@ -44,7 +44,8 @@ Round N
  │    ├─ buy upgrades (four per unit; 200 / 400 / 600 / 800 in the order bought, whatever the unit)
  │    ├─ upgrade towers (100 / 200 / 400 / 800)
  │    ├─ promote veterans that earned a level (half unit cost per level; section 5c)
- │    ├─ buy squads, place and rotate them in your zone
+ │    ├─ buy squads, place and rotate them in your zone (a banner over the field says what's being placed; Esc or
+ │    │  Done stops, and so does running out of supply for another squad)
  │    ├─ squads from earlier rounds are locked in place
  │    └─ Undo (Ctrl+Z) reverses purchases one at a time; fighting without spending asks for confirmation
  ├─ Battle (automatic, deterministic, up to 120 s; always starts at 1× playback, which is real time)
@@ -52,6 +53,8 @@ Round N
  └─ Resolution
       ├─ loser takes damage = Σ over the winner's surviving squads of (cost × fraction alive × 0.08 + 4)
       ├─ time-out: each side takes damage from the other's survivors
+      ├─ shown, not explained: the battle's last frame stays up while each surviving squad flies its damage to the
+      │  other side's HP bar, smallest first (DamageTally.tsx). Keeps fly nothing, because they don't count
       ├─ every squad gains XP = damage dealt + healing done; enough XP unlocks a level (section 5c)
       ├─ every unit is restored for the next round (armies are permanent; battles are not)
       └─ battle report and replay
@@ -495,10 +498,10 @@ The tabs, in order: **Play** (the default: the full game against the AI, every u
 
 | Tool | What it's for |
 |---|---|
-| **Battle report** | After each battle the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
+| **Battle report** | After each battle (and the survivors' damage flying to the HP bars, which a click, a key or Skip cuts short) the field resets to deployment positions. The top three damage dealers on each side get gold, silver and bronze medals on the field and an MVP board in the sidebar. Hover any squad: every squad it fought gets a label on the field ("dealt X" / "took Y"). The sidebar shows damage dealt, kills, damage taken, friendly fire, healing, and breakdowns (dealt through mechanism; taken by source, element and reaction) |
 | **Replay** | Rerun the exact battle; it is deterministic |
-| **Play a friend** | PvP by link: starts a match and shows an invite link to send. Each round both players deploy, then both browsers run the same battle. The address carries the player's seat, so a reload resumes the match. How it works and how to set up the relay: `docs/MULTIPLAYER.md` |
-| **How to play** | A five-page walkthrough for new players (header button; opens on the Play tab). The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
+| **Play a friend** | PvP by link: starts a match and shows an invite link to send. Each round both players deploy, then both browsers run the same battle. A player who pressed Fight can take it back ("Not ready") until the friend presses it too. The address carries the player's seat, so a reload resumes the match. How it works and how to set up the relay: `docs/MULTIPLAYER.md` |
+| **How to play** | A three-page walkthrough, a line or two each in large type, so new players start fast: build then watch, survivors hit HP, counter what you see (header button; opens on the Play tab). Upgrades, veterans and Keeps are left to the Codex. The site stores nothing, so it shows on every visit to Play; Skip closes it. The AI defaults to Easy |
 | **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts` |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |

@@ -150,8 +150,13 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.
 - **PvP (Nov 1, 2026):** play a friend by link is live (`docs/MULTIPLAYER.md`). The relay is deployed on the owner's
   Cloudflare account and needs no upkeep; redeploy only when `relay/` changes. Tested with two scripted Chrome windows
-  against the real relay. Not yet checked: two people on separate devices and networks, and whether Firefox and Safari
-  run battles identically to Chrome (a desync shows a notice and the host's result wins).
+  against the real relay, then played by the owner and a friend on their own machines (no desync reported). Not yet
+  checked: whether Firefox and Safari run battles identically to Chrome (a desync shows a notice and the host's result
+  wins).
+- **Playtest with a friend (Nov 1, 2026):** the intro became three short pages in large type; after a battle each
+  surviving squad flies its damage to the HP bar (Keeps don't); placing shows a banner with Done/Esc; small tokens
+  (Skirmishers, Cloudlings, Grunts) now show their icon in battle; PvP players can take back Fight. Escape not cancelling
+  placement on the friend's Mac wasn't reproduced; the key handler was made more robust and Done added. Recheck on a Mac.
 - **Playtest vs Hard (Nov 1, 2026):** after it, veterancy got rarer (`veterancyXp` knobs, DESIGN.md §5c), Keep levels
   became +3,000 HP each, and playback fast-forwards once a fight is decided. Owner decisions: round damage ignoring
   levels is intentional; battles can't end early because the survivors set the round damage (only playback speeds up).

@@ -19,89 +19,35 @@ export function Intro({ onClose }: { onClose: () => void }) {
   const u = (id: string) => units.find((x) => x.id === id);
   const [i, setI] = useState(0);
 
+  // Kept short on purpose: three screens, a line or two each, then play. The Codex has the rest.
   const steps: Step[] = [
     {
-      title: "Welcome to Common Ground",
-      art: <Icons defs={[u("knights"), u("grunts"), u("fire_elemental"), u("giant_bats")]} />,
+      title: "Build, then watch",
+      art: <Icons defs={[u("knights"), u("crossbowmen"), u("grunts"), u("fire_elemental")]} />,
       body: (
-        <>
-          <p>
-            You command an army, but you don&apos;t control it in battle. You <b>choose</b> units and <b>place</b> them, then press
-            Fight and watch both armies clash on their own.
-          </p>
-          <p>Winning is about picking the right units and putting them in the right places.</p>
-        </>
+        <p>
+          Pick units and place them in your <b className="blue">blue zone</b>. Press <b>Fight!</b> and the battle plays out on
+          its own.
+        </p>
       ),
     },
     {
-      title: "1. Recruit and place",
-      art: <Icons defs={[u("knights"), u("crossbowmen"), u("grunts")]} />,
+      title: "Survivors hit HP",
+      art: <Icons defs={[u("knights"), u("knights"), u("ogre_brute")]} />,
       body: (
-        <>
-          <p>
-            First pick an <b>opening</b>: a pack of two units, placed for you, or a war chest of supply. Each round after that you
-            get more <b>supply</b>. Pick a unit in the sidebar, then click inside your{" "}
-            <b className="blue">blue zone</b> to place a squad.
-          </p>
-          <p>
-            Put tough units in front and shooters behind. <b>R</b> or right-click rotates a squad; <b>Ctrl+Z</b> undoes a purchase.
-          </p>
-        </>
+        <p>
+          Squads still standing after a fight damage the other side&apos;s HP. First to <b>0</b> loses. Your army stays, and
+          each round you add more.
+        </p>
       ),
     },
     {
-      title: "2. Your army keeps growing",
-      art: <Icons defs={[u("knights"), u("knights"), u("crossbowmen"), u("ogre_brute")]} />,
-      body: (
-        <>
-          <p>
-            Squads stay with you for the whole match and are <b>locked in place</b> once a round is fought. Every round you add
-            more on top.
-          </p>
-          <p>
-            Lose a battle and you lose HP based on what the enemy has left standing. The first player at <b>0 HP</b> loses the
-            war.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "3. Counter what you see",
+      title: "Counter what you see",
       art: <Triangle a={u("grunts")} b={u("crossbowmen")} c={u("knights")} />,
       body: (
         <>
-          <p>
-            Before you build, you can see the enemy&apos;s army from last round. Every unit beats some units and loses to others:
-          </p>
-          <p className="intro-small">
-            A goblin swarm soaks up crossbow bolts · Crossbow bolts punch through Knights · Knights cut down the swarm. Pikes
-            and trolls bring down giants, Giant Bats land on archers, and Air Elementals swat fliers.
-          </p>
-          <p>
-            Hover any unit to see what it does. The <b>Counters</b> tab shows what beats any unit, and the <b>Codex</b> explains every
-            rule; underlined words link straight to it.
-          </p>
-        </>
-      ),
-    },
-    {
-      title: "4. Upgrades and Keeps",
-      art: <Icons defs={[u("ogre_brute"), u("wolf_riders")]} keep />,
-      body: (
-        <>
-          <p>
-            The <b>Upgrades</b> tab improves <b>every</b> squad of a unit, including ones already on the field. Each unit has
-            four, and each one you buy for it costs more, so pick a specialty.
-          </p>
-          <p>
-            Squads earn <b>XP</b> for the damage they deal. When one earns a level, a gold <b>▲</b> appears over it: click it
-            and pay its price to double its HP and damage (then triple, and so on).
-          </p>
-          <p>
-            Each side has two <b>Keeps</b>. If one falls, its owner&apos;s whole army is <b>Dazed</b> for a few seconds and fights
-            badly, so guard your flanks, or sneak raiders around theirs.
-          </p>
-          <p className="intro-small">You&apos;re playing the AI on Easy. You can change that at the bottom of the sidebar.</p>
+          <p>You can see the enemy&apos;s army from last round. Hover any unit to see what it beats.</p>
+          <p className="intro-small">You&apos;re playing the AI on Easy. Change it at the bottom of the sidebar.</p>
         </>
       ),
     },
