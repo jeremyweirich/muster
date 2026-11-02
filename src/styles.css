@@ -180,6 +180,10 @@ code {
 }
 .version {
   font-size: 12px;
+  /* also the hidden way into the debug panel, so it's a bare button */
+  background: none;
+  border: none;
+  padding: 0;
 }
 .version .build {
   font-size: 0.85em;
@@ -2106,8 +2110,32 @@ button.primary.warn-btn {
   font-size: 12px;
   padding: 3px 6px;
 }
-.shop-cost.dim {
+.shop-cost.dim,
+.shop-item.unaffordable .shop-name {
   opacity: 0.5;
+}
+.shop-note {
+  margin: 0;
+}
+
+/* ----------------------------------------------------------------- debug (hidden tab) */
+
+.debug-side h3,
+.debug-side p {
+  margin: 0;
+}
+.debug-report {
+  margin: 0;
+  width: 100%;
+  max-height: 100%;
+  overflow: auto;
+  padding: 8px;
+  font-size: 11px;
+  white-space: pre-wrap;
+  user-select: text;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
 }
 .rail-undo {
   flex: none;

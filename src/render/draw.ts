@@ -253,6 +253,12 @@ const ATLAS_SIZE = 1024;
 interface Sprite { x: number; y: number; px: number } // a square cell in the atlas, in atlas pixels
 let atlas: { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; scale: number; cells: Map<string, Sprite>; x: number; y: number; row: number } | null = null;
 let atlasGen = 0; // bumped whenever the atlas's cells are thrown away
+let atlasFills = 0; // times the atlas ran out of room and started over
+
+// For the debug panel's performance test: a working set too big for the atlas would show as many fills.
+export function spriteStats() {
+  return { sprites: atlas?.cells.size ?? 0, used: atlas ? (atlas.y + atlas.row) / ATLAS_SIZE : 0, fills: atlasFills };
+}
 
 // The cached sprite for `key`, `half` field pixels from its center to its edge, painted around (0, 0) by `paint`.
 // Null when it can't be cached; the caller then draws directly.
@@ -285,6 +291,7 @@ function sprite(key: string, scale: number, half: number, paint: (c: CanvasRende
     a.ctx.clearRect(0, 0, ATLAS_SIZE, ATLAS_SIZE);
     a.x = a.y = a.row = 0;
     atlasGen++;
+    atlasFills++;
   }
   const s = { x: a.x, y: a.y, px };
   a.x += px;
@@ -313,11 +320,20 @@ function tokenSprite(def: UnitDef, tile: number, scale: number, slot: number, ma
   return s;
 }
 
-// tokenSprite slots: the whole token, its body and its top (by side and flash where they differ), and a flier's glow
+// tokenSprite slots: the whole token, its body and its top (by side and flash where they differ), and a flier's glow.
+// A triangle's whole and body slots repeat for each heading, SLOTS_PER_TURN apart.
 const SLOT_WHOLE = 0;
 const SLOT_BODY = 4;
 const SLOT_TOP = 8;
 const SLOT_GLOW = 10;
+const SLOTS_PER_TURN = 12;
+
+// Headings a turning token is cached at: 7.5° apart, under a pixel of movement at a token's corner.
+const TURNS = 48;
+function turnStep(facing: number): number {
+  const t = facing / (Math.PI * 2);
+  return Math.round((t - Math.floor(t)) * TURNS) % TURNS;
+}
 
 function stamp(ctx: CanvasRenderingContext2D, s: Sprite, x: number, y: number) {
   const inner = s.px - 2;
@@ -429,25 +445,25 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
   const st = o.statuses;
   const frozen = st?.frozen !== undefined;
   const hasTop = ((def.look.icon || def.look.glyph) && r >= 5) || level > 0;
-  const look = () => `${def.look.shape}|${def.look.color}|${def.look.icon}|${def.look.glyph}|${r}|${side}|${shadow}|${flash}`;
-  const k = side * 2 + (flash ? 1 : 0);
-  // Most tokens are a single stamp: body and icon together. A triangle turns with its facing, so its body is drawn
-  // fresh; frost and a veteran's level number sit between the body and the icon, so those tokens take two stamps.
-  const turns = def.look.shape === "triangle";
+  // A triangle turns with its facing, so its body is cached at each of TURNS headings (the notch stays exact).
+  const turn = def.look.shape === "triangle" ? turnStep(facing) : 0;
+  const bodyFacing = (turn * Math.PI * 2) / TURNS;
+  const look = () => `${def.look.shape}|${def.look.color}|${def.look.icon}|${def.look.glyph}|${r}|${side}|${shadow}|${flash}|${turn}`;
+  const k = turn * SLOTS_PER_TURN + side * 2 + (flash ? 1 : 0);
+  // Most tokens are a single stamp: body and icon together. Frost and a veteran's level number sit between the body
+  // and the icon, so those tokens take two stamps.
   const whole =
-    turns || level || frozen
+    level || frozen
       ? null
       : tokenSprite(def, tile, scale, SLOT_WHOLE + k, () =>
           sprite(`whole|${look()}`, scale, r * 1.3 + 1.5, (c) => {
-            paintBody(c, def, side, 0, 0, r, facing, flash, shadow);
+            paintBody(c, def, side, 0, 0, r, bodyFacing, flash, shadow);
             if (hasTop) paintTop(c, def, 0, 0, r, 0);
           }),
         );
   if (whole) stamp(ctx, whole, px, py);
   else {
-    const body = turns
-      ? null
-      : tokenSprite(def, tile, scale, SLOT_BODY + k, () => sprite(`body|${look()}`, scale, r * 1.3 + 1.5, (c) => paintBody(c, def, side, 0, 0, r, facing, flash, shadow)));
+    const body = tokenSprite(def, tile, scale, SLOT_BODY + k, () => sprite(`body|${look()}`, scale, r * 1.3 + 1.5, (c) => paintBody(c, def, side, 0, 0, r, bodyFacing, flash, shadow)));
     if (body) stamp(ctx, body, px, py);
     else paintBody(ctx, def, side, px, py, r, facing, flash, shadow);
   }
@@ -512,10 +528,11 @@ export function drawSquad(
     ctx.strokeRect(sq.x * tile + 1, sq.y * tile + 1, w * tile - 2, h * tile - 2);
     ctx.setLineDash([]);
   }
+  const scale = ctx.getTransform().a || 1;
   formation(def, sq.x, sq.y, sq.rot, side).forEach(([x, y], i) => {
     const dead = o.alive !== undefined && i >= o.alive;
     // a tower's level is a property of its def, so it shows as the squad's badge, not on the token as well
-    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3, noPip: def.structure });
+    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3, noPip: def.structure, scale });
   });
   ctx.globalAlpha = 1;
   const level = (sq.level ?? 1) > 1 ? sq.level! : def.structure ? shownLevel(def) : undefined;

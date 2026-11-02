@@ -3,6 +3,7 @@ import { randomId } from "./game/pvp";
 import { relayUrl } from "./net/config";
 import { CodexView } from "./ui/CodexView";
 import { CountersView } from "./ui/CountersView";
+import { DebugView } from "./ui/DebugView";
 import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
 import { PvpView, type PlayStatus } from "./ui/PvpView";
@@ -17,12 +18,14 @@ const TABS = [
   { id: "counters", label: "Counters" },
 ] as const;
 
-type Tab = (typeof TABS)[number]["id"];
+// "debug" is a hidden tab for development, opened by clicking the version in the corner.
+type Tab = (typeof TABS)[number]["id"] | "debug";
 
 // The hash is #tab or #tab/topic: keyword links elsewhere in the game open #codex/<topic>,
 // and #counters/<unit> opens the counter guide for that unit.
 function parseHash(): { tab: Tab; topic?: string } {
   const [tab, topic] = location.hash.slice(1).split("/");
+  if (tab === "debug") return { tab };
   return TABS.some((t) => t.id === tab) ? { tab: tab as Tab, topic } : { tab: "play" };
 }
 
@@ -87,9 +90,9 @@ export function App() {
         <button className="help-btn" onClick={() => setIntro(true)}>
           How to play
         </button>
-        <div className="version muted" title={`Built ${new Date(__BUILD_TIME__).toLocaleString()}`}>
-          prototype <span className="build">{__APP_VERSION__}</span>
-        </div>
+        <button className="version muted" title={`Built ${new Date(__BUILD_TIME__).toLocaleString()}`} onClick={() => go("debug")}>
+          <span className="build">{__APP_VERSION__}</span>
+        </button>
       </header>
       {/* Play stays mounted so following a Codex link mid-game doesn't lose the match */}
       <div style={{ display: tab === "play" ? "contents" : "none" }}>
@@ -101,6 +104,7 @@ export function App() {
       {tab === "story" && <StoryView />}
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}
+      {tab === "debug" && <DebugView />}
       {intro && <Intro onClose={() => setIntro(false)} />}
     </div>
   );

@@ -34,8 +34,12 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
     const ctx = canvas.getContext("2d")!;
     const fieldW = RULES.fieldW * tile;
     let scale = 0;
+    // Play stays mounted behind the other tabs; while it's hidden its field doesn't draw (a battle waits)
+    let hidden = false;
     const resize = () => {
-      const shown = canvas.getBoundingClientRect().width || fieldW;
+      const shown = canvas.getBoundingClientRect().width;
+      hidden = shown === 0;
+      if (hidden) return;
       const next = Math.min(MAX_PIXELS_W, Math.round(shown * Math.min(MAX_DPR, window.devicePixelRatio || 1))) / fieldW;
       if (next === scale) return;
       scale = next;
@@ -54,8 +58,10 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
     const loop = (now: number) => {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      ctx.setTransform(scale, 0, 0, scale, 0, 0);
-      drawRef.current(ctx, dt, (now - start) / 1000);
+      if (!hidden) {
+        ctx.setTransform(scale, 0, 0, scale, 0, 0);
+        drawRef.current(ctx, dt, (now - start) / 1000);
+      }
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

@@ -518,7 +518,11 @@ The campaign outline (docs/CAMPAIGN.md) casts these as commanders: the goblin Bo
 ## 10. Tabs and tools — Decided
 
 The tabs, in order: **Play** (the default: the full game against the AI, every unit available), **PvP**, **Story**,
-**Codex**, **Counters**. The site opens on Play.
+**Codex**, **Counters**. The site opens on Play. Play stays mounted behind the other tabs (a Codex link mid-game keeps
+the match), but its field doesn't draw while hidden, so a battle waits until you come back.
+
+The shop states the usual unlock price once (the unlock sheet's title on phones, a line above the shop on desktop) and
+marks only units whose price differs (the independents), so tiles have room for names.
 
 | Tool | What it's for |
 |---|---|
@@ -530,6 +534,7 @@ The tabs, in order: **Play** (the default: the full game against the AI, every u
 | **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md), listed as coming soon. Data in `src/data/campaign.ts` |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
+| **Debug panel** | Hidden, for development: click the version in the header's corner (`#debug`, `src/ui/DebugView.tsx`). One button, **Performance test**: about a minute of fixed armies (the simulator alone, then the deploy screen and three battles on this device's field, played as Play plays them), reported as plain text with Copy and Share. That is how numbers come off a phone: the owner runs it there and pastes the report back; the site still sends nothing |
 | `npm run bench` | Simulator benchmark: time per battle and a fingerprint of every outcome (`docs/SIMULATION.md`) |
 | `npm run ai-duel` | Full AI-vs-AI matches, the current planner against a saved baseline, to judge an AI change (`docs/SIMULATION.md`) |
 | `npm run balance` | The balance harness (section 4, Balance): stats, coverage, the equal-supply matrix, checks against the targets, and the closing-distance, composition, sensitivity and upgrade tests |
@@ -575,9 +580,9 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
   pressure); plain grass is filled underneath every frame, so a blanked cache never turns the field black or leaves
   trails.
 - Unit tokens are stamped from a sprite atlas (`draw.ts`, "unit sprites"): body, shading, outline and icon are drawn
-  once per unit look, so a plain token costs one image copy plus its facing notch. Triangles (they turn) draw their
-  body fresh; frost and veteran numbers sit between body and icon, so those take two stamps. The atlas is rebuilt
-  after a GPU reset, like the background.
+  once per unit look, so a plain token costs one image copy plus its facing notch. Triangles turn with their facing,
+  so theirs are cached at 48 headings; frost and veteran numbers sit between body and icon, so those take two stamps.
+  The atlas is rebuilt after a GPU reset, like the background.
 - Fliers hover above a shadow at their real position and bob gently. Winged fliers (Griffons, Bats, Dragon) flap
   wings; elemental fliers (Cloudlings, a flying Air Elemental) glow instead.
 - Every unit has a vector icon (`src/render/icons.ts`), drawn on its token and in the shop.

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { FACTIONS, factionOf } from "../data/roles";
 import { RULES } from "../data/rules";
-import { unlockPrice } from "../game/army";
+import { unlockPrice, usualUnlockPrice } from "../game/army";
 import { shownLevel } from "../sim/levels";
 import type { UnitDef } from "../sim/types";
 import { Linked } from "./codexLinks";
@@ -164,8 +164,16 @@ export function DetailsSheet({ def, owned, onClose }: { def: UnitDef; owned: str
 // Every unit you haven't unlocked, by faction; tap one to read about it, then unlock it.
 export function UnlockSheet({ units, supply, onUnlock, onClose }: { units: UnitDef[]; supply: number; onUnlock: (u: UnitDef) => void; onClose: () => void }) {
   const [preview, setPreview] = useState<UnitDef | null>(null);
+  // the usual price goes in the title, so the tiles have room for names
+  const usual = usualUnlockPrice(units);
+  const title = (
+    <>
+      <b>Unlock a unit</b>
+      {units.length > 0 && <span className="muted"> · {usual} supply each</span>}
+    </>
+  );
   return (
-    <Sheet kind="full" title={<b>Unlock a unit</b>} onClose={onClose}>
+    <Sheet kind="full" title={title} onClose={onClose}>
       <div className="unlock-sheet">
         <div className="unlock-list">
           {units.length === 0 && <p className="muted small">You&apos;ve unlocked every unit.</p>}
@@ -177,10 +185,14 @@ export function UnlockSheet({ units, supply, onUnlock, onClose }: { units: UnitD
                 <div className="shop-faction">{f.name}</div>
                 <div className="unlock-grid">
                   {list.map((u) => (
-                    <button key={u.id} className={`shop-item ${preview?.id === u.id ? "active" : ""}`} onClick={() => setPreview(u)}>
+                    <button
+                      key={u.id}
+                      className={`shop-item ${preview?.id === u.id ? "active" : ""} ${unlockPrice(u) <= supply ? "" : "unaffordable"}`}
+                      onClick={() => setPreview(u)}
+                    >
                       <Swatch def={u} size={16} />
                       <span className="shop-name">{u.name}</span>
-                      <span className={`shop-cost lock ${unlockPrice(u) <= supply ? "" : "dim"}`}>🔒 {unlockPrice(u)}</span>
+                      {unlockPrice(u) !== usual && <span className="shop-cost lock">{unlockPrice(u)}</span>}
                     </button>
                   ))}
                 </div>

@@ -175,3 +175,7 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   is capped at 2× DPR. At 4× throttle, round 5: deploy screen 22–28 → 60 fps, battle 43–47 → 59–60 fps. Next lever if
   big late-game fights still stutter on a phone: the sim tick (about a third of frames run one; 10–15 ms for 400
   models at 6× throttle), e.g. stepping the battle in a worker. Not yet checked on a real phone.
+  **Getting numbers from the owner's phone:** the hidden debug panel (click the version in the header, or `#debug`)
+  runs a one-minute performance test and shows a text report with Copy/Share; ask the owner to run it on the live
+  site and paste the report. Same scenarios as the desktop scripts, plus sprite-atlas stats. Desktop result at 4×
+  throttle (Nov 1): deploy 56 fps, battles 56–60 fps.
