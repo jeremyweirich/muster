@@ -53,7 +53,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Fire Elemental | Chaff clear (Stormcaller) | 200 cost, 4 × 180 HP, 45 fire every 3 s, splash 1.3, fire resist 0.3 (was immune) |
 | Water Elemental | Utility | 300 cost, 2400 HP, water resist 0.3 (was immune) |
 | Air Elemental | Chaff clear (Arclight → Raiden) | 50 lightning every 1.2 s (two chain links kill a goblin each), lightning resist 0.3. Beats Knights; *Warded Plate* flips it |
-| Cloudlings | Chaff (Wasp) | 14 per flock, 50 HP, speed 19 |
+| Cloudlings | Chaff (Wasp) | 14 per flock, 40 HP, speed 19 |
 | Frost Elemental | Anti-giant (Melting Point) | 200 cost, ramping cold (+25% per hit, up to ×3), frost resist 0.3 (was immune) |
 | Stone Golem | Tank (Fortress) | 300 cost, 3600 HP, 300 damage, speed 9, physical resist 0.4, lightning and fire 0.3 (were immune) |
 | Dragon, Giant | Independents | Fire resist 0.3 (was immune). Giant 400 cost, stats scaled with it. Not rebalanced |
@@ -78,9 +78,11 @@ Knights cut down the swarm. The How to Play page says so.
 
 **Open problems, most important first**
 1. **Fliers still win one-unit fights too broadly.** Cloudlings hard-counter 13 of 19 units, Griffons 12, Giant Bats
-   11, and the Nash mix puts its weight on Ballista, Cloudlings and the Dragon. Most of it is ground-only units that
-   can't touch air, which one-unit armies exaggerate. Mixed-army tests (`fight`) are the better read, and Knights'
-   optional anti-air javelin is the lever we've held back.
+   11. Most of it is ground-only units that can't touch air, which one-unit armies exaggerate. Mixed-army tests
+   (`fight`) are the better read, and Knights' optional anti-air javelin is the lever we've held back. Nov 1, 2026:
+   the owner found Cloudlings too strong; base damage moved into Freezing Rain, attack speed into Downpour, and HP
+   50 → 40 so a cloud falls to four arrows. Skirmishers now beat them (87%), and the Nash mix's Cloudling weight
+   fell from 31% to 14% (now Crossbowmen 53%, Dragon 16%, Cloudlings 14%, Skirmishers 8%).
 2. **Crossbowmen and Frost Elementals have soft counters but no hard counter.** Their chaff counters win at equal
    supply, but not at 2:1.
 3. **Small leftover side bias.** At 32 seeds, Crossbowmen and Air Elementals lean to the bottom side (63%), Grunts and

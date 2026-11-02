@@ -662,11 +662,11 @@ export const DEFAULT_UNITS: UnitDef[] = [
     squadSize: 14,
     footprint: { w: 3, h: 2 },
     layer: "air",
-    hp: 50,
+    hp: 40,
     speed: 19,
     size: 0.22,
     attack: {
-      damage: 10, element: "physical", cooldown: 1.5, range: 2,
+      damage: 8, element: "physical", cooldown: 1.8, range: 2,
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 12,
     },
     // Downpour soaks, Freezing Rain freezes what's soaked, Thunderstorm conducts through Wet and shatters Frozen.
@@ -674,7 +674,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "downpour",
         name: "Downpour",
-        description: "Rains on its first target, then every 6s: soaks it Wet, leaves a puddle.",
+        description: "Hails 20% faster. Rains on its first target, then every 6s: soaks it Wet, leaves a puddle.",
+        mods: [{ stat: "cooldown", mult: 0.83 }],
         traits: [
           {
             type: "periodic",
@@ -697,8 +698,9 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "freezing_rain",
         name: "Freezing Rain",
-        description: "Frost damage that ignores armor and freezes Wet targets.",
+        description: "+40% damage, as frost that ignores armor and freezes Wet targets.",
         element: "frost",
+        mods: [{ stat: "damage", mult: 1.4 }],
       },
     ],
     tags: ["faction:elemental", "race:elemental", "element:water", "size:small", "role:swarm", "role:flier", "role:fast"],

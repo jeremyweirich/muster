@@ -230,10 +230,10 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     role: "chaff",
     analogue: "Wasp",
     upgrades: {
-      downpour: { intent: "Combo: soak targets Wet" },
+      downpour: { intent: "Combo: soak targets Wet, and hail faster to make up the base attack speed" },
       thunderstorm: { intent: "Lightning that Conducts through Wet" },
       overcast: { intent: "More bodies" },
-      freezing_rain: { intent: "Frost hail: through armor, and Wet targets freeze" },
+      freezing_rain: { intent: "Frost hail: harder hits that go through armor, and Wet targets freeze" },
     },
   },
   frost_elemental: {
@@ -296,6 +296,7 @@ export const RELATIONS: [string, string, string][] = [
   ["skirmishers", "ballista", "too many bodies for one bolt"],
   ["skirmishers", "frost_elemental", "the cold never gets to sink in"],
   ["skirmishers", "giant_bats", "short bows that hit fliers"],
+  ["skirmishers", "cloudlings", "short bows outrange the hail, and a cloud falls to a few arrows"],
   ["cloudlings", "crossbowmen", "a flock the bolts can't thin"],
   ["cloudlings", "ballista", "one bolt, one cloud"],
   ["cloudlings", "knights", "they can't hit fliers"],
