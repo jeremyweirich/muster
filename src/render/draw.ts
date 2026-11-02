@@ -12,7 +12,9 @@ export const SIDE_COLORS = ["#4da3ff", "#ff5468"] as const;
 const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
 const SURFACE_IDS = SurfaceGrid.ids();
 
-type BackgroundOpts = { zones?: boolean; grid?: Side[] };
+// size: the field in tiles (default RULES). sideways: the sides face each other left and right (the Units tab's arena).
+type BackgroundOpts = { zones?: boolean; grid?: Side[]; size?: { w: number; h: number }; sideways?: boolean };
+const fieldSize = (opts: BackgroundOpts) => opts.size ?? { w: RULES.fieldW, h: RULES.fieldH };
 
 const GRASS_BASE = "#1c2a1e";
 
@@ -29,11 +31,12 @@ export function repaintBackground() {
 }
 
 function backgroundLayer(tile: number, scale: number, opts: BackgroundOpts): HTMLCanvasElement | null {
-  const size = `${tile}|${scale}`;
+  const field = fieldSize(opts);
+  const size = `${tile}|${scale}|${field.w}x${field.h}`;
   if (grass?.key.split("#")[0] !== size) {
     const canvas = document.createElement("canvas");
-    canvas.width = Math.round(RULES.fieldW * tile * scale);
-    canvas.height = Math.round(RULES.fieldH * tile * scale);
+    canvas.width = Math.round(field.w * tile * scale);
+    canvas.height = Math.round(field.h * tile * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
     const layer = { canvas, ctx, key: size, painted: false };
@@ -43,10 +46,10 @@ function backgroundLayer(tile: number, scale: number, opts: BackgroundOpts): HTM
   }
   if (grass.ctx.isContextLost?.()) return null;
   // one layer, repainted when the phase (and so the overlays) changes
-  const key = `${size}#${opts.zones ? "z" : ""}|${(opts.grid ?? []).join(",")}`;
+  const key = `${size}#${opts.zones ? "z" : ""}|${(opts.grid ?? []).join(",")}|${opts.sideways ? "s" : ""}`;
   if (!grass.painted || grass.key !== key) {
     grass.ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    paintGrass(grass.ctx, tile);
+    paintGrass(grass.ctx, tile, field);
     paintOverlays(grass.ctx, tile, opts);
     grass.key = key;
     grass.painted = true;
@@ -55,8 +58,8 @@ function backgroundLayer(tile: number, scale: number, opts: BackgroundOpts): HTM
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts = {}) {
-  const W = RULES.fieldW * tile;
-  const H = RULES.fieldH * tile;
+  const W = fieldSize(opts).w * tile;
+  const H = fieldSize(opts).h * tile;
   // plain grass underneath, so a blanked layer shows an empty field, never the last frame
   ctx.fillStyle = GRASS_BASE;
   ctx.fillRect(0, 0, W, H);
@@ -67,9 +70,9 @@ export function drawBackground(ctx: CanvasRenderingContext2D, tile: number, opts
   else paintOverlays(ctx, tile, opts);
 }
 
-function paintGrass(ctx: CanvasRenderingContext2D, tile: number) {
-  const W = RULES.fieldW * tile;
-  const H = RULES.fieldH * tile;
+function paintGrass(ctx: CanvasRenderingContext2D, tile: number, field: { w: number; h: number }) {
+  const W = field.w * tile;
+  const H = field.h * tile;
   // grass: a slightly lighter band through the middle
   const base = ctx.createLinearGradient(0, 0, 0, H);
   base.addColorStop(0, GRASS_BASE);
@@ -80,11 +83,11 @@ function paintGrass(ctx: CanvasRenderingContext2D, tile: number) {
   // mowed stripes, two tiles wide, so distances still read at a glance; mirrored about the centerline (a dark band
   // straddles it), so the two halves of the field line up when placing
   ctx.fillStyle = "rgba(255,255,255,0.022)";
-  for (let x = (RULES.fieldW / 2 + 1) % 4; x < RULES.fieldW; x += 4) ctx.fillRect(x * tile, 0, 2 * tile, H);
+  for (let x = (field.w / 2 + 1) % 4; x < field.w; x += 4) ctx.fillRect(x * tile, 0, 2 * tile, H);
   // speckles and grass tufts from a fixed seed, so the field looks the same every time
   let seed = 1234567;
   const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const tufts = Math.round(RULES.fieldW * RULES.fieldH * 2.2);
+  const tufts = Math.round(field.w * field.h * 2.2);
   for (let i = 0; i < tufts; i++) {
     const x = rnd() * W;
     const y = rnd() * H;
@@ -104,8 +107,8 @@ function paintGrass(ctx: CanvasRenderingContext2D, tile: number) {
 }
 
 function paintOverlays(ctx: CanvasRenderingContext2D, tile: number, opts: BackgroundOpts) {
-  const W = RULES.fieldW * tile;
-  const H = RULES.fieldH * tile;
+  const W = fieldSize(opts).w * tile;
+  const H = fieldSize(opts).h * tile;
   if (opts.zones) {
     for (const side of [0, 1] as Side[]) {
       const { y0, y1 } = deployZone(side);
@@ -145,8 +148,13 @@ function paintOverlays(ctx: CanvasRenderingContext2D, tile: number, opts: Backgr
   ctx.lineWidth = 1.5;
   ctx.setLineDash([4, 6]);
   ctx.beginPath();
-  ctx.moveTo(0, (RULES.fieldH / 2) * tile);
-  ctx.lineTo(W, (RULES.fieldH / 2) * tile);
+  if (opts.sideways) {
+    ctx.moveTo(W / 2, 0);
+    ctx.lineTo(W / 2, H);
+  } else {
+    ctx.moveTo(0, H / 2);
+    ctx.lineTo(W, H / 2);
+  }
   ctx.stroke();
   ctx.setLineDash([]);
   // vignette pulls the eye to the middle
@@ -874,13 +882,25 @@ function drawBeam(ctx: CanvasRenderingContext2D, fx: BeamFx, tile: number, k: nu
 // Render interpolation: where each model was one tick ago, and how far (0..1) playback is into the current tick.
 export type Interp = { alpha: number; prev: Map<Model, { x: number; y: number; facing: number }> };
 
+// highlight: models to mark with a pulsing halo (the featured unit on the Units tab). sideways: see BackgroundOpts.
+export type BattleDrawOpts = { highlight?: (m: Model) => boolean; sideways?: boolean };
+
 // `flip` draws the field turned 180° with the team colors swapped: a PvP guest fights as side 1, but sees their own
 // army at the bottom in blue. Positions are turned, not the canvas, so text, health bars and fliers stay upright.
-export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: number, fx: FxLayer, realTime: number, interp?: Interp, flip = false) {
+export function drawBattle(
+  ctx: CanvasRenderingContext2D,
+  battle: Battle,
+  tile: number,
+  fx: FxLayer,
+  realTime: number,
+  interp?: Interp,
+  flip = false,
+  opts: BattleDrawOpts = {},
+) {
   const W = battle.rules.fieldW;
   const H = battle.rules.fieldH;
   const view = (s: Side): Side => (flip ? (s === 0 ? 1 : 0) : s);
-  drawBackground(ctx, tile);
+  drawBackground(ctx, tile, { size: { w: W, h: H }, sideways: opts.sideways });
   drawSurfaces(ctx, battle.surfaces, tile, realTime, flip);
   const a = interp?.alpha ?? 1;
   const scale = ctx.getTransform().a || 1;
@@ -907,6 +927,7 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
       y = H - y;
       facing += Math.PI;
     }
+    if (opts.highlight?.(m)) drawHalo(ctx, m.def, x, y, tile, realTime + m.id * 0.4);
     return drawUnit(ctx, m.def, view(m.side), x, y, tile, {
       facing,
       hpFrac: m.hp / m.maxHp,
@@ -924,4 +945,16 @@ export function drawBattle(ctx: CanvasRenderingContext2D, battle: Battle, tile: 
   fx.shots.settle(fx.parts);
   for (const m of battle.models) if (m.alive && m.def.layer === "air") draw(m);
   fx.draw(ctx, tile);
+}
+
+// A soft gold glow on the ground under a model, breathing slowly.
+function drawHalo(ctx: CanvasRenderingContext2D, def: UnitDef, x: number, y: number, tile: number, time: number) {
+  const r = Math.max(2.5, def.size * tile) * (1.9 + Math.sin(time * 3) * 0.15);
+  const g = ctx.createRadialGradient(x * tile, y * tile, r * 0.3, x * tile, y * tile, r);
+  g.addColorStop(0, "rgba(255,214,102,0.5)");
+  g.addColorStop(1, "rgba(255,214,102,0)");
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(x * tile, y * tile, r, 0, Math.PI * 2);
+  ctx.fill();
 }

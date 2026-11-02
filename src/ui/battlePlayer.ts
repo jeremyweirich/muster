@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { drawBattle, FxLayer, type Interp } from "../render/draw";
+import { drawBattle, FxLayer, type BattleDrawOpts, type Interp } from "../render/draw";
 import type { Battle, BattleResult } from "../sim/battle";
 import type { Side } from "../sim/types";
 
@@ -60,6 +60,8 @@ export function useBattlePlayer() {
       speed: number,
       onEnd?: (r: BattleResult) => void,
       flip = false, // drawn turned 180° (a PvP guest's view)
+      drawOpts?: BattleDrawOpts,
+      decidedSpeedup = DECIDED_SPEEDUP,
     ) {
       const tick = battle.rules.tick;
       const now = armyTaken(battle);
@@ -69,7 +71,7 @@ export function useBattlePlayer() {
       taken.current = now;
       const decided = !battle.over && (harmless(battle, 0, hurtAt.current[1]) || harmless(battle, 1, hurtAt.current[0]));
       if (speed > 0 && !battle.over) {
-        acc.current += dt * speed * PLAYBACK_SCALE * (decided ? DECIDED_SPEEDUP : 1);
+        acc.current += dt * speed * PLAYBACK_SCALE * (decided ? decidedSpeedup : 1);
         const steps = Math.min(400, Math.floor(acc.current / tick));
         for (let s = 0; s < steps && !battle.over; s++) {
           // only the state just before the last step matters for interpolation
@@ -85,7 +87,7 @@ export function useBattlePlayer() {
       }
       interp.current.alpha = battle.over ? 1 : Math.min(1, acc.current / tick);
       fx.current.update(dt * Math.max(1, Math.min(speed, 2)));
-      drawBattle(ctx, battle, tile, fx.current, time, interp.current, flip);
+      drawBattle(ctx, battle, tile, fx.current, time, interp.current, flip, drawOpts);
       if (decided && speed > 0) drawBanner(ctx, (battle.rules.fieldW * tile) / 2, "One side can't fight back · fast-forwarding");
       if (battle.over && ended.current !== battle) {
         ended.current = battle;
@@ -101,7 +103,7 @@ export function useBattlePlayer() {
   };
 }
 
-function drawBanner(ctx: CanvasRenderingContext2D, cx: number, text: string) {
+export function drawBanner(ctx: CanvasRenderingContext2D, cx: number, text: string) {
   ctx.save();
   ctx.font = "bold 12px system-ui, sans-serif";
   const w = ctx.measureText(text).width + 16;

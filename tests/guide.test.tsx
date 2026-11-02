@@ -1,12 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ROLES } from "../src/data/roles";
+import { SHOWCASES } from "../src/data/showcases";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { strengths, weaknesses } from "../src/game/counters";
+import { showcaseBattle } from "../src/game/showcase";
 import { CodexView } from "../src/ui/CodexView";
 import { KEYWORDS, Linked } from "../src/ui/codexLinks";
 import { CountersView } from "../src/ui/CountersView";
 import { UnitInfo } from "../src/ui/UnitInfo";
+import { UnitsView } from "../src/ui/UnitsView";
 
 const byId = (id: string) => DEFAULT_UNITS.find((u) => u.id === id)!;
 const codex = renderToStaticMarkup(<CodexView />);
@@ -37,6 +40,30 @@ describe("codex links", () => {
 
   it("the counters page renders before a unit is picked", () => {
     expect(renderToStaticMarkup(<CountersView />)).toContain("Pick the enemy unit");
+  });
+});
+
+describe("units tab", () => {
+  it("every unit has a showcase fight, and the featured side wins it", () => {
+    for (const u of DEFAULT_UNITS) {
+      expect(SHOWCASES[u.id], u.id).toBeDefined();
+      for (const seed of [1, 2, 3]) {
+        const b = showcaseBattle(DEFAULT_UNITS, u.id, [], seed);
+        b.run();
+        expect(b.winner, `${u.id} seed ${seed}`).toBe(0);
+      }
+    }
+  });
+
+  it("every unit link has a page", () => {
+    const html = [codex, renderToStaticMarkup(<UnitInfo def={byId("knights")} link />), renderToStaticMarkup(<UnitsView topic="cleric" />)].join("");
+    const linked = [...html.matchAll(/href="#units\/([^"]+)"/g)].map((m) => m[1]);
+    expect(linked.length).toBeGreaterThan(0);
+    for (const id of new Set(linked)) expect(DEFAULT_UNITS.some((u) => u.id === id), id).toBe(true);
+  });
+
+  it("opens the linked unit", () => {
+    expect(renderToStaticMarkup(<UnitsView topic="cleric" />)).toContain("behind it wins");
   });
 });
 

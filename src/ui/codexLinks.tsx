@@ -15,6 +15,19 @@ export function CodexLink({ topic, children, className = "kw" }: { topic: string
   );
 }
 
+// Each unit has a page on the Units tab (#units/<id>): what it does, its upgrades, and a little fight showing it off.
+export function unitHref(id: string): string {
+  return `#units/${id}`;
+}
+
+export function UnitLink({ id, children, className = "unit-link" }: { id: string; children: ReactNode; className?: string }) {
+  return (
+    <a className={className} href={unitHref(id)}>
+      {children}
+    </a>
+  );
+}
+
 // Words in player-facing text (descriptions, effects) that have a Codex entry. Order matters:
 // longer phrases first, so "burning ground" becomes the Fire surface rather than the Burning status.
 export const KEYWORDS: [RegExp, string][] = [

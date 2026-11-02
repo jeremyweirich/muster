@@ -988,6 +988,7 @@ export function PlayView({ pvp, onStatus }: { pvp?: PvpProps; onStatus?: (s: Pla
       def={card.def}
       owned={card.def.structure ? undefined : match.upgrades[card.side][card.def.id] ?? []}
       upgradeAction={upgradeAction(card.def)}
+      link
     />
     </>
   );

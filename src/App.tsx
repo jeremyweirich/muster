@@ -7,13 +7,14 @@ import { DebugView } from "./ui/DebugView";
 import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
 import { PvpView, type PlayStatus } from "./ui/PvpView";
-import { StoryView } from "./ui/StoryView";
+import { UnitsView } from "./ui/UnitsView";
 import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
 
 const TABS = [
   { id: "play", label: "Play" },
   { id: "pvp", label: "PvP" },
-  { id: "story", label: "Story" },
+  // Story (StoryView, the campaigns) is parked until the campaigns are built; Units took its place.
+  { id: "units", label: "Units" },
   { id: "codex", label: "Codex" },
   { id: "counters", label: "Counters" },
 ] as const;
@@ -22,7 +23,7 @@ const TABS = [
 type Tab = (typeof TABS)[number]["id"] | "debug";
 
 // The hash is #tab or #tab/topic: keyword links elsewhere in the game open #codex/<topic>,
-// and #counters/<unit> opens the counter guide for that unit.
+// #units/<unit> opens a unit's page, and #counters/<unit> opens the counter guide for that unit.
 function parseHash(): { tab: Tab; topic?: string } {
   const [tab, topic] = location.hash.slice(1).split("/");
   if (tab === "debug") return { tab };
@@ -101,7 +102,7 @@ export function App() {
       {tab === "pvp" && (
         <PvpView available={relayAvailable} room={pvp?.room ?? null} play={playStatus} onCreate={startPvp} onLeave={leavePvp} onPlay={() => go("play")} />
       )}
-      {tab === "story" && <StoryView />}
+      {tab === "units" && <UnitsView topic={route.topic} />}
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}
       {tab === "debug" && <DebugView />}

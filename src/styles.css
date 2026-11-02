@@ -959,7 +959,7 @@ kbd {
   padding: 0 4px;
 }
 
-.enemy-picker {
+.unit-picker {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -993,6 +993,83 @@ kbd {
   border-color: var(--accent);
   background: #2c2a22;
 }
+.unit-link {
+  color: inherit;
+  text-decoration: none;
+}
+.unit-link:hover,
+a.unit-chip:hover {
+  color: var(--accent);
+}
+a.unit-chip {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Units tab: the fight on the left stays in view while the card on the right scrolls. */
+.unit-page {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
+  gap: 14px;
+  align-items: start;
+}
+.showcase {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+.showcase-field {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+}
+.showcase-sides {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 8px;
+  font-weight: 600;
+}
+.showcase-caption {
+  margin: 4px 0;
+}
+.showcase p {
+  margin-bottom: 0;
+}
+.small-btn.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Phones held sideways: a compact picker, so the fight is on the first screen. */
+@media (max-height: 560px) and (orientation: landscape) {
+  .units .lede {
+    display: none;
+  }
+  .units .unit-picker {
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .units .picker-item {
+    padding: 1px 7px 1px 3px;
+    font-size: 12px;
+  }
+  .units .picker-faction {
+    min-width: 76px;
+    font-size: 10px;
+  }
+}
+@media (max-width: 720px) {
+  .unit-page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .showcase {
+    position: static;
+  }
+}
+
 .counter-enemy {
   display: flex;
   gap: 14px;

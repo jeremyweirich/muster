@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { FACTIONS, factionOf } from "../data/roles";
 import { DEFAULT_UNITS } from "../data/units";
 import { COUNTER_BUDGET, COUNTER_SEEDS, strengths, weaknesses, type Reason } from "../game/counters";
 import { runMatchup, type MatchupResult } from "../game/lab";
 import type { LabMessage, LabRequest } from "../game/lab.worker";
 import type { UnitDef } from "../sim/types";
-import { CodexLink, Linked } from "./codexLinks";
-import { RoleChips, Swatch } from "./UnitInfo";
+import { CodexLink, Linked, UnitLink } from "./codexLinks";
+import { RoleChips, Swatch, UnitPicker } from "./UnitInfo";
 
 // "I'm getting wrecked by X, what do I build?" Pick X; every other unit fights it with the same supply
 // (one-unit armies, level 1, no upgrades, no Keeps), simulated in a worker. Results are cached for the
@@ -113,24 +112,7 @@ export function CountersView({ topic }: { topic?: string }) {
       <h2>Counters</h2>
       <p className="lede">Getting wrecked by something? Pick it, and see what to build against it.</p>
 
-      <div className="enemy-picker">
-        {FACTIONS.map((f) => {
-          const list = units.filter((u) => factionOf(u.tags) === f.id);
-          if (!list.length) return null;
-          return (
-            <div key={f.id} className="picker-group">
-              <span className="picker-faction">{f.name}</span>
-              <div className="picker-items">
-                {list.map((u) => (
-                  <button key={u.id} className={`picker-item ${u.id === enemyId ? "active" : ""}`} onClick={() => pick(u.id)}>
-                    <Swatch def={u} size={18} /> {u.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <UnitPicker units={units} active={enemyId} onPick={pick} />
 
       {!enemy ? (
         <p className="muted">Pick the enemy unit that&apos;s beating you.</p>
@@ -195,7 +177,9 @@ function CounterGroup({
             <Swatch def={unit} size={26} />
             <div className="counter-main">
               <div>
-                <b>{unit.name}</b>{" "}
+                <UnitLink id={unit.id}>
+                  <b>{unit.name}</b>
+                </UnitLink>{" "}
                 <span className="muted small">
                   {unit.cost} supply{unit.unlockCost ? ` · unlock ${unit.unlockCost}` : ""}
                 </span>

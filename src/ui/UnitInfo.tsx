@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import { ELEMENT_COLORS } from "../data/elements";
 import { RULES } from "../data/rules";
-import { rolesOf } from "../data/roles";
+import { FACTIONS, factionOf, rolesOf } from "../data/roles";
 import { ICONS, type IconDef, type IconId } from "../render/icons";
 import { shownLevel } from "../sim/levels";
 import { describeSelector } from "../sim/selectors";
 import type { Element, UnitDef } from "../sim/types";
-import { CodexLink, Linked } from "./codexLinks";
+import { CodexLink, Linked, UnitLink } from "./codexLinks";
 import { derived, describeEffect, describeTrait, describeUpgrade } from "./describe";
 
 export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
@@ -34,6 +34,30 @@ function IconSvg({ icon, size, nudge }: { icon: IconDef; size: number; nudge: nu
   );
 }
 
+// Every unit as a button, grouped by faction (Units and Counters tabs).
+export function UnitPicker({ units, active, onPick }: { units: UnitDef[]; active: string | null; onPick: (id: string) => void }) {
+  return (
+    <div className="unit-picker">
+      {FACTIONS.map((f) => {
+        const list = units.filter((u) => factionOf(u.tags) === f.id);
+        if (!list.length) return null;
+        return (
+          <div key={f.id} className="picker-group">
+            <span className="picker-faction">{f.name}</span>
+            <div className="picker-items">
+              {list.map((u) => (
+                <button key={u.id} className={`picker-item ${u.id === active ? "active" : ""}`} onClick={() => onPick(u.id)}>
+                  <Swatch def={u} size={18} /> {u.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // Role chips link to their Codex entry, which explains what the role means.
 export function RoleChips({ tags }: { tags: string[] }) {
   const roles = rolesOf(tags);
@@ -57,14 +81,17 @@ function El({ e, children }: { e: Element; children: ReactNode }) {
   );
 }
 
+// `link`: the name links to the unit's page on the Units tab (from Play; not on the page itself).
 export function UnitInfo({
   def,
   owned,
   upgradeAction,
+  link,
 }: {
   def: UnitDef;
   owned?: string[];
   upgradeAction?: (upgradeId: string) => ReactNode;
+  link?: boolean;
 }) {
   const d = derived(def);
   const entries = Object.entries(def.resist ?? {}) as [Element, number][];
@@ -76,7 +103,15 @@ export function UnitInfo({
       <div className="unit-info-head">
         <Swatch def={def} size={30} />
         <div>
-          <div className="unit-name">{def.name}</div>
+          <div className="unit-name">
+            {link && !def.structure ? (
+              <UnitLink id={def.id}>
+                {def.name}
+              </UnitLink>
+            ) : (
+              def.name
+            )}
+          </div>
           <div className="muted">
             {def.structure ? "tower" : `${def.cost} supply`} · {def.squadSize} × <CodexLink topic="layers">{def.layer}</CodexLink>
             {def.unlockCost ? ` · unlock ${def.unlockCost}` : ""}

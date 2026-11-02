@@ -11,6 +11,7 @@ export interface FieldPointer {
 
 interface Props {
   tile?: number;
+  field?: { w: number; h: number }; // in tiles; default the battlefield (RULES)
   draw: (ctx: CanvasRenderingContext2D, dt: number, time: number) => void;
   onPointer?: (p: FieldPointer) => void;
   className?: string;
@@ -24,7 +25,9 @@ const MAX_DPR = 2;
 
 // A canvas sized to the battlefield that redraws every animation frame. Drawing is in field pixels (`tile` per tile);
 // the pixel buffer matches the canvas's size on screen (up to MAX_DPR), so a phone doesn't paint pixels it can't show.
-export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
+export function FieldCanvas({ tile = 20, field, draw, onPointer, className }: Props) {
+  const fw = field?.w ?? RULES.fieldW;
+  const fh = field?.h ?? RULES.fieldH;
   const ref = useRef<HTMLCanvasElement>(null);
   const drawRef = useRef(draw);
   drawRef.current = draw;
@@ -32,7 +35,7 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
   useEffect(() => {
     const canvas = ref.current!;
     const ctx = canvas.getContext("2d")!;
-    const fieldW = RULES.fieldW * tile;
+    const fieldW = fw * tile;
     let scale = 0;
     // Play stays mounted behind the other tabs; while it's hidden its field doesn't draw (a battle waits)
     let hidden = false;
@@ -44,7 +47,7 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
       if (next === scale) return;
       scale = next;
       canvas.width = Math.round(fieldW * scale);
-      canvas.height = Math.round(RULES.fieldH * tile * scale);
+      canvas.height = Math.round(fh * tile * scale);
     };
     resize();
     const observer = new ResizeObserver(resize);
@@ -70,13 +73,13 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
       observer.disconnect();
       document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [tile]);
+  }, [tile, fw, fh]);
 
   const toTile = (e: React.PointerEvent | React.MouseEvent) => {
     const rect = ref.current!.getBoundingClientRect();
     return {
-      x: ((e.clientX - rect.left) / rect.width) * RULES.fieldW,
-      y: ((e.clientY - rect.top) / rect.height) * RULES.fieldH,
+      x: ((e.clientX - rect.left) / rect.width) * fw,
+      y: ((e.clientY - rect.top) / rect.height) * fh,
     };
   };
 
@@ -84,7 +87,7 @@ export function FieldCanvas({ tile = 20, draw, onPointer, className }: Props) {
     <canvas
       ref={ref}
       className={className ?? "field"}
-      style={{ aspectRatio: `${RULES.fieldW} / ${RULES.fieldH}` }}
+      style={{ aspectRatio: `${fw} / ${fh}` }}
       onPointerMove={(e) => onPointer?.({ type: "move", ...toTile(e), button: e.button })}
       onPointerDown={(e) => onPointer?.({ type: "down", ...toTile(e), button: e.button })}
       onPointerLeave={(e) => onPointer?.({ type: "leave", ...toTile(e), button: e.button })}

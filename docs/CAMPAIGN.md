@@ -284,7 +284,7 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
 3. **Mission framework.** A `MissionDef` in `src/data/campaign.ts`: per-side HP, unit and upgrade pools, towers,
    veterancy and opening on or off, a win condition (standard or "topple a Keep"), and an enemy plan: scripted rounds,
    then the AI limited to a pool with a personality. Also a briefing and debrief view with the book page, and a
-   mission list in the Story tab, which already lists the campaigns from `src/data/campaign.ts` (no storage). The sim
+   mission list in the Story tab (`StoryView.tsx`, parked for now: it lists the campaigns from `src/data/campaign.ts`, no storage; bring the tab back in `App.tsx` when missions exist). The sim
    stays untouched; this is match setup plus UI. Add `npm run playtest -- --mission N` so missions can be tested
    headlessly.
 4. **Build missions 1–3 first** and playtest them as onboarding. If they work, they can replace How to Play.

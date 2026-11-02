@@ -14,9 +14,11 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   `src/data/units.ts` (and `elements.ts`, `towers.ts`, `rules.ts`). There is no in-app unit editor, by choice.
 - They value: clear unit identities, upgrades with personality, readable battles, and good player-facing tools (battle
   report, Codex, Counters). Keep all of those working.
-- Tabs: **Play** (default, the full game), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Story** (campaigns, coming soon; `docs/CAMPAIGN.md`), **Codex** (the
-  rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades). Game screens
-  don't explain rules: keywords link to Codex entries (DESIGN.md §10, "Codex links").
+- Tabs: **Play** (default, the full game), **PvP** (play a friend by link; `docs/MULTIPLAYER.md`), **Units** (browse the
+  roster; each unit has a small showcase fight from `src/data/showcases.ts`, links are `#units/<id>`), **Codex** (the
+  rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades). The Story
+  tab is parked (not mounted) until the campaigns are built. Game screens don't explain rules: keywords link to Codex
+  entries (DESIGN.md §10, "Codex links").
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 - **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
 - **Two computers, one source of truth.** The owner works on a desktop and a laptop. Claude Code's memory is per
@@ -37,6 +39,8 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   - tags: `faction:*` (goblin, warden, elemental, independent), `race:*`, `size:*`, and 2–4 `role:*` tags from
     `src/data/roles.ts`
   - a one-line description
+  - a showcase fight in `src/data/showcases.ts` (the Units tab): an opponent it beats in a way that shows off what
+    it does, and a caption. A test checks the featured side wins
   - an unlock cost: 100 (independents 200). Nothing is unlocked at the start; the opening packs (`src/data/openings.ts`)
     unlock two units each, and a test checks every pack's squads add up to `RULES.openingPackValue`
   - **four upgrades** that make the unit an increasingly expensive specialist, not a jack of all trades. About one should

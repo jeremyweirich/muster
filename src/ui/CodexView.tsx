@@ -5,7 +5,7 @@ import { RULES } from "../data/rules";
 import { TOWER_DEFS, towerDaze } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import { ELEMENTS, type Element, type StatusDef, type SurfaceDef, type UnitDef, type UnitReaction } from "../sim/types";
-import { CodexLink, Linked } from "./codexLinks";
+import { CodexLink, Linked, UnitLink } from "./codexLinks";
 import { describeEffect } from "./describe";
 import { Swatch } from "./UnitInfo";
 
@@ -97,9 +97,9 @@ function UnitChips({ units, label }: { units: UnitDef[]; label: string }) {
     <div className="unit-chips">
       <span className="muted small">{label}</span>
       {units.map((u) => (
-        <span key={u.id} className="unit-chip">
+        <UnitLink key={u.id} id={u.id} className="unit-chip">
           <Swatch def={u} size={16} /> {u.name}
-        </span>
+        </UnitLink>
       ))}
     </div>
   );
