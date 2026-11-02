@@ -70,3 +70,12 @@ scripts/    balance harness, benchmarks, headless playtests
 ## Deploying
 
 Every push to `main` runs `.github/workflows/pages.yml`, which installs, tests, builds and publishes to GitHub Pages.
+
+## License and credits
+
+Common Ground is a free, non-commercial fan project inspired by [Mechabellum](https://store.steampowered.com/app/669330/Mechabellum/).
+It is not affiliated with or endorsed by Game River, and Mechabellum and related names are their trademarks. If you
+enjoy this, go play and support the real thing. This project will never be sold or monetized.
+
+The code is under the [PolyForm Noncommercial License 1.0.0](LICENSE): you're welcome to play, study, modify and share
+it for any non-commercial purpose, but not to sell it or use it commercially.

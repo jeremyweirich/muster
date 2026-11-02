@@ -3,7 +3,7 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v63)
+## 2 November 2026 (v58–v66)
 
 - **New independent: Bog Toad Riders.** Swamp folk on giant toads whose sticky tongues lash out, snatch fliers from
   the air and hit medium units hardest. Upgrades: *Spit Bile* (splashing bile that clears swarms, in the air too) and
@@ -16,6 +16,8 @@ tell which build you played. Every small fix is in the [commit history](https://
   upgrade.
 - **Opening packs** now pair any two faction units, from any factions.
 - Debug panel: links to the source code and this changelog.
+- **License:** the code is now under the PolyForm Noncommercial License: free to play, study, modify and share, never
+  to sell. Common Ground is a fan project inspired by Mechabellum and not affiliated with Game River.
 
 ## 1 November 2026 (v29–v57)
 
