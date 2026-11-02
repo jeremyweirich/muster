@@ -25,6 +25,9 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   machine and isn't shared, so anything the other machine should know (decisions, preferences, conventions, status,
   how-tos) goes in this file or `docs/`, committed and pushed. Don't rely on memory for that. Keep memory for local
   details only: this machine's paths, installed tools and their versions, and quirks.
+  **Pull before starting work** (`git pull --rebase`, or `git fetch` and compare with `origin/main`): the other
+  machine has often pushed since this checkout was last used. A local start-of-session git status can say "clean"
+  while being far behind. Building on a stale checkout means redoing the work on top of the new code afterwards.
 - **Naming:** anything user-facing or newly named uses the game's name, Common Ground (`common-ground` as a slug), e.g.
   the PvP relay Worker `common-ground-relay`. `muster` stays only in the repo, its npm package and the `/muster/` Pages
   path.

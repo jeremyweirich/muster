@@ -14,23 +14,40 @@ const FRONT = 7; // the front line's distance from each side's edge, in tiles
 export const FEATURED = "f";
 
 // Each preferred depth gets its own column, front to back, so squads never overlap. Squads in a column are stacked
-// and centered. Lines stand sideways (rotated) to face the enemy.
+// and centered; a column that would run off the arena continues in a new one behind it. Lines stand sideways
+// (rotated) to face the enemy.
 function place(squads: { def: UnitDef; uid: string }[], side: Side): PlacedSquad[] {
+  const GAP = 0.5;
   const depths = [...new Set(squads.map((s) => preferredDepth(s.def)))].sort((a, b) => a - b);
-  const out: PlacedSquad[] = [];
-  let edge = FRONT;
+  const columns: { def: UnitDef; uid: string; w: number; h: number }[][] = [];
   for (const depth of depths) {
-    const column = squads.filter((s) => preferredDepth(s.def) === depth);
-    const sizes = column.map(({ def }) => footprintOf(def, def.footprint.w > def.footprint.h));
-    const width = Math.max(...sizes.map((s) => s.w));
-    const height = sizes.reduce((sum, s) => sum + s.h, 0) + (sizes.length - 1) * 0.5;
+    let column: (typeof columns)[number] = [];
+    let height = 0;
+    for (const s of squads.filter((s) => preferredDepth(s.def) === depth)) {
+      const { w, h } = footprintOf(s.def, s.def.footprint.w > s.def.footprint.h);
+      if (column.length && height + GAP + h > ARENA.fieldH) {
+        columns.push(column);
+        column = [];
+        height = 0;
+      }
+      height += (column.length ? GAP : 0) + h;
+      column.push({ ...s, w, h });
+    }
+    columns.push(column);
+  }
+  const out: PlacedSquad[] = [];
+  // a deep army moves its front line up (short of the midline) rather than off the back of the arena
+  const depth = columns.reduce((sum, c) => sum + Math.max(...c.map((s) => s.w)) + 1, -1);
+  let edge = Math.min(Math.max(FRONT, depth), ARENA.fieldW / 2 - 1);
+  for (const column of columns) {
+    const width = Math.max(...column.map((s) => s.w));
+    const height = column.reduce((sum, s) => sum + s.h, 0) + (column.length - 1) * GAP;
     let y = Math.max(0, (ARENA.fieldH - height) / 2);
-    column.forEach(({ def, uid }, i) => {
-      const { w, h } = sizes[i];
+    for (const { def, uid, w, h } of column) {
       const x = edge - width + (width - w) / 2;
       out.push({ uid, defId: def.id, x: side === 0 ? x : ARENA.fieldW - x - w, y, rot: w !== def.footprint.w || undefined, round: 1 });
-      y += h + 0.5;
-    });
+      y += h + GAP;
+    }
     edge -= width + 1;
   }
   return out;

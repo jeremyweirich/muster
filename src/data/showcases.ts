@@ -27,9 +27,11 @@ export const SHOWCASES: Record<string, Showcase> = {
 
   // Elementals
   fire_elemental: { vs: ["grunts", "grunts"], caption: "Fireballs splash a crowd and leave it burning." },
-  water_elemental: { allies: ["frost_elemental"], vs: ["knights", "knights"], caption: "A tidal tank that soaks the enemy Wet, so its partner's frost freezes them solid." },
+  // Wet + lightning conducts for double damage; against Knights alone the line is too sturdy to show it winning
+  water_elemental: { allies: ["air_elemental"], vs: ["knights", "grunts"], caption: "A tidal tank that soaks the enemy Wet, so its partner's lightning conducts for double damage." },
   air_elemental: { vs: ["skirmishers", "skirmishers"], caption: "Chain lightning jumps from goblin to goblin." },
-  cloudlings: { squads: 2, vs: ["ballista", "ballista"], caption: "A flock of tiny fliers: each heavy bolt only ever pops one cloud." },
+  // the balance table has Cloudlings beating Crossbowmen at equal supply, but narrowly; in this short arena it takes 3 to 2
+  cloudlings: { squads: 3, vs: ["crossbowmen", "crossbowmen"], caption: "A flock the bolts can't thin: each heavy bolt only ever pops one cloud." },
   frost_elemental: { squads: 2, vs: ["stone_golem"], caption: "The cold sinks in: each bolt in a row on the Golem hits harder than the last." },
   stone_golem: { vs: ["knights"], caption: "Too big to cut down: the Knights' swords barely scratch it." },
 

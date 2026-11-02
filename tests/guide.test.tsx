@@ -4,7 +4,7 @@ import { ROLES } from "../src/data/roles";
 import { SHOWCASES } from "../src/data/showcases";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { strengths, weaknesses } from "../src/game/counters";
-import { showcaseBattle } from "../src/game/showcase";
+import { ARENA, showcaseBattle } from "../src/game/showcase";
 import { CodexView } from "../src/ui/CodexView";
 import { KEYWORDS, Linked } from "../src/ui/codexLinks";
 import { CountersView } from "../src/ui/CountersView";
@@ -53,6 +53,23 @@ describe("units tab", () => {
         expect(b.winner, `${u.id} seed ${seed}`).toBe(0);
       }
     }
+  });
+
+  it("every showcase starts inside the arena, even a crowd too tall for one column", () => {
+    const saved = SHOWCASES.giant;
+    const inside = (id: string) => {
+      const b = showcaseBattle(DEFAULT_UNITS, id);
+      for (const m of b.models) {
+        expect(m.x >= 0 && m.x <= ARENA.fieldW && m.y >= 0 && m.y <= ARENA.fieldH, `${id}: ${m.def.id} at ${m.x}, ${m.y}`).toBe(true);
+      }
+    };
+    try {
+      SHOWCASES.giant = { vs: Array(7).fill("grunts"), caption: "" };
+      inside("giant");
+    } finally {
+      SHOWCASES.giant = saved;
+    }
+    for (const id of Object.keys(SHOWCASES)) inside(id);
   });
 
   it("every unit link has a page", () => {
