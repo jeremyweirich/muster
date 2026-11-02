@@ -252,6 +252,7 @@ export interface Rules {
   speedScale: number; // tiles per second per speed point
   allyPush: number; // how hard allies push each other apart, 0..1 (enemies always fully block each other)
   preferReach: number; // tiles beyond attack range where `prefers`, towers-first and highest/lowest-HP targeting apply
+  escortMeleeRange: number; // units without an attack walk with the nearest ground ally whose attack range is at most this
   upgradeCosts: number[]; // price of the 1st, 2nd... upgrade bought for a unit, whatever the unit
   openingChoices: number; // packs offered in round 1 (both sides see the same ones)
   openingPackValue: number; // squads in a pack add up to this much supply

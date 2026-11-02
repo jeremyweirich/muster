@@ -561,15 +561,20 @@ export class Battle {
     return add;
   }
 
+  // the nearest ground melee ally (the line, where the hits land), else the nearest armed ally
   private findEscort(m: Model): Model | undefined {
     let best: Model | undefined;
     let bestD = Infinity;
+    let bestMelee = false;
     for (const t of this.models) {
       if (t.side !== m.side || t === m || !t.alive || !t.def.attack || t.def.structure) continue;
+      const melee = t.def.layer === "ground" && t.def.attack.range <= this.rules.escortMeleeRange;
+      if (bestMelee && !melee) continue;
       const d = dist2(m, t);
-      if (d < bestD) {
+      if (d < bestD || (melee && !bestMelee)) {
         bestD = d;
         best = t;
+        bestMelee = melee;
       }
     }
     return best;
@@ -591,7 +596,7 @@ export class Battle {
     // a ramping unit keeps hitting the target it's building on while it's still in reach
     const locked = m.engaged && m.rampTarget === m.targetId && !!trait(m.def, "ramp");
     if (stale || (m.retarget <= 0 && !locked)) {
-      // units without an attack (support) follow the nearest ally that has one
+      // units without an attack (support) follow an armed ally, melee first
       target = atk ? this.findTarget(m) : this.findEscort(m);
       m.targetId = target ? target.id : -1;
       m.retarget = 0.6 + this.rng.next() * 0.4;
