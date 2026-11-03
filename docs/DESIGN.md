@@ -660,9 +660,9 @@ Rough priority order. Everything is open to reshuffling.
    open items in `docs/BALANCE-PLAN.md` §3). Next: veterancy's value (the Ballista parks behind chaff), fliers in one-unit fights, hard counters for
    Crossbowmen, Frost and Toad Riders, mixed-army tests. Then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
-3. **Campaigns** (docs/CAMPAIGN.md): the mission framework and Wardens mission 1 are built (Nov 2, 2026); next,
-   missions 2–3 (scripted later rounds, HP, Keeps). Parked until stored progress is decided: saving the player's
-   winning board from a campaign finale as the Drill Book's last page.
+3. **Campaigns** (docs/CAMPAIGN.md): the mission framework and Wardens missions 1–3 are built (Nov 2, 2026); next,
+   the owner's playtest of 1–3, then missions 4–8 (recipe in CAMPAIGN.md §6). Parked: saving the player's winning
+   board from a campaign finale as the Drill Book's last page (story progress is stored now, so it's possible).
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary. The owner's plan: cast

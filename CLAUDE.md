@@ -190,16 +190,19 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   - The "untouchable Ballista park" was really **veterancy** on the screen in front of it (replayed: demote the
     Lv2 Knights and Grunts and the Ballistae all die). Level N is N× HP and N× damage, about 4× the value for half the
     price; that's where to look next.
-- **Campaigns** are planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; updated Nov 2, 2026).
-  **Wardens mission 1, *Hands Off*, is built** (Nov 2, 2026): a mission is a `MissionDef` in `src/data/campaign.ts`
-  played on the ordinary Play board (`PlayView`'s `mission` prop; framework in CAMPAIGN.md §6). Each mission lists
-  reference armies that must win and must lose, and `tests/campaign.test.tsx` fights them, so a rebalance that breaks
-  a mission's lesson fails the tests. Story progress is stored (owner, Nov 2): missions open one by one, each
-  after the one before is won, with a victory banner and a commendation star per mission and a Reset button; the
-  debug panel can open every mission for testing. The site opens on Story (left-most tab), with "Play the full game
-  now" at the very top for impatient players. **Missions 2 and 3 are built** (Nov 2, 2026), tuned by simulation; next:
-  the owner's playtest of 1–3, then mission 4. Parked idea to keep: the campaign finale's last
-  Drill Book page is generated from the player's own winning board (storage now exists for it).
+- **Campaigns (Nov 2, 2026):** planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; owner decisions
+  in §8, independents and maps in §9). **Wardens missions 1–3 are built**: *Hands Off* (one battle), *The Appeal*
+  (rounds and HP; the Boss hits your thin flank), *Two Keeps* (Tower Raiders wolves through the long grass). A mission
+  is a `MissionDef` in `src/data/campaign.ts` played on the ordinary Play board (`PlayView`'s `mission` prop); each
+  lists reference plans that must win, lose and earn its commendation, and `tests/campaign.test.tsx` fights them.
+  Make new ones with the recipe in CAMPAIGN.md §6 and `npm run mission`. Story is the left-most tab and where the site
+  opens ("Play the full game now" at the top); progress is stored, missions open in order, each with a victory banner
+  and a commendation star, and Reset sits at the bottom. Speakers get a portrait and a parchment speech bubble
+  (`src/ui/Portraits.tsx`; a new speaker needs a face). The debug panel can open every mission for testing.
+  **Next:** the owner playtests 1–3, then mission 4 (*Under the Bridge*: unlocks, the Ballista, the Troll). Parked:
+  the finale's last Drill Book page drawn from the player's own winning board (storage exists for it now).
+- **Small things (Nov 2, 2026):** a Hard win streak (Play, beside Restart); the version in the header is a pill that
+  opens the debug panel, whose first button is **Report a bug** (a prefilled GitHub issue).
 - **Terrain and maps (Nov 2, 2026):** rocks and ponds (impassable for ground units, who slide along the edge),
   rough ground (half speed) and tall grass (hides ground units from ground shooters until they attack); fliers ignore
   all of it. Six point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule:
@@ -232,7 +235,7 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   **On the owner's phone** (Android 10, Chrome 156, 1.88× DPR, 8 cores; debug-panel report, Nov 1): 60 fps in every
   scenario, ≤ 0.7% slow frames, 4–6 ms JS per frame (p95 ≤ 8.6) with 436 models, sim 0.6 ms per tick. No more
   rendering work needed; moving the sim to a worker (the next lever) is shelved unless a slower device needs it.
-  **Getting numbers from the owner's phone:** the hidden debug panel (click the version in the header, or `#debug`)
+  **Getting numbers from the owner's phone:** the debug panel (click the version in the header, or `#debug`)
   runs a one-minute performance test and shows a text report with Copy/Share; ask the owner to run it on the live
   site and paste the report. Same scenarios as the desktop scripts, plus sprite-atlas stats. Desktop result at 4×
   throttle (Nov 1): deploy 56 fps, battles 56–60 fps.
