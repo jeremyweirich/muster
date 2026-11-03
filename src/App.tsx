@@ -7,6 +7,7 @@ import { DebugView } from "./ui/DebugView";
 import { Intro } from "./ui/Intro";
 import { PlayView } from "./ui/PlayView";
 import { PvpView, type PlayStatus } from "./ui/PvpView";
+import { RotateHint } from "./ui/RotateHint";
 import { SpectateView } from "./ui/SpectateView";
 import { StoryView } from "./ui/StoryView";
 import { UnitsView } from "./ui/UnitsView";
@@ -154,6 +155,7 @@ export function App() {
         </div>
       )}
       {intro && <Intro onClose={() => setIntro(false)} />}
+      <RotateHint />
     </div>
   );
 }

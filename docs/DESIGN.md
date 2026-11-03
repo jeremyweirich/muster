@@ -89,8 +89,9 @@ and towers.
   its upgrades, with the bought ones starred in gold. On short landscape screens and in portrait the header has no
   room, so the enemy's unlocks stay in the sidebar instead.
 - **Phones play sideways.** On short landscape screens the header and padding shrink so the field gets the height. In
-  portrait, touch devices get a "turn your phone sideways" screen with a full-screen + landscape-lock button (works on
-  Android; iOS has to rotate by hand) and a "play in portrait anyway" escape, which stacks the field above the sidebar.
+  portrait, touch devices get a "turn your phone sideways" screen on every tab, including Story where the site opens,
+  with a full-screen + landscape-lock button (works on Android; iOS has to rotate by hand) and a "play in portrait
+  anyway" escape that lasts the visit and stacks the field above the sidebar.
 - **Phone layout (short landscape screens, `COMPACT_QUERY` in `MobileDeploy.tsx`).** Desktop is unchanged. Height is
   what phones lack, so the field takes the full height and the sidebar takes the width left over; the health bars and
   round move to the top of the sidebar in one row. While deploying, nothing needs scrolling:

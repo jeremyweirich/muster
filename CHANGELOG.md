@@ -5,6 +5,8 @@ tell which build you played. Every small fix is in the [commit history](https://
 
 ## 2 November 2026 (v58–v79)
 
+- **Phones held upright** get the "turn your phone sideways" screen, with its full-screen button, on the Story page
+  again (it had only shown on Play since the site started opening on Story).
 - **Balance pass, judged by the story missions.** Every unit a mission introduces can now win it.
   - **Clerics** cost 100 (was 200), have more HP, stand just behind the line instead of in it, and allies near them
     deal +25% damage (*Blessing*: +50%).

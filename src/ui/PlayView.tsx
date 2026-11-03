@@ -117,7 +117,6 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const [fightArmed, setFightArmed] = useState(false);
   const [fightQueued, setFightQueued] = useState(false);
   const [matchNo, setMatchNo] = useState(0); // a restart in round 1 needs a fresh plan too
-  const [portraitOk, setPortraitOk] = useState(false);
   const [sideTab, setSideTab] = useState<"recruit" | "upgrades">("recruit");
   // phones held sideways deploy from a rail and sheets over the field (MobileDeploy.tsx)
   const compact = useMedia(COMPACT_QUERY);
@@ -1044,7 +1043,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   );
 
   return (
-    <div className={`play ${portraitOk ? "portrait-ok" : ""}`} style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
+    <div className="play" style={{ "--field-ratio": RULES.fieldW / RULES.fieldH } as React.CSSProperties}>
       <main className="board">
         {!compact && hud}
         <div
@@ -1445,27 +1444,8 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       </aside>
 
       {loveLetter && <LoveLetter onClose={() => setLoveLetter(false)} />}
-
-      <div className="rotate-hint">
-        <div className="rotate-icon">📱↻</div>
-        <p>Turn your phone sideways to play.</p>
-        {canLockLandscape && <button className="primary" onClick={goLandscape}>Full screen, landscape</button>}
-        <button onClick={() => setPortraitOk(true)}>Play in portrait anyway</button>
-      </div>
     </div>
   );
-}
-
-// Fullscreen plus an orientation lock works on Android browsers; iOS has neither, so the button is hidden there.
-const canLockLandscape = typeof document !== "undefined" && !!document.fullscreenEnabled && typeof screen !== "undefined" && "orientation" in screen;
-
-async function goLandscape() {
-  try {
-    await document.documentElement.requestFullscreen();
-    await (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.("landscape");
-  } catch {
-    // not supported here; the player can still rotate by hand
-  }
 }
 
 // Promote every veteran of one unit at once, while supply lasts. Only offered when more than one of its squads has a level waiting.

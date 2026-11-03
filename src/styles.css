@@ -1310,8 +1310,8 @@ a.reason:hover {
   }
 }
 
-/* Portrait: the game is meant to be played sideways. Touch devices get a prompt to rotate;
-   anyone who stays in portrait (or a narrow desktop window) gets a stacked layout. */
+/* Portrait: the game is meant to be played sideways. Touch devices get a prompt to rotate on every tab
+   (RotateHint.tsx); anyone who stays in portrait (or a narrow desktop window) gets a stacked layout. */
 .rotate-hint {
   display: none;
 }
@@ -1330,7 +1330,7 @@ a.reason:hover {
   }
 }
 @media (orientation: portrait) and (max-width: 900px) and (pointer: coarse) {
-  .play:not(.portrait-ok) .rotate-hint {
+  .rotate-hint {
     position: fixed;
     inset: 0;
     z-index: 10;
