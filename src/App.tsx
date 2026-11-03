@@ -117,7 +117,7 @@ export function App() {
         <button className="help-btn" onClick={() => setIntro(true)}>
           How to play
         </button>
-        <button className="version muted" title={`Built ${new Date(__BUILD_TIME__).toLocaleString()}`} onClick={() => go("debug")}>
+        <button className="version muted" title={`Debug tools and Report a bug · built ${new Date(__BUILD_TIME__).toLocaleString()}`} onClick={() => go("debug")}>
           <span className="build">{__APP_VERSION__}</span>
         </button>
       </header>

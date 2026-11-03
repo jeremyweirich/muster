@@ -3,8 +3,13 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v73)
+## 2 November 2026 (v58–v74)
 
+- **Story missions 2 and 3.** *The Appeal*: a longer match over several rounds, where the Boss reads your army and
+  hits the flank you left thin. *Two Keeps*: wolves come through the long grass for your Keeps, and you can buy Keep
+  levels. Each has a commendation to earn.
+- **Report a bug** from the debug panel (click the version in the corner): opens a GitHub issue with your version and
+  browser filled in.
 - **Terrain and maps.** Every skirmish is fought on one of six maps: rocks and ponds to walk round, rough ground that
   slows, and tall grass that hides units from archers until they attack. Fliers ignore it all. The map's name sits
   under the round number.

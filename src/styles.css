@@ -180,10 +180,17 @@ code {
 }
 .version {
   font-size: 12px;
-  /* also the hidden way into the debug panel, so it's a bare button */
+  /* the way into the debug panel (and Report a bug): a quiet pill that still looks clickable */
   background: none;
-  border: none;
-  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  cursor: pointer;
+}
+.version:hover,
+.version:focus-visible {
+  color: var(--text);
+  border-color: var(--muted);
 }
 .version .build {
   font-size: 0.85em;
@@ -2585,4 +2592,15 @@ button.primary.warn-btn {
   font-weight: 400;
   text-align: center;
   color: var(--muted);
+}
+/* a link that looks like a primary button (the debug panel's Report a bug) */
+a.primary-link {
+  display: block;
+  text-align: center;
+  background: var(--accent);
+  color: var(--accent-text);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-weight: 600;
+  text-decoration: none;
 }

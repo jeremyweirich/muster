@@ -127,6 +127,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const allHard = useRef(true);
   const [loveLetter, setLoveLetter] = useState(false);
   const battleRef = useRef<Battle | null>(null);
+  const missionResults = useRef<BattleResult[]>([]); // every battle of a mission, for its commendation
   const fieldRef = useRef<HTMLDivElement>(null);
   // PvP: the connection, which match of the room is on screen (0 until it's rebuilt from the log), and notices
   const conn = usePvpConnection(pvp?.link ?? null);
@@ -164,7 +165,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   useEffect(() => {
     if (pvp || match.phase !== "deploy") return;
     if (mission) {
-      setAiPlan(missionPlan(mission.def, match.round));
+      setAiPlan(missionPlan(mission.def, match));
       return;
     }
     setAiPlan(null);
@@ -247,7 +248,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     if (wonOnHard && !tally && !loveLetterShown()) setLoveLetter(true);
   }, [wonOnHard, !!tally]);
 
-  const outcome = mission && match.phase === "over" && fought?.result ? missionOutcome(mission.def, match, fought.result) : null;
+  const outcome = mission && match.phase === "over" && fought?.result ? missionOutcome(mission.def, match, missionResults.current) : null;
   useEffect(() => {
     if (outcome?.won) mission?.onWon(outcome.commended);
   }, [outcome?.won]);
@@ -561,6 +562,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     const strikes = battleRef.current && !singleBattle ? survivorStrikes(battleRef.current, canonResult, defs, seat === 1) : [];
     if (strikes.length) setTally({ strikes, before: match.hp, landed: 0 });
     setFought((f) => (f ? { ...f, result: r } : f));
+    if (mission) missionResults.current = [...missionResults.current, r];
     setMatch((m) => applyRound(m, r, defs));
   };
 
@@ -606,6 +608,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
 
 
   const restart = () => {
+    missionResults.current = [];
     battleRef.current = null;
     setFought(null);
     setSelected(null);
@@ -825,12 +828,12 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   // how many upgrades (unit or tower) the player can buy right now, shown on the Upgrades tab
   const affordableUpgrades =
     units.reduce((n, u) => {
-      if (!unlocked.has(u.id) || !u.upgrades?.length) return n;
+      if (!upgradesOn || !unlocked.has(u.id) || !u.upgrades?.length) return n;
       const bought = match.upgrades[0][u.id] ?? [];
       const price = upgradePrice(u, bought.length);
       return price !== null && price <= match.supply[0] ? n + u.upgrades.filter((up) => !bought.includes(up.id)).length : n;
     }, 0) +
-    match.towerLevels[0].filter((l) => (towerUpgradePrice(l) ?? Infinity) <= match.supply[0]).length +
+    (towersOn ? match.towerLevels[0].filter((l) => (towerUpgradePrice(l) ?? Infinity) <= match.supply[0]).length : 0) +
     myArmy.filter((sq) => canPromote(sq) && promotePrice(defs.get(sq.defId)!) <= match.supply[0]).length;
   const promotable = myArmy.filter(canPromote);
   // Promote all is per unit type: the squads of one unit, when more than one has a level waiting
@@ -1234,29 +1237,32 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
                 </div>
               </div>
             )}
-            {upgradesOn && (
+            {(upgradesOn || towersOn) && (
               <div className="side-tabs">
                 <button className={sideTab === "recruit" ? "active" : ""} onClick={() => setSideTab("recruit")}>
                   Recruit
                 </button>
                 <button className={sideTab === "upgrades" ? "active" : ""} onClick={() => setSideTab("upgrades")}>
-                  Upgrades{affordableUpgrades > 0 && <span className="tab-badge">{affordableUpgrades}</span>}
+                  {upgradesOn ? "Upgrades" : "Keeps"}
+                  {affordableUpgrades > 0 && <span className="tab-badge">{affordableUpgrades}</span>}
                 </button>
               </div>
             )}
-            {upgradesOn && sideTab === "upgrades" && (
+            {(upgradesOn || towersOn) && sideTab === "upgrades" && (
               <>
-                <UpgradePanel
-                  units={units.filter((u) => unlocked.has(u.id) && u.upgrades?.length)}
-                  owned={match.upgrades[0]}
-                  supply={match.supply[0]}
-                  onBuy={buyUpgrade}
-                />
+                {upgradesOn && (
+                  <UpgradePanel
+                    units={units.filter((u) => unlocked.has(u.id) && u.upgrades?.length)}
+                    owned={match.upgrades[0]}
+                    supply={match.supply[0]}
+                    onBuy={buyUpgrade}
+                  />
+                )}
                 <PromotionPanel squads={promotable} defs={defs} supply={match.supply[0]} onPromote={promote} promoteAll={promoteAll} onHover={(sq) => setHoverInfo(sq ? { def: squadDef(sq, 0)!, side: 0, squad: sq } : null)} />
                 {towersOn && <TowerPanel levels={match.towerLevels} supply={match.supply[0]} onBuy={buyTower} />}
               </>
             )}
-            {(!upgradesOn || sideTab === "recruit") && (
+            {(!(upgradesOn || towersOn) || sideTab === "recruit") && (
             <div className="recruit">
               <div className="shop-list">
                 {FACTIONS.map((f) => {

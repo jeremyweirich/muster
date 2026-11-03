@@ -1,6 +1,6 @@
 # Common Ground: campaign plan (Nov 2026)
 
-Status: **Wardens mission 1 is built and playable** (the Story tab). The rest is a plan. Inputs: `docs/VISION.md`
+Status: **Wardens missions 1–3 are built and playable** (the Story tab). The rest is a plan. Inputs: `docs/VISION.md`
 (the story, which wins on tone), DESIGN.md (mechanics) and the roster as it stands in `src/data/units.ts`. This is
 about the order in which the game, its mechanics and its factions are introduced. Names in *italics* are placeholders.
 
@@ -112,25 +112,43 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Teaches.** Steel in front, arrows behind. Then the horn sounds and you let go.
 - **Debrief.** Sergeant: "Boring wins. Write that down." The Boss files an appeal (mission 2).
 
-### 2. The Appeal
+### 2. The Appeal (built)
 - **Dispute.** The goblins appeal the goat. Under the Compact a loss can be appealed once, as a longer match: rounds
   and HP, explained in-world.
-- **Page 2.** "What is placed stays placed. You will see what they fielded, never what they will add."
-- **Punch.** Round 1 is all Grunts. In round 2 the Boss adds Skirmishers on whichever flank your locked line left
-  thin, shooting from behind a Grunt screen (Skirmishers beat Crossbowmen: "too many bodies for a few bolts").
-- **Teaches.** Armies persist and lock. Read their last army, guess their answer, add yours. Unspent supply carries
-  over. Winning margins become HP damage.
-- **Needs** from the framework: scripted rounds after the first, unrevealed (the first time the player deploys
-  blind), HP bars, and veterancy off (it arrives in mission 7).
+- **Page 2, What Is Placed Stays Placed.** "You will see what they fielded, never what they will add." Drill: *Read
+  their last army. Guess their answer. Add yours.*
+- **Kit.** 400 supply, then the standard income; Knights and Crossbowmen. **HP 70 for the player, 90 for the Boss**
+  (per-side HP: the reactive path has room to lose a round). No Keeps, no upgrades, veterancy off. Map: Millbrook
+  Ford, a pond in the middle (the Archivist mentions it). Round 1 is blind, for the first time.
+- **Enemy.** Round 1: four Grunt mobs. Round 2: two Grunt mobs in front of three Skirmisher squads, on **the flank the
+  player's army leaves thin** (the side away from its cost-weighted center; the Boss reads what you fielded).
+  Round 3: three more Grunt mobs in the center. Nothing after.
+- **Punch.** The archers shoot from behind the goblin screen on the empty flank (Skirmishers beat Crossbowmen: "too
+  many bodies for a few bolts").
+- **Checked by simulation:** a player who loses round 2, reads it and puts steel on the flanks wins in four rounds
+  (26 HP left); one who guesses and covers both flanks in round 2 wins every round (the commendation). Never adding
+  after round 1, adding only bows, and all bows lose.
+- **Commendation.** *Guess Right*: win every round of the appeal.
+- **Debrief hints.** Never added after round 1 ("supply you don't spend doesn't fight"); no Knights; otherwise the
+  thin-flank lesson.
 
-### 3. Two Keeps
-- **Dispute.** A goblin painted something rude on the West Keep.
-- **Page 3.** "Every Field has two Keeps. If one falls, the whole army loses its nerve."
-- **Punch.** Round 2: Wolf Riders placed on a flank run around the line and topple a Keep. The whole army is Dazed
-  (4 s at level 0) and the main fight collapses.
-- **Teaches.** Towers, collapse Daze, covering flanks. Tower levels are insurance against raids: the first level adds
-  2,000 HP, so a raid has to work at it.
-- **Commendation.** No Keep falls.
+### 3. Two Keeps (built)
+- **Dispute.** A goblin painted something rude on the West Keep. ("IT'S A GOOD LIKENESS.")
+- **Page 3, Two Keeps.** "Every Field has two Keeps. If one falls, the whole army loses its nerve." Drill: *Guard the
+  flanks, or build the walls higher.*
+- **Kit.** 400 supply, Knights and Crossbowmen, HP 100 each, **Keeps on**, veterancy off. Unit upgrades stay off, so
+  the sidebar's second tab is just **Keeps** (levels for sale). Map: Long Grass, tall grass on both flanks (the
+  Sergeant: "Goblins like long grass").
+- **Enemy.** The Boss's Wolf Riders have *Tower Raiders* (shown as a ★ on his wolves: a first look at enemy
+  upgrades). Round 1: three Grunt mobs and Skirmishers. Rounds 2 and 3: one Wolf Rider squad on the player's thin
+  flank each time, while Grunts and Skirmishers join the center. Round 4: a last few goblins.
+- **Punch.** The wolves come through the long grass (hidden from the bows) and go for that flank's Keep; when it falls
+  the whole army is Dazed and the center collapses.
+- **Checked by simulation:** steel beside the Keeps wins, and so do Keep levels with a Knight squad on a flank, and
+  buying levels and guarding the flank after the first raid. Bows and levels with no new steel lose, and so does all
+  bows. **What the tuning found:** a level-1 Keep only delays a Tower Raiders squad, so levels buy time and steel
+  ends raids. The hints say so.
+- **Commendation.** *Not One Stone*: win without losing a Keep (Knights beside both Keeps from round 1 earn it).
 
 ### 4. Under the Bridge
 - **Dispute.** The goblins have adopted the troll under the toll bridge and claim its toll.
@@ -293,7 +311,7 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
   to it (for example the goblin campaign opening against *your* page-9 army, replaying the player's real finale
   instead of an authored one). Check with the owner before storing more than progress.
 
-## 6. The mission framework (built for mission 1)
+## 6. The mission framework
 
 A mission is data: a `MissionDef` in `src/data/campaign.ts`, attached to its entry in `CAMPAIGNS`. The match is the
 ordinary match with the mission's setup, played in the same `PlayView` (its `mission` prop), so placement, battles,
@@ -304,15 +322,18 @@ the report and replays all work unchanged. The sim is untouched.
 | `supply` | the player's supply in round 1 (later rounds get the standard income) |
 | `units` | the player's units, unlocked and free; `shop` lists more the player may unlock (mission 4 on) |
 | `hp` | each side's HP; absent means **one battle decides it**, and the HP bars and damage tally are hidden |
-| `towers`, `upgrades` | whether the Keeps stand and whether the Upgrades tab exists (both off in mission 1) |
+| `towers`, `upgrades` | whether the Keeps stand and whether the Upgrades tab exists. With Keeps but no upgrades, the tab is just **Keeps** (mission 3) |
+| `veterancy` | whether squads earn XP (off until mission 7) |
 | `map` | the map (`src/data/terrain.ts`); absent: the open field |
 | `enemy.units` | the enemy's unlocks, shown like the AI's |
-| `enemy.rounds` | scripted squads added each round, in field coordinates (the enemy deploys at the top) |
+| `enemy.rounds` | squads added each round, in field coordinates (the enemy deploys at the top). A round can be a function of what the enemy saw (`seen`: the player's squads from earlier rounds), e.g. `onFlank(thinFlank(seen), …)` puts squads on the flank the player left thin |
+| `enemy.upgrades` | upgrades the enemy has from the start, shown as ★ like the AI's |
 | `enemy.revealed` | round 1's squads are placed and visible before the player deploys |
 | `briefing`, `page` | lines from the cast, then the Drill Book page (a title, its text and an optional drill diagram) |
 | `objective` | one line in the sidebar while deploying |
 | `win`, `hints` | the debrief: lines on a win; on a loss, the first hint whose condition matches what the player fielded |
-| `commendation` | a name, how to earn it, and a check against the final battle |
+| `commendation` | a name, how to earn it, and a check against every battle of the match (`results`) |
+| `reference` | plans that must win, must lose, and must earn the commendation: per round, squads to add, or squads plus Keep levels to buy |
 
 `src/game/mission.ts` builds the match (`newMissionMatch`), the enemy's scripted turn (`missionPlan`) and the outcome
 (`missionOutcome`: won, and the commendation). `tests/campaign.test.tsx` checks every mission's data (squads in the
@@ -324,15 +345,18 @@ The Story tab (`#story`) lists the campaigns, and a playable mission opens at `#
 then the Field, then the debrief with Try again and Next. The tab stays mounted once opened, like Play, so a Codex
 link mid-mission doesn't lose it.
 
-Not built yet (each arrives with the mission that needs it): AI enemies limited to a pool (the Boss, the Tinker),
-veterancy off, a "topple a Keep" win condition, a two-phase enemy (mission 8), and `npm run playtest -- --mission N`.
+**Tuning a mission.** Write candidate player plans (sensible, reactive, careless) and play them against the script
+until the shape is right, then keep the clearest as references; keep only those with a clear margin, so a small
+rebalance doesn't flip them. Plans must spend exactly what a player could: 400 in round 1, then +400, +500, +600.
+
+Not built yet (each arrives with the mission that needs it): AI enemies limited to a pool (the Boss, the Tinker), a
+"topple a Keep" win condition, a two-phase enemy (mission 8), and `npm run playtest -- --mission N`.
 
 ## 7. Plan of attack
 
 1. ~~**Goblin roster rework**~~ **Done (Oct 2026).**
-2. ~~**Mission framework**~~ **Done (Nov 2026)** for what mission 1 needs (§6).
-3. **Missions 1–3** and playtest them as onboarding. **Mission 1 is built.** If they work, they can replace How to
-   Play. Mission 2 adds scripted later rounds and HP; mission 3 turns the Keeps on.
+2. ~~**Mission framework**~~ **Done (Nov 2026)** (§6).
+3. ~~**Missions 1–3**~~ **Built (Nov 2, 2026).** Next: the owner playtests them as onboarding.
 4. Missions 4–8, then the replay-opener tech for Goblin mission 1 (an authored version of the Wardens finale, played
    from the other side, since nothing is stored between missions).
 5. Goblin campaign. Simulate the elementals' authored fights at the same time, then build their campaign.

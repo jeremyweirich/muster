@@ -15,6 +15,24 @@ import { FieldCanvas } from "./FieldCanvas";
 // and its CHANGELOG.md (plain links: nothing is fetched).
 
 const REPO = "https://github.com/jeremyweirich/muster";
+
+// A new GitHub issue, with the version and browser filled in. It opens only when the player clicks it, and they can
+// edit or drop those lines before sending; the site itself still sends nothing.
+function bugReportUrl(): string {
+  const body = [
+    "**What happened?**",
+    "",
+    "",
+    "**What did you expect?**",
+    "",
+    "",
+    "---",
+    `Version: ${__APP_VERSION__}`,
+    `Browser: ${navigator.userAgent}`,
+    `Screen: ${screen.width}×${screen.height} at ${devicePixelRatio}×`,
+  ].join("\n");
+  return `${REPO}/issues/new?body=${encodeURIComponent(body)}`;
+}
 const TILE = 24; // as in PlayView
 const defs = defMap(DEFAULT_UNITS);
 
@@ -209,7 +227,11 @@ export function DebugView({ allMissions, onAllMissions }: { allMissions: boolean
       </main>
       <aside className="panel side debug-side">
         <h3>Debug</h3>
-        {status === "idle" && <p className="muted small">Tools for development. Back to the game with the tabs above.</p>}
+        <a className="primary-link" href={bugReportUrl()} target="_blank" rel="noreferrer">
+          🐞 Report a bug
+        </a>
+        <p className="muted small">Opens a new issue on GitHub (you'll need an account), with your version and browser filled in.</p>
+        {status === "idle" && <p className="muted small">The rest is tools for development. Back to the game with the tabs above.</p>}
         <button className="primary" disabled={status === "running"} onClick={start}>
           Performance test
         </button>

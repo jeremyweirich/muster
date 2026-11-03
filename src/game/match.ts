@@ -37,6 +37,7 @@ export interface MatchState {
   towerLevels: [number[], number[]];
   towers?: boolean; // false: no Keeps on the Field (some story missions); absent: they stand
   map?: string; // the map's id (src/data/terrain.ts); absent: the open field
+  veterancy?: boolean; // false: squads earn no XP (story missions before veterans are taught); absent: they do
   openings: [Opening, Opening];
   phase: Phase;
   history: RoundReport[];
@@ -164,7 +165,9 @@ export function applyOutcome(state: MatchState, outcome: RoundOutcome): MatchSta
   const hp: [number, number] = [Math.max(0, state.hp[0] - damage[0]), Math.max(0, state.hp[1] - damage[1])];
   const report: RoundReport = { round: state.round, winner: outcome.winner, timedOut: outcome.timedOut, damage };
   const gain = (army: PlacedSquad[]) =>
-    army.map((sq) => ({ ...sq, xp: capXp((sq.xp ?? 0) + (outcome.xp[sq.uid] ?? 0), sq.level ?? 1, RULES) || undefined }));
+    state.veterancy === false
+      ? army
+      : army.map((sq) => ({ ...sq, xp: capXp((sq.xp ?? 0) + (outcome.xp[sq.uid] ?? 0), sq.level ?? 1, RULES) || undefined }));
   return {
     ...state,
     hp,

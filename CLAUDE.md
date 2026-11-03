@@ -191,7 +191,8 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   a mission's lesson fails the tests. Story progress is stored (owner, Nov 2): missions open one by one, each
   after the one before is won, with a victory banner and a commendation star per mission and a Reset button; the
   debug panel can open every mission for testing. The site opens on Story (left-most tab), with "Play the full game
-  now" at the very top for impatient players. Next: missions 2–3. Parked idea to keep: the campaign finale's last
+  now" at the very top for impatient players. **Missions 2 and 3 are built** (Nov 2, 2026), tuned by simulation; next:
+  the owner's playtest of 1–3, then mission 4. Parked idea to keep: the campaign finale's last
   Drill Book page is generated from the player's own winning board (storage now exists for it).
 - **Terrain and maps (Nov 2, 2026):** rocks and ponds (impassable for ground units, who slide along the edge),
   rough ground (half speed) and tall grass (hides ground units from ground shooters until they attack); fliers ignore
