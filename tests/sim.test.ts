@@ -251,7 +251,8 @@ describe("rotation and unlocks", () => {
     expect(priceOf(f, new Set(["fire_elemental"]))).toBe(f.cost);
   });
 
-  it("ai pays for unlocks within its budget", () => {
+  // five AI plans: about a second here, and CI runs several times slower
+  it("ai pays for unlocks within its budget", { timeout: 30_000 }, () => {
     for (let seed = 1; seed < 6; seed++) {
       const mine = army(1, ["grunts"]);
       const plan = planAiRound(
