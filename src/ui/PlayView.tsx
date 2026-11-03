@@ -44,6 +44,7 @@ import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
 import { CodexLink } from "./codexLinks";
 import { Debrief } from "./Mission";
+import { loadHardStreak, recordHardMatch } from "./progress";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
 
@@ -126,6 +127,9 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   // the easter egg for winning a match with the AI on Hard every round (LoveLetter.tsx)
   const allHard = useRef(true);
   const [loveLetter, setLoveLetter] = useState(false);
+  // wins in a row against Hard (progress.ts); recorded once per finished match
+  const [streak, setStreak] = useState(loadHardStreak);
+  const streakRecorded = useRef(-1);
   const battleRef = useRef<Battle | null>(null);
   const missionResults = useRef<BattleResult[]>([]); // every battle of a mission, for its commendation
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -247,6 +251,12 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   useEffect(() => {
     if (wonOnHard && !tally && !loveLetterShown()) setLoveLetter(true);
   }, [wonOnHard, !!tally]);
+  const hardMatchOver = !pvp && !mission && match.phase === "over" && allHard.current;
+  useEffect(() => {
+    if (!hardMatchOver || streakRecorded.current === matchNo) return;
+    streakRecorded.current = matchNo;
+    setStreak(recordHardMatch(match.hp[0] > 0 && match.hp[1] <= 0));
+  }, [hardMatchOver, matchNo]);
 
   const outcome = mission && match.phase === "over" && fought?.result ? missionOutcome(mission.def, match, missionResults.current) : null;
   useEffect(() => {
@@ -887,6 +897,11 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
         </select>
       </label>
       <button onClick={restart}>Restart</button>
+      {streak.best > 0 && (
+        <span className="muted small" title="Matches won in a row with the AI on Hard every round">
+          Hard streak {streak.current} · best {streak.best}
+        </span>
+      )}
     </div>
   );
   const aiNote = deploying && !pvp && !mission && (
@@ -1366,6 +1381,12 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
             {outcome ? null : match.phase === "over" ? (
               <>
                 <h2>{match.hp[0] > 0 ? "You win the war!" : match.hp[1] > 0 ? "You have been defeated." : "Mutual ruin."}</h2>
+                {hardMatchOver && (
+                  <p className="streak">
+                    {streak.current > 0 ? `🔥 ${streak.current} in a row against Hard` : "Your run against Hard ends here."}{" "}
+                    <span className="muted">Best: {streak.best}</span>
+                  </p>
+                )}
                 <button className="primary big" onClick={pvp ? rematch : restart}>
                   {pvp ? "Rematch" : "New game"}
                 </button>

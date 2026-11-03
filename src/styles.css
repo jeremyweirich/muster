@@ -2483,21 +2483,61 @@ button.primary.warn-btn {
   flex-direction: column;
   gap: 6px;
 }
+/* dialogue: a portrait beside a parchment speech bubble whose tail points at it; goblins speak from the right */
 .say {
-  margin: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.say-goblin {
+  flex-direction: row-reverse;
+}
+.say .portrait {
+  flex: none;
+}
+.say .bubble {
+  position: relative;
+  margin: 2px 0 0;
+  padding: 7px 12px 8px;
+  background: #ece0c2;
+  color: #2b2417;
+  border: 1px solid #c4ad7c;
+  border-radius: 10px;
   font-size: 15px;
   line-height: 1.45;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
-.say b {
+/* the tail: a small rotated square on the portrait's side */
+.say .bubble::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  width: 10px;
+  height: 10px;
+  background: #ece0c2;
+  border: 1px solid #c4ad7c;
+  transform: rotate(45deg);
+}
+.say-warden .bubble::before {
+  left: -6px;
+  border-top: none;
+  border-right: none;
+}
+.say-goblin .bubble::before {
+  right: -6px;
+  border-bottom: none;
+  border-left: none;
+}
+.say .bubble b {
   display: block;
   font-size: 12px;
   letter-spacing: 0.03em;
 }
-.say-warden b {
-  color: var(--blue);
+.say-warden .bubble b {
+  color: #1f4f86;
 }
-.say-goblin b {
-  color: var(--red);
+.say-goblin .bubble b {
+  color: #9a2a36;
 }
 .brief-kit {
   margin: 0;
@@ -2572,7 +2612,14 @@ button.primary.warn-btn {
   gap: 8px;
 }
 .debrief .say {
-  font-size: 14px;
+  gap: 7px;
+}
+.debrief .say .bubble {
+  font-size: 13px;
+  padding: 5px 9px 6px;
+}
+.debrief .say .bubble::before {
+  top: 10px;
 }
 .commendation {
   margin: 0;

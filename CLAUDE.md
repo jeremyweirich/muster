@@ -94,9 +94,10 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - Each side fights with its own upgraded unit definitions (`upgradedDefs`, `new Battle([defsA, defsB], …)`).
 - The AI only uses the simulator, so new units must work with it without special-casing.
 - Don't add `localStorage`, analytics, network calls or external scripts. The site is a static page with no data
-  collection. Two exceptions, both owner decisions: **story progress** (missions won, commendations earned) and the
-  love letter's "already shown" flag live in this browser's `localStorage` (`src/ui/progress.ts`,
-  `src/ui/LoveLetter.tsx`), guarded so the game works when storage is blocked; nothing else is stored. And PvP (`docs/MULTIPLAYER.md`): it talks to the owner's relay (`relay/`, a Cloudflare
+  collection. Two exceptions, both owner decisions: **story progress** (missions won, commendations earned), the
+  Hard win streak and the love letter's "already shown" flag live in this browser's `localStorage`
+  (`src/ui/progress.ts`, `src/ui/LoveLetter.tsx`), guarded so the game works when storage is blocked; nothing else
+  is stored. And PvP (`docs/MULTIPLAYER.md`): it talks to the owner's relay (`relay/`, a Cloudflare
   Worker), and only after a player starts or joins a match. Single-player stays offline.
 - PvP needs both browsers to run identical battles: in `src/sim`, use only `+ − × ÷`, `sqrt`, `floor` and the like,
   never `Math.sin`/`cos`/`atan2`/`exp`/`pow` on values that affect the outcome (they can differ between browsers).
@@ -115,8 +116,13 @@ npm run bench         # simulator speed, plus a fingerprint of every outcome (do
 npm run ai-duel -- snapshot | run   # judge an AI change in full AI-vs-AI matches against a saved baseline
 npm run relay         # local PvP relay for `npm run dev` (docs/MULTIPLAYER.md); deploy the real one from relay/
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
+npm run mission -- <id> ['<plan json>']  # play a story mission's reference plans, or one plan, round by round
 npx tsx scripts/faction-holes.ts <csv>   # each faction's best answer to every unit, from `balance -- matrix --csv`
 ```
+
+**Making story missions:** the owner wants many more. Follow the recipe in `docs/CAMPAIGN.md` §6 ("Making a
+mission"): story and punch first, then a `MissionDef`, then tune by simulation with `npm run mission` until careless
+plans lose and sensible ones win, and keep the clearest plans as references (the tests fight them).
 
 **Playtesting rounds:** when the owner asks for "a round of playtesting against Hard", follow `docs/PLAYTESTING.md`
 (goal and hypothesis, pure-faction matches, reading the AI, writing `docs/PLAYTEST-YYYY-MM-DD.md`). Smooth the tooling

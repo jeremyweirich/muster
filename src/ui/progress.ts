@@ -53,3 +53,35 @@ export function missionOpen(p: Progress, id: string, all = false): boolean {
   const i = MISSIONS.findIndex((m) => m.def.id === id);
   return i === 0 || (i > 0 && (all || p.won.includes(MISSIONS[i - 1].def.id)));
 }
+
+// The vanity counter: matches won in a row against the AI on Hard (every round on Hard, as for the love letter), and
+// the best run. Its own key, so resetting story progress leaves it alone. Only finished matches count: a Hard match
+// lost ends the run; matches on other difficulties, and abandoned ones, don't touch it.
+export interface HardStreak {
+  current: number;
+  best: number;
+}
+
+const STREAK_KEY = "common-ground:hard-streak";
+
+export function loadHardStreak(): HardStreak {
+  try {
+    const s = JSON.parse(localStorage.getItem(STREAK_KEY) ?? "null");
+    if (s && Number.isInteger(s.current) && Number.isInteger(s.best)) return { current: s.current, best: s.best };
+  } catch {
+    // unreadable: start fresh
+  }
+  return { current: 0, best: 0 };
+}
+
+export function recordHardMatch(won: boolean): HardStreak {
+  const s = loadHardStreak();
+  const current = won ? s.current + 1 : 0;
+  const next = { current, best: Math.max(s.best, current) };
+  try {
+    localStorage.setItem(STREAK_KEY, JSON.stringify(next));
+  } catch {
+    // blocked: the streak lasts for this visit only through the return value
+  }
+  return next;
+}

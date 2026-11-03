@@ -16,7 +16,8 @@
     "playtest": "tsx scripts/playtest.ts",
     "bench": "tsx scripts/bench.ts",
     "ai-duel": "tsx scripts/ai-duel.ts",
-    "relay": "tsx relay/dev-server.ts"
+    "relay": "tsx relay/dev-server.ts",
+    "mission": "tsx scripts/mission.ts"
   },
   "dependencies": {
     "react": "^19.1.0",

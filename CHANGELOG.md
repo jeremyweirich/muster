@@ -3,8 +3,11 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v74)
+## 2 November 2026 (v58–v76)
 
+- **Faces for the story.** Everyone who speaks in a mission has a portrait, and their lines sit in parchment speech
+  bubbles (Wardens on the left, goblins on the right).
+- **Hard streak:** the game remembers how many matches in a row you've won against the Hard AI, and your best run.
 - **Story missions 2 and 3.** *The Appeal*: a longer match over several rounds, where the Boss reads your army and
   hits the flank you left thin. *Two Keeps*: wolves come through the long grass for your Keeps, and you can buy Keep
   levels. Each has a commendation to earn.

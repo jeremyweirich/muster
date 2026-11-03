@@ -2,18 +2,24 @@ import { CAST, type Line, type MissionDef, type MissionEntry } from "../data/cam
 import { DEFAULT_UNITS } from "../data/units";
 import type { MissionOutcome } from "../game/mission";
 import { Linked, UnitLink } from "./codexLinks";
+import { Portrait } from "./Portraits";
 import { Swatch } from "./UnitInfo";
 
 // The story around a mission: the briefing before it, the Drill Book page, and the debrief after (docs/CAMPAIGN.md).
 
 const UNITS = new Map(DEFAULT_UNITS.map((u) => [u.id, u]));
 
-export function Say({ line }: { line: Line }) {
+// A line of dialogue: the speaker's portrait and a parchment speech bubble. Wardens speak from the left, goblins from
+// the right, so a conversation reads as one.
+export function Say({ line, small }: { line: Line; small?: boolean }) {
   const who = CAST[line.who];
   return (
-    <p className={`say say-${who.side}`}>
-      <b>{who.name}</b> {line.text}
-    </p>
+    <div className={`say say-${who.side}`}>
+      <Portrait who={line.who} size={small ? 34 : 48} />
+      <p className="bubble">
+        <b>{who.name}</b> {line.text}
+      </p>
+    </div>
   );
 }
 
@@ -85,7 +91,7 @@ export function Debrief({ def, outcome, onRetry, onLeave }: { def: MissionDef; o
   const c = def.commendation;
   return (
     <div className="debrief">
-      {outcome.won ? def.win.map((l, i) => <Say key={i} line={l} />) : outcome.hint && <Say line={outcome.hint} />}
+      {outcome.won ? def.win.map((l, i) => <Say key={i} line={l} small />) : outcome.hint && <Say line={outcome.hint} small />}
       {c &&
         (outcome.commended ? (
           <p className="commendation earned">

@@ -345,9 +345,36 @@ The Story tab (`#story`) lists the campaigns, and a playable mission opens at `#
 then the Field, then the debrief with Try again and Next. The tab stays mounted once opened, like Play, so a Codex
 link mid-mission doesn't lose it.
 
-**Tuning a mission.** Write candidate player plans (sensible, reactive, careless) and play them against the script
-until the shape is right, then keep the clearest as references; keep only those with a clear margin, so a small
-rebalance doesn't flip them. Plans must spend exactly what a player could: 400 in round 1, then +400, +500, +600.
+### Making a mission (the recipe used for missions 1–3)
+
+1. **Story first.** Read `docs/VISION.md` and this mission's entry above: the dispute, the page, the punch and the
+   counterpunch, the commendation. Check the punch against `RELATIONS` in `src/data/balance.ts` (who beats whom, and
+   why): the lesson has to be true in the sim, not just in the story.
+2. **Write the `MissionDef`** in `src/data/campaign.ts` (copy the closest mission) and set `play:` on its entry in
+   `CAMPAIGNS`. Enemy squads use field tiles; the enemy deploys in rows 0–6 (a squad's `y` is its top row, so a
+   4×2 Grunt mob fits at `y` 0–5). Keep each round's squads clear of earlier rounds' squads, on both flanks if a round
+   uses `onFlank`. `thinFlank(seen)` and `onFlank(flank, specs)` (write specs for the West; they're mirrored for
+   the East) make the Boss answer what the player fielded.
+3. **Draft player plans** of three kinds: sensible, reactive (loses the punch round, then adapts) and careless (all
+   bows, never adds, ignores the lesson). Plans must spend what a player really has: the mission's `supply` in round 1,
+   then the standard income (+400, +500, +600, …); Keep levels cost 100 / 200 / 400 / 800 each.
+4. **Play them:** `npm run mission -- <id> '<plan json>'` plays one plan round by round (W/L, battle length, damage,
+   Keeps lost, HP, and the debrief hint on a loss); with no plan it plays the mission's reference plans. Iterate on
+   the enemy's rounds and on per-side HP until the shape is right: the careless plans lose, the sensible ones win,
+   the reactive one wins with some HP to spare, the commendation is reachable, and a match runs about the target
+   number of rounds. Lessons from 1–3:
+   - The punch needs to *land*: if the scripted unit doesn't do the thing (wolves chasing the nearest squad instead of
+     a Keep), give the enemy the upgrade that makes it (`enemy.upgrades`, Tower Raiders) rather than hoping.
+   - Rounds after the script ends are free wins for the player (the enemy adds nothing), so keep the script going
+     until the target length, or a careless plan wins late.
+   - A map can make or break a punch (the raid lands on Long Grass, not on the open field).
+5. **Keep the clearest plans as `reference`** (`wins`, `loses`, `commended`), only those with a clear margin, so a
+   small rebalance doesn't flip them; comment what each one does. `npm test` then fights them on every change.
+6. **Text:** briefing (3–5 lines, the cast's voices from VISION.md), page and drill, objective, win lines (seed the
+   next mission), hints from specific to general (the last has no `when`). A new speaker needs a `CAST` entry and a
+   face in `src/ui/Portraits.tsx`.
+7. **Check it on screen** (Playwright, CLAUDE.md "Verifying UI changes"; the debug panel's "Open every story mission"
+   skips the earlier ones), then update this file's mission entry with what the tuning found.
 
 Not built yet (each arrives with the mission that needs it): AI enemies limited to a pool (the Boss, the Tinker), a
 "topple a Keep" win condition, a two-phase enemy (mission 8), and `npm run playtest -- --mission N`.
