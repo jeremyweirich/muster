@@ -150,6 +150,12 @@ export function UnitInfo({
                 {Math.round(atk.damage)} {atk.element}
               </El>{" "}
               / {+atk.cooldown.toFixed(2)}s
+              {atk.windup ? (
+                <>
+                  {" "}
+                  + {+atk.windup.toFixed(2)}s <CodexLink topic="windup">windup</CodexLink>
+                </>
+              ) : null}
             </dd>
             <dt>DPS</dt>
             <dd>

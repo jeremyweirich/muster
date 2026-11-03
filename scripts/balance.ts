@@ -426,7 +426,7 @@ if (mode === "sensitivity") {
   const nudges: [string, (d: UnitDef, f: number) => UnitDef][] = [
     ["hp", (d, f) => ({ ...d, hp: d.hp * f })],
     ["damage", (d, f) => (d.attack ? { ...d, attack: { ...d.attack, damage: d.attack.damage * f } } : d)],
-    ["attack rate", (d, f) => (d.attack ? { ...d, attack: { ...d.attack, cooldown: d.attack.cooldown / f } } : d)],
+    ["attack rate", (d, f) => (d.attack ? { ...d, attack: { ...d.attack, cooldown: d.attack.cooldown / f, windup: d.attack.windup && d.attack.windup / f } } : d)],
     ["range", (d, f) => (d.attack ? { ...d, attack: { ...d.attack, range: d.attack.range * f } } : d)],
     ["speed", (d, f) => ({ ...d, speed: d.speed * f })],
   ];

@@ -47,6 +47,7 @@ export interface Model {
   shotAt: number; // battle time of its last attack (tall grass hides it from shooters until it attacks)
   rampTarget: number; // ramp trait: the target of its current streak of hits
   rampHits: number;
+  aim: number; // windup: seconds spent aiming at the current target since the reload
   summoned: boolean; // spawned mid-battle (Warboss); not part of the placed squad's survivors
   engaged: boolean; // in range of its target this tick (spacing only applies while advancing)
   buffAttack: number;
@@ -312,6 +313,7 @@ export class Battle {
       shotAt: -Infinity,
       rampTarget: -1,
       rampHits: 0,
+      aim: 0,
       summoned,
       engaged: false,
       buffAttack: 1,
@@ -622,11 +624,14 @@ export class Battle {
     let target = m.targetId >= 0 ? this.byId.get(m.targetId) : undefined;
     const stale = !target || (atk ? !this.canTarget(atk, target, m) : !target.alive);
     // a ramping unit keeps hitting the target it's building on while it's still in reach
-    const locked = m.engaged && m.rampTarget === m.targetId && !!trait(m.def, "ramp");
+    // and a holdTarget unit (Ballista) keeps the one it's aiming at
+    const locked = m.engaged && ((m.rampTarget === m.targetId && !!trait(m.def, "ramp")) || !!atk?.holdTarget);
     if (stale || (m.retarget <= 0 && !locked)) {
       // units without an attack (support) follow an armed ally, melee first
       target = atk ? this.findTarget(m) : this.findEscort(m);
-      m.targetId = target ? target.id : -1;
+      const id = target ? target.id : -1;
+      if (id !== m.targetId) m.aim = 0;
+      m.targetId = id;
       m.retarget = 0.6 + this.rng.next() * 0.4;
     }
     if (!target) return;
@@ -640,13 +645,20 @@ export class Battle {
 
     m.engaged = gap <= range;
     if (gap <= range) {
+      if (atk && m.cooldown <= 0 && atk.windup) {
+        // reloaded: aim at the target for the windup before firing
+        m.aim += dt * attackRate;
+        if (m.aim < atk.windup) return;
+      }
       if (atk && m.cooldown <= 0) {
         m.cooldown = atk.cooldown;
+        m.aim = 0;
         this.fire(m, target, atk);
         if (atk.selfDestruct) this.die(m);
       }
       return;
     }
+    m.aim = 0;
     if (anchored) return;
     let speed = m.def.speed * this.rules.speedScale * this.statusMult(m, "moveMult") * m.buffMove;
     const sprint = trait(m.def, "sprint");

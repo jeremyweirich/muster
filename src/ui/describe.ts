@@ -74,7 +74,7 @@ export interface DerivedStats {
 }
 
 export function derived(def: UnitDef): DerivedStats {
-  const modelDps = def.attack && def.attack.cooldown > 0 ? def.attack.damage / def.attack.cooldown : 0;
+  const modelDps = def.attack && def.attack.cooldown > 0 ? def.attack.damage / (def.attack.cooldown + (def.attack.windup ?? 0)) : 0;
   const squadHp = def.hp * def.squadSize;
   const squadDps = modelDps * def.squadSize;
   return {

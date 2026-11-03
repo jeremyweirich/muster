@@ -12,7 +12,7 @@ for (const f of FACTIONS) {
   for (const u of units) {
     const a = u.attack;
     const atk = a
-      ? `${a.damage} ${a.element} / ${a.cooldown}s, range ${a.range}${a.splash ? `, splash ${a.splash}` : ""}${a.chain ? `, chain ×${a.chain.count}` : ""}`
+      ? `${a.damage} ${a.element} / ${a.cooldown}s${a.windup ? ` + ${a.windup}s windup` : ""}, range ${a.range}${a.splash ? `, splash ${a.splash}` : ""}${a.chain ? `, chain ×${a.chain.count}` : ""}`
       : "none";
     const roles = rolesOf(u.tags).map((r) => r.name).join(", ");
     const ups = (u.upgrades ?? []).map((up) => `**${up.name}**: ${up.description ?? ""}`).join("<br>");

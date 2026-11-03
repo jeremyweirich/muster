@@ -1093,6 +1093,29 @@ export function drawBattle(
       facing += Math.PI;
     }
     if (opts.highlight?.(m)) drawHalo(ctx, m.def, x, y, tile, realTime + m.id * 0.4);
+    const windup = m.def.attack?.windup;
+    const aimed = windup && m.aim > 0 ? battle.get(m.targetId) : undefined;
+    if (aimed) {
+      // winding up: a sight line to the target that firms up as the shot comes
+      const q = interp?.prev.get(aimed);
+      let tx = q ? q.x + (aimed.x - q.x) * a : aimed.x;
+      let ty = q ? q.y + (aimed.y - q.y) * a : aimed.y;
+      if (flip) {
+        tx = W - tx;
+        ty = H - ty;
+      }
+      const k = Math.min(1, m.aim / windup!);
+      ctx.strokeStyle = SIDE_COLORS[view(m.side)];
+      ctx.globalAlpha = 0.15 + 0.6 * k;
+      ctx.lineWidth = 0.6 + 1.2 * k;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(x * tile, y * tile);
+      ctx.lineTo(tx * tile, ty * tile);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
     return drawUnit(ctx, m.def, view(m.side), x, y, tile, {
       facing,
       hpFrac: m.hp / m.maxHp,

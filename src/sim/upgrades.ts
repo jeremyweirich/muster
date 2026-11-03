@@ -24,6 +24,7 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
       const a = out.attack;
       a.damage = modValue(a.damage, mods("damage"));
       a.cooldown = Math.max(0.1, modValue(a.cooldown, mods("cooldown")));
+      if (a.windup) a.windup = modValue(a.windup, mods("cooldown"));
       a.range = modValue(a.range, mods("range"));
       a.splash = modValue(a.splash ?? 0, mods("splash")) || undefined;
       if (a.chain) a.chain = { ...a.chain, count: Math.round(modValue(a.chain.count, mods("chainCount"))) };

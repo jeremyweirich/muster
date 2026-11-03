@@ -79,7 +79,7 @@ function statLine(def: UnitDef): string {
   const atk = def.attack;
   const parts = [def.structure ? "tower" : `${def.cost} supply`, `${def.squadSize} × ${Math.round(def.hp)} HP`];
   if (shownLevel(def)) parts.unshift(`level ${def.level}`);
-  if (atk) parts.push(`${Math.round(atk.damage)} ${atk.element} / ${+atk.cooldown.toFixed(2)}s`, `range ${+atk.range.toFixed(1)}`);
+  if (atk) parts.push(`${Math.round(atk.damage)} ${atk.element} / ${+atk.cooldown.toFixed(2)}s${atk.windup ? ` + ${+atk.windup.toFixed(2)}s windup` : ""}`, `range ${+atk.range.toFixed(1)}`);
   parts.push(`speed ${Math.round(def.speed)}`);
   return parts.join(" · ");
 }

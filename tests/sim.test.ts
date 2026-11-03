@@ -223,6 +223,39 @@ describe("targeting and self-destruct", () => {
     expect(knights().every((m) => b.get(m.targetId)?.def.id === "giant_bats")).toBe(true);
   });
 
+  it("a Ballista winds up each shot and keeps its target until it dies", () => {
+    const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${x}`, defId, x, y, round: 1 });
+    const ballista = byId("ballista");
+    const start = (holdTarget: boolean) => {
+      const d = new Map(defs).set("ballista", { ...ballista, attack: { ...ballista.attack!, holdTarget } });
+      const b = new Battle(d, [[sq("ogre_brute", 19, 13), sq("stone_golem", 25, 13)], [sq("ballista", 22, 4)]], { seed: 1, towers: false });
+      b.step();
+      return { b, bal: b.models.find((m) => m.def.id === "ballista")! };
+    };
+    const keeps = (holdTarget: boolean) => {
+      const { b, bal } = start(holdTarget);
+      const first = bal.targetId;
+      expect(bal.engaged).toBe(true);
+      // the other one now has the most HP: a plain highest-HP shooter switches the next time it looks round
+      const other = b.models.find((m) => m.side === 0 && m.id !== first)!;
+      other.hp = other.maxHp = 1e5;
+      for (let i = 0; i < 40; i++) b.step();
+      return bal.targetId === first;
+    };
+    expect(keeps(true)).toBe(true);
+    expect(keeps(false)).toBe(false);
+
+    const { b, bal } = start(true);
+    bal.cooldown = 0;
+    bal.aim = 0;
+    let ticks = 0;
+    while (!b.projectiles.length) {
+      b.step();
+      ticks++;
+    }
+    expect(ticks * RULES.tick).toBeCloseTo(ballista.attack!.windup!, 1);
+  });
+
   it("toughness takes a flat amount off every hit, but a quarter always gets through", () => {
     const taken = (ups: string[]) => {
       const b = new Battle([defs, upgradedDefs(defs, { dragon: ups })], [army(0, ["skirmishers"]), army(1, ["dragon"])], { seed: 1, towers: false });
@@ -663,8 +696,8 @@ describe("goblin mechanics", () => {
     // Ballistae already in range of the ogre, with the mob still standing beside it.
     const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${x}${y}`, defId, x, y, round: 1 });
     const b = runFor(
-      new Battle([up({ ogre_brute: ["thick_skull"] }), defs], [[sq("ogre_brute", 22, 14), sq("grunts", 21, 16)], [sq("ballista", 18, 4), sq("ballista", 22, 4), sq("ballista", 26, 4)]], { seed: 3, towers: false, recordFx: true }),
-      1.5,
+      new Battle([up({ ogre_brute: ["thick_skull"] }), defs], [[sq("ogre_brute", 22, 14), sq("grunts", 21, 16)], [sq("ballista", 18, 4), sq("ballista", 22, 4), sq("ballista", 26, 4)]], { seed: 1, towers: false, recordFx: true }),
+      3, // a reload and a windup, then the bolts fly
     );
     expect(fxTexts(b, "Meat shield!")).toBeGreaterThan(0);
   });

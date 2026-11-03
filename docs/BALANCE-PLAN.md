@@ -77,6 +77,12 @@ from Crossbowmen 45% to Ballista 35%, Dragon 29%, Skirmishers 18%, Cloudlings 15
 fliers and the Ballista (full damage to air) take their place in one-unit fights, which exaggerate fliers. Watch
 whether the Ballista becomes the next "answer to everything" in the missions.
 
+**Ballista windup and target hold (owner, Nov 2, 2026).** It now aims for 1.25 s after each 2.5 s reload and keeps
+its target until it dies. Holding the target is focus fire, which flipped Griffons > Ballista to 38% at the old
+3.5 s cycle (it used to spread bolts over the three riders). The 3.75 s cycle (−7% DPS) puts it back at 88%. The
+check is otherwise unchanged: 94 of 96, 39 of 41, the same misses, Ballista still 35% of the Nash mix. Every
+mission's reference plans still hold.
+
 The rest of this section predates the campaign pass.
 
 `npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the independents pass (Nov 2, 2026):

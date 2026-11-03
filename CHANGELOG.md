@@ -3,8 +3,11 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v79)
+## 2 November 2026 (v58–v81)
 
+- **The Ballista winds up every shot**: after reloading it aims for 1.25 s (a dashed sight line shows at whom), and
+  it keeps its target until that target dies. Its reload is 2.5 s, so a shot comes every 3.75 s (was 3.5 s). See
+  *Winding up* in the Codex.
 - **Phones held upright** get the "turn your phone sideways" screen, with its full-screen button, on the Story page
   again (it had only shown on Play since the site started opening on Story).
 - **Balance pass, judged by the story missions.** Every unit a mission introduces can now win it.

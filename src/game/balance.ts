@@ -7,7 +7,7 @@ import type { UnitDef } from "../sim/types";
 // Single-target damage per second of one model.
 export function modelDps(def: UnitDef): number {
   const a = def.attack;
-  return a ? a.damage / a.cooldown : 0;
+  return a ? a.damage / (a.cooldown + (a.windup ?? 0)) : 0;
 }
 
 // Self-TTK = HP ÷ own DPS: how long one model takes to kill a copy of itself, ignoring squad size.
