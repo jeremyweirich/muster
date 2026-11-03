@@ -1,10 +1,10 @@
-import { planTurn, type MissionDef, type Plan } from "../data/campaign";
+import { planTurn, type Line, type MissionDef, type Plan } from "../data/campaign";
 import { DEFAULT_UNITS } from "../data/units";
 import { Battle, type BattleResult } from "../sim/battle";
 import type { PlacedSquad, Side } from "../sim/types";
 import { canPlace, defMap, type DefMap } from "./army";
 import { applyRound, applyTurn, canPromote, chooseOpening, nextRound, promotePrice, turnCost, type MatchState, type Turn } from "./match";
-import { missionOutcome, missionPlan, missionSquads, newMissionMatch, type MissionOutcome } from "./mission";
+import { missionOutcome, missionPlan, missionSquads, newMissionMatch, scriptedTurn, type MissionOutcome } from "./mission";
 import { prepareBattle } from "./pvp";
 
 // A story mission played from a plan, the way the game plays it: each round the player buys that round's part of the
@@ -19,6 +19,7 @@ export interface RoundLog {
   damage: [number, number]; // taken by [player, enemy]
   keepsLost: number; // the player's
   hp: [number, number]; // after the round
+  line?: Line; // what the enemy said as it deployed (EnemyTurn.line)
 }
 
 export interface MissionRun extends MissionOutcome {
@@ -92,6 +93,7 @@ export function runMission(m: MissionDef, plan: Plan, defs: DefMap = DEFS): Miss
   const problems: string[] = [];
   for (let guard = 0; guard < 20; guard++) {
     const enemy = missionPlan(m, state);
+    const line = scriptedTurn(m, state).line;
     state = playerTurn(m, state, plan, problems, defs);
     const bad = misplaced(enemy.squads, 1, state.armies[1], m.towers, defs);
     if (bad.length) problems.push(`round ${state.round}: enemy misplaced ${bad.join(", ")}`);
@@ -103,7 +105,7 @@ export function runMission(m: MissionDef, plan: Plan, defs: DefMap = DEFS): Miss
     state = applyRound(state, result, defs);
     const h = state.history[state.history.length - 1];
     const keepsLost = Object.values(result.stats).filter((s) => s.structure && s.side === 0 && s.alive === 0).length;
-    rounds.push({ round: h.round, winner: h.winner, time: result.time, damage: h.damage, keepsLost, hp: [...state.hp] });
+    rounds.push({ round: h.round, winner: h.winner, time: result.time, damage: h.damage, keepsLost, hp: [...state.hp], line });
     if (state.phase === "over") return { ...missionOutcome(m, state, results), results, rounds, state, problems };
     state = nextRound(state);
   }

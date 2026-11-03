@@ -207,7 +207,7 @@ describe("targeting and self-destruct", () => {
       b.step();
       return b.models.filter((m) => m.def.id === "giant_bats").map((m) => b.get(m.targetId)?.def.id);
     };
-    expect(targets(11)).toEqual(Array(4).fill("crossbowmen")); // just behind the knights
+    expect(targets(13)).toEqual(Array(4).fill("crossbowmen")); // right under them
     expect(targets(0)).toEqual(Array(4).fill("knights")); // the far side of the field
   });
 

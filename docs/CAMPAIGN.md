@@ -401,6 +401,10 @@ The Story tab (`#story`) lists the campaigns, and a playable mission opens at `#
 then the Field, then the debrief with Try again and Next. The tab stays mounted once opened, like Play, so a Codex
 link mid-mission doesn't lose it.
 
+**The copy in one place:** `docs/COPY.md` lists every mission's text (briefing, Drill Book page, objective, enemy
+lines, debrief, hints, commendation) with what it teaches. It's generated: `npm run -s copy-doc > docs/COPY.md`.
+The owner edits it for consistency and tone; the edits go back into `src/data/campaign.ts`, then regenerate.
+
 ### Making a mission (the recipe used for missions 1–8)
 
 1. **Story first.** Read `docs/VISION.md` and this mission's entry above: the dispute, the page, the punch and the

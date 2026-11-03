@@ -120,6 +120,7 @@ npm run relay         # local PvP relay for `npm run dev` (docs/MULTIPLAYER.md);
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
 npm run mission -- <id> ['<plan json>']  # play a story mission's reference plans, or one plan, round by round
 npm run mission -- all                   # every mission's reference plans, one line each: the balance dashboard
+npm run -s copy-doc > docs/COPY.md       # every word of the story missions in one page, for editing the copy
 npx tsx scripts/faction-holes.ts <csv>   # each faction's best answer to every unit, from `balance -- matrix --csv`
 ```
 

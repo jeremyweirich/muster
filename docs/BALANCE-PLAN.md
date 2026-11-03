@@ -93,6 +93,9 @@ ogres fell to massed *Repeaters* and the mission ended before the Tinker's raids
 only meets plans that are already losing). After both: 94 of 96, 39 of 41, the same misses as before, and every
 reference plan holds.
 
+**Preference reach halved (owner, Nov 3, 2026):** `RULES.preferReach` 4 → 2 (the owner called it the aggro radius).
+Nothing moved: 94 of 96, 39 of 41, the same misses and Nash mix, and every mission's reference plans hold.
+
 The rest of this section predates the campaign pass.
 
 `npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the independents pass (Nov 2, 2026):

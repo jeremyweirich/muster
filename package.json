@@ -13,6 +13,7 @@
     "matrix": "tsx scripts/balance.ts matrix",
     "balance": "tsx scripts/balance.ts",
     "roster-table": "tsx scripts/roster-table.ts",
+    "copy-doc": "tsx scripts/copy-doc.ts",
     "playtest": "tsx scripts/playtest.ts",
     "bench": "tsx scripts/bench.ts",
     "ai-duel": "tsx scripts/ai-duel.ts",

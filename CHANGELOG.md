@@ -3,6 +3,11 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
+## 3 November 2026 (v83)
+
+- **Units are drawn to their preferred targets from half as far**: a preference (the biggest target, Keeps, fliers,
+  …) now only picks among enemies within 2 tiles beyond attack range (was 4). Farther than that, the nearest wins.
+
 ## 2 November 2026 (v58–v82)
 
 - **Units keep their target once they start attacking it**, until it dies, hides or gets out of range (before, they
