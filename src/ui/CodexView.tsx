@@ -129,6 +129,7 @@ const CONTENTS: { title: string; items: [string, string][] }[] = [
       ["layers", "Ground and air"],
       ["keeps", "Keeps"],
       ["friendly-fire", "Who gets hurt"],
+      ["targets", "Picking targets"],
       ["windup", "Winding up"],
     ],
   },
@@ -249,13 +250,19 @@ export function CodexView({ topic }: { topic?: string }) {
           electrify a puddle you made. The battle report counts this as friendly fire.
         </p>
       </Entry>
+      <Entry id="targets" title="Picking targets" focus={topic}>
+        <p>
+          Each champion picks the nearest enemy it can hit, unless its card says it prefers something else nearby, and walks
+          to it. On the way it looks round about once a second and may switch. Once it starts attacking, it <b>keeps its
+          target</b> until that enemy dies, hides or gets out of range, whatever else walks up to it. Raiders that arrive while
+          the back line is busy with something else get a free moment.
+        </p>
+      </Entry>
       <Entry id="windup" title="Winding up" focus={topic}>
         <p>
           Most units fire the moment they&apos;ve reloaded. A few heavy weapons, like the Ballista, <b>wind up</b> every shot: once
           reloaded, they spend a moment aiming at their target first (a line shows where), and only fire if it&apos;s still in
-          range. They also <b>keep their target</b>: once they&apos;re aiming at something in range, they won&apos;t switch until it
-          dies, hides or gets away, whatever else walks up to them. Rush them with many small units, or with raiders they
-          aren&apos;t looking at.
+          range. Each new target means a fresh windup, so many small enemies waste a lot of their time.
         </p>
       </Entry>
 

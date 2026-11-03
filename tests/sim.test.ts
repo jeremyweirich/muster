@@ -223,29 +223,32 @@ describe("targeting and self-destruct", () => {
     expect(knights().every((m) => b.get(m.targetId)?.def.id === "giant_bats")).toBe(true);
   });
 
-  it("a Ballista winds up each shot and keeps its target until it dies", () => {
+  it("units stay on their target once they start attacking it; until then they look round", () => {
     const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${x}`, defId, x, y, round: 1 });
     const ballista = byId("ballista");
-    const start = (holdTarget: boolean) => {
-      const d = new Map(defs).set("ballista", { ...ballista, attack: { ...ballista.attack!, holdTarget } });
-      const b = new Battle(d, [[sq("ogre_brute", 19, 13), sq("stone_golem", 25, 13)], [sq("ballista", 22, 4)]], { seed: 1, towers: false });
+    const start = (y: number, range = ballista.attack!.range) => {
+      const d = new Map(defs).set("ballista", { ...ballista, attack: { ...ballista.attack!, range } });
+      const b = new Battle(d, [[sq("ogre_brute", 19, y), sq("stone_golem", 25, y)], [sq("ballista", 22, 4)]], { seed: 1, towers: false });
       b.step();
       return { b, bal: b.models.find((m) => m.def.id === "ballista")! };
     };
-    const keeps = (holdTarget: boolean) => {
-      const { b, bal } = start(holdTarget);
+    const keeps = (y: number, range?: number) => {
+      const { b, bal } = start(y, range);
       const first = bal.targetId;
-      expect(bal.engaged).toBe(true);
-      // the other one now has the most HP: a plain highest-HP shooter switches the next time it looks round
+      // the other one now has the most HP: a highest-HP shooter switches the next time it looks round, unless it's attacking
       const other = b.models.find((m) => m.side === 0 && m.id !== first)!;
       other.hp = other.maxHp = 1e5;
-      for (let i = 0; i < 40; i++) b.step();
+      for (let i = 0; i < 30; i++) b.step();
+      expect(bal.engaged).toBe(range === undefined);
       return bal.targetId === first;
     };
-    expect(keeps(true)).toBe(true);
-    expect(keeps(false)).toBe(false);
+    expect(keeps(13)).toBe(true); // in range from the start
+    expect(keeps(17, 9)).toBe(false); // still walking up
 
-    const { b, bal } = start(true);
+    // a Ballista winds up each shot
+    const { b, bal } = start(13);
+    while (!bal.engaged) b.step();
+    b.projectiles.length = 0;
     bal.cooldown = 0;
     bal.aim = 0;
     let ticks = 0;

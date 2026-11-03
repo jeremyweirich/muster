@@ -3,11 +3,14 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v81)
+## 2 November 2026 (v58–v82)
 
-- **The Ballista winds up every shot**: after reloading it aims for 1.25 s (a dashed sight line shows at whom), and
-  it keeps its target until that target dies. Its reload is 2.5 s, so a shot comes every 3.75 s (was 3.5 s). See
-  *Winding up* in the Codex.
+- **Units keep their target once they start attacking it**, until it dies, hides or gets out of range (before, they
+  looked round about once a second and switched to whatever was nearer or preferred). See *Picking targets* in the
+  Codex. To keep the story missions as designed, *Plain Steel*'s Tinker has 160 HP (was 200) and the Boss's fourth
+  wave in *The Marches* brings wolves. Giant Bats' *Leather Wings* gives +35% physical resistance (was +30%).
+- **The Ballista winds up every shot**: after reloading it aims for 1.25 s (a dashed sight line shows at whom). Its
+  reload is 2.5 s, so a shot comes every 3.75 s (was 3.5 s). See *Winding up* in the Codex.
 - **Phones held upright** get the "turn your phone sideways" screen, with its full-screen button, on the Story page
   again (it had only shown on Play since the site started opening on Story).
 - **Balance pass, judged by the story missions.** Every unit a mission introduces can now win it.

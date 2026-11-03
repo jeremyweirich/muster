@@ -49,7 +49,6 @@ export interface AttackDef {
   element: Element;
   cooldown: number; // seconds between attacks
   windup?: number; // seconds of aiming at the target after each reload before the shot goes off (cooldown mods scale it too)
-  holdTarget?: boolean; // keeps its target while it is in range, until it dies or can no longer be targeted
   range: number; // tiles
   targets: Layer[];
   targeting: Targeting;

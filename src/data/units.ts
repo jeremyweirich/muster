@@ -93,7 +93,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "ballista",
     name: "Ballista",
-    description: "Huge single bolts at very long range. It picks the biggest target nearby, winds up each shot and won't switch until that target dies. Swarms and raiders beat it.",
+    description: "Huge single bolts at very long range. It picks the biggest target nearby and winds up every shot. Swarms and raiders beat it.",
     cost: 100,
     unlockCost: 100,
     squadSize: 1,
@@ -103,7 +103,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 5,
     size: 0.6,
     attack: {
-      damage: 260, element: "physical", cooldown: 2.5, windup: 1.25, holdTarget: true, range: 11,
+      damage: 260, element: "physical", cooldown: 2.5, windup: 1.25, range: 11,
       targets: ["ground", "air"], targeting: "highestHp", delivery: "projectile", projectileSpeed: 18,
       bonusVs: [{ selector: { hasAnyTag: ["size:large", "size:huge"] }, mult: 2 }],
     },
@@ -495,8 +495,8 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "leather_wings",
         name: "Leather Wings",
-        description: "+30% physical resistance, and 40% faster for the first 3s.",
-        resist: { physical: 0.3 },
+        description: "+35% physical resistance, and 40% faster for the first 3s.",
+        resist: { physical: 0.35 },
         traits: [{ type: "sprint", mult: 1.4, duration: 3 }],
       },
       {

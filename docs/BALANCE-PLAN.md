@@ -83,6 +83,16 @@ its target until it dies. Holding the target is focus fire, which flipped Griffo
 check is otherwise unchanged: 94 of 96, 39 of 41, the same misses, Ballista still 35% of the Nash mix. Every
 mission's reference plans still hold.
 
+**Every unit keeps its target once attacking (owner, Nov 2, 2026).** The Ballista's target hold became the rule for
+everyone: a unit in range of its target stays on it until it dies, hides or gets out of range. It is focus fire for
+every shooter. The matrix barely moved: one new miss, *Leather Wings* against Skirmishers at an even 50%, fixed with
++35% physical resistance (was +30%). The missions moved more. *Plain Steel*'s round 4 is a coin flip either way, and
+two winning plans fell 10–24 HP short, so the Tinker's HP went 200 → 160 (the losing plans deal only 7, so they still
+lose). In *The Marches*, all bows lost rounds 2–3 instead of winning them, so the Boss's waves ran longer, his round-4
+ogres fell to massed *Repeaters* and the mission ended before the Tinker's raids. His fourth wave now brings wolves (it
+only meets plans that are already losing). After both: 94 of 96, 39 of 41, the same misses as before, and every
+reference plan holds.
+
 The rest of this section predates the campaign pass.
 
 `npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the independents pass (Nov 2, 2026):

@@ -623,9 +623,8 @@ export class Battle {
     m.retarget -= dt;
     let target = m.targetId >= 0 ? this.byId.get(m.targetId) : undefined;
     const stale = !target || (atk ? !this.canTarget(atk, target, m) : !target.alive);
-    // a ramping unit keeps hitting the target it's building on while it's still in reach
-    // and a holdTarget unit (Ballista) keeps the one it's aiming at
-    const locked = m.engaged && ((m.rampTarget === m.targetId && !!trait(m.def, "ramp")) || !!atk?.holdTarget);
+    // once it's attacking (its target in range), a unit stays on that target until it dies, hides or gets away
+    const locked = m.engaged && !!atk;
     if (stale || (m.retarget <= 0 && !locked)) {
       // units without an attack (support) follow an armed ally, melee first
       target = atk ? this.findTarget(m) : this.findEscort(m);

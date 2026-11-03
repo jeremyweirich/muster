@@ -635,7 +635,7 @@ const PLAIN_STEEL: MissionDef = {
   supply: 400,
   units: ["knights", "crossbowmen"],
   shop: ["ballista", "cleric"],
-  hp: [180, 200],
+  hp: [180, 160],
   towers: true,
   upgrades: true,
   veterancy: false,
@@ -1152,7 +1152,7 @@ const BOSS_WAVES: SquadSpec[][] = [
   [["troll", 22, 3], ["grunts", 14, 4], ["grunts", 30, 4], ["wolf_riders", 6, 3]],
   [["ogre_brute", 22, 0], ["troll", 14, 1], ["grunts", 34, 1]],
   [["wolf_riders", 40, 3], ["wolf_riders", 4, 0], ["troll", 28, 1], ["grunts", 16, 0]],
-  [["ogre_brute", 12, 4], ["ogre_brute", 34, 4], ["grunts", 22, 5]],
+  [["ogre_brute", 12, 4], ["ogre_brute", 34, 4], ["grunts", 22, 5], ["wolf_riders", 40, 3]],
   [["troll", 18, 5], ["troll", 28, 5], ["ogre_brute", 22, 0], ["grunts", 2, 5]],
 ];
 const TINKER_WAVES: EnemyTurn[] = [

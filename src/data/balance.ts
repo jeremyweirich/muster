@@ -90,8 +90,8 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     },
   },
   ballista: {
-    // winds up every shot (1.25 s after a 2.5 s reload) and keeps its target until it dies (owner, Nov 2, 2026). The
-    // focus fire kills 3 Griffons one at a time; the windup's slower cycle is what keeps them ahead
+    // winds up every shot (1.25 s after a 2.5 s reload; owner, Nov 2, 2026). Units keep their target once attacking, so
+    // it kills 3 Griffons one at a time; the windup's slower cycle is what keeps them ahead
     role: "antiGiant",
     analogue: "Marksman",
     upgrades: {

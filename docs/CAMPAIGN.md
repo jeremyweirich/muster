@@ -92,7 +92,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 | 2 | The Appeal | the goat, appealed | rounds, locked squads, reading their last army, HP | | Skirmishers | 70 / 90 |
 | 3 | Two Keeps | a rude drawing on a Keep | towers, collapse Daze, flanks, tower levels | | Wolf Riders | 100 |
 | 4 | Under the Bridge | the bridge toll | unlocks, big units, regeneration | Ballista | Troll | 160 / 140 |
-| 5 | Plain Steel | the wheelbarrow patent | upgrades, yours and theirs | Cleric | the Tinker's gadgets | 180 / 200 |
+| 5 | Plain Steel | the wheelbarrow patent | upgrades, yours and theirs | Cleric | the Tinker's gadgets | 180 / 160 |
 | 6 | Look Up | who owns the sky | the air layer | Griffon Riders | Giant Bats | 240 |
 | 7 | Old Grumm | an old grudge | veterancy, promotions | Dwarven Pikemen | Ogre Brute (veteran) | 300 |
 | 8 | The Marches | the border itself | the full Compact: opening offer, blind from round 1 | (all) | (all) | 400 |
@@ -174,7 +174,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   Archivist: "We have had wheelbarrows for four hundred and twelve years."
 - **Page 5, Drills.** "A drill improves every squad that knows it, even those already on the Field." Drill: *Read
   their stars. Answer with a drill.*
-- **Kit.** 400 supply, Knights and Crossbowmen; Ballista and **Cleric** in the shop. HP 180 / 200. Keeps on,
+- **Kit.** 400 supply, Knights and Crossbowmen; Ballista and **Cleric** in the shop. HP 180 / 160 (was 200, until units kept their targets). Keeps on,
   **upgrades on**, veterancy off. Map: Standing Stones.
 - **Enemy.** Gadgets arrive by round (`EnemyTurn.upgrades`): round 2 adds two mobs and archers and gives **every**
   Grunt *Scrap Armor*, including those placed in round 1; round 3 brings trolls with *Thick Blood*; then trolls and
@@ -504,3 +504,7 @@ to; run it before and after changing units. The first pass, from what missions 5
 | Griffon Riders: ×1.5 against medium units | They're the anti-medium flier, but Crossbowmen out-damaged them 2:1 against medium targets (6) |
 | Pikemen: ×4.5 against large units and cavalry (was ×3.5) | Knights did the pike page's job better than the pikes (7, 8) |
 | Mission 6's round-2 bats lost *Savage Claws* | Sized for the old Crossbowmen; with bows needing *Skyhunters*, four plain squads are enough |
+
+When units started keeping their targets once attacking (focus fire, Nov 2, 2026): mission 5's Tinker went to 160 HP
+(was 200), since its round 4 is a coin flip and two winning plans fell 10–24 HP short; and mission 8's fourth Boss
+wave brings wolves, since all bows, losing early, met the Boss's ogres instead of the Tinker's raids and won.
