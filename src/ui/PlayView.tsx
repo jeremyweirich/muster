@@ -108,7 +108,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const [hoverInfo, setHoverInfo] = useState<{ def: UnitDef; side: Side; fromShop?: boolean; squad?: PlacedSquad } | null>(null);
   const [speed, setSpeed] = useState(1);
   const [aiPlan, setAiPlan] = useState<AiPlan | null>(null);
-  const [enemyLine, setEnemyLine] = useState<Line | null>(null); // a mission's enemy, speaking while the player deploys
+  const [roundLines, setRoundLines] = useState<Line[]>([]); // a mission's cast (either side), speaking while the player deploys
   const [fought, setFought] = useState<Fought | null>(null);
   const [view, setView] = useState<"report" | "replay">("report");
   const [pinned, setPinned] = useState<string | null>(null);
@@ -170,7 +170,8 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     if (pvp || match.phase !== "deploy") return;
     if (mission) {
       setAiPlan(missionPlan(mission.def, match));
-      setEnemyLine(scriptedTurn(mission.def, match).line ?? null);
+      const said = [mission.def.roundLines?.[match.round], scriptedTurn(mission.def, match).line];
+      setRoundLines(said.filter((l): l is Line => !!l));
       return;
     }
     setAiPlan(null);
@@ -912,7 +913,9 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const objective = mission && deploying && (
     <div className="objective">
       <b>{mission.title}</b> <span className="small">{mission.def.objective}</span>
-      {enemyLine && <Say line={enemyLine} small />}
+      {roundLines.map((l, i) => (
+        <Say key={i} line={l} small />
+      ))}
     </div>
   );
   const toUnlock = shopUnits.filter((u) => !unlocked.has(u.id));

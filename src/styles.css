@@ -2543,10 +2543,7 @@ button.primary.warn-btn {
   margin: 0;
   font-size: 15px;
 }
-.brief-kit + .muted {
-  margin: -6px 0 0;
-}
-/* a page of the Drill Book: old paper, a serif hand, the drill drawn in ranks */
+/* a page of the Drill Book: old paper, a serif hand, the formation drawn in ranks, pencil in the margin */
 .drill-page {
   background: #2b2619;
   border: 1px solid #5c4d2b;
@@ -2589,10 +2586,33 @@ button.primary.warn-btn {
   display: flex;
   gap: 8px;
 }
-.drill-line {
+/* the Marshal's own line on page 9, in ink */
+.drill-ink {
   margin: 0;
-  font-size: 20px;
-  font-weight: 700;
+  font-family: "Segoe Script", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: 22px;
+  color: #f4ead2;
+  transform: rotate(-1.5deg);
+}
+/* the Marshal's pencil notes: grey, quick, a little crooked */
+.pencil-note {
+  margin: 0;
+  max-width: 34em;
+  font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #a9a597;
+  text-align: left;
+  transform: rotate(-0.6deg);
+}
+.drill-page .pencil-note {
+  align-self: stretch;
+  border-top: 1px dashed #5c4d2b;
+  padding-top: 7px;
+}
+.debrief .pencil-note {
+  font-size: 12px;
+  padding: 2px 4px;
 }
 /* in the Play sidebar: the mission's task, and the debrief once it's over */
 .objective {

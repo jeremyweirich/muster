@@ -52,35 +52,56 @@ own:
 
 All three are forms of care that look nothing alike from the outside. That's the quiet message under the loud battles.
 
+## How the copy sounds
+
+- Plain, specific and funny. Avoid dramatic language and short, parallel epigrams.
+- Use one game term per concept: Knights, Crossbowmen, upgrade, unlock, supply, shop, Dazed.
+- Don't repeat what the player can see on screen, or tell them the same rule twice on one screen.
+- Characters speak from what they want and know. Don't rely on catchphrases.
+
 ## Faction voices
 
-### Wardens: proud of being boring
+### Wardens: the book and the real world
 
-This is the small dose of personality, and it reinforces their blandness instead of fighting it. Their tutorial device
-is the **Drill Book**, a centuries-old manual of formations, with one page per mission.
+The tutorial device is the **Drill Book**, a centuries-old manual of formations, with one page per mission. The heart of
+the campaign is the gap between the book and the real world, and the people on each side of it.
 
-- The player's commander is a newly appointed **Marshal**, a little anxious and comforted by the book. Their onboarding
-  mirrors the player's.
-- A **dwarf sergeant**: "Boring wins. Write that down."
-- An **elf archivist** notes that this formation hasn't changed in four hundred years. "And it has never once needed to."
-- **Arc:** the Marshal learns the book can grow. The last page is the first one they write themselves.
+- **Sergeant Dunmor (dwarf)** has never read the book and knows the real world and combat completely. He is old,
+  confident and lazy, and he trusts the book utterly. Anything he has learned from experience, he assumes is in the
+  book: "Book says so." He is usually right about the Field and wrong about the page.
+- **Archivist Ithiel (elf)** has never seen the real world and knows the book completely. He has only read about all
+  this and is delighted to finally be outside. He has field-trip energy, academic and excited, even around the fighting,
+  and keeps comparing what he sees to the literature.
+- **The Marshal (player, they/them)** is newly appointed, nervous and talks out loud. They ask the questions, read the
+  book and take notes in pencil in its margins. Their onboarding mirrors the player's. By the finale, they are the one
+  answering the questions.
+- **Arc:** Dunmor and Ithiel learn from each other, and the Marshal writes down what they learn. Dunmor finds out what
+  the book really says, and Ithiel finds out what the world is really like. The last page is the first one the Marshal
+  writes in ink, and it finally makes the book say what Dunmor always claimed it did.
 
-### Goblins: chaos with a lot of heart
+Rules are always accurate by the end of an exchange. If Dunmor misquotes the book, Ithiel or the page corrects him
+right there. "Boring wins" appears rarely, so it can pay off at the end.
 
-Two leads: **the Boss** and **the Tinker**.
+### Goblins: smart, sarcastic and chaotic with a lot of heart
 
-- The campaign opens with the replayed Warden finale. "Lads, they had pointy sticks and we had nothing. So I made a
-  bigger thing."
-- The Tinker announces the odds on every gadget and always gets them wrong: "One in three chance it works! ...or one in
-  three it doesn't. One of those." That's the risk/reward tutorial voice.
+Two leads: **the Boss** and **the Tinker**. Both are clever and sarcastic, without dialect or words like "lads".
+
+- **In the Wardens campaign, keep them focused.** The Boss is about swarming the player with numbers. The Tinker is
+  about careful selection of upgrades. Their personalities are developed in the goblin campaign.
+- **The Boss** is social, full of bravado and speaks in capitals. He wants to be on top of a huge pile of goblins.
+- **The Tinker** is mechanical, loud and always improving something. They care more about whether a thing worked than
+  about who won. They introduce upgrades: "An inventor would have fixed it by now."
+- The campaign opens with the replayed Warden finale. "They had pointy sticks and we had nothing. So I made a bigger
+  thing."
 - The fireball mission: "Fire's hot. Fire's also free. Point it at THEM." Goblins who go out in a blaze get cheered,
   not mourned.
 
 ### Elementals: not arrogant, careful
 
-The goblin campaign shows them as aloof snobs. Their own campaign reveals the truth.
+The goblin campaign shows them as aloof snobs. Their own campaign reveals the truth: they keep their distance so they
+don't hurt anyone.
 
 - A **young fire elemental** is afraid of burning its neighbors. Positioning, the hardest skill in the game, becomes an
   act of care.
-- An **elder**: "We are not complicated because we are clever. We are complicated because we burn."
+- An **elder**: "We're not being rude. We're standing over here so you don't catch fire."
 - **Payoff:** when the combos land perfectly, it's the most beautiful thing on the board. Hard to do, and worth it.

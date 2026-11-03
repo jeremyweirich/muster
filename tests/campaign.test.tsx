@@ -29,7 +29,8 @@ describe("story missions", () => {
         for (const id of [...m.units, ...(m.shop ?? []), ...m.enemy.units]) expect(defs.has(id), id).toBe(true);
         for (const rank of m.page.diagram ?? []) for (const id of rank) expect(defs.has(id), id).toBe(true);
         for (const [unitId, ids] of Object.entries(m.enemy.upgrades ?? {})) for (const id of ids) expect(defs.get(unitId)?.upgrades?.some((u) => u.id === id), `${unitId} ${id}`).toBe(true);
-        for (const l of [...m.briefing, ...m.win, ...m.hints.map((h) => h.line)]) expect(CAST[l.who]).toBeDefined();
+        for (const l of [...m.briefing, ...m.win, ...m.hints.map((h) => h.line), ...Object.values(m.roundLines ?? {})]) expect(CAST[l.who]).toBeDefined();
+        for (const round of Object.keys(m.roundLines ?? {})) expect(Number(round), `a line for round ${round}`).toBeGreaterThan(0);
         expect(m.hints.some((h) => !h.when), "a loss always gets a hint").toBe(true);
         for (const plan of [...m.reference.wins, ...m.reference.loses])
           for (const round of plan) for (const [unitId, id] of planTurn(round).upgrades ?? []) expect(defs.get(unitId)?.upgrades?.some((u) => u.id === id), `${unitId} ${id}`).toBe(true);
@@ -53,6 +54,8 @@ describe("story missions", () => {
       const run = play(m, m.reference.wins[0]);
       const html = renderToStaticMarkup(<Debrief def={m} outcome={run} army={run.state.armies[0]} onRetry={() => {}} onLeave={() => {}} />);
       expect(html).toContain(m.lastPage!.title.replace(/'/g, "&#x27;"));
+      if (m.lastPage!.handwritten) expect(html).toContain(m.lastPage!.handwritten);
+      if (m.winNote) expect(html).toContain("pencil-note");
       const ranks = boardDiagram(run.state.armies[0]);
       expect(ranks.flat().sort()).toEqual(run.state.armies[0].map((sq) => sq.defId).sort());
     }

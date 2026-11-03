@@ -1,18 +1,18 @@
 # Common Ground: the story copy
 
-Every word the story campaigns show, mission by mission, for editing for consistency and tone. Generated from `src/data/campaign.ts` by `npm run copy-doc > docs/COPY.md`: edit here, then the changes go back into `campaign.ts` (ask Claude) and this page is regenerated. The voices are in `docs/VISION.md`.
+Every word the story campaigns show, mission by mission, for editing for consistency and tone. Generated from `src/data/campaign.ts` by `npm run -s copy-doc > docs/COPY.md`: edit here, then the changes go back into `campaign.ts` (ask Claude) and this page is regenerated. The voices are in `docs/VISION.md`.
 
 ## The campaigns (Story tab)
 
-- **The Drill Book:** A new Marshal, a four-hundred-year-old book of formations, and a goblin Boss with a season's worth of grievances.
-- **The Tinker's Odds:** “Lads, they had pointy sticks and we had nothing. So I made a bigger thing.” *(not built yet)*
-- **We Burn:** “We are not complicated because we are clever. We are complicated because we burn.” *(not built yet)*
+- **The Drill Book:** A nervous new Marshal, a sergeant who has never read the book, and an archivist who has never left it.
+- **The Tinker's Notebook:** "They had pointy sticks and we had nothing. So I made a bigger thing." *(not built yet)*
+- **We Burn:** "We're not being rude. We're standing over here so you don't catch fire." *(not built yet)*
 
 ---
 
 ## The Drill Book, mission 1: Hands Off
 
-**Teaches** (design note, not shown): Placing, then letting go: steel in front, arrows behind. Crossbowmen alone get swarmed by a mob.
+**Teaches** (design note, not shown): Placing, then letting go: Knights in front, Crossbowmen behind. Crossbowmen alone get swarmed by a mob.
 
 **On the Story list:** A goat has wandered across the border at Millbrook. Settle it on the Field.
 
@@ -20,39 +20,46 @@ Every word the story campaigns show, mission by mission, for editing for consist
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal. Welcome to your first Field. Today's dispute concerns a goat.
-- **Sergeant Dunmor:** Wandered over at Millbrook on Tuesday. The goblins say it's theirs. The goat hasn't said.
-- **The Boss:** IT'S OUR GOAT.
-- **Archivist Ithiel:** The challenger deploys first, and they have: you may study their army as long as you like. The book has a page for this. It has been the same page for four hundred years.
+- **Archivist Ithiel:** Is that the goat? It's much smaller than the literature suggests! There's also a precedent involving a turnip, if we have an hour.
+- **Sergeant Dunmor:** We don't. Knights in front, Crossbowmen behind them, so the mob has something to run into. When the horn goes, hands in your pockets. Book says so.
+- **Archivist Ithiel:** It says "no hand may touch the Field." It doesn't mention pockets.
+- **Sergeant Dunmor:** Well, that's where I keep mine.
+- **Marshal:** Sorry, so once it starts, what do I do?
+- **Sergeant Dunmor:** Nothing. Best part of the job.
+- **The Boss:** IT'S OUR GOAT. WE HAVE THREE MOBS OF WITNESSES.
+- **Archivist Ithiel:** The challenger deploys first, so you can study their army for as long as you like. I certainly intend to!
 
 Drill Book page, **Page 1: The Compact**:
 
-> “Choose your champions. Place them. When the horn sounds, no hand may touch the Field.”
->
-> *Steel in front. Arrows behind.*
+> "Choose your units. Place them. When the horn sounds, no hand may touch the Field."
 
-**Objective** (also the sidebar's line while deploying): Win the battle. Three mobs of Grunts are waiting, and you have 400 supply of Knights and Crossbowmen.
+*Pencil note: Knights in front, Crossbowmen behind. Surely there's more to it? Ask whether pockets are required.*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. One battle decides it.
+**Objective:** Win the battle.
 
 ### During the match
 
-*(the enemy says nothing)*
+*(one battle, no lines)*
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. Write that down.
-- **Archivist Ithiel:** Written. The goat goes home to Millbrook.
-- **The Boss:** THAT WASN'T FAIR. WE'RE APPEALING.
+- **Sergeant Dunmor:** Everybody back? Good, less paperwork. Boring wins. Book says so.
+- **Archivist Ithiel:** It doesn't, actually! I'd remember.
+- **Sergeant Dunmor:** Well, it should.
+- **The Boss:** YOU BEAT THREE MOBS. WE HAVE MORE MOBS. WE'RE APPEALING.
+- **Marshal:** Can they do that?
+- **Archivist Ithiel:** Oh, I very much hope so!
+
+*Pencil note: "Boring wins" (Sgt.). Not in the book, says Ithiel. Sgt. says it should be.*
 
 ### Hints after a loss (the first that matches)
 
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Bolts hit hard, but there were more goblins than bolts. A mob needs something to run onto. Steel in front.
-- When otherwise: **Sergeant Dunmor:** They got round the steel. Put the Knights where the goblins will run: between them and the bows.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Crossbowmen only get so many shots, and there were more goblins than shots. A mob needs something to run into. Put Knights in front.
+- When otherwise: **Sergeant Dunmor:** They got round your Knights. Put them where the goblins are heading, between the mob and your Crossbowmen.
 
 ### Commendation
 
-**Steel in Front:** Win with Crossbowmen on the Field, and lose none of them.
+**Knights in Front:** Win with Crossbowmen on the Field, and lose none of them.
 
 ---
 
@@ -66,36 +73,42 @@ Drill Book page, **Page 1: The Compact**:
 
 Briefing:
 
-- **Archivist Ithiel:** The goblins have appealed the goat. Under the Compact a loss may be appealed once, as a longer match.
-- **Sergeant Dunmor:** Rounds, Marshal. Each round you add champions, and whatever you've placed stays where it is. After every battle the survivors take a bite out of the other side's standing. First side to run out loses.
-- **The Boss:** BEST OF... LOTS.
-- **Archivist Ithiel:** They've moved the Field to Millbrook Ford. There is a pond in the middle. I'd not plan on anyone walking through it.
+- **Archivist Ithiel:** They've appealed! Under the Compact, a loss can be appealed once, as a longer match. I've only ever read about one of these!
+- **Marshal:** How much longer?
+- **Sergeant Dunmor:** Rounds. Each round you add units, and whatever you've already placed stays put. After each battle, the survivors take a bite out of the other side's HP. First to zero loses.
+- **The Boss:** WE CAME BACK WITH MORE. THEN WE COME BACK WITH MORE AFTER THAT. THAT'S WHAT ROUNDS ARE.
+- **Archivist Ithiel:** According to the map, Millbrook Ford is a shallow crossing.
+- **Sergeant Dunmor:** It's been a pond for sixty years. Nobody's walking through that.
+- **Archivist Ithiel:** The map is wrong? How wonderful!
 
 Drill Book page, **Page 2: What Is Placed Stays Placed**:
 
-> “You will see what they fielded, never what they will add.”
->
-> *Read their last army. Guess their answer. Add yours.*
+> "You will see what the other side has fielded, but never what they will add."
 
-**Objective** (also the sidebar's line while deploying): Bring the Boss's HP to nothing before yours runs out. Your squads stay on the Field, and every round brings more supply to add.
+*Pencil note: So I look at their last army and guess? Is guessing allowed? Asked Sgt. He said "Everyone guesses." That doesn't help.*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. You start with 70 HP, The Boss with 90.
+**Objective:** Bring the Boss's HP to zero before yours runs out.
 
 ### During the match
 
-*(the enemy says nothing)*
+- Round 2: **The Boss:** THAT WAS THE SHORT VERSION.
+- Round 3: **Sergeant Dunmor:** See where they put those Skirmishers? On the side we left thin. Goblins always check.
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. Twice now.
-- **Archivist Ithiel:** The appeal is dismissed. The goat has eaten the appeal.
+- **Archivist Ithiel:** The appeal is dismissed, and the goat has eaten it! I can't find a precedent!
 - **The Boss:** THAT WAS OUR ONLY COPY.
+- **Marshal:** Does that count as a ruling?
+- **Archivist Ithiel:** I have no idea. Isn't that marvelous?
+- **Sergeant Dunmor:** It's a goat. Who's got lunch?
+
+*Pencil note: Millbrook Ford is a pond (Sgt.). The map is older than the pond (Ithiel, thrilled). Look at the thin side of your own army first.*
 
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will.
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Bolts alone again. A mob needs steel to run onto.
-- When otherwise: **Sergeant Dunmor:** Their archers hid behind a goblin screen, on the flank we'd left thin. You saw them there. Next time, put steel on that flank and bows behind it, or guess it before they do.
+- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** You stopped adding units after round 1. Supply in your pocket doesn't fight, and they kept coming.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** No Knights, so nothing stopped the mob reaching your Crossbowmen. Put Knights in front.
+- When otherwise: **Sergeant Dunmor:** Their Skirmishers hid behind Grunts, on the flank we left thin. Next time, put Knights on that flank with Crossbowmen behind them, or get there before they do.
 
 ### Commendation
 
@@ -105,7 +118,7 @@ Drill Book page, **Page 2: What Is Placed Stays Placed**:
 
 ## The Drill Book, mission 3: Two Keeps
 
-**Teaches** (design note, not shown): Keeps: when one falls, the whole army is Dazed. Guard the flanks with steel; Keep levels only buy time.
+**Teaches** (design note, not shown): Keeps: when one falls, the whole army is Dazed. Guard the flanks with Knights; Keep levels only buy time.
 
 **On the Story list:** Someone has painted something rude on the West Keep.
 
@@ -113,47 +126,54 @@ Drill Book page, **Page 2: What Is Placed Stays Placed**:
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal, a goblin has painted something on the West Keep.
+- **Archivist Ithiel:** A goblin has painted something on the West Keep! I've seen this sort of thing in marginalia, but never at this scale.
 - **Sergeant Dunmor:** It's rude.
+- **Marshal:** Is that supposed to be me?
 - **The Boss:** IT'S A GOOD LIKENESS.
-- **Archivist Ithiel:** Every Field has two Keeps a side. They don't fight, and they don't count toward winning a battle. But if one falls, the whole army loses its nerve.
-- **Sergeant Dunmor:** And the grass on the flanks is long this year. Goblins like long grass.
+- **Archivist Ithiel:** Each side has two Keeps. They don't fight, and they don't count toward winning a battle, but you very much want to hold on to them. Page 3 is quite firm!
+- **Sergeant Dunmor:** Lose one and everyone stands around blinking. And the grass on the flanks is long this year. Goblins hide in it.
+- **Archivist Ithiel:** The book doesn't mention grass at all!
+- **Sergeant Dunmor:** Goblins don't read it either.
 
 Drill Book page, **Page 3: Two Keeps**:
 
-> “Every Field has two Keeps. If one falls, the whole army loses its nerve.”
->
-> *Guard the flanks, or build the walls higher.*
+> "If a Keep falls, the whole army is Dazed. A Keep can be built higher."
 
-**Objective** (also the sidebar's line while deploying): Win the match, and mind your Keeps: a fallen Keep Dazes your whole army. You can buy Keep levels under Keeps.
+*Pencil note: Book says buy levels (Keeps tab). Sgt. says put Knights beside the Keeps. Which? Does anyone know? Do both?*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. Each side starts with 100 HP.
+**Objective:** Win the match.
 
 ### During the match
 
-*(the enemy says nothing)*
+- Round 2: **The Boss:** NICE KEEPS. BE A SHAME.
+- Round 3: **Archivist Ithiel:** Wolf Riders! See the star beside them? That's an upgrade, Tower Raiders, so they go straight for Keeps. Volume Four calls this "an unsporting tendency"!
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. Write that down. Again.
-- **Archivist Ithiel:** The painting has been scrubbed off the West Keep. Mostly.
-- **The Boss:** FINE. WE'RE GETTING THE TROLL.
+- **Sergeant Dunmor:** Told you about the grass.
+- **Archivist Ithiel:** You did! I went and stood in it. May I add it to the book?
+- **Sergeant Dunmor:** Thought it was already in there.
+- **Archivist Ithiel:** The painting has been scrubbed off the West Keep. Mostly. I kept a sketch.
+- **Marshal:** Please don't keep a sketch.
+- **The Boss:** SCRUB ALL YOU LIKE. WE'RE GETTING THE TROLL.
+
+*Pencil note: Keep levels buy time (book). Knights stop the wolves (Sgt.). Long grass hides wolves (Sgt., and now Ithiel, who has some in his hair).*
 
 ### Hints after a loss (the first that matches)
 
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Bolts alone again. A mob needs steel to run onto.
-- When `keepFell(c)&&c.towerLevels.every(l=>l===0)`: **Sergeant Dunmor:** Their wolves went round us and pulled down a Keep, and the whole line lost its nerve. Put steel beside the Keeps. A level on one costs 100 and makes a raid work for it.
-- When otherwise: **Sergeant Dunmor:** They got to the Keeps anyway. Walls only buy time: put steel beside them, where the wolves come in.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** No Knights on the Field, so nothing stopped the mob or the wolves. Buy some Knights.
+- When `keepFell(c)&&c.towerLevels.every(l=>l===0)`: **Sergeant Dunmor:** The wolves pulled down a Keep and the whole army was Dazed. Put Knights beside the Keeps. A level costs 100 and slows the wolves down, too.
+- When otherwise: **Archivist Ithiel:** Page 3 says higher walls help, and they do, for a while! It seems the wolves just take longer. Knights beside the Keeps are what actually stop them.
 
 ### Commendation
 
-**Not One Stone:** Win without losing a Keep.
+**Both Keeps Standing:** Win without losing a Keep.
 
 ---
 
 ## The Drill Book, mission 4: Under the Bridge
 
-**Teaches** (design note, not shown): Unlocks and big units: trolls beat a Knight line, so buy an engine from the armory (the Ballista) and put steel in front of it.
+**Teaches** (design note, not shown): Unlocks and big units: trolls beat a Knight line, so unlock the Ballista in the shop and put Knights in front of it.
 
 **On the Story list:** The goblins have adopted the troll under the toll bridge. And its toll.
 
@@ -161,39 +181,44 @@ Drill Book page, **Page 3: Two Keeps**:
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal, there is a troll under the toll bridge at Hob's Crossing. It has lived there longer than the bridge has.
-- **Sergeant Dunmor:** The goblins have adopted it. They've also adopted the toll.
-- **The Boss:** HE'S FAMILY NOW. FAMILY GETS PAID.
-- **Sergeant Dunmor:** Trolls go through Knights like a boot through a hedge. Every blow in a row lands harder, and they heal while they fight.
-- **Archivist Ithiel:** The river is deep on both sides of the bridge, so the Field's short way across is the middle. And the armory holds the Ballista. It costs the Treasury once per Field; after that, a squad is only a squad.
+- **Archivist Ithiel:** There's a troll under the toll bridge at Hob's Crossing, and it's been there longer than the bridge! I have three volumes on trolls. I can't wait to see if they got the knees right.
+- **Sergeant Dunmor:** Knees are the last thing you'll notice. They go through Knights like a boot through a hedge. Every blow in a row lands harder, and they heal while they fight.
+- **The Boss:** THE TROLL WORKS FOR US NOW. SO DOES THE TOLL. EXACT CHANGE ONLY.
+- **Marshal:** What do we do about a troll?
+- **Sergeant Dunmor:** Ballista. Big, slow, and goes for the biggest thing it can see. Put Knights in front, or a mob will wreck it. Book says so.
+- **Archivist Ithiel:** It actually does, for once! Page 4! How did you know?
+- **Sergeant Dunmor:** Stood in front of one once. River's deep on both sides of the bridge, too, so the short way across is the middle.
 
-Drill Book page, **Page 4: The Armory**:
+Drill Book page, **Page 4: Unlocks**:
 
-> “The armory holds more than the book's first pages. Each new engine costs the Treasury once per Field.”
->
-> *Big things need engines. Engines need steel in front.*
+> "Some units must be unlocked in the shop. Each unlock costs supply once per match, and after that you buy squads as usual. Ballistae need Knights in front of them."
 
-**Objective** (also the sidebar's line while deploying): Win the match. The Boss has trolls. The Ballista waits in the shop: unlock it once this match (100), then buy squads as usual.
+*Pencil note: Sgt. and the book agree. Marking the date.*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. In the armory: Ballista (unlock 100). You start with 160 HP, The Boss with 140.
+**Objective:** Win the match.
 
 ### During the match
 
-*(the enemy says nothing)*
+- Round 2: **The Boss:** TOLL'S GONE UP.
+- Round 3: **Archivist Ithiel:** An actual troll! Volume One has the knees completely wrong! Oh, and it's healing. It's still healing. Look at that!
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. Big, slow, boring wins bigger.
-- **Archivist Ithiel:** The troll has gone back under the bridge. It has agreed to charge the goblins as well.
-- **The Boss:** THAT'S NOT FAMILY BEHAVIOR. I'M TELLING THE TINKER.
+- **Sergeant Dunmor:** Big, slow, and it worked. That's what I like in a plan.
+- **Archivist Ithiel:** The troll has gone back under the bridge, and it's agreed to charge the goblins as well. Also, I've drawn the correct knees.
+- **Marshal:** Is that going in the book?
+- **Archivist Ithiel:** It had better be!
+- **The Boss:** YOU WANT TO PLAY CLEVER? MEET THE TINKER.
+
+*Pencil note: Trolls get worse the longer they keep hitting something (Sgt.). For knees, see Ithiel's drawing.*
 
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will.
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Bolts alone again. A mob needs steel to run onto.
-- When `!fielded(c,"ballista")`: **Sergeant Dunmor:** Steel against trolls is a fair fight, and they brought more trolls than we brought steel. The Ballista hunts the biggest thing on the Field: unlock it in the shop.
-- When `c.army.filter(sq=>sq.defId==="knights").length<2`: **Sergeant Dunmor:** The Ballistae had nothing in front of them, and a mob that reaches an engine wrecks it. Steel in front, engines behind.
-- When otherwise: **Sergeant Dunmor:** The trolls got through anyway. Add Ballistae every round, behind the Knights, and leave the trolls to them.
+- When `c.army.every(sq=>sq.round===1)`: **Archivist Ithiel:** You finished with supply unspent, and the goblins kept adding units. I've checked, and unspent supply has never won a battle. Not once in four hundred years of records!
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** The mob got to your Crossbowmen with no Knights in the way. Buy some Knights.
+- When `!fielded(c,"ballista")`: **Sergeant Dunmor:** Knights against trolls is a fair fight, and they brought more trolls. Unlock the Ballista in the shop. It goes for the biggest thing on the Field.
+- When `c.army.filter(sq=>sq.defId==="knights").length<2`: **Sergeant Dunmor:** Your Ballistae had nothing in front of them, and a mob that reaches a Ballista wrecks it. Knights in front, Ballistae behind.
+- When otherwise: **Sergeant Dunmor:** The trolls still got through. Add Ballistae every round, behind your Knights, and leave the trolls to them.
 
 ### Commendation
 
@@ -201,9 +226,9 @@ Drill Book page, **Page 4: The Armory**:
 
 ---
 
-## The Drill Book, mission 5: Plain Steel
+## The Drill Book, mission 5: The Wheelbarrow
 
-**Teaches** (design note, not shown): Upgrades, yours and theirs: the enemy's gadgets show as stars, and the answer is a drill of your own (Repeaters), which reaches every squad already on the Field.
+**Teaches** (design note, not shown): Upgrades, yours and theirs: the enemy's upgrades show as stars, and the answer is an upgrade of your own (Repeaters), which reaches every squad already on the Field.
 
 **On the Story list:** A goblin Tinker accuses the Wardens of stealing the wheelbarrow.
 
@@ -211,51 +236,58 @@ Drill Book page, **Page 4: The Armory**:
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal, we have been accused of theft. A goblin Tinker says we stole the wheelbarrow.
-- **The Tinker:** THE wheelbarrow. One wheel, two handles. I drew it first.
-- **Archivist Ithiel:** We have had wheelbarrows for four hundred and twelve years.
-- **Sergeant Dunmor:** This one tinkers, Marshal. Whatever the goblins bring today will have been improved, and every improvement shows: a star by the unit, once the horn sounds.
-- **The Tinker:** Scrap Armor! Nine chances in ten it stops a bolt. Or ten in nine. Something in nine.
-- **Archivist Ithiel:** The book answers in kind. A drill improves every squad that knows it, even those already on the Field.
+- **Archivist Ithiel:** We've been accused of theft! A goblin says we stole the wheelbarrow. We've had wheelbarrows for four hundred and twelve years. I brought the records!
+- **The Tinker:** Four hundred and twelve years, and it still has one wheel! Nobody who invented that would have stopped there. So you must have stolen it.
+- **Marshal:** Is that an argument?
+- **Archivist Ithiel:** It's a very good one!
+- **The Tinker:** I'll have a look at your army, then I'll pick my upgrades. It's called thinking! It's free, you should try it!
+- **Sergeant Dunmor:** Our squads get better all at once sometimes, even the ones already out there. Never knew why.
+- **Archivist Ithiel:** That's Page 5! Those are upgrades, and someone has to buy them!
+- **Sergeant Dunmor:** Ah. That explains the invoices.
 
-Drill Book page, **Page 5: Drills**:
+Drill Book page, **Page 5: Upgrades**:
 
-> “A drill improves every squad that knows it, even those already on the Field.”
->
-> *Read their stars. Answer with a drill.*
+> "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades show as a star beside the unit."
 
-**Objective** (also the sidebar's line while deploying): Win the match. Upgrades are open: a drill changes every squad of that unit, even ones already placed. The Tinker's upgrades show as ★.
+*Pencil note: Check for stars, then pick an upgrade that answers them. Does Sgt. know he's been paying for these? He does now.*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. In the armory: Ballista (unlock 100), Cleric (unlock 100). You start with 180 HP, The Tinker with 160.
+**Objective:** Win the match.
 
 ### During the match
 
-*(the enemy says nothing)*
+- Round 1: **Sergeant Dunmor:** Shop's got a Cleric now. Stands behind the Knights, patches them up, and they hit harder for it.
+- Round 2: **The Tinker:** Just a small change this round! You'll notice!
+- Round 3: **Archivist Ithiel:** That star is Scrap Armor. It stops one hit per Grunt! So one big hit is wasted, but lots of small hits... oh, what a lovely problem!
+- Round 4: **The Tinker:** Thick Blood on the trolls! I considered something flashier, but it wouldn't have been as annoying.
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. Boring, repeated quickly, wins faster.
-- **The Tinker:** The odds were good on that one. Very good. I'll redo the sums.
+- **Sergeant Dunmor:** Repeaters. Forty years, I thought they just turned up like that some seasons.
+- **The Tinker:** You picked the right upgrade! Most people don't look. Can I see one up close?
 - **Archivist Ithiel:** The wheelbarrow stays with us. The Tinker has asked to borrow it.
-- **The Boss:** FORGET THE GROUND. NOBODY OWNS THE SKY.
+- **Marshal:** Should we let them?
+- **Sergeant Dunmor:** It's a wheelbarrow.
+- **The Boss:** THE GROUND'S FULL ANYWAY. WE'LL USE THE SKY.
+
+*Pencil note: Sgt. has been buying upgrades for forty years without knowing it. Wheelbarrow: is one wheel a problem? Nobody here has ever asked.*
 
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will.
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Bolts alone again. A mob needs steel to run onto.
-- When `Object.keys(c.upgrades).length===0`: **Sergeant Dunmor:** Every goblin in that mob shrugged off the first bolt it took. We fought new gadgets with old drills. Buy a drill under Upgrades: it reaches every squad on the Field.
-- When `!c.upgrades.crossbowmen?.includes("repeaters")`: **Sergeant Dunmor:** The right drill matters. Their armor stops one hit per goblin, so a heavy bolt is wasted on it. Repeaters shoot many small bolts: the armor only stops the first.
-- When otherwise: **Sergeant Dunmor:** Close. Buy the drill the round you see their stars, and keep adding steel in front of the bows.
+- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** They kept adding squads and you stopped. That's the whole story.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** The mob ran straight onto your Crossbowmen. Put Knights in front.
+- When `Object.keys(c.upgrades).length===0`: **Archivist Ithiel:** Every Grunt shrugged off its first hit, and we never answered! Open the Upgrades tab. An upgrade reaches every squad already on the Field.
+- When `!c.upgrades.crossbowmen?.includes("repeaters")`: **Archivist Ithiel:** Scrap Armor stops one hit per Grunt, so a heavy bolt is wasted on it. Repeaters fire lots of small bolts, and the armor only stops the first!
+- When otherwise: **Sergeant Dunmor:** Close. Buy the upgrade the round you see the star, and keep adding Knights in front of your Crossbowmen.
 
 ### Commendation
 
-**Well Drilled:** Once their armor shows, win every round after it.
+**Right Upgrade:** Once their armor shows, win every round after it.
 
 ---
 
 ## The Drill Book, mission 6: Look Up
 
-**Teaches** (design note, not shown): The air: Knights can't strike what flies. Know which champions can (bows, Griffon Riders).
+**Teaches** (design note, not shown): The air: Knights can't hit what flies. Know which units can (Crossbowmen, Ballistae, Griffon Riders).
 
 **On the Story list:** The Compact draws borders on the ground. The goblins have noticed.
 
@@ -263,49 +295,55 @@ Drill Book page, **Page 5: Drills**:
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal, a point of law. The Compact draws the Field's borders on the ground.
-- **Sergeant Dunmor:** And the goblins have noticed it says nothing about above it.
-- **The Boss:** WHO OWNS THE SKY? NOBODY. SO IT'S OURS.
-- **Sergeant Dunmor:** Bats, Marshal. Big ones, with goblins on. They fly over the line and go for whoever's standing behind it.
-- **Archivist Ithiel:** The book is calm about this. Knights cannot strike what flies; Crossbowmen and Ballistae can, and Griffon Riders fly themselves. The Mire slows anyone on foot. It slows nothing with wings.
+- **Archivist Ithiel:** A point of law! The Compact draws the Field's borders on the ground and says nothing about the air above it. I've read that clause a hundred times and never once looked up.
+- **The Boss:** YOU DREW A LINE ON THE GROUND. WE'RE GOING OVER IT. THAT'S NOT CHEATING, THAT'S READING.
+- **Archivist Ithiel:** He's right!
+- **Sergeant Dunmor:** Bats. Big ones, with goblins on. They go over your Knights and come down on whoever's behind them. The Mire won't slow them down, either.
+- **Marshal:** What can hit them?
+- **Archivist Ithiel:** Page 6 has a list! Griffon Riders are on it. The griffon is described here as noble and gentle-natured.
+- **Sergeant Dunmor:** They bite.
 
-Drill Book page, **Page 6: Look Up**:
+Drill Book page, **Page 6: Fliers**:
 
-> “Knights cannot strike what flies. Know which of your champions can.”
->
-> *Bows under the sky. Wings against wings.*
+> "Knights cannot hit what flies. Crossbowmen, Ballistae and Griffon Riders can."
 
-**Objective** (also the sidebar's line while deploying): Win the match. The Boss has taken to the air, and Knights can't hit fliers. Crossbowmen, Ballistae and Griffon Riders can.
+*Pencil note: Griffons bite (Sgt.). Book says gentle-natured. Ithiel would like to check. Please don't let him check.*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. In the armory: Ballista (unlock 100), Cleric (unlock 100), Griffon Riders (unlock 100). Each side starts with 240 HP.
+**Objective:** Win the match.
 
 ### During the match
 
-*(the enemy says nothing)*
+- Round 2: **The Boss:** YOU MIGHT WANT TO LOOK UP.
+- Round 3: **Archivist Ithiel:** Giant Bats! Actual ones! Did you see how they fold their wings before they land on the Crossbowmen? Volume Two gets that completely wrong!
+- Round 5: **Sergeant Dunmor:** More Skirmishers, and they shoot fliers. Don't send your Griffon Riders in alone.
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. Looking up is boring too. Write that down.
-- **Archivist Ithiel:** Ruled: the sky over the Field belongs to the Field. The bats have gone home.
+- **Sergeant Dunmor:** Sore neck, but everyone looked up. That'll do.
+- **Archivist Ithiel:** It's ruled: the sky over the Field belongs to the Field. The bats have gone home. And griffons do bite.
+- **Marshal:** You checked?
+- **Archivist Ithiel:** I've amended the entry!
 - **The Boss:** FINE. I'M CALLING GRUMM.
 - **Sergeant Dunmor:** ...Grumm?
 
+*Pencil note: Griffons bite (confirmed, Ithiel, left hand). Crossbowmen do half damage to fliers until you buy Skyhunters.*
+
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will.
-- When `!c.army.some(sq=>sq.round>1&&(sq.defId==="crossbowmen"||sq.defId==="griffon_riders"))`: **Sergeant Dunmor:** Knights can't hit what flies, and the bats knew it. Crossbowmen can, and so can Griffon Riders: put them where the bats come down.
-- When `c.army.filter(sq=>sq.defId==="ballista").length>c.army.filter(sq=>sq.defId==="crossbowmen").length`: **Sergeant Dunmor:** Bats land on engines. A Ballista hits fliers, but slowly: Crossbowmen behind the steel shoot them down faster.
-- When otherwise: **Sergeant Dunmor:** The bats went over the line and landed on the bows. More bows, Marshal, and Skyhunters picks out the fliers first.
+- When `c.army.every(sq=>sq.round===1)`: **Marshal:** I kept my supply for later, and there wasn't a later. Add units every round.
+- When `!c.army.some(sq=>sq.round>1&&(sq.defId==="crossbowmen"||sq.defId==="griffon_riders"))`: **Sergeant Dunmor:** Knights can't reach the bats, and the bats know it. Put Crossbowmen or Griffon Riders where they come down.
+- When `c.army.filter(sq=>sq.defId==="ballista").length>c.army.filter(sq=>sq.defId==="crossbowmen").length`: **Sergeant Dunmor:** Bats land on Ballistae. A Ballista can hit fliers, but it's slow about it. Crossbowmen behind your Knights do it faster.
+- When otherwise: **Archivist Ithiel:** The bats went over the line and landed on the Crossbowmen! Crossbowmen do half damage to fliers unless you buy Skyhunters. It's on the Upgrades tab.
 
 ### Commendation
 
-**Wings Against Wings:** Win with Griffon Riders on the Field.
+**Air Cover:** Win with Griffon Riders on the Field.
 
 ---
 
 ## The Drill Book, mission 7: Old Grumm
 
-**Teaches** (design note, not shown): Veterancy: squads that live earn levels. Promote them, and put the longest weapons (pikes) where the biggest enemy walks.
+**Teaches** (design note, not shown): Veterancy: squads that live earn levels. Promote them, and put Dwarven Pikemen where the biggest enemy walks.
 
 **On the Story list:** Thirty years ago, an ogre ate the Sergeant's helmet.
 
@@ -313,48 +351,55 @@ Drill Book page, **Page 6: Look Up**:
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal, the Boss has named a champion: Old Grumm.
-- **Sergeant Dunmor:** Thirty years ago, at a Field match, Grumm ate my helmet. I was nearly still in it.
-- **The Boss:** GRUMM'S BEEN FIGHTING SINCE BEFORE YOU WERE BORN. HE'S GOOD AT IT NOW.
-- **Archivist Ithiel:** Squads that fight well learn from it, and Grumm has learned a great deal. Ours can too: when a squad has a level waiting, you may promote it, for half its price.
-- **Archivist Ithiel:** And there is a page in the book no one has turned to in two hundred years. There was nothing large enough to need it.
-- **Sergeant Dunmor:** The pikes. Dwarven Pikemen, Marshal: long sticks for large problems.
+- **Sergeant Dunmor:** Thirty years ago, Grumm ate my helmet. I was nearly still in it. Nothing you can do about an ogre that size. Book says so.
+- **The Boss:** GRUMM REMEMBERS YOUR SERGEANT. SAYS THE HELMET NEEDED SALT.
+- **Archivist Ithiel:** Page 7 is entirely about large things! Dwarven Pikemen, with very long pikes. Nobody's opened it in two hundred years!
+- **Sergeant Dunmor:** ...There's a page.
+- **Marshal:** Are you all right?
+- **Sergeant Dunmor:** Thirty years.
+- **Sergeant Dunmor:** Right. Squads that live through a battle get better at this. A gold ▲ means one has a level waiting. Promote it for half its price. That part I do know.
 
 Drill Book page, **Page 7: The Pike Line**:
 
-> “Against the largest, the longest. Hold them at the point.”
->
-> *Pikes where the big ones walk. Promote what lives.*
+> "Dwarven Pikemen do extra damage to large units. Put them where large units walk."
 
-**Objective** (also the sidebar's line while deploying): Win the match. Squads now earn experience: one with a level waiting shows a gold ▲, and promoting it costs half its price.
+*Pencil note: Sgt. asked me to read this page to him. Twice.*
 
-**Kit line** (built from the mission's setup): Your champions: Knights, Crossbowmen. In the armory: Ballista (unlock 100), Cleric (unlock 100), Griffon Riders (unlock 100), Dwarven Pikemen (unlock 100). Each side starts with 300 HP.
+**Objective:** Win the match.
 
 ### During the match
 
-*(the enemy says nothing)*
+- Round 2: **The Boss:** GRUMM'S WARMED UP.
+- Round 3: **Sergeant Dunmor:** That's him. Hasn't changed. Put your Pikemen where he's walking, and promote anything with a gold ▲.
+- Round 4: **Archivist Ithiel:** The entry says "broad in the swing"! That doesn't really cover it, does it?
+- Round 5: **The Boss:** ONE GRUMM WAS A COURTESY.
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. And I've got my helmet back. It's been chewed.
-- **Archivist Ithiel:** The pike page has been copied out fresh. The old ink had faded.
-- **The Boss:** RIGHT. THAT'S IT. THE WHOLE BORDER. EVERYTHING. NEXT TIME.
+- **Sergeant Dunmor:** Got my helmet back. It's been chewed.
+- **Archivist Ithiel:** I've copied the pike page out fresh, since the old ink had faded. It only says "large," though. What was he actually like, up close?
+- **Sergeant Dunmor:** Give me that page. I'll tell you what's wrong with it.
+- **Marshal:** You're going to read it?
+- **Sergeant Dunmor:** Just that page.
+- **The Boss:** RIGHT. THE WHOLE BORDER. EVERYTHING WE'VE GOT, ALL AT ONCE. COUNT THEM IF YOU CAN.
+
+*Pencil note: Grumm's swing takes two or three at once (Sgt., dictating to Ithiel). Sgt. checked the page afterward. He's reading it.*
 
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will.
-- When `c.army.every(sq=>(sq.level??1)===1)`: **Sergeant Dunmor:** Squads that live through a battle learn from it. We had veterans waiting and never promoted one. When you see the gold ▲, promote: half a squad's price buys a whole squad's worth.
-- When otherwise: **Sergeant Dunmor:** Grumm walked through us. Keep promoting, put the pikes where he walks, and keep bows behind them to finish him.
+- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** You stopped adding units after round 1. Grumm didn't stop.
+- When `c.army.every(sq=>(sq.level??1)===1)`: **Sergeant Dunmor:** You had veterans waiting and never promoted one. When you see a gold ▲, promote it. Half a squad's price buys a whole squad's worth.
+- When otherwise: **Sergeant Dunmor:** Grumm walked through us. Keep promoting, put your Pikemen where he walks, and keep Crossbowmen behind them to finish him.
 
 ### Commendation
 
-**Old Page, New Ink:** Win with a promoted squad of Dwarven Pikemen on the Field.
+**Page Seven:** Win with a promoted squad of Dwarven Pikemen on the Field.
 
 ---
 
 ## The Drill Book, mission 8: The Marches
 
-**Teaches** (design note, not shown): The full Compact: choose an opening, deploy blind from round 1, and use every page of the book at once.
+**Teaches** (design note, not shown): The full Compact: choose an opening, deploy blind from round 1, and use everything from the book at once.
 
 **On the Story list:** The season final. The Boss stakes the whole border.
 
@@ -362,44 +407,55 @@ Drill Book page, **Page 7: The Pike Line**:
 
 Briefing:
 
-- **Archivist Ithiel:** Marshal, the season final. The Boss has staked the whole border: the Marches, from the Toll Bridge to the hills.
+- **Archivist Ithiel:** The season final! The Boss has staked the whole border, from the Toll Bridge to the hills. I've brought a hat.
 - **The Boss:** EVERYTHING. ALL OF IT. AND THE GOAT.
-- **Sergeant Dunmor:** Full Compact rules today. Nobody sees the other army before the horn. The Treasury offers an opening, and the whole armory is ours to unlock.
-- **The Tinker:** And if the Boss loses twice, it's my turn. I've been working on something. Several somethings.
-- **Archivist Ithiel:** Every page of the book applies. A Giant from the hills has offered to hire on, which the book doesn't cover. And there is one blank page at the back. It has been blank for four hundred years.
+- **Marshal:** Full Compact rules, page 8. Nobody sees the other army before the horn, and we choose an opening. I've read it three times.
+- **Sergeant Dunmor:** Page 3. If a Keep falls, the whole army is Dazed. I looked it up.
+- **Archivist Ithiel:** You looked it up?
+- **Sergeant Dunmor:** Griffons?
+- **Archivist Ithiel:** Bite. I can show you the hand.
+- **The Tinker:** If the Boss loses twice, it's my turn. I've watched what you field all season, so I know exactly which upgrades I want.
+- **Archivist Ithiel:** A Giant from the hills has offered to hire on, and the book doesn't cover that!
+- **Sergeant Dunmor:** Book says hire anything that big.
+- **Archivist Ithiel:** It absolutely does not!
+- **Marshal:** Hire it if we need it. We'll write it in.
 
 Drill Book page, **Page 8: The Full Compact**:
 
-> “Every commander chooses, every commander places, and no one sees the other's army before the horn.”
->
-> *Every page at once.*
+> "Every commander chooses, every commander places, and no one sees the other's army before the horn."
 
-**Objective** (also the sidebar's line while deploying): Win the season final. Round 1 offers three Warden packs or the war chest, the whole armory is open, and the goblins stay hidden until the horn.
+*Pencil note: Knights in front, Crossbowmen behind. Watch the sky and the Keeps. Promote. I think I can do this. There's a blank page at the back.*
 
-**Kit line** (built from the mission's setup): Round 1 offers three packs (Knights and Crossbowmen; Crossbowmen and Dwarven Pikemen; Knights and Dwarven Pikemen) or the war chest. In the armory: Knights (unlock 100), Crossbowmen (unlock 100), Ballista (unlock 100), Griffon Riders (unlock 100), Cleric (unlock 100), Dwarven Pikemen (unlock 100), Giant (unlock 200). Each side starts with 400 HP.
+**Objective:** Win the season final.
 
 ### During the match
 
-- Round 3–5 (scripted: when depends on how the match goes). **The Tinker:** My turn! Bats. Four chances in five they work. I counted twice, and got two answers.
-- Round 4–6 (scripted: when depends on how the match goes). **The Tinker:** Both Keeps at once. Nobody does both Keeps at once. That's what makes it work.
-- Round 5 (scripted: when depends on how the match goes). **The Boss:** NO. BIGGER.
+- Round 2: **Archivist Ithiel:** The histories never mention the noise!
+- Round 3–5 (scripted: when depends on how the match goes). **The Tinker:** My turn! Bats, with Shriek. I checked your army first, so you're going to hate this.
+- Round 4–6 (scripted: when depends on how the match goes). **The Tinker:** Tower Raiders, on both flanks. You'd have answered one raid, so I sent two.
+- Round 5 (scripted: when depends on how the match goes). **The Boss:** NO. MORE.
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Boring wins. A whole border's worth of boring.
-- **The Tinker:** I had ideas. Good ones. Nobody listened.
+- **The Tinker:** Your wheelbarrow's outside. It has two wheels now. You're welcome.
+- **Sergeant Dunmor:** It's better.
+- **Archivist Ithiel:** It isn't in the book!
+- **Marshal:** It could be.
+- **Sergeant Dunmor:** Boring wins. Book says so.
+- **Archivist Ithiel:** It doesn't, as I've told you every... oh. Oh! Page 9! In ink!
+- **Marshal:** It kept coming up.
+- **Sergeant Dunmor:** Told you it was in there.
 - **The Boss:** ...SAME TIME NEXT SEASON?
-- **Archivist Ithiel:** The Marshal has written on the blank page. In ink.
 
-Then a page of the book, **Page 9, in the Marshal's hand**: What we fielded at the Marches, and what held.
+Then a page of the book, **Page 9, in the Marshal's hand, in ink**: "Boring wins." Below it, what we fielded at the Marches, and what held.
 
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will.
-- When `!c.army.some(sq=>["knights","pikemen"].includes(sq.defId))`: **Sergeant Dunmor:** Nothing in front of the bows, Marshal. The Boss sent his biggest, and they walked straight in. Steel in front.
-- When `!c.army.some(sq=>["crossbowmen","griffon_riders"].includes(sq.defId))`: **Sergeant Dunmor:** The Tinker's bats came over the line, and nothing of ours could reach them. Bows under the sky.
-- When `c.results.some(r=>Object.values(r.stats).some(s=>s.structure&&s.side===0&&s.alive===0))`: **Sergeant Dunmor:** The Tinker went for both Keeps at once, and the line lost its nerve. Steel beside the Keeps, or a level on each, before it comes.
-- When otherwise: **Sergeant Dunmor:** Every page at once, Marshal: steel in front, bows behind, eyes up, Keeps guarded, veterans promoted.
+- When `c.army.every(sq=>sq.round===1)`: **Marshal:** We stopped adding after round 1. I know better than that.
+- When `!c.army.some(sq=>["knights","pikemen"].includes(sq.defId))`: **Sergeant Dunmor:** Nothing in front of your Crossbowmen. The Boss sent his biggest units, and they walked straight in. Put Knights or Pikemen in front.
+- When `!c.army.some(sq=>["crossbowmen","griffon_riders"].includes(sq.defId))`: **Archivist Ithiel:** The Tinker's bats came over the line, and nothing of ours could reach them! Crossbowmen and Griffon Riders can.
+- When `c.results.some(r=>Object.values(r.stats).some(s=>s.structure&&s.side===0&&s.alive===0))`: **Sergeant Dunmor:** The Tinker hit both Keeps at once, and the whole army was Dazed. Put Knights beside the Keeps, or buy a level on each, before it comes.
+- When otherwise: **Marshal:** All right. Knights in front, Crossbowmen behind, watch the sky, guard the Keeps, promote the veterans. Again.
 
 ### Commendation
 

@@ -3,7 +3,14 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 3 November 2026 (v83)
+## 3 November 2026 (v83–v84)
+
+- **The Wardens campaign's copy pass.** New briefings, pages, debriefs and hints in every mission, written to
+  `docs/VISION.md`'s voices: Dunmor knows the Field and has never read the book, Ithiel knows the book and has never
+  left it. The Marshal speaks, with a portrait, and writes pencil notes in the book's margins and after each win. The
+  cast talks between rounds in missions 2–8. Page 9 opens with "Boring wins." in the Marshal's hand. Mission 5 is now
+  *The Wheelbarrow*, and five commendations have new names. The kit line under each briefing and the drill line under
+  each page are gone. The goblin campaign's working title is *The Tinker's Notebook*.
 
 - **Units are drawn to their preferred targets from half as far**: a preference (the biggest target, Keeps, fliers,
   …) now only picks among enemies within 2 tiles beyond attack range (was 4). Farther than that, the nearest wins.

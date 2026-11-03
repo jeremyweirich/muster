@@ -1,10 +1,9 @@
 import { CAST, type Line, type MissionDef, type MissionEntry } from "../data/campaign";
 import { DEFAULT_UNITS } from "../data/units";
-import { unlockPrice } from "../game/army";
 import type { MissionOutcome } from "../game/mission";
 import { footprintOf } from "../sim/battle";
 import type { PlacedSquad } from "../sim/types";
-import { Linked, UnitLink } from "./codexLinks";
+import { Linked } from "./codexLinks";
 import { Portrait } from "./Portraits";
 import { Swatch } from "./UnitInfo";
 
@@ -26,11 +25,13 @@ export function Say({ line, small }: { line: Line; small?: boolean }) {
   );
 }
 
-// A page of the book: the rule, then the drill drawn as ranks of tokens, front rank toward the enemy.
-export function DrillPage({ page }: { page: MissionDef["page"] }) {
+// A page of the book: a line in the Marshal's hand (page 9), the rule, the formation drawn as ranks of tokens (front
+// rank toward the enemy), and the Marshal's pencil note in the margin.
+export function DrillPage({ page }: { page: MissionDef["page"] & { handwritten?: string } }) {
   return (
     <div className="drill-page">
       <div className="drill-title">{page.title}</div>
+      {page.handwritten && <p className="drill-ink">{page.handwritten}</p>}
       <p className="drill-text">“{page.text}”</p>
       {page.diagram && (
         <div className="drill-diagram" aria-hidden="true">
@@ -45,9 +46,14 @@ export function DrillPage({ page }: { page: MissionDef["page"] }) {
           ))}
         </div>
       )}
-      {page.drill && <p className="drill-line">{page.drill}</p>}
+      {page.note && <PencilNote text={page.note} />}
     </div>
   );
+}
+
+// The Marshal's pencil note: in a page's margin, and after a win.
+export function PencilNote({ text }: { text: string }) {
+  return <p className="pencil-note">{text}</p>;
 }
 
 // The player's board as a page of the book: ranks by depth, front rank (nearest the enemy) first, each rank left to
@@ -62,21 +68,6 @@ export function boardDiagram(army: PlacedSquad[]): string[][] {
     ranks.set(band, [...(ranks.get(band) ?? []), { ...sq, x: sq.x + w / 2 }]);
   }
   return [...ranks.entries()].sort(([a], [b]) => a - b).map(([, sqs]) => sqs.sort((a, b) => a.x - b.x).map((sq) => sq.defId));
-}
-
-// "Ballista (unlock 100), Cleric (unlock 100)"
-function UnitList({ ids, priced }: { ids: string[]; priced?: boolean }) {
-  return (
-    <>
-      {ids.map((id, i) => (
-        <span key={id}>
-          {i > 0 && ", "}
-          <UnitLink id={id}>{UNITS.get(id)?.name ?? id}</UnitLink>
-          {priced && UNITS.get(id) && ` (unlock ${unlockPrice(UNITS.get(id)!)})`}
-        </span>
-      ))}
-    </>
-  );
 }
 
 export function Briefing({ entry, onStart, onBack }: { entry: MissionEntry; onStart: () => void; onBack: () => void }) {
@@ -100,24 +91,6 @@ export function Briefing({ entry, onStart, onBack }: { entry: MissionEntry; onSt
         <p className="brief-kit">
           <Linked text={m.objective} />
         </p>
-        <p className="muted small">
-          {m.units.length > 0 && (
-            <>
-              Your champions: <UnitList ids={m.units} />.{" "}
-            </>
-          )}
-          {m.opening && (
-            <>
-              Round 1 offers three packs ({m.opening.map(([a, b]) => `${UNITS.get(a)?.name} and ${UNITS.get(b)?.name}`).join("; ")}) or the war chest.{" "}
-            </>
-          )}
-          {m.shop && m.shop.length > 0 && (
-            <>
-              In the armory: <UnitList ids={m.shop} priced />.{" "}
-            </>
-          )}
-          {m.hp ? (m.hp[0] === m.hp[1] ? `Each side starts with ${m.hp[0]} HP.` : `You start with ${m.hp[0]} HP, ${m.enemy.name} with ${m.hp[1]}.`) : "One battle decides it."}
-        </p>
         <button className="primary big" onClick={onStart}>
           Take the Field
         </button>
@@ -132,6 +105,7 @@ export function Debrief({ def, outcome, army, onRetry, onLeave }: { def: Mission
   return (
     <div className="debrief">
       {outcome.won ? def.win.map((l, i) => <Say key={i} line={l} small />) : outcome.hint && <Say line={outcome.hint} small />}
+      {outcome.won && def.winNote && <PencilNote text={def.winNote} />}
       {outcome.won && def.lastPage && <DrillPage page={{ ...def.lastPage, diagram: boardDiagram(army) }} />}
       {c &&
         (outcome.commended ? (

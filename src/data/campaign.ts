@@ -7,11 +7,13 @@ import type { PlacedSquad } from "../sim/types";
 import { canPlace, defMap } from "../game/army";
 import { DEFAULT_UNITS } from "./units";
 
-// The cast. Voices are in docs/VISION.md: the Wardens are proud of being boring, the Boss SHOUTS, and the Tinker
-// gives odds on every gadget and always gets them wrong.
+// The cast. Voices are in docs/VISION.md: Dunmor knows the Field and has never read the book, Ithiel knows the book
+// and has never seen the Field, the Marshal (the player) is new and asks out loud, the Boss SHOUTS, and the Tinker
+// picks upgrades.
 export const CAST = {
   sergeant: { name: "Sergeant Dunmor", side: "warden" },
   archivist: { name: "Archivist Ithiel", side: "warden" },
+  marshal: { name: "Marshal", side: "warden" }, // the player
   boss: { name: "The Boss", side: "goblin" },
   tinker: { name: "The Tinker", side: "goblin" },
 } as const;
@@ -75,7 +77,8 @@ export interface MissionDef {
   units: string[]; // the player's units, unlocked and free
   shop?: string[]; // more units the player may unlock, at the usual price
   opening?: [string, string][]; // round 1 offers these packs (each named by its two units) or the war chest, as a skirmish does
-  lastPage?: { title: string; text: string }; // on a win, the debrief draws the player's winning board as a page of the book
+  // on a win, the debrief draws the player's winning board as a page of the book, under a line in the Marshal's hand
+  lastPage?: { title: string; handwritten?: string; text: string };
   hp?: [number, number]; // each side's HP; absent: one battle decides the mission
   towers: boolean; // the Keeps stand
   map?: string; // a MAPS id (src/data/terrain.ts); absent: the open field
@@ -91,12 +94,14 @@ export interface MissionDef {
   briefing: Line[];
   page: {
     title: string;
-    text: string;
-    drill?: string; // the formation, in a line
+    text: string; // the rule
+    note?: string; // the Marshal's pencil note in the margin
     diagram?: string[][]; // unit ids by rank, front rank first
   };
-  objective: string; // the sidebar's one line while deploying
+  objective: string; // the sidebar's one line while deploying: just the goal
+  roundLines?: Record<number, Line>; // said in the sidebar while the player deploys that round (beside any EnemyTurn line)
   win: Line[];
+  winNote?: string; // the Marshal's pencil note after a win
   hints: { when?: (c: MissionContext) => boolean; line: Line }[]; // after a loss, the first that matches
   commendation?: { name: string; text: string; earned: (c: MissionContext) => boolean };
   // Armies that must win and must lose against the script (tests/campaign.test.tsx), so the punch and the
@@ -191,35 +196,37 @@ const HANDS_OFF: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "Marshal. Welcome to your first Field. Today's dispute concerns a goat." },
-    { who: "sergeant", text: "Wandered over at Millbrook on Tuesday. The goblins say it's theirs. The goat hasn't said." },
-    { who: "boss", text: "IT'S OUR GOAT." },
-    {
-      who: "archivist",
-      text: "The challenger deploys first, and they have: you may study their army as long as you like. The book has a page for this. It has been the same page for four hundred years.",
-    },
+    { who: "archivist", text: "Is that the goat? It's much smaller than the literature suggests! There's also a precedent involving a turnip, if we have an hour." },
+    { who: "sergeant", text: "We don't. Knights in front, Crossbowmen behind them, so the mob has something to run into. When the horn goes, hands in your pockets. Book says so." },
+    { who: "archivist", text: "It says \"no hand may touch the Field.\" It doesn't mention pockets." },
+    { who: "sergeant", text: "Well, that's where I keep mine." },
+    { who: "marshal", text: "Sorry, so once it starts, what do I do?" },
+    { who: "sergeant", text: "Nothing. Best part of the job." },
+    { who: "boss", text: "IT'S OUR GOAT. WE HAVE THREE MOBS OF WITNESSES." },
+    { who: "archivist", text: "The challenger deploys first, so you can study their army for as long as you like. I certainly intend to!" },
   ],
   page: {
     title: "Page 1: The Compact",
-    text: "Choose your champions. Place them. When the horn sounds, no hand may touch the Field.",
-    drill: "Steel in front. Arrows behind.",
+    text: "Choose your units. Place them. When the horn sounds, no hand may touch the Field.",
+    note: "Knights in front, Crossbowmen behind. Surely there's more to it? Ask whether pockets are required.",
     diagram: [["knights"], ["crossbowmen", "crossbowmen"]],
   },
-  objective: "Win the battle. Three mobs of Grunts are waiting, and you have 400 supply of Knights and Crossbowmen.",
+  objective: "Win the battle.",
   win: [
-    { who: "sergeant", text: "Boring wins. Write that down." },
-    { who: "archivist", text: "Written. The goat goes home to Millbrook." },
-    { who: "boss", text: "THAT WASN'T FAIR. WE'RE APPEALING." },
+    { who: "sergeant", text: "Everybody back? Good, less paperwork. Boring wins. Book says so." },
+    { who: "archivist", text: "It doesn't, actually! I'd remember." },
+    { who: "sergeant", text: "Well, it should." },
+    { who: "boss", text: "YOU BEAT THREE MOBS. WE HAVE MORE MOBS. WE'RE APPEALING." },
+    { who: "marshal", text: "Can they do that?" },
+    { who: "archivist", text: "Oh, I very much hope so!" },
   ],
+  winNote: "\"Boring wins\" (Sgt.). Not in the book, says Ithiel. Sgt. says it should be.",
   hints: [
-    {
-      when: (c) => !fielded(c, "knights"),
-      line: { who: "sergeant", text: "Bolts hit hard, but there were more goblins than bolts. A mob needs something to run onto. Steel in front." },
-    },
-    { line: { who: "sergeant", text: "They got round the steel. Put the Knights where the goblins will run: between them and the bows." } },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Crossbowmen only get so many shots, and there were more goblins than shots. A mob needs something to run into. Put Knights in front." } },
+    { line: { who: "sergeant", text: "They got round your Knights. Put them where the goblins are heading, between the mob and your Crossbowmen." } },
   ],
   commendation: {
-    name: "Steel in Front",
+    name: "Knights in Front",
     text: "Win with Crossbowmen on the Field, and lose none of them.",
     earned: (c) => {
       const bows = c.army.filter((sq) => sq.defId === "crossbowmen");
@@ -281,37 +288,36 @@ const THE_APPEAL: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "The goblins have appealed the goat. Under the Compact a loss may be appealed once, as a longer match." },
-    {
-      who: "sergeant",
-      text: "Rounds, Marshal. Each round you add champions, and whatever you've placed stays where it is. After every battle the survivors take a bite out of the other side's standing. First side to run out loses.",
-    },
-    { who: "boss", text: "BEST OF... LOTS." },
-    { who: "archivist", text: "They've moved the Field to Millbrook Ford. There is a pond in the middle. I'd not plan on anyone walking through it." },
+    { who: "archivist", text: "They've appealed! Under the Compact, a loss can be appealed once, as a longer match. I've only ever read about one of these!" },
+    { who: "marshal", text: "How much longer?" },
+    { who: "sergeant", text: "Rounds. Each round you add units, and whatever you've already placed stays put. After each battle, the survivors take a bite out of the other side's HP. First to zero loses." },
+    { who: "boss", text: "WE CAME BACK WITH MORE. THEN WE COME BACK WITH MORE AFTER THAT. THAT'S WHAT ROUNDS ARE." },
+    { who: "archivist", text: "According to the map, Millbrook Ford is a shallow crossing." },
+    { who: "sergeant", text: "It's been a pond for sixty years. Nobody's walking through that." },
+    { who: "archivist", text: "The map is wrong? How wonderful!" },
   ],
   page: {
     title: "Page 2: What Is Placed Stays Placed",
-    text: "You will see what they fielded, never what they will add.",
-    drill: "Read their last army. Guess their answer. Add yours.",
+    text: "You will see what the other side has fielded, but never what they will add.",
+    note: "So I look at their last army and guess? Is guessing allowed? Asked Sgt. He said \"Everyone guesses.\" That doesn't help.",
   },
-  objective: "Bring the Boss's HP to nothing before yours runs out. Your squads stay on the Field, and every round brings more supply to add.",
+  objective: "Bring the Boss's HP to zero before yours runs out.",
+  roundLines: {
+    2: { who: "boss", text: "THAT WAS THE SHORT VERSION." },
+    3: { who: "sergeant", text: "See where they put those Skirmishers? On the side we left thin. Goblins always check." },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. Twice now." },
-    { who: "archivist", text: "The appeal is dismissed. The goat has eaten the appeal." },
+    { who: "archivist", text: "The appeal is dismissed, and the goat has eaten it! I can't find a precedent!" },
     { who: "boss", text: "THAT WAS OUR ONLY COPY." },
+    { who: "marshal", text: "Does that count as a ruling?" },
+    { who: "archivist", text: "I have no idea. Isn't that marvelous?" },
+    { who: "sergeant", text: "It's a goat. Who's got lunch?" },
   ],
+  winNote: "Millbrook Ford is a pond (Sgt.). The map is older than the pond (Ithiel, thrilled). Look at the thin side of your own army first.",
   hints: [
-    {
-      when: (c) => c.army.every((sq) => sq.round === 1),
-      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
-    },
-    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Bolts alone again. A mob needs steel to run onto." } },
-    {
-      line: {
-        who: "sergeant",
-        text: "Their archers hid behind a goblin screen, on the flank we'd left thin. You saw them there. Next time, put steel on that flank and bows behind it, or guess it before they do.",
-      },
-    },
+    { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "sergeant", text: "You stopped adding units after round 1. Supply in your pocket doesn't fight, and they kept coming." } },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "No Knights, so nothing stopped the mob reaching your Crossbowmen. Put Knights in front." } },
+    { line: { who: "sergeant", text: "Their Skirmishers hid behind Grunts, on the flank we left thin. Next time, put Knights on that flank with Crossbowmen behind them, or get there before they do." } },
   ],
   commendation: { name: "Guess Right", text: "Win every round of the appeal.", earned: allRoundsWon },
   reference: {
@@ -393,38 +399,40 @@ const TWO_KEEPS: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "Marshal, a goblin has painted something on the West Keep." },
+    { who: "archivist", text: "A goblin has painted something on the West Keep! I've seen this sort of thing in marginalia, but never at this scale." },
     { who: "sergeant", text: "It's rude." },
+    { who: "marshal", text: "Is that supposed to be me?" },
     { who: "boss", text: "IT'S A GOOD LIKENESS." },
-    {
-      who: "archivist",
-      text: "Every Field has two Keeps a side. They don't fight, and they don't count toward winning a battle. But if one falls, the whole army loses its nerve.",
-    },
-    { who: "sergeant", text: "And the grass on the flanks is long this year. Goblins like long grass." },
+    { who: "archivist", text: "Each side has two Keeps. They don't fight, and they don't count toward winning a battle, but you very much want to hold on to them. Page 3 is quite firm!" },
+    { who: "sergeant", text: "Lose one and everyone stands around blinking. And the grass on the flanks is long this year. Goblins hide in it." },
+    { who: "archivist", text: "The book doesn't mention grass at all!" },
+    { who: "sergeant", text: "Goblins don't read it either." },
   ],
   page: {
     title: "Page 3: Two Keeps",
-    text: "Every Field has two Keeps. If one falls, the whole army loses its nerve.",
-    drill: "Guard the flanks, or build the walls higher.",
+    text: "If a Keep falls, the whole army is Dazed. A Keep can be built higher.",
+    note: "Book says buy levels (Keeps tab). Sgt. says put Knights beside the Keeps. Which? Does anyone know? Do both?",
   },
-  objective: "Win the match, and mind your Keeps: a fallen Keep Dazes your whole army. You can buy Keep levels under Keeps.",
+  objective: "Win the match.",
+  roundLines: {
+    2: { who: "boss", text: "NICE KEEPS. BE A SHAME." },
+    3: { who: "archivist", text: "Wolf Riders! See the star beside them? That's an upgrade, Tower Raiders, so they go straight for Keeps. Volume Four calls this \"an unsporting tendency\"!" },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. Write that down. Again." },
-    { who: "archivist", text: "The painting has been scrubbed off the West Keep. Mostly." },
-    { who: "boss", text: "FINE. WE'RE GETTING THE TROLL." },
+    { who: "sergeant", text: "Told you about the grass." },
+    { who: "archivist", text: "You did! I went and stood in it. May I add it to the book?" },
+    { who: "sergeant", text: "Thought it was already in there." },
+    { who: "archivist", text: "The painting has been scrubbed off the West Keep. Mostly. I kept a sketch." },
+    { who: "marshal", text: "Please don't keep a sketch." },
+    { who: "boss", text: "SCRUB ALL YOU LIKE. WE'RE GETTING THE TROLL." },
   ],
+  winNote: "Keep levels buy time (book). Knights stop the wolves (Sgt.). Long grass hides wolves (Sgt., and now Ithiel, who has some in his hair).",
   hints: [
-    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Bolts alone again. A mob needs steel to run onto." } },
-    {
-      when: (c) => keepFell(c) && c.towerLevels.every((l) => l === 0),
-      line: {
-        who: "sergeant",
-        text: "Their wolves went round us and pulled down a Keep, and the whole line lost its nerve. Put steel beside the Keeps. A level on one costs 100 and makes a raid work for it.",
-      },
-    },
-    { line: { who: "sergeant", text: "They got to the Keeps anyway. Walls only buy time: put steel beside them, where the wolves come in." } },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "No Knights on the Field, so nothing stopped the mob or the wolves. Buy some Knights." } },
+    { when: (c) => keepFell(c) && c.towerLevels.every((l) => l === 0), line: { who: "sergeant", text: "The wolves pulled down a Keep and the whole army was Dazed. Put Knights beside the Keeps. A level costs 100 and slows the wolves down, too." } },
+    { line: { who: "archivist", text: "Page 3 says higher walls help, and they do, for a while! It seems the wolves just take longer. Knights beside the Keeps are what actually stop them." } },
   ],
-  commendation: { name: "Not One Stone", text: "Win without losing a Keep.", earned: (c) => !keepFell(c) },
+  commendation: { name: "Both Keeps Standing", text: "Win without losing a Keep.", earned: (c) => !keepFell(c) },
   reference: {
     wins: [
       // a level on each Keep before the raid, and a Knight squad on one flank
@@ -509,53 +517,39 @@ const UNDER_THE_BRIDGE: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "Marshal, there is a troll under the toll bridge at Hob's Crossing. It has lived there longer than the bridge has." },
-    { who: "sergeant", text: "The goblins have adopted it. They've also adopted the toll." },
-    { who: "boss", text: "HE'S FAMILY NOW. FAMILY GETS PAID." },
-    {
-      who: "sergeant",
-      text: "Trolls go through Knights like a boot through a hedge. Every blow in a row lands harder, and they heal while they fight.",
-    },
-    {
-      who: "archivist",
-      text: "The river is deep on both sides of the bridge, so the Field's short way across is the middle. And the armory holds the Ballista. It costs the Treasury once per Field; after that, a squad is only a squad.",
-    },
+    { who: "archivist", text: "There's a troll under the toll bridge at Hob's Crossing, and it's been there longer than the bridge! I have three volumes on trolls. I can't wait to see if they got the knees right." },
+    { who: "sergeant", text: "Knees are the last thing you'll notice. They go through Knights like a boot through a hedge. Every blow in a row lands harder, and they heal while they fight." },
+    { who: "boss", text: "THE TROLL WORKS FOR US NOW. SO DOES THE TOLL. EXACT CHANGE ONLY." },
+    { who: "marshal", text: "What do we do about a troll?" },
+    { who: "sergeant", text: "Ballista. Big, slow, and goes for the biggest thing it can see. Put Knights in front, or a mob will wreck it. Book says so." },
+    { who: "archivist", text: "It actually does, for once! Page 4! How did you know?" },
+    { who: "sergeant", text: "Stood in front of one once. River's deep on both sides of the bridge, too, so the short way across is the middle." },
   ],
   page: {
-    title: "Page 4: The Armory",
-    text: "The armory holds more than the book's first pages. Each new engine costs the Treasury once per Field.",
-    drill: "Big things need engines. Engines need steel in front.",
+    title: "Page 4: Unlocks",
+    text: "Some units must be unlocked in the shop. Each unlock costs supply once per match, and after that you buy squads as usual. Ballistae need Knights in front of them.",
+    note: "Sgt. and the book agree. Marking the date.",
     diagram: [["knights", "knights"], ["ballista", "crossbowmen", "ballista"]],
   },
-  objective: "Win the match. The Boss has trolls. The Ballista waits in the shop: unlock it once this match (100), then buy squads as usual.",
+  objective: "Win the match.",
+  roundLines: {
+    2: { who: "boss", text: "TOLL'S GONE UP." },
+    3: { who: "archivist", text: "An actual troll! Volume One has the knees completely wrong! Oh, and it's healing. It's still healing. Look at that!" },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. Big, slow, boring wins bigger." },
-    { who: "archivist", text: "The troll has gone back under the bridge. It has agreed to charge the goblins as well." },
-    { who: "boss", text: "THAT'S NOT FAMILY BEHAVIOR. I'M TELLING THE TINKER." },
+    { who: "sergeant", text: "Big, slow, and it worked. That's what I like in a plan." },
+    { who: "archivist", text: "The troll has gone back under the bridge, and it's agreed to charge the goblins as well. Also, I've drawn the correct knees." },
+    { who: "marshal", text: "Is that going in the book?" },
+    { who: "archivist", text: "It had better be!" },
+    { who: "boss", text: "YOU WANT TO PLAY CLEVER? MEET THE TINKER." },
   ],
+  winNote: "Trolls get worse the longer they keep hitting something (Sgt.). For knees, see Ithiel's drawing.",
   hints: [
-    {
-      when: (c) => c.army.every((sq) => sq.round === 1),
-      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
-    },
-    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Bolts alone again. A mob needs steel to run onto." } },
-    {
-      when: (c) => !fielded(c, "ballista"),
-      line: {
-        who: "sergeant",
-        text: "Steel against trolls is a fair fight, and they brought more trolls than we brought steel. The Ballista hunts the biggest thing on the Field: unlock it in the shop.",
-      },
-    },
-    {
-      when: (c) => c.army.filter((sq) => sq.defId === "knights").length < 2,
-      line: { who: "sergeant", text: "The Ballistae had nothing in front of them, and a mob that reaches an engine wrecks it. Steel in front, engines behind." },
-    },
-    {
-      line: {
-        who: "sergeant",
-        text: "The trolls got through anyway. Add Ballistae every round, behind the Knights, and leave the trolls to them.",
-      },
-    },
+    { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "archivist", text: "You finished with supply unspent, and the goblins kept adding units. I've checked, and unspent supply has never won a battle. Not once in four hundred years of records!" } },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "The mob got to your Crossbowmen with no Knights in the way. Buy some Knights." } },
+    { when: (c) => !fielded(c, "ballista"), line: { who: "sergeant", text: "Knights against trolls is a fair fight, and they brought more trolls. Unlock the Ballista in the shop. It goes for the biggest thing on the Field." } },
+    { when: (c) => c.army.filter((sq) => sq.defId === "knights").length < 2, line: { who: "sergeant", text: "Your Ballistae had nothing in front of them, and a mob that reaches a Ballista wrecks it. Knights in front, Ballistae behind." } },
+    { line: { who: "sergeant", text: "The trolls still got through. Add Ballistae every round, behind your Knights, and leave the trolls to them." } },
   ],
   commendation: {
     name: "Bridge Held",
@@ -625,12 +619,12 @@ const UNDER_THE_BRIDGE: MissionDef = {
   },
 };
 
-// Mission 5: upgrades. The Tinker arrives with gadgets: in round 2 every Grunt on the Field, including those already
+// Mission 5: upgrades. The Tinker arrives with upgrades: in round 2 every Grunt on the Field, including those already
 // placed, gets Scrap Armor (each goblin shrugs off its first hit), and in round 3 the trolls get Thick Blood. The
-// counter is a drill of your own: Repeaters (many small bolts) reaches every Crossbowman. Tuned by simulation: any
+// counter is an upgrade of your own: Repeaters (many small bolts) reaches every Crossbowman. Tuned by simulation: any
 // plan with Repeaters wins, whenever it's bought; the same supply spent on more squads loses, and so does the wrong
-// drill (Knights' Veterans). Two Clerics behind the line after Repeaters win too (docs/CAMPAIGN.md §10).
-const PLAIN_STEEL: MissionDef = {
+// upgrade (Knights' Veterans). Two Clerics behind the line after Repeaters win too (docs/CAMPAIGN.md §10).
+const THE_WHEELBARROW: MissionDef = {
   id: "wardens-5",
   supply: 400,
   units: ["knights", "crossbowmen"],
@@ -688,52 +682,44 @@ const PLAIN_STEEL: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "Marshal, we have been accused of theft. A goblin Tinker says we stole the wheelbarrow." },
-    { who: "tinker", text: "THE wheelbarrow. One wheel, two handles. I drew it first." },
-    { who: "archivist", text: "We have had wheelbarrows for four hundred and twelve years." },
-    {
-      who: "sergeant",
-      text: "This one tinkers, Marshal. Whatever the goblins bring today will have been improved, and every improvement shows: a star by the unit, once the horn sounds.",
-    },
-    { who: "tinker", text: "Scrap Armor! Nine chances in ten it stops a bolt. Or ten in nine. Something in nine." },
-    { who: "archivist", text: "The book answers in kind. A drill improves every squad that knows it, even those already on the Field." },
+    { who: "archivist", text: "We've been accused of theft! A goblin says we stole the wheelbarrow. We've had wheelbarrows for four hundred and twelve years. I brought the records!" },
+    { who: "tinker", text: "Four hundred and twelve years, and it still has one wheel! Nobody who invented that would have stopped there. So you must have stolen it." },
+    { who: "marshal", text: "Is that an argument?" },
+    { who: "archivist", text: "It's a very good one!" },
+    { who: "tinker", text: "I'll have a look at your army, then I'll pick my upgrades. It's called thinking! It's free, you should try it!" },
+    { who: "sergeant", text: "Our squads get better all at once sometimes, even the ones already out there. Never knew why." },
+    { who: "archivist", text: "That's Page 5! Those are upgrades, and someone has to buy them!" },
+    { who: "sergeant", text: "Ah. That explains the invoices." },
   ],
   page: {
-    title: "Page 5: Drills",
-    text: "A drill improves every squad that knows it, even those already on the Field.",
-    drill: "Read their stars. Answer with a drill.",
+    title: "Page 5: Upgrades",
+    text: "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades show as a star beside the unit.",
+    note: "Check for stars, then pick an upgrade that answers them. Does Sgt. know he's been paying for these? He does now.",
   },
-  objective: "Win the match. Upgrades are open: a drill changes every squad of that unit, even ones already placed. The Tinker's upgrades show as ★.",
+  objective: "Win the match.",
+  roundLines: {
+    1: { who: "sergeant", text: "Shop's got a Cleric now. Stands behind the Knights, patches them up, and they hit harder for it." },
+    2: { who: "tinker", text: "Just a small change this round! You'll notice!" },
+    3: { who: "archivist", text: "That star is Scrap Armor. It stops one hit per Grunt! So one big hit is wasted, but lots of small hits... oh, what a lovely problem!" },
+    4: { who: "tinker", text: "Thick Blood on the trolls! I considered something flashier, but it wouldn't have been as annoying." },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. Boring, repeated quickly, wins faster." },
-    { who: "tinker", text: "The odds were good on that one. Very good. I'll redo the sums." },
+    { who: "sergeant", text: "Repeaters. Forty years, I thought they just turned up like that some seasons." },
+    { who: "tinker", text: "You picked the right upgrade! Most people don't look. Can I see one up close?" },
     { who: "archivist", text: "The wheelbarrow stays with us. The Tinker has asked to borrow it." },
-    { who: "boss", text: "FORGET THE GROUND. NOBODY OWNS THE SKY." },
+    { who: "marshal", text: "Should we let them?" },
+    { who: "sergeant", text: "It's a wheelbarrow." },
+    { who: "boss", text: "THE GROUND'S FULL ANYWAY. WE'LL USE THE SKY." },
   ],
+  winNote: "Sgt. has been buying upgrades for forty years without knowing it. Wheelbarrow: is one wheel a problem? Nobody here has ever asked.",
   hints: [
-    {
-      when: (c) => c.army.every((sq) => sq.round === 1),
-      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
-    },
-    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Bolts alone again. A mob needs steel to run onto." } },
-    {
-      when: (c) => Object.keys(c.upgrades).length === 0,
-      line: {
-        who: "sergeant",
-        text: "Every goblin in that mob shrugged off the first bolt it took. We fought new gadgets with old drills. Buy a drill under Upgrades: it reaches every squad on the Field.",
-      },
-    },
-    {
-      when: (c) => !c.upgrades.crossbowmen?.includes("repeaters"),
-      line: {
-        who: "sergeant",
-        text: "The right drill matters. Their armor stops one hit per goblin, so a heavy bolt is wasted on it. Repeaters shoot many small bolts: the armor only stops the first.",
-      },
-    },
-    { line: { who: "sergeant", text: "Close. Buy the drill the round you see their stars, and keep adding steel in front of the bows." } },
+    { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "sergeant", text: "They kept adding squads and you stopped. That's the whole story." } },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "The mob ran straight onto your Crossbowmen. Put Knights in front." } },
+    { when: (c) => Object.keys(c.upgrades).length === 0, line: { who: "archivist", text: "Every Grunt shrugged off its first hit, and we never answered! Open the Upgrades tab. An upgrade reaches every squad already on the Field." } },
+    { when: (c) => !c.upgrades.crossbowmen?.includes("repeaters"), line: { who: "archivist", text: "Scrap Armor stops one hit per Grunt, so a heavy bolt is wasted on it. Repeaters fire lots of small bolts, and the armor only stops the first!" } },
+    { line: { who: "sergeant", text: "Close. Buy the upgrade the round you see the star, and keep adding Knights in front of your Crossbowmen." } },
   ],
-  // the armor first shows in round 2's battle, so the answer can come from round 3
-  commendation: { name: "Well Drilled", text: "Once their armor shows, win every round after it.", earned: (c) => c.results.slice(2).every((r) => r.winner === 0) },
+  commendation: { name: "Right Upgrade", text: "Once their armor shows, win every round after it.", earned: (c) => c.results.slice(2).every((r) => r.winner === 0) },
   reference: {
     wins: [
       // Repeaters the round after the armor shows
@@ -772,7 +758,7 @@ const PLAIN_STEEL: MissionDef = {
     loses: [
       // never adds after round 1
       [[["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]]],
-      // no drills: the same supply on more Crossbowmen
+      // no upgrades: the same supply on more Crossbowmen
       [
         [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
         [["knights", 16, 20], ["knights", 28, 20]],
@@ -780,7 +766,7 @@ const PLAIN_STEEL: MissionDef = {
         [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
         [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25], ["crossbowmen", 6, 22]],
       ],
-      // no drills: Ballistae instead
+      // no upgrades: Ballistae instead
       [
         [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
         [["knights", 16, 20], ["knights", 28, 20]],
@@ -788,7 +774,7 @@ const PLAIN_STEEL: MissionDef = {
         [["knights", 10, 20], ["knights", 34, 20], ["ballista", 22, 24], ["ballista", 26, 24]],
         [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 16, 25], ["crossbowmen", 30, 25], ["ballista", 19, 24]],
       ],
-      // the wrong drill: Knights' Veterans against armored mobs
+      // the wrong upgrade: Knights' Veterans against armored mobs
       [
         [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
         [["knights", 16, 20], ["knights", 28, 20]],
@@ -874,52 +860,42 @@ const LOOK_UP: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "Marshal, a point of law. The Compact draws the Field's borders on the ground." },
-    { who: "sergeant", text: "And the goblins have noticed it says nothing about above it." },
-    { who: "boss", text: "WHO OWNS THE SKY? NOBODY. SO IT'S OURS." },
-    { who: "sergeant", text: "Bats, Marshal. Big ones, with goblins on. They fly over the line and go for whoever's standing behind it." },
-    {
-      who: "archivist",
-      text: "The book is calm about this. Knights cannot strike what flies; Crossbowmen and Ballistae can, and Griffon Riders fly themselves. The Mire slows anyone on foot. It slows nothing with wings.",
-    },
+    { who: "archivist", text: "A point of law! The Compact draws the Field's borders on the ground and says nothing about the air above it. I've read that clause a hundred times and never once looked up." },
+    { who: "boss", text: "YOU DREW A LINE ON THE GROUND. WE'RE GOING OVER IT. THAT'S NOT CHEATING, THAT'S READING." },
+    { who: "archivist", text: "He's right!" },
+    { who: "sergeant", text: "Bats. Big ones, with goblins on. They go over your Knights and come down on whoever's behind them. The Mire won't slow them down, either." },
+    { who: "marshal", text: "What can hit them?" },
+    { who: "archivist", text: "Page 6 has a list! Griffon Riders are on it. The griffon is described here as noble and gentle-natured." },
+    { who: "sergeant", text: "They bite." },
   ],
   page: {
-    title: "Page 6: Look Up",
-    text: "Knights cannot strike what flies. Know which of your champions can.",
-    drill: "Bows under the sky. Wings against wings.",
+    title: "Page 6: Fliers",
+    text: "Knights cannot hit what flies. Crossbowmen, Ballistae and Griffon Riders can.",
+    note: "Griffons bite (Sgt.). Book says gentle-natured. Ithiel would like to check. Please don't let him check.",
     diagram: [["knights", "knights"], ["crossbowmen", "griffon_riders", "crossbowmen"]],
   },
-  objective: "Win the match. The Boss has taken to the air, and Knights can't hit fliers. Crossbowmen, Ballistae and Griffon Riders can.",
+  objective: "Win the match.",
+  roundLines: {
+    2: { who: "boss", text: "YOU MIGHT WANT TO LOOK UP." },
+    3: { who: "archivist", text: "Giant Bats! Actual ones! Did you see how they fold their wings before they land on the Crossbowmen? Volume Two gets that completely wrong!" },
+    5: { who: "sergeant", text: "More Skirmishers, and they shoot fliers. Don't send your Griffon Riders in alone." },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. Looking up is boring too. Write that down." },
-    { who: "archivist", text: "Ruled: the sky over the Field belongs to the Field. The bats have gone home." },
+    { who: "sergeant", text: "Sore neck, but everyone looked up. That'll do." },
+    { who: "archivist", text: "It's ruled: the sky over the Field belongs to the Field. The bats have gone home. And griffons do bite." },
+    { who: "marshal", text: "You checked?" },
+    { who: "archivist", text: "I've amended the entry!" },
     { who: "boss", text: "FINE. I'M CALLING GRUMM." },
     { who: "sergeant", text: "...Grumm?" },
   ],
+  winNote: "Griffons bite (confirmed, Ithiel, left hand). Crossbowmen do half damage to fliers until you buy Skyhunters.",
   hints: [
-    {
-      when: (c) => c.army.every((sq) => sq.round === 1),
-      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
-    },
-    {
-      when: (c) => !c.army.some((sq) => sq.round > 1 && (sq.defId === "crossbowmen" || sq.defId === "griffon_riders")),
-      line: {
-        who: "sergeant",
-        text: "Knights can't hit what flies, and the bats knew it. Crossbowmen can, and so can Griffon Riders: put them where the bats come down.",
-      },
-    },
-    {
-      when: (c) => c.army.filter((sq) => sq.defId === "ballista").length > c.army.filter((sq) => sq.defId === "crossbowmen").length,
-      line: { who: "sergeant", text: "Bats land on engines. A Ballista hits fliers, but slowly: Crossbowmen behind the steel shoot them down faster." },
-    },
-    {
-      line: {
-        who: "sergeant",
-        text: "The bats went over the line and landed on the bows. More bows, Marshal, and Skyhunters picks out the fliers first.",
-      },
-    },
+    { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "marshal", text: "I kept my supply for later, and there wasn't a later. Add units every round." } },
+    { when: (c) => !c.army.some((sq) => sq.round > 1 && (sq.defId === "crossbowmen" || sq.defId === "griffon_riders")), line: { who: "sergeant", text: "Knights can't reach the bats, and the bats know it. Put Crossbowmen or Griffon Riders where they come down." } },
+    { when: (c) => c.army.filter((sq) => sq.defId === "ballista").length > c.army.filter((sq) => sq.defId === "crossbowmen").length, line: { who: "sergeant", text: "Bats land on Ballistae. A Ballista can hit fliers, but it's slow about it. Crossbowmen behind your Knights do it faster." } },
+    { line: { who: "archivist", text: "The bats went over the line and landed on the Crossbowmen! Crossbowmen do half damage to fliers unless you buy Skyhunters. It's on the Upgrades tab." } },
   ],
-  commendation: { name: "Wings Against Wings", text: "Win with Griffon Riders on the Field.", earned: (c) => fielded(c, "griffon_riders") },
+  commendation: { name: "Air Cover", text: "Win with Griffon Riders on the Field.", earned: (c) => fielded(c, "griffon_riders") },
   reference: {
     wins: [
       // Skyhunters as soon as the bats have shown, and bows every round
@@ -1044,44 +1020,43 @@ const OLD_GRUMM: MissionDef = {
     ],
   },
   briefing: [
-    { who: "archivist", text: "Marshal, the Boss has named a champion: Old Grumm." },
-    { who: "sergeant", text: "Thirty years ago, at a Field match, Grumm ate my helmet. I was nearly still in it." },
-    { who: "boss", text: "GRUMM'S BEEN FIGHTING SINCE BEFORE YOU WERE BORN. HE'S GOOD AT IT NOW." },
-    {
-      who: "archivist",
-      text: "Squads that fight well learn from it, and Grumm has learned a great deal. Ours can too: when a squad has a level waiting, you may promote it, for half its price.",
-    },
-    { who: "archivist", text: "And there is a page in the book no one has turned to in two hundred years. There was nothing large enough to need it." },
-    { who: "sergeant", text: "The pikes. Dwarven Pikemen, Marshal: long sticks for large problems." },
+    { who: "sergeant", text: "Thirty years ago, Grumm ate my helmet. I was nearly still in it. Nothing you can do about an ogre that size. Book says so." },
+    { who: "boss", text: "GRUMM REMEMBERS YOUR SERGEANT. SAYS THE HELMET NEEDED SALT." },
+    { who: "archivist", text: "Page 7 is entirely about large things! Dwarven Pikemen, with very long pikes. Nobody's opened it in two hundred years!" },
+    { who: "sergeant", text: "...There's a page." },
+    { who: "marshal", text: "Are you all right?" },
+    { who: "sergeant", text: "Thirty years." },
+    { who: "sergeant", text: "Right. Squads that live through a battle get better at this. A gold ▲ means one has a level waiting. Promote it for half its price. That part I do know." },
   ],
   page: {
     title: "Page 7: The Pike Line",
-    text: "Against the largest, the longest. Hold them at the point.",
-    drill: "Pikes where the big ones walk. Promote what lives.",
+    text: "Dwarven Pikemen do extra damage to large units. Put them where large units walk.",
+    note: "Sgt. asked me to read this page to him. Twice.",
     diagram: [["pikemen", "knights", "pikemen"], ["crossbowmen", "crossbowmen"]],
   },
-  objective: "Win the match. Squads now earn experience: one with a level waiting shows a gold ▲, and promoting it costs half its price.",
+  objective: "Win the match.",
+  roundLines: {
+    2: { who: "boss", text: "GRUMM'S WARMED UP." },
+    3: { who: "sergeant", text: "That's him. Hasn't changed. Put your Pikemen where he's walking, and promote anything with a gold ▲." },
+    4: { who: "archivist", text: "The entry says \"broad in the swing\"! That doesn't really cover it, does it?" },
+    5: { who: "boss", text: "ONE GRUMM WAS A COURTESY." },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. And I've got my helmet back. It's been chewed." },
-    { who: "archivist", text: "The pike page has been copied out fresh. The old ink had faded." },
-    { who: "boss", text: "RIGHT. THAT'S IT. THE WHOLE BORDER. EVERYTHING. NEXT TIME." },
+    { who: "sergeant", text: "Got my helmet back. It's been chewed." },
+    { who: "archivist", text: "I've copied the pike page out fresh, since the old ink had faded. It only says \"large,\" though. What was he actually like, up close?" },
+    { who: "sergeant", text: "Give me that page. I'll tell you what's wrong with it." },
+    { who: "marshal", text: "You're going to read it?" },
+    { who: "sergeant", text: "Just that page." },
+    { who: "boss", text: "RIGHT. THE WHOLE BORDER. EVERYTHING WE'VE GOT, ALL AT ONCE. COUNT THEM IF YOU CAN." },
   ],
+  winNote: "Grumm's swing takes two or three at once (Sgt., dictating to Ithiel). Sgt. checked the page afterward. He's reading it.",
   hints: [
-    {
-      when: (c) => c.army.every((sq) => sq.round === 1),
-      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
-    },
-    {
-      when: (c) => c.army.every((sq) => (sq.level ?? 1) === 1),
-      line: {
-        who: "sergeant",
-        text: "Squads that live through a battle learn from it. We had veterans waiting and never promoted one. When you see the gold ▲, promote: half a squad's price buys a whole squad's worth.",
-      },
-    },
-    { line: { who: "sergeant", text: "Grumm walked through us. Keep promoting, put the pikes where he walks, and keep bows behind them to finish him." } },
+    { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "sergeant", text: "You stopped adding units after round 1. Grumm didn't stop." } },
+    { when: (c) => c.army.every((sq) => (sq.level ?? 1) === 1), line: { who: "sergeant", text: "You had veterans waiting and never promoted one. When you see a gold ▲, promote it. Half a squad's price buys a whole squad's worth." } },
+    { line: { who: "sergeant", text: "Grumm walked through us. Keep promoting, put your Pikemen where he walks, and keep Crossbowmen behind them to finish him." } },
   ],
   commendation: {
-    name: "Old Page, New Ink",
+    name: "Page Seven",
     text: "Win with a promoted squad of Dwarven Pikemen on the Field.",
     earned: (c) => c.army.some((sq) => sq.defId === "pikemen" && (sq.level ?? 1) > 1),
   },
@@ -1107,7 +1082,7 @@ const OLD_GRUMM: MissionDef = {
         { squads: [["knights", 40, 22], ["pikemen", 4, 22], ["pikemen", 14, 25], ["crossbowmen", 30, 25]], promote: true },
         { squads: [["pikemen", 22, 25], ["knights", 10, 22], ["knights", 34, 22], ["crossbowmen", 8, 26]], promote: true },
       ],
-      // the old drill: Knights and bows, a squad of each every round
+      // the old way: Knights and bows, a squad of each every round
       [
         [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
         { squads: [["knights", 16, 20], ["knights", 28, 20]], promote: true },
@@ -1159,17 +1134,17 @@ const TINKER_WAVES: EnemyTurn[] = [
   {
     squads: [["giant_bats", 8, 0], ["giant_bats", 38, 0], ["giant_bats", 22, 0]],
     upgrades: { giant_bats: ["shriek"] },
-    line: { who: "tinker", text: "My turn! Bats. Four chances in five they work. I counted twice, and got two answers." },
+    line: { who: "tinker", text: "My turn! Bats, with Shriek. I checked your army first, so you're going to hate this." },
   },
   {
     squads: [["wolf_riders", 2, 3], ["wolf_riders", 44, 3], ["skirmishers", 14, 0]],
     upgrades: { wolf_riders: ["tower_raiders"] },
-    line: { who: "tinker", text: "Both Keeps at once. Nobody does both Keeps at once. That's what makes it work." },
+    line: { who: "tinker", text: "Tower Raiders, on both flanks. You'd have answered one raid, so I sent two." },
   },
   {
     squads: [["giant_bats", 14, 0], ["giant_bats", 30, 0], ["skirmishers", 6, 5], ["skirmishers", 38, 5]],
     upgrades: { skirmishers: ["ambush"] },
-    line: { who: "boss", text: "NO. BIGGER." },
+    line: { who: "boss", text: "NO. MORE." },
   },
   {
     squads: [["giant_bats", 4, 0], ["wolf_riders", 10, 3], ["wolf_riders", 36, 3], ["skirmishers", 22, 5]],
@@ -1207,53 +1182,47 @@ const THE_MARCHES: MissionDef = {
     rounds: Array(12).fill(theMarches),
   },
   briefing: [
-    { who: "archivist", text: "Marshal, the season final. The Boss has staked the whole border: the Marches, from the Toll Bridge to the hills." },
+    { who: "archivist", text: "The season final! The Boss has staked the whole border, from the Toll Bridge to the hills. I've brought a hat." },
     { who: "boss", text: "EVERYTHING. ALL OF IT. AND THE GOAT." },
-    {
-      who: "sergeant",
-      text: "Full Compact rules today. Nobody sees the other army before the horn. The Treasury offers an opening, and the whole armory is ours to unlock.",
-    },
-    { who: "tinker", text: "And if the Boss loses twice, it's my turn. I've been working on something. Several somethings." },
-    {
-      who: "archivist",
-      text: "Every page of the book applies. A Giant from the hills has offered to hire on, which the book doesn't cover. And there is one blank page at the back. It has been blank for four hundred years.",
-    },
+    { who: "marshal", text: "Full Compact rules, page 8. Nobody sees the other army before the horn, and we choose an opening. I've read it three times." },
+    { who: "sergeant", text: "Page 3. If a Keep falls, the whole army is Dazed. I looked it up." },
+    { who: "archivist", text: "You looked it up?" },
+    { who: "sergeant", text: "Griffons?" },
+    { who: "archivist", text: "Bite. I can show you the hand." },
+    { who: "tinker", text: "If the Boss loses twice, it's my turn. I've watched what you field all season, so I know exactly which upgrades I want." },
+    { who: "archivist", text: "A Giant from the hills has offered to hire on, and the book doesn't cover that!" },
+    { who: "sergeant", text: "Book says hire anything that big." },
+    { who: "archivist", text: "It absolutely does not!" },
+    { who: "marshal", text: "Hire it if we need it. We'll write it in." },
   ],
   page: {
     title: "Page 8: The Full Compact",
     text: "Every commander chooses, every commander places, and no one sees the other's army before the horn.",
-    drill: "Every page at once.",
+    note: "Knights in front, Crossbowmen behind. Watch the sky and the Keeps. Promote. I think I can do this. There's a blank page at the back.",
     diagram: [["pikemen", "knights", "pikemen"], ["crossbowmen", "ballista", "crossbowmen"]],
   },
-  objective: "Win the season final. Round 1 offers three Warden packs or the war chest, the whole armory is open, and the goblins stay hidden until the horn.",
+  objective: "Win the season final.",
+  roundLines: {
+    2: { who: "archivist", text: "The histories never mention the noise!" },
+  },
   win: [
-    { who: "sergeant", text: "Boring wins. A whole border's worth of boring." },
-    { who: "tinker", text: "I had ideas. Good ones. Nobody listened." },
+    { who: "tinker", text: "Your wheelbarrow's outside. It has two wheels now. You're welcome." },
+    { who: "sergeant", text: "It's better." },
+    { who: "archivist", text: "It isn't in the book!" },
+    { who: "marshal", text: "It could be." },
+    { who: "sergeant", text: "Boring wins. Book says so." },
+    { who: "archivist", text: "It doesn't, as I've told you every... oh. Oh! Page 9! In ink!" },
+    { who: "marshal", text: "It kept coming up." },
+    { who: "sergeant", text: "Told you it was in there." },
     { who: "boss", text: "...SAME TIME NEXT SEASON?" },
-    { who: "archivist", text: "The Marshal has written on the blank page. In ink." },
   ],
-  lastPage: { title: "Page 9, in the Marshal's hand", text: "What we fielded at the Marches, and what held." },
+  lastPage: { title: "Page 9, in the Marshal's hand, in ink", handwritten: "Boring wins.", text: "What we fielded at the Marches, and what held." },
   hints: [
-    {
-      when: (c) => c.army.every((sq) => sq.round === 1),
-      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
-    },
-    {
-      when: (c) => !c.army.some((sq) => ["knights", "pikemen"].includes(sq.defId)),
-      line: { who: "sergeant", text: "Nothing in front of the bows, Marshal. The Boss sent his biggest, and they walked straight in. Steel in front." },
-    },
-    {
-      when: (c) => !c.army.some((sq) => ["crossbowmen", "griffon_riders"].includes(sq.defId)),
-      line: { who: "sergeant", text: "The Tinker's bats came over the line, and nothing of ours could reach them. Bows under the sky." },
-    },
-    {
-      when: keepFell,
-      line: {
-        who: "sergeant",
-        text: "The Tinker went for both Keeps at once, and the line lost its nerve. Steel beside the Keeps, or a level on each, before it comes.",
-      },
-    },
-    { line: { who: "sergeant", text: "Every page at once, Marshal: steel in front, bows behind, eyes up, Keeps guarded, veterans promoted." } },
+    { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "marshal", text: "We stopped adding after round 1. I know better than that." } },
+    { when: (c) => !c.army.some((sq) => ["knights", "pikemen"].includes(sq.defId)), line: { who: "sergeant", text: "Nothing in front of your Crossbowmen. The Boss sent his biggest units, and they walked straight in. Put Knights or Pikemen in front." } },
+    { when: (c) => !c.army.some((sq) => ["crossbowmen", "griffon_riders"].includes(sq.defId)), line: { who: "archivist", text: "The Tinker's bats came over the line, and nothing of ours could reach them! Crossbowmen and Griffon Riders can." } },
+    { when: keepFell, line: { who: "sergeant", text: "The Tinker hit both Keeps at once, and the whole army was Dazed. Put Knights beside the Keeps, or buy a level on each, before it comes." } },
+    { line: { who: "marshal", text: "All right. Knights in front, Crossbowmen behind, watch the sky, guard the Keeps, promote the veterans. Again." } },
   ],
   commendation: {
     name: "Boring Wins",
@@ -1324,13 +1293,13 @@ export const CAMPAIGNS: CampaignInfo[] = [
     id: "wardens",
     faction: "warden",
     title: "The Drill Book",
-    tagline: "A new Marshal, a four-hundred-year-old book of formations, and a goblin Boss with a season's worth of grievances.",
+    tagline: "A nervous new Marshal, a sergeant who has never read the book, and an archivist who has never left it.",
     missions: [
       { title: "Hands Off", teaser: "A goat has wandered across the border at Millbrook. Settle it on the Field.", play: HANDS_OFF },
       { title: "The Appeal", teaser: "The goblins appeal the goat. Under the Compact, an appeal is a longer match.", play: THE_APPEAL },
       { title: "Two Keeps", teaser: "Someone has painted something rude on the West Keep.", play: TWO_KEEPS },
       { title: "Under the Bridge", teaser: "The goblins have adopted the troll under the toll bridge. And its toll.", play: UNDER_THE_BRIDGE },
-      { title: "Plain Steel", teaser: "A goblin Tinker accuses the Wardens of stealing the wheelbarrow.", play: PLAIN_STEEL },
+      { title: "The Wheelbarrow", teaser: "A goblin Tinker accuses the Wardens of stealing the wheelbarrow.", play: THE_WHEELBARROW },
       { title: "Look Up", teaser: "The Compact draws borders on the ground. The goblins have noticed.", play: LOOK_UP },
       { title: "Old Grumm", teaser: "Thirty years ago, an ogre ate the Sergeant's helmet.", play: OLD_GRUMM },
       { title: "The Marches", teaser: "The season final. The Boss stakes the whole border.", play: THE_MARCHES },
@@ -1339,15 +1308,15 @@ export const CAMPAIGNS: CampaignInfo[] = [
   {
     id: "goblins",
     faction: "goblin",
-    title: "The Tinker's Odds",
-    tagline: "“Lads, they had pointy sticks and we had nothing. So I made a bigger thing.”",
+    title: "The Tinker's Notebook", // working title
+    tagline: '"They had pointy sticks and we had nothing. So I made a bigger thing."',
     missions: [],
   },
   {
     id: "elementals",
     faction: "elemental",
     title: "We Burn",
-    tagline: "“We are not complicated because we are clever. We are complicated because we burn.”",
+    tagline: '"We\'re not being rude. We\'re standing over here so you don\'t catch fire."',
     missions: [],
   },
 ];

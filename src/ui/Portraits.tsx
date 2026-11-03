@@ -40,6 +40,30 @@ const FACES: Record<Speaker, ReactNode> = {
       <path d="M28 45 Q32 47 36 45" stroke="#b07a62" strokeWidth="1.3" fill="none" strokeLinecap="round" />
     </>
   ),
+  // The Marshal: young, in a new officer's cap a size too big, eyebrows up, a pencil behind one ear for the margins
+  marshal: (
+    <>
+      <path d="M19 34 Q18 50 25 56 L39 56 Q46 50 45 34 Z" fill="#5a3b28" />
+      <ellipse cx="32" cy="38" rx="12.5" ry="14.5" fill="#e9c3a0" />
+      <ellipse cx="19.6" cy="39" rx="2.2" ry="3.4" fill="#e1b893" />
+      <ellipse cx="44.4" cy="39" rx="2.2" ry="3.4" fill="#e1b893" />
+      <rect x="44" y="26" width="2.3" height="14" rx="1" transform="rotate(-28 45 33)" fill="#e3b341" />
+      <path d="M43.3 38.6 L45.4 41.4 L44.4 37.8 Z" fill="#3a2a1a" />
+      {/* the cap: a crown, a band with the Warden badge and a peak that sits low */}
+      <path d="M15 27 Q15 12 32 12 Q49 12 49 27 Z" fill="#2c4a6e" />
+      <rect x="15" y="24" width="34" height="5" rx="2" fill="#1e3550" />
+      <circle cx="32" cy="20" r="3" fill="#d8c08a" />
+      <path d="M17 29 Q32 35 47 29 Q32 31 17 29 Z" fill="#14273d" />
+      {/* worried eyebrows, wide eyes, an unsure mouth */}
+      <path d="M23 34 L29 32.6" stroke="#5a3b28" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M41 34 L35 32.6" stroke="#5a3b28" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="26.5" cy="38" r="2.3" fill="#fff" />
+      <circle cx="37.5" cy="38" r="2.3" fill="#fff" />
+      <circle cx="26.5" cy="38.3" r="1.3" fill="#2e3b4a" />
+      <circle cx="37.5" cy="38.3" r="1.3" fill="#2e3b4a" />
+      <path d="M27 47 Q30 45.6 32 47 Q34 48.4 37 46.6" stroke="#9c5f4a" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+    </>
+  ),
   // The Boss: a big goblin with sideways ears, a dented crown and a tusky grin
   boss: (
     <>
@@ -58,7 +82,7 @@ const FACES: Record<Speaker, ReactNode> = {
     </>
   ),
   // The Tinker: a lean goblin in a leather cap, brass goggles pushed up, one eye behind a jeweller's lens, a pencil
-  // behind one ear for working out the odds
+  // behind one ear for the notebook
   tinker: (
     <>
       <path d="M19 36 L5 30 L18 43 Z" fill="#79a64c" />
@@ -90,6 +114,7 @@ const FACES: Record<Speaker, ReactNode> = {
 const FRAME: Record<Speaker, string> = {
   sergeant: "#2c4a6e",
   archivist: "#2c4a6e",
+  marshal: "#2c4a6e",
   boss: "#6e2c33",
   tinker: "#6e2c33",
 };

@@ -86,7 +86,7 @@ mission's reference plans still hold.
 **Every unit keeps its target once attacking (owner, Nov 2, 2026).** The Ballista's target hold became the rule for
 everyone: a unit in range of its target stays on it until it dies, hides or gets out of range. It is focus fire for
 every shooter. The matrix barely moved: one new miss, *Leather Wings* against Skirmishers at an even 50%, fixed with
-+35% physical resistance (was +30%). The missions moved more. *Plain Steel*'s round 4 is a coin flip either way, and
++35% physical resistance (was +30%). The missions moved more. Mission 5's round 4 is a coin flip either way, and
 two winning plans fell 10–24 HP short, so the Tinker's HP went 200 → 160 (the losing plans deal only 7, so they still
 lose). In *The Marches*, all bows lost rounds 2–3 instead of winning them, so the Boss's waves ran longer, his round-4
 ogres fell to massed *Repeaters* and the mission ended before the Tinker's raids. His fourth wave now brings wolves (it
