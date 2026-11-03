@@ -3,8 +3,14 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v76)
+## 2 November 2026 (v58–v78)
 
+- **The whole Wardens campaign.** Five new story missions finish *The Drill Book*: *Under the Bridge* (your first
+  unlock, the Ballista, against the Boss's trolls), *Plain Steel* (upgrades, and the Tinker's gadgets), *Look Up*
+  (Giant Bats and the air), *Old Grumm* (a legendary veteran ogre, Dwarven Pikemen and promotions) and the finale,
+  *The Marches*: the opening offer, everything in the armory, and a Boss who hands over to the Tinker once he's lost
+  twice. Win it and the Drill Book's last page is drawn from your own winning army. Each mission has a commendation.
+- **Two new maps**, Toll Bridge and Border Pass, in skirmish too. In story missions the HP bars now start full.
 - **Faces for the story.** Everyone who speaks in a mission has a portrait, and their lines sit in parchment speech
   bubbles (Wardens on the left, goblins on the right).
 - **Hard streak:** the game remembers how many matches in a row you've won against the Hard AI, and your best run.

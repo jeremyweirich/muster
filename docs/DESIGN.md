@@ -128,7 +128,9 @@ no-man's land between rounds; spells themselves are out of scope for now). Data 
   sim takes none of these paths (the bench fingerprint is unchanged).
 - **Maps** (`MAPS`): Open Field, Millbrook Ford (a pond between two rough patches), Standing Stones (scattered rocks),
   Long Grass (grass on both flanks, a rock in the middle), The Mire (a wide band of rough ground with two ponds), Broken
-  Hills (grass in the middle, rocks and rough ground off-center). Every map is **point-symmetric** (turned 180° it's the
+  Hills (grass in the middle, rocks and rough ground off-center), Toll Bridge (a pond either side of the middle, so
+  the middle is the short way across) and Border Pass (rocks either side of the middle, scree on the flanks); the last
+  two were made for story missions 4 and 8 and are in the skirmish draw too. Every map is **point-symmetric** (turned 180° it's the
   same), so both sides face the same ground and a PvP guest's turned-round view needs nothing special. A test checks
   this and the no-man's-land rule.
 - **Which map:** a skirmish draws one from the match seed (`pickMap`, its own random stream, so the opening packs don't
@@ -660,9 +662,9 @@ Rough priority order. Everything is open to reshuffling.
    open items in `docs/BALANCE-PLAN.md` §3). Next: veterancy's value (the Ballista parks behind chaff), fliers in one-unit fights, hard counters for
    Crossbowmen, Frost and Toad Riders, mixed-army tests. Then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
-3. **Campaigns** (docs/CAMPAIGN.md): the mission framework and Wardens missions 1–3 are built (Nov 2, 2026); next,
-   the owner's playtest of 1–3, then missions 4–8 (recipe in CAMPAIGN.md §6). Parked: saving the player's winning
-   board from a campaign finale as the Drill Book's last page (story progress is stored now, so it's possible).
+3. **Campaigns** (docs/CAMPAIGN.md): the mission framework and the whole Wardens campaign (missions 1–8) are built
+   (Nov 2, 2026); next, the owner's playtest of 4–8, then the goblin campaign. The finale's debrief draws the player's
+   winning board as the Drill Book's page 9, shown and not kept; keeping it is parked (CAMPAIGN.md §5).
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary. The owner's plan: cast

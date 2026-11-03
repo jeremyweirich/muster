@@ -191,21 +191,23 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
     Lv2 Knights and Grunts and the Ballistae all die). Level N is N× HP and N× damage, about 4× the value for half the
     price; that's where to look next.
 - **Campaigns (Nov 2, 2026):** planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; owner decisions
-  in §8, independents and maps in §9). **Wardens missions 1–3 are built**: *Hands Off* (one battle), *The Appeal*
-  (rounds and HP; the Boss hits your thin flank), *Two Keeps* (Tower Raiders wolves through the long grass). A mission
+  in §8, independents and maps in §9). **The whole Wardens campaign is built** (missions 1–8; what each teaches and
+  what its tuning found is in CAMPAIGN.md §2). A mission
   is a `MissionDef` in `src/data/campaign.ts` played on the ordinary Play board (`PlayView`'s `mission` prop); each
   lists reference plans that must win, lose and earn its commendation, and `tests/campaign.test.tsx` fights them.
-  Make new ones with the recipe in CAMPAIGN.md §6 and `npm run mission`. Story is the left-most tab and where the site
+  Make new ones with the recipe in CAMPAIGN.md §6 and `npm run mission` (both use `src/game/missionRun.ts`). Story is the left-most tab and where the site
   opens ("Play the full game now" at the top); progress is stored, missions open in order, each with a victory banner
   and a commendation star, and Reset sits at the bottom. Speakers get a portrait and a parchment speech bubble
   (`src/ui/Portraits.tsx`; a new speaker needs a face). The debug panel can open every mission for testing.
-  **Next:** the owner playtests 1–3, then mission 4 (*Under the Bridge*: unlocks, the Ballista, the Troll). Parked:
-  the finale's last Drill Book page drawn from the player's own winning board (storage exists for it now).
+  **Next:** the owner playtests 4–8, then the goblin campaign. Open questions for the owner from the tuning (CAMPAIGN.md
+  §2): Pikemen lose to a cleaving veteran ogre, so in missions 7–8 the pike line wins but isn't the strongest answer
+  (Knights and bows do better); the Cleric, Griffon Riders and the Giant are each a valid but pricier choice where
+  they're introduced. Page 9 (the finale's winning board as a drill diagram) is shown in the debrief, not kept.
 - **Small things (Nov 2, 2026):** a Hard win streak (Play, beside Restart); the version in the header is a pill that
   opens the debug panel, whose first button is **Report a bug** (a prefilled GitHub issue).
 - **Terrain and maps (Nov 2, 2026):** rocks and ponds (impassable for ground units, who slide along the edge),
   rough ground (half speed) and tall grass (hides ground units from ground shooters until they attack); fliers ignore
-  all of it. Six point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule:
+  all of it. Eight point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule:
   **units and the AI never plan around terrain** (no pathfinding); it's for map variety and a step toward spells cast
   on no-man's land, which are out of scope until the owner asks.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.

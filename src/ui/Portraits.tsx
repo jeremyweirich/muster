@@ -57,12 +57,41 @@ const FACES: Record<Speaker, ReactNode> = {
       <path d="M25 46 L26.5 50 L28 46.6 Z M36 46.6 L37.5 50 L39 46 Z" fill="#f4efd8" />
     </>
   ),
+  // The Tinker: a lean goblin in a leather cap, brass goggles pushed up, one eye behind a jeweller's lens, a pencil
+  // behind one ear for working out the odds
+  tinker: (
+    <>
+      <path d="M19 36 L5 30 L18 43 Z" fill="#79a64c" />
+      <path d="M45 36 L59 30 L46 43 Z" fill="#79a64c" />
+      <rect x="47" y="25" width="2.4" height="13" rx="1" transform="rotate(35 48 31)" fill="#e3b341" />
+      <ellipse cx="32" cy="40" rx="13.5" ry="14" fill="#86b85a" />
+      {/* leather cap and the goggles on it */}
+      <path d="M17 32 Q17 13 32 13 Q47 13 47 32 Q40 26 32 26 Q24 26 17 32 Z" fill="#7a5233" />
+      <rect x="17" y="24" width="30" height="3.4" rx="1.5" fill="#4a3220" />
+      <circle cx="25.5" cy="23.5" r="4.6" fill="#c9a24a" stroke="#7d6122" strokeWidth="1.2" />
+      <circle cx="38.5" cy="23.5" r="4.6" fill="#c9a24a" stroke="#7d6122" strokeWidth="1.2" />
+      <circle cx="25.5" cy="23.5" r="2.7" fill="#a9d4e6" />
+      <circle cx="38.5" cy="23.5" r="2.7" fill="#a9d4e6" />
+      {/* one plain eye, one magnified behind the lens */}
+      <circle cx="26" cy="38" r="2.2" fill="#f2e04a" />
+      <circle cx="26" cy="38" r="0.9" fill="#1d1d0b" />
+      <circle cx="38.5" cy="38" r="5.4" fill="#cfe6ef" fillOpacity="0.55" stroke="#7d6122" strokeWidth="1.6" />
+      <circle cx="38.5" cy="38" r="3.4" fill="#f2e04a" />
+      <circle cx="38.5" cy="38" r="1.5" fill="#1d1d0b" />
+      <path d="M43.6 39.5 L47 46" stroke="#7d6122" strokeWidth="1.2" />
+      {/* a lopsided, hopeful grin and a smudge of soot */}
+      <path d="M24 46 Q31 51 40 45" stroke="#3a1c14" strokeWidth="1.8" fill="none" strokeLinecap="round" />
+      <path d="M33 48.4 L34.2 51 L35.4 48" fill="#f4efd8" />
+      <ellipse cx="22" cy="44" rx="2.6" ry="1.4" fill="#4b5a36" fillOpacity="0.6" />
+    </>
+  ),
 };
 
 const FRAME: Record<Speaker, string> = {
   sergeant: "#2c4a6e",
   archivist: "#2c4a6e",
   boss: "#6e2c33",
+  tinker: "#6e2c33",
 };
 
 export function Portrait({ who, size = 48 }: { who: Speaker; size?: number }) {

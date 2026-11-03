@@ -9,8 +9,8 @@ import { promoted, type AiPlan, type Difficulty } from "../game/ai";
 import type { AiRequest } from "../game/ai.worker";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
 import { applyRound, applyTurn, battleXp, canPromote, chooseOpening, newMatch, nextRound, outcomeOf, packLabel, promotePrice, survivorDamage, type MatchState, type OpeningChoice, type Turn } from "../game/match";
-import type { MissionDef } from "../data/campaign";
-import { missionOutcome, missionPlan, newMissionMatch } from "../game/mission";
+import type { Line, MissionDef } from "../data/campaign";
+import { missionOutcome, missionPlan, newMissionMatch, scriptedTurn } from "../game/mission";
 import {
   checkTurn,
   currentStart,
@@ -43,7 +43,7 @@ import { planInWorkers } from "./planInWorkers";
 import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
 import { CodexLink } from "./codexLinks";
-import { Debrief } from "./Mission";
+import { Debrief, Say } from "./Mission";
 import { loadHardStreak, recordHardMatch } from "./progress";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
@@ -108,6 +108,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const [hoverInfo, setHoverInfo] = useState<{ def: UnitDef; side: Side; fromShop?: boolean; squad?: PlacedSquad } | null>(null);
   const [speed, setSpeed] = useState(1);
   const [aiPlan, setAiPlan] = useState<AiPlan | null>(null);
+  const [enemyLine, setEnemyLine] = useState<Line | null>(null); // a mission's enemy, speaking while the player deploys
   const [fought, setFought] = useState<Fought | null>(null);
   const [view, setView] = useState<"report" | "replay">("report");
   const [pinned, setPinned] = useState<string | null>(null);
@@ -170,6 +171,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     if (pvp || match.phase !== "deploy") return;
     if (mission) {
       setAiPlan(missionPlan(mission.def, match));
+      setEnemyLine(scriptedTurn(mission.def, match).line ?? null);
       return;
     }
     setAiPlan(null);
@@ -273,7 +275,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   // You see the enemy as it stood last round: its opening pack, placed in round 1, stays hidden until the battle.
   const enemySeen = match.armies[1].filter((sq) => sq.round < match.round);
   const unlocked = useMemo(() => new Set(match.unlocked[0]), [match.unlocked]);
-  const openingPending = !mission && match.round === 1 && match.openings[0].choice === null;
+  const openingPending = (!mission || !!mission.def.opening) && match.round === 1 && match.openings[0].choice === null;
   const isNew = (sq: PlacedSquad) => !RULES.lockPlacedSquads || sq.round === match.round;
   const heldSquad = held ? myArmy.find((s) => s.uid === held) : undefined;
   const placingDef = heldSquad ? myDefs.get(heldSquad.defId) : selected ? myDefs.get(selected) : undefined;
@@ -911,6 +913,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const objective = mission && deploying && (
     <div className="objective">
       <b>{mission.title}</b> <span className="small">{mission.def.objective}</span>
+      {enemyLine && <Say line={enemyLine} small />}
     </div>
   );
   const toUnlock = shopUnits.filter((u) => !unlocked.has(u.id));
@@ -926,7 +929,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     if (openingPending)
       return (
         <Sheet kind="full">
-          <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
+          <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : mission ? undefined : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
         </Sheet>
       );
     if (sheet === "unlock")
@@ -1003,7 +1006,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
         </div>
       ) : (
         <>
-          <HpBar label="You" hp={shownHp[0]} side={0} hits={hitsOn[0]} />
+          <HpBar label="You" hp={shownHp[0]} max={mission?.def.hp?.[0]} side={0} hits={hitsOn[0]} />
           <div className="round">
             Round {match.round}
             {mapName && terrain.length > 0 && (
@@ -1012,7 +1015,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
               </CodexLink>
             )}
           </div>
-          <HpBar label={rival} hp={shownHp[1]} side={1} hits={hitsOn[1]} />
+          <HpBar label={rival} hp={shownHp[1]} max={mission?.def.hp?.[1]} side={1} hits={hitsOn[1]} />
         </>
       )}
       <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
@@ -1227,7 +1230,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
               </button>
             </div>
             {openingPending && (
-              <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
+              <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : mission ? undefined : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
             )}
             {(placingDef || held) && (
               <div className="held">
@@ -1373,7 +1376,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
                 You took <b>{report.damage[0]}</b> · {pvp ? "Your friend" : rival} took <b>{report.damage[1]}</b>
               </p>
             )}
-            {outcome && mission && <Debrief def={mission.def} outcome={outcome} onRetry={restart} onLeave={mission.onLeave} />}
+            {outcome && mission && <Debrief def={mission.def} outcome={outcome} army={match.armies[0]} onRetry={restart} onLeave={mission.onLeave} />}
             {fought?.result && !singleBattle && <PromotionsEarned result={fought.result} army={match.armies[0]} defs={defs} />}
             {fought?.result && view === "report" && (
               <MvpBoard result={fought.result} defs={defs} selected={pinned} onSelect={setPinned} onHover={setHoverSquad} />
@@ -1611,11 +1614,12 @@ function PromotionsEarned({ result, army, defs }: { result: BattleResult; army: 
 }
 
 // The round-1 choice: one of three packs (two units unlocked, their squads placed, plus supply), or flat supply.
-function OpeningOffer({ packs, units, rival, onChoose }: { packs: number[]; units: UnitDef[]; rival: string; onChoose: (c: OpeningChoice) => void }) {
+// `rival`: who is offered the same packs (a story mission's enemy isn't offered any)
+function OpeningOffer({ packs, units, rival, onChoose }: { packs: number[]; units: UnitDef[]; rival?: string; onChoose: (c: OpeningChoice) => void }) {
   return (
     <div className="opening">
       <div className="muted small">
-        Opening: pick one ({rival} is offered the same). A pack&apos;s units come unlocked and placed for you, with{" "}
+        Opening: pick one{rival && <> ({rival} is offered the same)</>}. A pack&apos;s units come unlocked and placed for you, with{" "}
         {RULES.openingPackSupply} supply to spend.
       </div>
       <div className="opening-buttons">
@@ -1795,9 +1799,10 @@ export function UnlockStrip({ units, owned, side, note }: { units: UnitDef[]; ow
   );
 }
 
-// `hits` counts the strikes that have landed on it this tally; each one restarts the flash.
-export function HpBar({ label, hp, side, hits = 0 }: { label: string; hp: number; side: Side; hits?: number }) {
-  const frac = Math.max(0, hp / RULES.startHp);
+// `hits` counts the strikes that have landed on it this tally; each one restarts the flash. `max` is a full bar: the
+// side's starting HP (a story mission sets its own).
+export function HpBar({ label, hp, max = RULES.startHp, side, hits = 0 }: { label: string; hp: number; max?: number; side: Side; hits?: number }) {
+  const frac = Math.max(0, hp / max);
   return (
     <div className={`hp hp-${side}`}>
       <span>{label}</span>

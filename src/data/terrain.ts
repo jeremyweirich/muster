@@ -71,6 +71,22 @@ export const MAPS: MapDef[] = [
       { kind: "rough", x: 37, y: 11, r: 4, ry: 2.2 },
     ),
   },
+  {
+    // the river under the toll bridge: deep water either side of the middle, so the bridge is the short way across
+    id: "toll-bridge",
+    name: "Toll Bridge",
+    terrain: twin({ kind: "pond", x: 14, y: 13.5, r: 4 }),
+  },
+  {
+    // the pass through the border hills: rocks either side of the middle and scree on the flanks
+    id: "border-pass",
+    name: "Border Pass",
+    terrain: twin(
+      { kind: "rocks", x: 18, y: 12.5, r: 1.6 },
+      { kind: "rocks", x: 7, y: 11, r: 1.2 },
+      { kind: "rough", x: 40, y: 12, r: 4, ry: 2 },
+    ),
+  },
 ];
 
 export const MAP_BY_ID = new Map(MAPS.map((m) => [m.id, m]));

@@ -4,13 +4,16 @@
 
 import type { BattleResult } from "../sim/battle";
 import type { PlacedSquad } from "../sim/types";
+import { canPlace, defMap } from "../game/army";
 import { DEFAULT_UNITS } from "./units";
 
-// The cast. Voices are in docs/VISION.md: the Wardens are proud of being boring, the Boss SHOUTS.
+// The cast. Voices are in docs/VISION.md: the Wardens are proud of being boring, the Boss SHOUTS, and the Tinker
+// gives odds on every gadget and always gets them wrong.
 export const CAST = {
   sergeant: { name: "Sergeant Dunmor", side: "warden" },
   archivist: { name: "Archivist Ithiel", side: "warden" },
   boss: { name: "The Boss", side: "goblin" },
+  tinker: { name: "The Tinker", side: "goblin" },
 } as const;
 export type Speaker = keyof typeof CAST;
 
@@ -19,9 +22,9 @@ export interface Line {
   text: string;
 }
 
-// A squad in field tiles: the unit, its footprint's top-left corner, and whether it's rotated. The player deploys
-// in rows 20–26 at the bottom, the enemy in rows 0–6 at the top.
-export type SquadSpec = [defId: string, x: number, y: number, rot?: boolean];
+// A squad in field tiles: the unit, its footprint's top-left corner, whether it's rotated, and its level (a veteran;
+// absent: level 1). The player deploys in rows 20–26 at the bottom, the enemy in rows 0–6 at the top.
+export type SquadSpec = [defId: string, x: number, y: number, rot?: boolean, level?: number];
 
 // What a debrief reads: the player's army as it fought the last battle, that battle, and every battle of the match.
 export interface MissionContext {
@@ -29,27 +32,50 @@ export interface MissionContext {
   result: BattleResult;
   results: BattleResult[];
   towerLevels: number[]; // the player's Keep levels at the end
+  upgrades: Record<string, string[]>; // the player's upgrades at the end
 }
 
-// What a scripted round can look at: the player's army as the enemy saw it (squads placed in earlier rounds).
+// What a scripted round can look at: the player's army as the enemy saw it (squads placed in earlier rounds, with
+// their levels), its upgrades, who won each earlier battle (0 = the player) and how many the enemy has lost.
 export interface ScriptContext {
   round: number;
   seen: PlacedSquad[];
+  upgrades: Record<string, string[]>;
+  winners: (0 | 1 | null)[];
+  lost: number;
+  own: PlacedSquad[]; // the enemy's army so far
+}
+// What the enemy adds in a round: squads, upgrades it buys that round (shown as ★ once the battle starts), and a
+// line someone says while the player deploys.
+export interface EnemyTurn {
+  squads: SquadSpec[];
+  upgrades?: Record<string, string[]>;
+  line?: Line;
 }
 // A round of the enemy's script: fixed squads, or squads chosen from what it saw (the Boss hits your thin flank).
-export type EnemyRound = SquadSpec[] | ((c: ScriptContext) => SquadSpec[]);
-// A reference army, round by round: the squads the player adds, or squads and Keep levels to buy (Keep indexes,
-// 0 = West, 1 = East, one entry per level).
-export type PlanRound = SquadSpec[] | { squads: SquadSpec[]; keeps: number[] };
+export type EnemyRound = SquadSpec[] | EnemyTurn | ((c: ScriptContext) => SquadSpec[] | EnemyTurn);
+// A reference army, round by round: the squads the player adds, or an object with squads and what else it buys:
+// Keep levels (Keep indexes, 0 = West, 1 = East, one entry per level), upgrades in the order bought, promotions (every
+// squad with a level waiting, in order, while supply lasts) and, in a mission with an opening offer, round 1's choice
+// (an offered pack's position, or "flat"). Units from the mission's shop are unlocked on first use, at their price.
+export interface PlanTurn {
+  squads?: SquadSpec[];
+  keeps?: number[];
+  upgrades?: [unitId: string, upgradeId: string][];
+  promote?: boolean;
+  opening?: number | "flat";
+}
+export type PlanRound = SquadSpec[] | PlanTurn;
 export type Plan = PlanRound[];
-export const planSquads = (r: PlanRound | undefined): SquadSpec[] => (!r ? [] : Array.isArray(r) ? r : r.squads);
-export const planKeeps = (r: PlanRound | undefined): number[] => (!r || Array.isArray(r) ? [] : r.keeps);
+export const planTurn = (r: PlanRound | undefined): PlanTurn => (!r ? {} : Array.isArray(r) ? { squads: r } : r);
 
 export interface MissionDef {
   id: string; // `#story/<id>`
   supply: number; // the player's supply in round 1; later rounds get the standard income
   units: string[]; // the player's units, unlocked and free
   shop?: string[]; // more units the player may unlock, at the usual price
+  opening?: [string, string][]; // round 1 offers these packs (each named by its two units) or the war chest, as a skirmish does
+  lastPage?: { title: string; text: string }; // on a win, the debrief draws the player's winning board as a page of the book
   hp?: [number, number]; // each side's HP; absent: one battle decides the mission
   towers: boolean; // the Keeps stand
   map?: string; // a MAPS id (src/data/terrain.ts); absent: the open field
@@ -115,6 +141,29 @@ function onFlank(flank: "west" | "east", specs: SquadSpec[]): SquadSpec[] {
   return specs.map(([id, x, y, rot]) => {
     const f = DEFAULT_UNITS.find((u) => u.id === id)!.footprint;
     return [id, 48 - x - (rot ? f.h : f.w), y, rot];
+  });
+}
+
+// Squads moved, where needed, to the nearest spot that's free of the enemy's army and of each other (rounds that
+// depend on how the match went can't be laid out by hand).
+const DEFS = defMap(DEFAULT_UNITS);
+function fit(own: PlacedSquad[], specs: SquadSpec[]): SquadSpec[] {
+  const placed = [...own];
+  return specs.map(([id, x, y, rot, level]) => {
+    const def = DEFS.get(id)!;
+    let best: [number, number] | null = null;
+    let bestCost = Infinity;
+    for (let dy = -6; dy <= 6; dy++)
+      for (let dx = -24; dx <= 24; dx++) {
+        const cost = Math.abs(dx) + 1.5 * Math.abs(dy);
+        if (cost < bestCost && canPlace(def, x + dx, y + dy, 1, placed, DEFS, undefined, rot)) {
+          best = [x + dx, y + dy];
+          bestCost = cost;
+        }
+      }
+    if (!best) return [id, x, y, rot, level];
+    placed.push({ uid: `fit${placed.length}`, defId: id, x: best[0], y: best[1], rot, round: 0 });
+    return [id, best[0], best[1], rot, level];
   });
 }
 
@@ -404,6 +453,870 @@ const TWO_KEEPS: MissionDef = {
   },
 };
 
+// Mission 4: unlocks and big units. The Boss's trolls come over the bridge from round 2 and beat Knights (the rage
+// builds through the armor); the Ballista, the first unit the player has to unlock, hunts the biggest target from
+// across the water. Tuned by simulation: Ballistae behind steel win, whether from round 1 or after meeting the trolls;
+// steel and bows alone, Ballistae with no steel in front, and never adding all lose.
+const UNDER_THE_BRIDGE: MissionDef = {
+  id: "wardens-4",
+  supply: 400,
+  units: ["knights", "crossbowmen"],
+  shop: ["ballista"],
+  hp: [160, 140],
+  towers: true,
+  upgrades: false,
+  veterancy: false,
+  map: "toll-bridge",
+  enemy: {
+    name: "The Boss",
+    units: ["grunts", "skirmishers", "troll"],
+    rounds: [
+      [
+        ["grunts", 14, 4],
+        ["grunts", 22, 4],
+        ["grunts", 30, 4],
+        ["skirmishers", 22, 1],
+      ],
+      [
+        ["troll", 14, 2],
+        ["troll", 20, 3],
+        ["troll", 28, 3],
+      ],
+      [
+        ["troll", 18, 0],
+        ["troll", 26, 0],
+        ["troll", 32, 1],
+      ],
+      [
+        ["troll", 8, 1],
+        ["troll", 38, 1],
+        ["troll", 22, 0],
+        ["grunts", 40, 3],
+        ["grunts", 4, 3],
+      ],
+      [
+        ["troll", 16, 0],
+        ["troll", 30, 0],
+        ["troll", 20, 5],
+        ["troll", 26, 5],
+      ],
+      [
+        ["troll", 10, 5],
+        ["troll", 36, 5],
+        ["troll", 2, 0],
+        ["troll", 44, 0],
+      ],
+    ],
+  },
+  briefing: [
+    { who: "archivist", text: "Marshal, there is a troll under the toll bridge at Hob's Crossing. It has lived there longer than the bridge has." },
+    { who: "sergeant", text: "The goblins have adopted it. They've also adopted the toll." },
+    { who: "boss", text: "HE'S FAMILY NOW. FAMILY GETS PAID." },
+    {
+      who: "sergeant",
+      text: "Trolls go through Knights like a boot through a hedge. Every blow in a row lands harder, and they heal while they fight.",
+    },
+    {
+      who: "archivist",
+      text: "The river is deep on both sides of the bridge, so the Field's short way across is the middle. And the armory holds the Ballista. It costs the Treasury once per Field; after that, a squad is only a squad.",
+    },
+  ],
+  page: {
+    title: "Page 4: The Armory",
+    text: "The armory holds more than the book's first pages. Each new engine costs the Treasury once per Field.",
+    drill: "Big things need engines. Engines need steel in front.",
+    diagram: [["knights", "knights"], ["ballista", "crossbowmen", "ballista"]],
+  },
+  objective: "Win the match. The Boss has trolls. The Ballista waits in the shop: unlock it once this match (100), then buy squads as usual.",
+  win: [
+    { who: "sergeant", text: "Boring wins. Big, slow, boring wins bigger." },
+    { who: "archivist", text: "The troll has gone back under the bridge. It has agreed to charge the goblins as well." },
+    { who: "boss", text: "THAT'S NOT FAMILY BEHAVIOR. I'M TELLING THE TINKER." },
+  ],
+  hints: [
+    {
+      when: (c) => c.army.every((sq) => sq.round === 1),
+      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
+    },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Bolts alone again. A mob needs steel to run onto." } },
+    {
+      when: (c) => !fielded(c, "ballista"),
+      line: {
+        who: "sergeant",
+        text: "Steel against trolls is a fair fight, and they brought more trolls than we brought steel. The Ballista hunts the biggest thing on the Field: unlock it in the shop.",
+      },
+    },
+    {
+      when: (c) => c.army.filter((sq) => sq.defId === "knights").length < 2,
+      line: { who: "sergeant", text: "The Ballistae had nothing in front of them, and a mob that reaches an engine wrecks it. Steel in front, engines behind." },
+    },
+    {
+      line: {
+        who: "sergeant",
+        text: "The trolls got through anyway. Add Ballistae every round, behind the Knights, and leave the trolls to them.",
+      },
+    },
+  ],
+  commendation: {
+    name: "Bridge Held",
+    text: "Win with Ballistae on the Field, and lose none of them in the last battle.",
+    earned: (c) => {
+      const engines = c.army.filter((sq) => sq.defId === "ballista");
+      return engines.length > 0 && engines.every((sq) => c.result.stats[sq.uid]?.alive === c.result.stats[sq.uid]?.total);
+    },
+  },
+  reference: {
+    wins: [
+      // meets the trolls with steel in round 2, then adds Ballistae behind it
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        [["ballista", 17, 22], ["ballista", 28, 22], ["ballista", 14, 24], ["crossbowmen", 30, 24]],
+        [["knights", 34, 20], ["ballista", 22, 24], ["ballista", 26, 24], ["ballista", 18, 25], ["crossbowmen", 31, 22]],
+        [["knights", 4, 20], ["knights", 40, 20], ["ballista", 10, 25], ["ballista", 36, 25], ["crossbowmen", 31, 25]],
+      ],
+      // Ballistae as soon as the trolls show
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["ballista", 17, 22], ["ballista", 28, 22], ["ballista", 14, 24]],
+        [["knights", 16, 20], ["ballista", 30, 24], ["ballista", 21, 24], ["crossbowmen", 25, 25]],
+        [["knights", 28, 20], ["knights", 9, 20], ["ballista", 26, 23], ["ballista", 17, 25]],
+      ],
+      // a Ballista from round 1, behind the Knights (it loses round 1: one bolt, one goblin)
+      [
+        [["knights", 22, 20], ["ballista", 23, 22]],
+        [["knights", 16, 20], ["ballista", 19, 22], ["ballista", 27, 22]],
+        [["knights", 28, 20], ["ballista", 21, 24], ["ballista", 25, 24], ["ballista", 17, 24]],
+        [["knights", 9, 20], ["knights", 35, 20], ["ballista", 29, 24], ["ballista", 15, 22]],
+      ],
+    ],
+    loses: [
+      // never adds after round 1
+      [[["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]]],
+      // steel and bows only, every round
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        [["knights", 10, 20], ["crossbowmen", 16, 22], ["crossbowmen", 28, 22], ["crossbowmen", 31, 22]],
+        [["knights", 34, 20], ["knights", 22, 25], ["crossbowmen", 18, 25], ["crossbowmen", 28, 25]],
+        [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 14, 25], ["crossbowmen", 31, 25], ["crossbowmen", 25, 26]],
+      ],
+      // Ballistae with no new steel in front
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["ballista", 17, 22], ["ballista", 28, 22], ["ballista", 14, 24]],
+        [["ballista", 30, 24], ["ballista", 22, 24], ["ballista", 26, 24], ["ballista", 18, 25], ["ballista", 32, 22]],
+        [["ballista", 6, 22], ["ballista", 40, 22], ["ballista", 3, 22], ["ballista", 43, 22], ["ballista", 3, 25], ["ballista", 44, 25]],
+      ],
+      // all bows
+      [
+        [["crossbowmen", 18, 22], ["crossbowmen", 22, 22], ["crossbowmen", 26, 22], ["crossbowmen", 30, 22]],
+        [["crossbowmen", 14, 22], ["crossbowmen", 34, 22], ["crossbowmen", 10, 22], ["crossbowmen", 38, 22]],
+        [["crossbowmen", 6, 22], ["crossbowmen", 42, 22], ["crossbowmen", 2, 22], ["crossbowmen", 44, 24], ["crossbowmen", 20, 24]],
+      ],
+    ],
+    // Ballistae as soon as the trolls show: every engine comes home from the last battle
+    commended: [
+      [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+      [["ballista", 17, 22], ["ballista", 28, 22], ["ballista", 14, 24]],
+      [["knights", 16, 20], ["ballista", 30, 24], ["ballista", 21, 24], ["crossbowmen", 25, 25]],
+      [["knights", 28, 20], ["knights", 9, 20], ["ballista", 26, 23], ["ballista", 17, 25]],
+    ],
+  },
+};
+
+// Mission 5: upgrades. The Tinker arrives with gadgets: in round 2 every Grunt on the Field, including those already
+// placed, gets Scrap Armor (each goblin shrugs off its first hit), and in round 3 the trolls get Thick Blood. The
+// counter is a drill of your own: Repeaters (many small bolts) reaches every Crossbowman. Tuned by simulation: any
+// plan with Repeaters wins, whenever it's bought; the same supply spent on more squads loses, and so does the wrong
+// drill (Knights' Veterans). The Cleric is in the shop but isn't the answer here: it and a prayer cost a round's
+// worth of fighters.
+const PLAIN_STEEL: MissionDef = {
+  id: "wardens-5",
+  supply: 400,
+  units: ["knights", "crossbowmen"],
+  shop: ["ballista", "cleric"],
+  hp: [180, 200],
+  towers: true,
+  upgrades: true,
+  veterancy: false,
+  map: "standing-stones",
+  enemy: {
+    name: "The Tinker",
+    units: ["grunts", "skirmishers", "troll"],
+    rounds: [
+      [
+        ["grunts", 14, 4],
+        ["grunts", 22, 4],
+        ["grunts", 30, 4],
+        ["skirmishers", 22, 1],
+      ],
+      {
+        squads: [
+          ["grunts", 6, 4],
+          ["grunts", 38, 4],
+          ["skirmishers", 30, 1],
+        ],
+        upgrades: { grunts: ["scrap_armor"] },
+      },
+      {
+        squads: [
+          ["troll", 18, 3],
+          ["troll", 28, 3],
+          ["grunts", 14, 1],
+        ],
+        upgrades: { troll: ["thick_blood"] },
+      },
+      [
+        ["grunts", 2, 1],
+        ["grunts", 42, 1],
+        ["troll", 22, 0],
+        ["skirmishers", 6, 0],
+      ],
+      [
+        ["troll", 16, 0],
+        ["troll", 34, 5],
+        ["grunts", 18, 5],
+        ["grunts", 26, 5],
+      ],
+      [
+        ["troll", 10, 5],
+        ["grunts", 0, 5],
+        ["grunts", 44, 5],
+        ["grunts", 2, 3],
+        ["skirmishers", 42, 3],
+      ],
+    ],
+  },
+  briefing: [
+    { who: "archivist", text: "Marshal, we have been accused of theft. A goblin Tinker says we stole the wheelbarrow." },
+    { who: "tinker", text: "THE wheelbarrow. One wheel, two handles. I drew it first." },
+    { who: "archivist", text: "We have had wheelbarrows for four hundred and twelve years." },
+    {
+      who: "sergeant",
+      text: "This one tinkers, Marshal. Whatever the goblins bring today will have been improved, and every improvement shows: a star by the unit, once the horn sounds.",
+    },
+    { who: "tinker", text: "Scrap Armor! Nine chances in ten it stops a bolt. Or ten in nine. Something in nine." },
+    { who: "archivist", text: "The book answers in kind. A drill improves every squad that knows it, even those already on the Field." },
+  ],
+  page: {
+    title: "Page 5: Drills",
+    text: "A drill improves every squad that knows it, even those already on the Field.",
+    drill: "Read their stars. Answer with a drill.",
+  },
+  objective: "Win the match. Upgrades are open: a drill changes every squad of that unit, even ones already placed. The Tinker's upgrades show as ★.",
+  win: [
+    { who: "sergeant", text: "Boring wins. Boring, repeated quickly, wins faster." },
+    { who: "tinker", text: "The odds were good on that one. Very good. I'll redo the sums." },
+    { who: "archivist", text: "The wheelbarrow stays with us. The Tinker has asked to borrow it." },
+    { who: "boss", text: "FORGET THE GROUND. NOBODY OWNS THE SKY." },
+  ],
+  hints: [
+    {
+      when: (c) => c.army.every((sq) => sq.round === 1),
+      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
+    },
+    { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Bolts alone again. A mob needs steel to run onto." } },
+    {
+      when: (c) => Object.keys(c.upgrades).length === 0,
+      line: {
+        who: "sergeant",
+        text: "Every goblin in that mob shrugged off the first bolt it took. We fought new gadgets with old drills. Buy a drill under Upgrades: it reaches every squad on the Field.",
+      },
+    },
+    {
+      when: (c) => !c.upgrades.crossbowmen?.includes("repeaters"),
+      line: {
+        who: "sergeant",
+        text: "The right drill matters. Their armor stops one hit per goblin, so a heavy bolt is wasted on it. Repeaters shoot many small bolts: the armor only stops the first.",
+      },
+    },
+    { line: { who: "sergeant", text: "Close. Buy the drill the round you see their stars, and keep adding steel in front of the bows." } },
+  ],
+  // the armor first shows in round 2's battle, so the answer can come from round 3
+  commendation: { name: "Well Drilled", text: "Once their armor shows, win every round after it.", earned: (c) => c.results.slice(2).every((r) => r.winner === 0) },
+  reference: {
+    wins: [
+      // Repeaters the round after the armor shows
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        { squads: [["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]], upgrades: [["crossbowmen", "repeaters"]] },
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        { squads: [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25]], upgrades: [["knights", "shield_wall"]] },
+      ],
+      // Repeaters in round 2, on the Tinker's word
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        { squads: [["knights", 16, 20]], upgrades: [["crossbowmen", "repeaters"]] },
+        [["knights", 28, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        { squads: [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25]], upgrades: [["knights", "shield_wall"]] },
+      ],
+      // Repeaters before the first battle, with one squad of steel
+      [
+        { squads: [["knights", 22, 20]], upgrades: [["crossbowmen", "repeaters"]] },
+        [["knights", 16, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 28, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        { squads: [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25]], upgrades: [["knights", "shield_wall"]] },
+      ],
+    ],
+    loses: [
+      // never adds after round 1
+      [[["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]]],
+      // no drills: the same supply on more Crossbowmen
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        [["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24], ["crossbowmen", 18, 24], ["crossbowmen", 26, 24]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25], ["crossbowmen", 6, 22]],
+      ],
+      // no drills: Ballistae instead
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        [["ballista", 17, 22], ["ballista", 28, 22], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22]],
+        [["knights", 10, 20], ["knights", 34, 20], ["ballista", 22, 24], ["ballista", 26, 24]],
+        [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 16, 25], ["crossbowmen", 30, 25], ["ballista", 19, 24]],
+      ],
+      // the wrong drill: Knights' Veterans against armored mobs
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        { squads: [["knights", 10, 20], ["crossbowmen", 14, 22]], upgrades: [["knights", "veterans"]] },
+        [["knights", 34, 20], ["knights", 4, 20], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]],
+      ],
+    ],
+    // Repeaters after the armor, then Shield Wall
+    commended: [
+      [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+      [["knights", 16, 20], ["knights", 28, 20]],
+      { squads: [["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]], upgrades: [["crossbowmen", "repeaters"]] },
+      { squads: [["knights", 10, 20], ["knights", 34, 20]], upgrades: [["knights", "shield_wall"]] },
+      [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25], ["crossbowmen", 18, 24]],
+    ],
+  },
+};
+
+// Mission 6: the air layer. In round 2 the Boss's Giant Bats (with Savage Claws) fly over the line and land on the
+// bows; from round 4 his Skirmishers shoot at anything that flies. Tuned by simulation: Crossbowmen behind the steel
+// win (with Skyhunters they win sooner), and Griffon Riders alongside them win too; steel alone, Ballistae (the
+// bats land on them) and Griffons in place of bows all lose. At these prices more bows beat a pricier flier, so the
+// commendation is what asks for Griffons.
+const LOOK_UP: MissionDef = {
+  id: "wardens-6",
+  supply: 400,
+  units: ["knights", "crossbowmen"],
+  shop: ["ballista", "cleric", "griffon_riders"],
+  hp: [240, 240],
+  towers: true,
+  upgrades: true,
+  veterancy: false,
+  map: "the-mire",
+  enemy: {
+    name: "The Boss",
+    units: ["grunts", "skirmishers", "troll", "giant_bats"],
+    rounds: [
+      [
+        ["grunts", 14, 4],
+        ["troll", 23, 3],
+        ["grunts", 30, 4],
+        ["skirmishers", 22, 0],
+      ],
+      {
+        squads: [
+          ["giant_bats", 4, 2],
+          ["giant_bats", 42, 2],
+          ["giant_bats", 18, 1],
+          ["giant_bats", 28, 1],
+        ],
+        upgrades: { giant_bats: ["savage_claws"] },
+      },
+      [
+        ["giant_bats", 8, 4],
+        ["giant_bats", 38, 4],
+        ["grunts", 22, 4],
+      ],
+      [
+        ["skirmishers", 4, 0],
+        ["skirmishers", 40, 0],
+        ["troll", 18, 3],
+        ["giant_bats", 26, 1],
+      ],
+      [
+        ["giant_bats", 16, 0],
+        ["giant_bats", 30, 0],
+        ["grunts", 2, 4],
+        ["grunts", 42, 4],
+        ["troll", 26, 5],
+      ],
+      [
+        ["giant_bats", 12, 0],
+        ["giant_bats", 34, 0],
+        ["skirmishers", 10, 5],
+        ["skirmishers", 34, 5],
+        ["troll", 20, 5],
+        ["troll", 24, 2],
+      ],
+      [
+        ["giant_bats", 0, 0],
+        ["giant_bats", 46, 0],
+        ["grunts", 14, 2],
+        ["grunts", 30, 2],
+        ["troll", 10, 4],
+        ["troll", 36, 4],
+      ],
+    ],
+  },
+  briefing: [
+    { who: "archivist", text: "Marshal, a point of law. The Compact draws the Field's borders on the ground." },
+    { who: "sergeant", text: "And the goblins have noticed it says nothing about above it." },
+    { who: "boss", text: "WHO OWNS THE SKY? NOBODY. SO IT'S OURS." },
+    { who: "sergeant", text: "Bats, Marshal. Big ones, with goblins on. They fly over the line and go for whoever's standing behind it." },
+    {
+      who: "archivist",
+      text: "The book is calm about this. Knights cannot strike what flies; Crossbowmen and Ballistae can, and Griffon Riders fly themselves. The Mire slows anyone on foot. It slows nothing with wings.",
+    },
+  ],
+  page: {
+    title: "Page 6: Look Up",
+    text: "Knights cannot strike what flies. Know which of your champions can.",
+    drill: "Bows under the sky. Wings against wings.",
+    diagram: [["knights", "knights"], ["crossbowmen", "griffon_riders", "crossbowmen"]],
+  },
+  objective: "Win the match. The Boss has taken to the air, and Knights can't hit fliers. Crossbowmen, Ballistae and Griffon Riders can.",
+  win: [
+    { who: "sergeant", text: "Boring wins. Looking up is boring too. Write that down." },
+    { who: "archivist", text: "Ruled: the sky over the Field belongs to the Field. The bats have gone home." },
+    { who: "boss", text: "FINE. I'M CALLING GRUMM." },
+    { who: "sergeant", text: "...Grumm?" },
+  ],
+  hints: [
+    {
+      when: (c) => c.army.every((sq) => sq.round === 1),
+      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
+    },
+    {
+      when: (c) => !c.army.some((sq) => sq.round > 1 && (sq.defId === "crossbowmen" || sq.defId === "griffon_riders")),
+      line: {
+        who: "sergeant",
+        text: "Knights can't hit what flies, and the bats knew it. Crossbowmen can, and so can Griffon Riders: put them where the bats come down.",
+      },
+    },
+    {
+      when: (c) => c.army.filter((sq) => sq.defId === "ballista").length > c.army.filter((sq) => sq.defId === "crossbowmen").length,
+      line: { who: "sergeant", text: "Bats land on engines. A Ballista hits fliers, but slowly: Crossbowmen behind the steel shoot them down faster." },
+    },
+    {
+      line: {
+        who: "sergeant",
+        text: "The bats went over the line and landed on the bows. More bows, Marshal, and Skyhunters picks out the fliers first.",
+      },
+    },
+  ],
+  commendation: { name: "Wings Against Wings", text: "Win with Griffon Riders on the Field.", earned: (c) => fielded(c, "griffon_riders") },
+  reference: {
+    wins: [
+      // Skyhunters as soon as the bats have shown, and bows every round
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        { squads: [["knights", 16, 20]], upgrades: [["crossbowmen", "skyhunters"]] },
+        [["knights", 28, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        { squads: [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25]], upgrades: [["knights", "shield_wall"]] },
+        [["knights", 40, 20], ["knights", 22, 26], ["crossbowmen", 4, 22], ["crossbowmen", 40, 22], ["crossbowmen", 38, 24], ["crossbowmen", 6, 24]],
+      ],
+      // plain bows, every round
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22]],
+        [["knights", 28, 20], ["crossbowmen", 17, 24], ["crossbowmen", 27, 24], ["crossbowmen", 22, 24]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25], ["knights", 40, 20], ["crossbowmen", 22, 26]],
+        [["knights", 4, 22], ["knights", 40, 22], ["crossbowmen", 4, 24], ["crossbowmen", 40, 24], ["crossbowmen", 33, 26], ["crossbowmen", 9, 26]],
+      ],
+    ],
+    loses: [
+      // never adds after round 1
+      [[["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]]],
+      // steel only after round 1
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 16, 22]],
+        { squads: [["knights", 4, 20], ["knights", 40, 20]], upgrades: [["knights", "shield_wall"]] },
+        [["knights", 22, 25], ["knights", 16, 25], ["knights", 28, 25], ["crossbowmen", 30, 22]],
+      ],
+      // Ballistae for the fliers: the bats land on them
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["ballista", 17, 22], ["ballista", 28, 22], ["ballista", 14, 24]],
+        [["knights", 16, 20], ["ballista", 30, 24], ["ballista", 21, 24], ["crossbowmen", 25, 25]],
+        { squads: [["knights", 10, 20], ["knights", 34, 20]], upgrades: [["ballista", "heavy_bolts"]] },
+        [["knights", 4, 20], ["knights", 40, 20], ["ballista", 17, 25], ["ballista", 26, 23], ["ballista", 33, 24]],
+      ],
+      // Griffons in place of more bows
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        [["griffon_riders", 15, 23], ["griffon_riders", 30, 23]],
+        { squads: [["knights", 10, 20], ["griffon_riders", 22, 24]], upgrades: [["griffon_riders", "sky_patrol"]] },
+        [["knights", 34, 20], ["knights", 4, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26], ["crossbowmen", 6, 22]],
+      ],
+    ],
+    // bows and Skyhunters first, then Griffons alongside them
+    commended: [
+      [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+      [["knights", 16, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22]],
+      { squads: [["knights", 28, 20], ["crossbowmen", 22, 24]], upgrades: [["crossbowmen", "skyhunters"]] },
+      [["griffon_riders", 17, 25], ["knights", 10, 20], ["crossbowmen", 27, 24]],
+      [["griffon_riders", 26, 25], ["knights", 34, 20], ["crossbowmen", 34, 22], ["crossbowmen", 6, 22], ["crossbowmen", 13, 24]],
+      [["knights", 4, 20], ["knights", 40, 20], ["griffon_riders", 6, 24], ["crossbowmen", 40, 22], ["crossbowmen", 38, 24]],
+    ],
+  },
+};
+
+// Mission 7: veterancy and promotions. Old Grumm, a level-3 Ogre Brute with Warboss (he calls a grunt every 5 s),
+// arrives in round 2 and walks off the Field alive; then wolves, trolls and more ogres. Pikemen are the page the
+// Archivist revives. Tuned by simulation: Pikemen whose veterans are promoted win, and the same plan putting that
+// supply into fresh squads instead loses. What the tuning also found: Knights and bows (no pikes) win with more HP to
+// spare, because Grumm's cleave kills several dwarves a swing; the commendation is what asks for a promoted pike
+// squad.
+const OLD_GRUMM: MissionDef = {
+  id: "wardens-7",
+  supply: 400,
+  units: ["knights", "crossbowmen"],
+  shop: ["ballista", "cleric", "griffon_riders", "pikemen"],
+  hp: [300, 300],
+  towers: true,
+  upgrades: true,
+  veterancy: true,
+  map: "broken-hills",
+  enemy: {
+    name: "The Boss",
+    units: ["grunts", "skirmishers", "wolf_riders", "troll", "ogre_brute"],
+    upgrades: { ogre_brute: ["warboss"] },
+    rounds: [
+      [
+        ["grunts", 14, 4],
+        ["grunts", 30, 4],
+        ["skirmishers", 22, 4],
+        ["grunts", 22, 1],
+      ],
+      [
+        ["ogre_brute", 20, 1, false, 3], // Old Grumm
+        ["grunts", 16, 1],
+      ],
+      [
+        ["wolf_riders", 40, 3],
+        ["wolf_riders", 8, 1],
+        ["grunts", 26, 0],
+      ],
+      [
+        ["troll", 16, 0],
+        ["troll", 30, 0],
+        ["skirmishers", 34, 4],
+        ["grunts", 2, 0],
+      ],
+      [
+        ["ogre_brute", 12, 4],
+        ["wolf_riders", 44, 0],
+        ["grunts", 38, 0],
+        ["skirmishers", 6, 5],
+      ],
+      [
+        ["troll", 20, 5],
+        ["troll", 26, 5],
+        ["wolf_riders", 0, 5],
+        ["wolf_riders", 46, 5],
+        ["grunts", 12, 0],
+      ],
+      [
+        ["ogre_brute", 38, 5],
+        ["ogre_brute", 10, 0],
+        ["grunts", 30, 2],
+        ["skirmishers", 18, 3],
+      ],
+    ],
+  },
+  briefing: [
+    { who: "archivist", text: "Marshal, the Boss has named a champion: Old Grumm." },
+    { who: "sergeant", text: "Thirty years ago, at a Field match, Grumm ate my helmet. I was nearly still in it." },
+    { who: "boss", text: "GRUMM'S BEEN FIGHTING SINCE BEFORE YOU WERE BORN. HE'S GOOD AT IT NOW." },
+    {
+      who: "archivist",
+      text: "Squads that fight well learn from it, and Grumm has learned a great deal. Ours can too: when a squad has a level waiting, you may promote it, for half its price.",
+    },
+    { who: "archivist", text: "And there is a page in the book no one has turned to in two hundred years. There was nothing large enough to need it." },
+    { who: "sergeant", text: "The pikes. Dwarven Pikemen, Marshal: long sticks for large problems." },
+  ],
+  page: {
+    title: "Page 7: The Pike Line",
+    text: "Against the largest, the longest. Hold them at the point.",
+    drill: "Pikes where the big ones walk. Promote what lives.",
+    diagram: [["pikemen", "knights", "pikemen"], ["crossbowmen", "crossbowmen"]],
+  },
+  objective: "Win the match. Squads now earn experience: one with a level waiting shows a gold ▲, and promoting it costs half its price.",
+  win: [
+    { who: "sergeant", text: "Boring wins. And I've got my helmet back. It's been chewed." },
+    { who: "archivist", text: "The pike page has been copied out fresh. The old ink had faded." },
+    { who: "boss", text: "RIGHT. THAT'S IT. THE WHOLE BORDER. EVERYTHING. NEXT TIME." },
+  ],
+  hints: [
+    {
+      when: (c) => c.army.every((sq) => sq.round === 1),
+      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
+    },
+    {
+      when: (c) => c.army.every((sq) => (sq.level ?? 1) === 1),
+      line: {
+        who: "sergeant",
+        text: "Squads that live through a battle learn from it. We had veterans waiting and never promoted one. When you see the gold ▲, promote: half a squad's price buys a whole squad's worth.",
+      },
+    },
+    { line: { who: "sergeant", text: "Grumm walked through us. Keep promoting, put the pikes where he walks, and keep bows behind them to finish him." } },
+  ],
+  commendation: {
+    name: "Old Page, New Ink",
+    text: "Win with a promoted squad of Dwarven Pikemen on the Field.",
+    earned: (c) => c.army.some((sq) => sq.defId === "pikemen" && (sq.level ?? 1) > 1),
+  },
+  reference: {
+    wins: [
+      // pikes from round 2, and every veteran promoted with what's left
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        { squads: [["pikemen", 16, 20], ["crossbowmen", 28, 22]], promote: true },
+        { squads: [["pikemen", 26, 20], ["knights", 10, 20], ["crossbowmen", 14, 22]], promote: true },
+        { squads: [["pikemen", 34, 20], ["crossbowmen", 31, 22]], upgrades: [["pikemen", "pike_wall"]], promote: true },
+        { squads: [["knights", 4, 20], ["pikemen", 40, 20], ["crossbowmen", 18, 24], ["crossbowmen", 26, 24]], promote: true },
+        { squads: [["knights", 40, 22], ["pikemen", 4, 22], ["pikemen", 14, 25], ["crossbowmen", 30, 25]], promote: true },
+        { squads: [["pikemen", 22, 25], ["knights", 10, 22], ["knights", 34, 22], ["crossbowmen", 8, 26]], promote: true },
+      ],
+      // pikes from round 1, on the Archivist's word
+      [
+        [["pikemen", 22, 20], ["crossbowmen", 23, 22]],
+        { squads: [["knights", 16, 20], ["crossbowmen", 28, 22]], promote: true },
+        { squads: [["pikemen", 26, 20], ["knights", 10, 20], ["crossbowmen", 14, 22]], promote: true },
+        { squads: [["pikemen", 34, 20], ["crossbowmen", 31, 22]], upgrades: [["pikemen", "pike_wall"]], promote: true },
+        { squads: [["knights", 4, 20], ["pikemen", 40, 20], ["crossbowmen", 18, 24], ["crossbowmen", 26, 24]], promote: true },
+        { squads: [["knights", 40, 22], ["pikemen", 4, 22], ["pikemen", 14, 25], ["crossbowmen", 30, 25]], promote: true },
+        { squads: [["pikemen", 22, 25], ["knights", 10, 22], ["knights", 34, 22], ["crossbowmen", 8, 26]], promote: true },
+      ],
+      // the old drill: Knights and bows, a squad of each every round
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        { squads: [["knights", 16, 20], ["knights", 28, 20]], promote: true },
+        { squads: [["knights", 10, 20], ["crossbowmen", 16, 22], ["crossbowmen", 28, 22], ["crossbowmen", 31, 22]], promote: true },
+        { squads: [["knights", 34, 20], ["crossbowmen", 18, 24], ["crossbowmen", 28, 24]], upgrades: [["crossbowmen", "repeaters"]], promote: true },
+        { squads: [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 14, 25], ["crossbowmen", 31, 25], ["crossbowmen", 25, 26]], promote: true },
+        { squads: [["knights", 4, 22], ["knights", 40, 22], ["knights", 16, 26], ["crossbowmen", 4, 24], ["crossbowmen", 40, 24]], promote: true },
+        { squads: [["knights", 22, 25], ["knights", 10, 22], ["knights", 34, 22], ["crossbowmen", 8, 26], ["crossbowmen", 37, 26], ["crossbowmen", 30, 26]], promote: true },
+      ],
+    ],
+    loses: [
+      // never adds after round 1
+      [[["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]]],
+      // the first plan, but a fresh squad every round instead of promotions
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["pikemen", 16, 20], ["crossbowmen", 28, 22]],
+        [["pikemen", 26, 20], ["knights", 10, 20], ["crossbowmen", 14, 22]],
+        { squads: [["pikemen", 34, 20], ["crossbowmen", 31, 22]], upgrades: [["pikemen", "pike_wall"]] },
+        [["knights", 4, 20], ["pikemen", 40, 20], ["crossbowmen", 18, 24], ["crossbowmen", 26, 24], ["crossbowmen", 22, 25]],
+        [["knights", 40, 22], ["pikemen", 4, 22], ["pikemen", 14, 25], ["crossbowmen", 30, 25], ["crossbowmen", 34, 25]],
+      ],
+    ],
+    // pikes from round 1, promoted: a pike squad reaches level 3
+    commended: [
+      [["pikemen", 22, 20], ["crossbowmen", 23, 22]],
+      { squads: [["knights", 16, 20], ["crossbowmen", 28, 22]], promote: true },
+      { squads: [["pikemen", 26, 20], ["knights", 10, 20], ["crossbowmen", 14, 22]], promote: true },
+      { squads: [["pikemen", 34, 20], ["crossbowmen", 31, 22]], upgrades: [["pikemen", "pike_wall"]], promote: true },
+      { squads: [["knights", 4, 20], ["pikemen", 40, 20], ["crossbowmen", 18, 24], ["crossbowmen", 26, 24]], promote: true },
+      { squads: [["knights", 40, 22], ["pikemen", 4, 22], ["pikemen", 14, 25], ["crossbowmen", 30, 25]], promote: true },
+      { squads: [["pikemen", 22, 25], ["knights", 10, 22], ["knights", 34, 22], ["crossbowmen", 8, 26]], promote: true },
+    ],
+  },
+};
+
+// Mission 8: the full Compact, from the opening offer. The Boss throws his biggest goblins at the line; once he has
+// lost twice, the Tinker takes over with tempo: a bat swarm, a raid on both Keeps, Skirmishers that never touch the
+// pikes. Scripted, not the AI, so the story beats land and the tests can fight it; each wave is fitted around the
+// goblins already on the Field (`fit`), and the last wave repeats until the match ends.
+const BOSS_WAVES: SquadSpec[][] = [
+  [["troll", 22, 3], ["grunts", 14, 4], ["grunts", 30, 4], ["wolf_riders", 6, 3]],
+  [["ogre_brute", 22, 0], ["troll", 14, 1], ["grunts", 34, 1]],
+  [["wolf_riders", 40, 3], ["wolf_riders", 4, 0], ["troll", 28, 1], ["grunts", 16, 0]],
+  [["ogre_brute", 12, 4], ["ogre_brute", 34, 4], ["grunts", 22, 5]],
+  [["troll", 18, 5], ["troll", 28, 5], ["ogre_brute", 22, 0], ["grunts", 2, 5]],
+];
+const TINKER_WAVES: EnemyTurn[] = [
+  {
+    squads: [["giant_bats", 8, 0], ["giant_bats", 38, 0], ["giant_bats", 22, 0]],
+    upgrades: { giant_bats: ["shriek"] },
+    line: { who: "tinker", text: "My turn! Bats. Four chances in five they work. I counted twice, and got two answers." },
+  },
+  {
+    squads: [["wolf_riders", 2, 3], ["wolf_riders", 44, 3], ["skirmishers", 14, 0]],
+    upgrades: { wolf_riders: ["tower_raiders"] },
+    line: { who: "tinker", text: "Both Keeps at once. Nobody does both Keeps at once. That's what makes it work." },
+  },
+  {
+    squads: [["giant_bats", 14, 0], ["giant_bats", 30, 0], ["skirmishers", 6, 5], ["skirmishers", 38, 5]],
+    upgrades: { skirmishers: ["ambush"] },
+    line: { who: "boss", text: "NO. BIGGER." },
+  },
+  {
+    squads: [["giant_bats", 4, 0], ["wolf_riders", 10, 3], ["wolf_riders", 36, 3], ["skirmishers", 22, 5]],
+  },
+];
+function theMarches(c: ScriptContext): EnemyTurn {
+  // the battle (0-based) in which the Boss lost for the second time
+  let losses = 0;
+  const takeover = c.winners.findIndex((w) => w === 0 && ++losses === 2);
+  if (takeover < 0) return { squads: fit(c.own, BOSS_WAVES[Math.min(c.round, BOSS_WAVES.length) - 1]) };
+  const t = TINKER_WAVES[Math.min(c.round - takeover - 2, TINKER_WAVES.length - 1)];
+  return { ...t, squads: fit(c.own, t.squads) };
+}
+
+// Tuned by simulation: the pike line wins, and so do steel and bows; never adding, all bows and a Ballista park lose.
+// Everyone loses the round the bats arrive, and the double raid takes both Keeps, even with a level on each.
+const THE_MARCHES: MissionDef = {
+  id: "wardens-8",
+  supply: 0,
+  units: [],
+  shop: ["knights", "crossbowmen", "ballista", "griffon_riders", "cleric", "pikemen", "giant"],
+  opening: [
+    ["knights", "crossbowmen"],
+    ["crossbowmen", "pikemen"],
+    ["knights", "pikemen"],
+  ],
+  hp: [400, 400],
+  towers: true,
+  upgrades: true,
+  veterancy: true,
+  map: "border-pass",
+  enemy: {
+    name: "The Boss",
+    units: ["grunts", "skirmishers", "wolf_riders", "troll", "ogre_brute", "giant_bats"],
+    rounds: Array(12).fill(theMarches),
+  },
+  briefing: [
+    { who: "archivist", text: "Marshal, the season final. The Boss has staked the whole border: the Marches, from the Toll Bridge to the hills." },
+    { who: "boss", text: "EVERYTHING. ALL OF IT. AND THE GOAT." },
+    {
+      who: "sergeant",
+      text: "Full Compact rules today. Nobody sees the other army before the horn. The Treasury offers an opening, and the whole armory is ours to unlock.",
+    },
+    { who: "tinker", text: "And if the Boss loses twice, it's my turn. I've been working on something. Several somethings." },
+    {
+      who: "archivist",
+      text: "Every page of the book applies. A Giant from the hills has offered to hire on, which the book doesn't cover. And there is one blank page at the back. It has been blank for four hundred years.",
+    },
+  ],
+  page: {
+    title: "Page 8: The Full Compact",
+    text: "Every commander chooses, every commander places, and no one sees the other's army before the horn.",
+    drill: "Every page at once.",
+    diagram: [["pikemen", "knights", "pikemen"], ["crossbowmen", "ballista", "crossbowmen"]],
+  },
+  objective: "Win the season final. Round 1 offers three Warden packs or the war chest, the whole armory is open, and the goblins stay hidden until the horn.",
+  win: [
+    { who: "sergeant", text: "Boring wins. A whole border's worth of boring." },
+    { who: "tinker", text: "I had ideas. Good ones. Nobody listened." },
+    { who: "boss", text: "...SAME TIME NEXT SEASON?" },
+    { who: "archivist", text: "The Marshal has written on the blank page. In ink." },
+  ],
+  lastPage: { title: "Page 9, in the Marshal's hand", text: "What we fielded at the Marches, and what held." },
+  hints: [
+    {
+      when: (c) => c.army.every((sq) => sq.round === 1),
+      line: { who: "sergeant", text: "Supply you don't spend doesn't fight, Marshal. Add champions every round: the goblins certainly will." },
+    },
+    {
+      when: (c) => !c.army.some((sq) => ["knights", "pikemen"].includes(sq.defId)),
+      line: { who: "sergeant", text: "Nothing in front of the bows, Marshal. The Boss sent his biggest, and they walked straight in. Steel in front." },
+    },
+    {
+      when: (c) => !c.army.some((sq) => ["crossbowmen", "griffon_riders"].includes(sq.defId)),
+      line: { who: "sergeant", text: "The Tinker's bats came over the line, and nothing of ours could reach them. Bows under the sky." },
+    },
+    {
+      when: keepFell,
+      line: {
+        who: "sergeant",
+        text: "The Tinker went for both Keeps at once, and the line lost its nerve. Steel beside the Keeps, or a level on each, before it comes.",
+      },
+    },
+    { line: { who: "sergeant", text: "Every page at once, Marshal: steel in front, bows behind, eyes up, Keeps guarded, veterans promoted." } },
+  ],
+  commendation: {
+    name: "Boring Wins",
+    text: "Win the final with only the two units your opening pack gave you.",
+    earned: (c) => {
+      const pack = new Set(c.army.filter((sq) => sq.free).map((sq) => sq.defId));
+      return pack.size > 0 && c.army.every((sq) => pack.has(sq.defId));
+    },
+  },
+  reference: {
+    wins: [
+      // the pike line: pikes and bows from the pack, more of both, Pike Wall, Skyhunters, promotions
+      [
+        { opening: 1, squads: [["pikemen", 18, 21]] },
+        { squads: [["pikemen", 28, 21], ["crossbowmen", 19, 23], ["crossbowmen", 27, 23]], promote: true },
+        { squads: [["pikemen", 13, 21], ["crossbowmen", 30, 25]], upgrades: [["crossbowmen", "skyhunters"]], promote: true },
+        { squads: [["pikemen", 33, 21], ["crossbowmen", 14, 23], ["crossbowmen", 31, 23]], upgrades: [["pikemen", "pike_wall"]], promote: true },
+        { squads: [["pikemen", 8, 21], ["crossbowmen", 16, 25], ["crossbowmen", 38, 23], ["crossbowmen", 6, 23]], promote: true },
+        { squads: [["pikemen", 38, 21], ["crossbowmen", 2, 21], ["crossbowmen", 43, 21]], upgrades: [["crossbowmen", "repeaters"]], promote: true },
+        { squads: [["pikemen", 3, 25], ["pikemen", 41, 25], ["crossbowmen", 9, 25], ["crossbowmen", 35, 25]], promote: true },
+        { squads: [["knights", 22, 20], ["knights", 28, 20], ["crossbowmen", 22, 26], ["crossbowmen", 26, 26]], promote: true },
+      ],
+      // the pike line, with a level on each Keep and pikes beside them before the Tinker's raid
+      [
+        { opening: 1, squads: [["pikemen", 18, 21]] },
+        { squads: [["pikemen", 28, 21], ["crossbowmen", 19, 23], ["crossbowmen", 27, 23]], promote: true },
+        { squads: [["pikemen", 8, 21]], keeps: [0, 1], promote: true },
+        { squads: [["pikemen", 34, 21], ["pikemen", 13, 21]], upgrades: [["crossbowmen", "skyhunters"]], promote: true },
+        { squads: [["crossbowmen", 31, 23], ["crossbowmen", 14, 23], ["crossbowmen", 16, 25], ["crossbowmen", 6, 23], ["crossbowmen", 38, 23]], upgrades: [["pikemen", "pike_wall"]], promote: true },
+        { squads: [["pikemen", 38, 25], ["pikemen", 3, 21], ["crossbowmen", 30, 25], ["crossbowmen", 43, 22]], promote: true },
+        { squads: [["pikemen", 3, 25], ["pikemen", 41, 23], ["crossbowmen", 9, 25]], upgrades: [["crossbowmen", "repeaters"]], promote: true },
+      ],
+    ],
+    loses: [
+      // never adds after the opening
+      [{ opening: 0 }],
+      // all bows
+      [
+        { opening: 0, squads: [["crossbowmen", 26, 22], ["crossbowmen", 16, 22]] },
+        [["crossbowmen", 14, 24], ["crossbowmen", 30, 24], ["crossbowmen", 10, 22], ["crossbowmen", 34, 22]],
+        [["crossbowmen", 6, 22], ["crossbowmen", 38, 22], ["crossbowmen", 2, 22], ["crossbowmen", 42, 22], ["crossbowmen", 20, 22]],
+        { squads: [["crossbowmen", 24, 23], ["crossbowmen", 17, 24], ["crossbowmen", 27, 24], ["crossbowmen", 6, 24]], upgrades: [["crossbowmen", "repeaters"]] },
+        [["crossbowmen", 38, 24], ["crossbowmen", 2, 24], ["crossbowmen", 42, 24], ["crossbowmen", 14, 26], ["crossbowmen", 30, 26], ["crossbowmen", 6, 26], ["crossbowmen", 38, 26]],
+      ],
+      // a Ballista park
+      [
+        { opening: 0, squads: [["ballista", 14, 22]] },
+        [["ballista", 26, 22], ["ballista", 30, 22], ["ballista", 8, 21], ["ballista", 34, 21]],
+        { squads: [["ballista", 6, 22], ["ballista", 38, 21], ["ballista", 2, 22]], upgrades: [["ballista", "heavy_bolts"]] },
+        [["ballista", 42, 21], ["ballista", 17, 23], ["ballista", 2, 25], ["ballista", 44, 24], ["ballista", 6, 25], ["ballista", 40, 25]],
+      ],
+    ],
+    // Knights and Crossbowmen from the pack, and nothing else: it loses only two rounds
+    commended: [
+      { opening: 0, squads: [["crossbowmen", 26, 25], ["crossbowmen", 16, 25]] },
+      { squads: [["knights", 25, 20], ["knights", 13, 20]], promote: true },
+      { squads: [["knights", 31, 20], ["crossbowmen", 28, 22], ["crossbowmen", 17, 22], ["crossbowmen", 22, 22]], promote: true },
+      { squads: [["knights", 7, 20], ["knights", 37, 20]], upgrades: [["crossbowmen", "skyhunters"]], promote: true },
+      { squads: [["knights", 2, 22], ["knights", 42, 22], ["crossbowmen", 8, 22], ["crossbowmen", 36, 22], ["crossbowmen", 31, 22]], promote: true },
+      { squads: [["knights", 19, 24], ["knights", 25, 24]], upgrades: [["knights", "shield_wall"]], promote: true },
+      { squads: [["knights", 8, 25], ["knights", 36, 25], ["crossbowmen", 13, 25], ["crossbowmen", 31, 25], ["crossbowmen", 3, 25]], promote: true },
+    ],
+  },
+};
+
 export const CAMPAIGNS: CampaignInfo[] = [
   {
     id: "wardens",
@@ -414,11 +1327,11 @@ export const CAMPAIGNS: CampaignInfo[] = [
       { title: "Hands Off", teaser: "A goat has wandered across the border at Millbrook. Settle it on the Field.", play: HANDS_OFF },
       { title: "The Appeal", teaser: "The goblins appeal the goat. Under the Compact, an appeal is a longer match.", play: THE_APPEAL },
       { title: "Two Keeps", teaser: "Someone has painted something rude on the West Keep.", play: TWO_KEEPS },
-      { title: "Under the Bridge", teaser: "The goblins have adopted the troll under the toll bridge. And its toll." },
-      { title: "Plain Steel", teaser: "A goblin Tinker accuses the Wardens of stealing the wheelbarrow." },
-      { title: "Look Up", teaser: "The Compact draws borders on the ground. The goblins have noticed." },
-      { title: "Old Grumm", teaser: "Thirty years ago, an ogre ate the Sergeant's helmet." },
-      { title: "The Marches", teaser: "The season final. The Boss stakes the whole border." },
+      { title: "Under the Bridge", teaser: "The goblins have adopted the troll under the toll bridge. And its toll.", play: UNDER_THE_BRIDGE },
+      { title: "Plain Steel", teaser: "A goblin Tinker accuses the Wardens of stealing the wheelbarrow.", play: PLAIN_STEEL },
+      { title: "Look Up", teaser: "The Compact draws borders on the ground. The goblins have noticed.", play: LOOK_UP },
+      { title: "Old Grumm", teaser: "Thirty years ago, an ogre ate the Sergeant's helmet.", play: OLD_GRUMM },
+      { title: "The Marches", teaser: "The season final. The Boss stakes the whole border.", play: THE_MARCHES },
     ],
   },
   {

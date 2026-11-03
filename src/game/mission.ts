@@ -1,5 +1,6 @@
+import { OPENING_PACKS } from "../data/openings";
 import { RULES } from "../data/rules";
-import type { Line, MissionContext, MissionDef, SquadSpec } from "../data/campaign";
+import type { EnemyTurn, Line, MissionContext, MissionDef, SquadSpec } from "../data/campaign";
 import type { BattleResult } from "../sim/battle";
 import type { PlacedSquad } from "../sim/types";
 import type { AiPlan } from "./ai";
@@ -9,25 +10,39 @@ import type { MatchState } from "./match";
 // enemy that plays a script instead of the AI.
 
 export function missionSquads(specs: SquadSpec[], round: number, tag: string): PlacedSquad[] {
-  return specs.map(([defId, x, y, rot], i) => ({ uid: `${tag}-${round}-${i}`, defId, x, y, rot: rot || undefined, round }));
+  return specs.map(([defId, x, y, rot, level], i) => ({ uid: `${tag}-${round}-${i}`, defId, x, y, rot: rot || undefined, round, level: level && level > 1 ? level : undefined }));
 }
 
-// The squads the enemy's script adds in a round. `seen` is the player's army as the enemy saw it: squads placed in
-// earlier rounds, as the AI sees it.
-export function scriptedSquads(m: MissionDef, round: number, seen: PlacedSquad[]): SquadSpec[] {
-  const r = m.enemy.rounds[round - 1];
-  if (!r) return [];
-  return typeof r === "function" ? r({ round, seen: seen.filter((sq) => sq.round < round) }) : r;
+// What the enemy's script adds in a round, from the state at the start of its deployment: `seen` is the player's
+// army as the enemy saw it (squads placed in earlier rounds, as the AI sees it).
+export function scriptedTurn(m: MissionDef, state: Pick<MatchState, "round" | "armies" | "upgrades" | "history">): EnemyTurn {
+  const r = m.enemy.rounds[state.round - 1];
+  if (!r) return { squads: [] };
+  const seen = state.armies[0].filter((sq) => sq.round < state.round);
+  const winners = state.history.map((h) => h.winner);
+  const lost = winners.filter((w) => w === 0).length;
+  const t = typeof r === "function" ? r({ round: state.round, seen, upgrades: state.upgrades[0], winners, lost, own: state.armies[1] }) : r;
+  return Array.isArray(t) ? { squads: t } : t;
+}
+
+// A mission's opening packs, as OPENING_PACKS indexes.
+export function missionPacks(m: MissionDef): number[] {
+  return (m.opening ?? []).map(([a, b]) => {
+    const i = OPENING_PACKS.findIndex((p) => p.units.length === 2 && p.units.some((u) => u.id === a) && p.units.some((u) => u.id === b));
+    if (i < 0) throw new Error(`no opening pack of ${a} and ${b}`);
+    return i;
+  });
 }
 
 // A revealed round 1 is placed before the player deploys. Its squads count as round 0, so the deploy screen shows
 // them the way it shows any army from an earlier round.
 export function newMissionMatch(m: MissionDef): MatchState {
+  const start = { round: 1, armies: [[], []] as [PlacedSquad[], PlacedSquad[]], upgrades: [{}, {}] as MatchState["upgrades"], history: [] };
   return {
     round: 1,
     hp: m.hp ?? [1, 1], // one battle: the winner's survivors always deal at least RULES.damagePerSquad
     supply: [m.supply, 0],
-    armies: [[], m.enemy.revealed ? missionSquads(scriptedSquads(m, 1, []), 0, "m") : []],
+    armies: [[], m.enemy.revealed ? missionSquads(scriptedTurn(m, start).squads, 0, "m") : []],
     unlocked: [[...m.units], [...m.enemy.units]],
     upgrades: [{}, { ...m.enemy.upgrades }],
     towerLevels: [RULES.towers.map(() => 0), RULES.towers.map(() => 0)],
@@ -35,7 +50,7 @@ export function newMissionMatch(m: MissionDef): MatchState {
     veterancy: m.veterancy,
     map: m.map,
     openings: [
-      { packs: [], choice: null },
+      { packs: missionPacks(m), choice: null },
       { packs: [], choice: null },
     ],
     phase: "deploy",
@@ -44,13 +59,16 @@ export function newMissionMatch(m: MissionDef): MatchState {
 }
 
 // The enemy's turn this round, from the state at the start of deployment: the script's squads (round 1's are
-// already on the Field when revealed).
+// already on the Field when revealed) and the upgrades it buys.
 export function missionPlan(m: MissionDef, state: MatchState): AiPlan {
-  const specs = state.round === 1 && m.enemy.revealed ? [] : scriptedSquads(m, state.round, state.armies[0]);
+  const t: EnemyTurn = state.round === 1 && m.enemy.revealed ? { squads: [] } : scriptedTurn(m, state);
+  const upgrades = Object.entries(t.upgrades ?? {}).flatMap(([unitId, ids]) =>
+    ids.filter((id) => !state.upgrades[1][unitId]?.includes(id)).map((upgradeId) => ({ unitId, upgradeId })),
+  );
   return {
-    squads: missionSquads(specs, state.round, "m"),
+    squads: missionSquads(t.squads, state.round, "m"),
     unlocks: [],
-    upgrades: [],
+    upgrades,
     towerUpgrades: [],
     promotions: [],
     spent: 0,
@@ -69,7 +87,7 @@ export interface MissionOutcome {
 // every battle of the match, in order (the last is the one that ended it).
 export function missionOutcome(m: MissionDef, state: MatchState, results: BattleResult[]): MissionOutcome {
   const won = state.hp[0] > 0 && state.hp[1] <= 0;
-  const c: MissionContext = { army: state.armies[0], result: results[results.length - 1], results, towerLevels: state.towerLevels[0] };
+  const c: MissionContext = { army: state.armies[0], result: results[results.length - 1], results, towerLevels: state.towerLevels[0], upgrades: state.upgrades[0] };
   return {
     won,
     commended: won && !!m.commendation?.earned(c),

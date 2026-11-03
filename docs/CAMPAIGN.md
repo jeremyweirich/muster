@@ -1,6 +1,7 @@
 # Common Ground: campaign plan (Nov 2026)
 
-Status: **Wardens missions 1–3 are built and playable** (the Story tab). The rest is a plan. Inputs: `docs/VISION.md`
+Status: **the Wardens campaign is built and playable** (missions 1–8, the Story tab; Nov 2, 2026). The goblin and
+elemental campaigns are a plan. Inputs: `docs/VISION.md`
 (the story, which wins on tone), DESIGN.md (mechanics) and the roster as it stands in `src/data/units.ts`. This is
 about the order in which the game, its mechanics and its factions are introduced. Names in *italics* are placeholders.
 
@@ -78,8 +79,8 @@ campaign, and SHOUTS. The Tinker shows up halfway, which seeds Campaign 2.
 
 **Arc.** The Marshal trusts the book, then learns that the book can grow. Mission 7 revives a page nobody has turned to
 in centuries. Mission 8's last page is the first one the Marshal writes. The owner loves the idea of **generating it from the
-player's own winning board**, drawn as a drill-book diagram, but it's **parked** until stored progress is decided (§5).
-Until then, the page can be generated and shown at the end of the finale, without being kept.
+player's own winning board**, drawn as a drill-book diagram. Built as shown, not kept: the finale's debrief draws it;
+keeping it is parked (§5).
 
 **Roster.** Everything the campaign needs is built: the six Warden units and the six goblins (Grunts, Skirmishers,
 Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that hit air (decided), so Griffons
@@ -88,10 +89,10 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 | # | Mission | Dispute | New for the player | Warden unit | Goblin unit | HP |
 |---|---|---|---|---|---|---|
 | 1 | Hands Off | a goat | placement, Fight, the hands-off rule | Knights, Crossbowmen | Grunts | 1 battle |
-| 2 | The Appeal | the goat, appealed | rounds, locked squads, reading their last army, HP | | Skirmishers | 60 |
+| 2 | The Appeal | the goat, appealed | rounds, locked squads, reading their last army, HP | | Skirmishers | 70 / 90 |
 | 3 | Two Keeps | a rude drawing on a Keep | towers, collapse Daze, flanks, tower levels | | Wolf Riders | 100 |
-| 4 | Under the Bridge | the bridge toll | unlocks, big units, regeneration | Ballista | Troll | 140 |
-| 5 | Plain Steel | the wheelbarrow patent | upgrades, yours and theirs | Cleric | the Tinker's gadgets | 180 |
+| 4 | Under the Bridge | the bridge toll | unlocks, big units, regeneration | Ballista | Troll | 160 / 140 |
+| 5 | Plain Steel | the wheelbarrow patent | upgrades, yours and theirs | Cleric | the Tinker's gadgets | 180 / 200 |
 | 6 | Look Up | who owns the sky | the air layer | Griffon Riders | Giant Bats | 240 |
 | 7 | Old Grumm | an old grudge | veterancy, promotions | Dwarven Pikemen | Ogre Brute (veteran) | 300 |
 | 8 | The Marches | the border itself | the full Compact: opening offer, blind from round 1 | (all) | (all) | 400 |
@@ -150,51 +151,99 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   ends raids. The hints say so.
 - **Commendation.** *Not One Stone*: win without losing a Keep (Knights beside both Keeps from round 1 earn it).
 
-### 4. Under the Bridge
-- **Dispute.** The goblins have adopted the troll under the toll bridge and claim its toll.
-- **Page 4.** "The armory holds more than the book's first pages. Each new engine costs the Treasury once per Field."
-- **Punch.** A Troll walks through Knights: its Berserk rage builds through the armor ("the rage builds through the
-  armor") and it regenerates between hits.
-- **Teaches.** Unlocks are a one-time cost per match. The Ballista hunts the biggest target, and big things need
-  specialists. A light seed: Burning stops the troll healing (Crossbowmen *Fire Bolts* comes in mission 5).
+### 4. Under the Bridge (built)
+- **Dispute.** The goblins have adopted the troll under the toll bridge at Hob's Crossing, and claim its toll.
+- **Page 4, The Armory.** "The armory holds more than the book's first pages. Each new engine costs the Treasury once
+  per Field." Drill: *Big things need engines. Engines need steel in front.*
+- **Kit.** 400 supply, Knights and Crossbowmen; the **Ballista in the shop** (the first unlock: 100 once, then 100 a
+  squad). **HP 160 for the player, 140 for the Boss.** Keeps on, Keeps tab only, veterancy off. Map: **Toll Bridge**
+  (new): a pond either side of the middle, so the middle is the short way across.
+- **Enemy.** Round 1: three Grunt mobs and Skirmishers. Rounds 2 and 3: three troll squads each. Round 4: three more and
+  two mobs on the flanks. Rounds 5 and 6: four troll squads each, so the script never runs dry.
+- **Punch.** The trolls beat a Knight line ("the rage builds through the armor").
+- **Checked by simulation:** Ballistae behind steel win, whether bought in round 1, the round the trolls show, or the
+  round after (99–136 HP left, 4–5 rounds). Steel and bows only, Ballistae with no new steel in front, all bows and
+  never adding lose. **What the tuning found:** two troll squads mixed into the mob changed nothing (the Boss's own
+  Grunts soak the hits, and "grunts beat trolls"); the punch needed three, and a fifth and sixth round, or steel alone
+  won late. A Ballista bought in round 1 loses that round (one bolt, one goblin), which the debrief explains.
+- **Commendation.** *Bridge Held*: win with Ballistae on the Field and lose none of them in the last battle.
+- **Debrief.** The troll goes back under the bridge and charges the goblins too. The Boss: "I'M TELLING THE TINKER."
 
-### 5. Plain Steel
-- **Dispute.** The Tinker (first appearance) accuses the Wardens of stealing the wheelbarrow. Archivist: "We have had
-  wheelbarrows for four hundred and twelve years."
-- **Page 5.** "A drill improves every squad that knows it, even those already on the Field."
-- **Punch.** The Tinker's gadgets: *Scrap Armor* Grunts (each blocks the first hit it takes, so every big bolt is
-  wasted on one) and a Troll with *Thick Blood* (it heals even while Burning). The Tinker announces odds for each
-  one, all wrong.
-- **Teaches.** Upgrades apply to every squad, including locked ones. You can see the enemy's upgrades.
-  Counter-upgrades: *Repeaters* (many small bolts, the Wardens' chaff clear) against armored Grunts. The Cleric heals
-  at base, but its prayers (*Blessing*, *Battle Hymn*) are what make it shine, so it's the unit that sells upgrades.
+### 5. Plain Steel (built)
+- **Dispute.** The Tinker (first appearance, and the enemy commander) accuses the Wardens of stealing the wheelbarrow.
+  Archivist: "We have had wheelbarrows for four hundred and twelve years."
+- **Page 5, Drills.** "A drill improves every squad that knows it, even those already on the Field." Drill: *Read
+  their stars. Answer with a drill.*
+- **Kit.** 400 supply, Knights and Crossbowmen; Ballista and **Cleric** in the shop. HP 180 / 200. Keeps on,
+  **upgrades on**, veterancy off. Map: Standing Stones.
+- **Enemy.** Gadgets arrive by round (`EnemyTurn.upgrades`): round 2 adds two mobs and archers and gives **every**
+  Grunt *Scrap Armor*, including those placed in round 1; round 3 brings trolls with *Thick Blood*; then trolls and
+  mobs to round 6. The Tinker gives wrong odds in the briefing.
+- **Punch.** Armored mobs shrug off the first bolt each, and the player loses round 2.
+- **Checked by simulation:** any plan with *Repeaters* wins, bought before round 1, in round 2 or after the armor shows
+  (59–129 HP left, 5 rounds). The same supply spent on more Crossbowmen or Ballistae instead loses, and so does the
+  wrong drill (Knights' *Veterans*). **What the tuning found:** the Cleric isn't the answer here. A Cleric and a
+  prayer cost about 500 supply of non-fighters, and every plan that bought them lost a round that more steel won.
+- **Commendation.** *Well Drilled*: once their armor shows, win every round after it.
+- **Debrief.** "Boring, repeated quickly, wins faster." The Boss: "NOBODY OWNS THE SKY."
 
-### 6. Look Up
+### 6. Look Up (built)
 - **Dispute.** "The Compact draws borders on the ground. The goblins have noticed."
-- **Page 6.** "Knights cannot strike what flies. Know which of your champions can."
-- **Punch.** Giant Bats fly over the line and eat the Crossbowmen.
-- **Teaches.** Two layers. Crossbowmen, Ballista and Griffons hit air; Knights, Pikemen and Trolls don't. *Skyhunters*
-  is the counter-upgrade. Griffons are fast and good against bats, but weak against massed bolts and Skirmishers.
+- **Page 6, Look Up.** "Knights cannot strike what flies. Know which of your champions can." Drill: *Bows under the
+  sky. Wings against wings.*
+- **Kit.** 400 supply, Knights and Crossbowmen; Ballista, Cleric and **Griffon Riders** in the shop. HP 240 each.
+  Upgrades on. Map: The Mire (it slows anything on foot, nothing with wings).
+- **Enemy.** Round 1: mobs, a troll, Skirmishers. Round 2: **four squads of Giant Bats with *Savage Claws***. Then more
+  bats, Skirmishers from round 4 (they shoot fliers), trolls, to round 7.
+- **Punch.** The bats fly over the line and land on the bows and engines.
+- **Checked by simulation:** Crossbowmen behind the steel win (126–128 HP left, 6 rounds), sooner with *Skyhunters*;
+  Griffons alongside the bows win too. Steel alone, Ballistae (the bats land on them) and Griffons in place of bows
+  lose. **What the tuning found:** two bat squads did nothing (Crossbowmen beat bats at equal supply), so it takes four
+  with claws. At these prices more bows beat a pricier flier, and Griffons die to the Skirmishers, so the commendation
+  is what asks for them.
+- **Commendation.** *Wings Against Wings*: win with Griffon Riders on the Field.
+- **Debrief.** "Looking up is boring too." The Boss: "I'M CALLING GRUMM." Sergeant: "...Grumm?"
 
-### 7. Old Grumm
+### 7. Old Grumm (built)
 - **Dispute.** Thirty years ago, at a Field match, Old Grumm ate the Sergeant's helmet.
-- **Page 7.** The pikes page. Archivist: "No one has turned to it in two hundred years. There was nothing large
-  enough to need it."
-- **Punch.** Grumm, a Lv3 Ogre Brute with *Warboss* (calls a grunt every 5 s and drives the goblins around him),
-  plus Wolf Riders. Grumm is the player's first look at a veteran.
-- **Teaches.** Veterancy: squads that deal damage earn levels, and you pay to promote them. The answer to a legend is
-  a cheap specialist: Dwarven Pikemen (×3.5 against large units and cavalry, *Pike Wall* against melee). Seed for
-  Campaign 2: Pike Wall makes stabbing goblins kill themselves.
+- **Page 7, The Pike Line.** "Against the largest, the longest. Hold them at the point." Drill: *Pikes where the big
+  ones walk. Promote what lives.* The Archivist: no one has turned to it in two hundred years.
+- **Kit.** 400 supply, Knights and Crossbowmen; Ballista, Cleric, Griffons and **Dwarven Pikemen** in the shop. HP 300
+  each. Upgrades on, **veterancy on**. Map: Broken Hills.
+- **Enemy.** Round 2 brings **Grumm, a level-3 Ogre Brute with *Warboss*** (`SquadSpec`'s fifth element is a level).
+  Then wolves, trolls and more ogres, to round 7.
+- **Punch.** Grumm walks off the Field alive in round 2, whatever the player brings.
+- **Checked by simulation:** plans that promote their veterans win (109–244 HP left, 7–8 rounds); the same pike plan
+  that puts that supply into fresh squads instead of promotions loses. **What the tuning found:** the Pikemen are a
+  winning choice but **not the strongest one**. Grumm's cleave kills two or three dwarves a swing (600 damage against
+  300 HP each), and Knights and bows win with more HP to spare, against level 2 Grumm too and against rounds made only
+  of wolves, trolls and ogres. Making the pike page the clear answer is a balance question (Pikemen against splash
+  veterans), not a mission one, so it's left for the owner. The commendation asks for promoted pikes.
+- **Commendation.** *Old Page, New Ink*: win with a promoted squad of Dwarven Pikemen on the Field.
+- **Debrief.** The Sergeant gets the helmet back, chewed. The Boss stakes the whole border.
 
-### 8. The Marches
-- **Dispute.** The season final. The Boss stakes the whole border.
-- **Page 8.** The full Compact: the opening offer, both sides blind from round 1, everything available.
-- **Enemy, in two phases.** First the Boss (Easy): bigger and more. Ogres, Trolls, Wolves and Grunts throw themselves
-  onto the pike line and lose. After about two lost rounds the Tinker takes over (Hard): a sudden bat swarm, a double
-  Keep raid, Skirmishers that don't touch the pikes. The Boss keeps shouting "NO. BIGGER."
-- **Teaches.** The whole counter web at once: punch, counterpunch, and a counter to the counter.
-- **Ending.** The pike line wins, and the Boss had no answer to it. The Tinker *did* have ideas, but nobody listened.
-  The Marshal writes page 9 in their own hand, drawn from the player's board (parked, §5).
+### 8. The Marches (built)
+- **Dispute.** The season final. The Boss stakes the whole border ("AND THE GOAT").
+- **Page 8, The Full Compact.** "Every commander chooses, every commander places, and no one sees the other's army
+  before the horn." Drill: *Every page at once.*
+- **Kit.** **The opening offer** (`opening`, packs named by their units): Knights and Crossbowmen, Crossbowmen and
+  Pikemen, Knights and Pikemen, or the war chest. Nothing else is free; the whole Warden armory and **the Giant** (the
+  first independent, 200 to unlock) are in the shop. HP 400 each. Keeps, upgrades and veterancy on. Map: **Border
+  Pass** (new). Blind from round 1.
+- **Enemy, in two phases**, scripted rather than the AI so the story beats land and the tests can fight it. The Boss
+  sends his biggest (trolls, ogres, wolves, mobs) until he has lost two battles (`ScriptContext.winners`); then the
+  Tinker takes over: **three squads of bats with *Shriek***, then **Tower Raiders wolves on both flanks**, then bats
+  and *Ambush* Skirmishers, and the last wave repeats. Waves are fitted around the goblins already on the Field
+  (`fit`). The Tinker and the Boss speak in the sidebar on the rounds they change plan (`EnemyTurn.line`).
+- **Checked by simulation:** the pike line wins (267 HP left, 8 rounds), and so do Knights and bows (258); pikes with
+  levels on both Keeps win (216). Never adding, all bows and a Ballista park lose. Everyone loses the round the bats
+  arrive, and the double raid takes both Keeps even with a level on each (as in mission 3, levels only buy time).
+  **What the tuning found:** a Tinker wave much bigger than the round's income flattens every plan, because each wave
+  stays on the Field; and *Pike Wall* answers the bats on its own, since they claw in melee. The Giant, offered here
+  as §9 planned, doesn't pay off against this enemy (big units, fliers and wolves, not mobs): every Giant plan lost.
+- **Commendation.** *Boring Wins*: win the final with only the two units your opening pack gave you.
+- **Ending.** "...SAME TIME NEXT SEASON?" On a win the debrief draws the player's own board as **Page 9, in the
+  Marshal's hand** (`lastPage`: ranks by depth, front rank first). It's shown, not kept (§5).
 
 ## 3. Campaign 2, Goblins: The Tinker's Odds
 
@@ -307,7 +356,9 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
 
 - **The player's winning board becomes the Drill Book's last page** (Wardens mission 8). Record the player's army from
   the finale's deciding round and draw it as a formation diagram: "Page 9, in the Marshal's hand." The owner called it
-  "genius". Story progress is stored now, so the page could be kept alongside it, and later campaigns could refer back
+  "genius". **The page is drawn and shown** in the finale's debrief (`lastPage`, `boardDiagram` in
+  `src/ui/Mission.tsx`), from the player's army as it fought the last battle; it isn't kept. Story progress is stored
+  now, so the page could be kept alongside it, and later campaigns could refer back
   to it (for example the goblin campaign opening against *your* page-9 army, replaying the player's real finale
   instead of an authored one). Check with the owner before storing more than progress.
 
@@ -321,22 +372,26 @@ the report and replays all work unchanged. The sim is untouched.
 |---|---|
 | `supply` | the player's supply in round 1 (later rounds get the standard income) |
 | `units` | the player's units, unlocked and free; `shop` lists more the player may unlock (mission 4 on) |
+| `opening` | round 1 offers these packs (each named by its two units) or the war chest, as a skirmish does (mission 8) |
 | `hp` | each side's HP; absent means **one battle decides it**, and the HP bars and damage tally are hidden |
 | `towers`, `upgrades` | whether the Keeps stand and whether the Upgrades tab exists. With Keeps but no upgrades, the tab is just **Keeps** (mission 3) |
 | `veterancy` | whether squads earn XP (off until mission 7) |
 | `map` | the map (`src/data/terrain.ts`); absent: the open field |
 | `enemy.units` | the enemy's unlocks, shown like the AI's |
-| `enemy.rounds` | squads added each round, in field coordinates (the enemy deploys at the top). A round can be a function of what the enemy saw (`seen`: the player's squads from earlier rounds), e.g. `onFlank(thinFlank(seen), …)` puts squads on the flank the player left thin |
+| `enemy.rounds` | squads added each round, in field coordinates (the enemy deploys at the top); a squad's fifth element is its level (Grumm). A round can instead be `{ squads, upgrades, line }`: upgrades it buys that round (mission 5's gadgets) and a line someone says in the sidebar while the player deploys. A round can be a function of the `ScriptContext`: what the enemy saw (`seen`: the player's squads from earlier rounds), who won each battle (`winners`, `lost`) and its own army (`own`), e.g. `onFlank(thinFlank(seen), …)` puts squads on the flank the player left thin, and `fit(own, …)` moves squads to free spots when the layout depends on how the match went (mission 8's two phases) |
 | `enemy.upgrades` | upgrades the enemy has from the start, shown as ★ like the AI's |
 | `enemy.revealed` | round 1's squads are placed and visible before the player deploys |
 | `briefing`, `page` | lines from the cast, then the Drill Book page (a title, its text and an optional drill diagram) |
 | `objective` | one line in the sidebar while deploying |
 | `win`, `hints` | the debrief: lines on a win; on a loss, the first hint whose condition matches what the player fielded |
 | `commendation` | a name, how to earn it, and a check against every battle of the match (`results`) |
-| `reference` | plans that must win, must lose, and must earn the commendation: per round, squads to add, or squads plus Keep levels to buy |
+| `lastPage` | on a win, the debrief draws the player's board as a page of the book (mission 8's page 9) |
+| `reference` | plans that must win, must lose, and must earn the commendation: per round, squads to add, or `{ squads, keeps, upgrades, promote, opening }` (`PlanTurn`). Shop units unlock on first use, at their price; `promote` promotes every squad with a level waiting, with what's left |
 
 `src/game/mission.ts` builds the match (`newMissionMatch`), the enemy's scripted turn (`missionPlan`) and the outcome
-(`missionOutcome`: won, and the commendation). `tests/campaign.test.tsx` checks every mission's data (squads in the
+(`missionOutcome`: won, and the commendation). `src/game/missionRun.ts` plays a plan against the script the way the
+game does, and reports anything a real player couldn't do (overspending, misplacing, units the mission doesn't
+offer); `tests/campaign.test.tsx` and `npm run mission` both use it. The test checks every mission's data (squads in the
 enemy zone, no overlaps, units that exist) and plays its **reference armies**: a mission lists armies that should win
 and armies that should lose, and the test fights them. That's how a mission's punch and counterpunch stay true when
 units are rebalanced.
@@ -345,7 +400,7 @@ The Story tab (`#story`) lists the campaigns, and a playable mission opens at `#
 then the Field, then the debrief with Try again and Next. The tab stays mounted once opened, like Play, so a Codex
 link mid-mission doesn't lose it.
 
-### Making a mission (the recipe used for missions 1–3)
+### Making a mission (the recipe used for missions 1–8)
 
 1. **Story first.** Read `docs/VISION.md` and this mission's entry above: the dispute, the page, the punch and the
    counterpunch, the commendation. Check the punch against `RELATIONS` in `src/data/balance.ts` (who beats whom, and
@@ -368,6 +423,18 @@ link mid-mission doesn't lose it.
    - Rounds after the script ends are free wins for the player (the enemy adds nothing), so keep the script going
      until the target length, or a careless plan wins late.
    - A map can make or break a punch (the raid lands on Long Grass, not on the open field).
+
+   Lessons from 4–8:
+   - Every squad the enemy adds fights in every later battle, so one extra squad early swings the whole match, and a
+     wave much bigger than the round's income flattens every plan. Grow the script about as fast as the income.
+   - Check the punch in a mixed fight, not just in `RELATIONS`: the Boss's own Grunts soaked hits meant for his trolls
+     (mission 4), and Crossbowmen shot down two bat squads without trouble (mission 6).
+   - Count the supply carefully: a plan that overspends looks like a win until the runner reports it. Promotions spend
+     only what's left, so a plan that spends everything never promotes.
+   - When the new unit is a valid but not the best answer in the sim, say so in the mission entry and let the
+     commendation ask for it, rather than bending the open roster (missions 5–8).
+   - For quick iteration, a scratch script can import `MISSIONS` and `runMission` and try many plans and enemy variants
+     at once; paste the winner into `campaign.ts`.
 5. **Keep the clearest plans as `reference`** (`wins`, `loses`, `commended`), only those with a clear margin, so a
    small rebalance doesn't flip them; comment what each one does. `npm test` then fights them on every change.
 6. **Text:** briefing (3–5 lines, the cast's voices from VISION.md), page and drill, objective, win lines (seed the
@@ -376,16 +443,18 @@ link mid-mission doesn't lose it.
 7. **Check it on screen** (Playwright, CLAUDE.md "Verifying UI changes"; the debug panel's "Open every story mission"
    skips the earlier ones), then update this file's mission entry with what the tuning found.
 
-Not built yet (each arrives with the mission that needs it): AI enemies limited to a pool (the Boss, the Tinker), a
-"topple a Keep" win condition, a two-phase enemy (mission 8), and `npm run playtest -- --mission N`.
+Not built yet (each arrives with the mission that needs it): AI enemies limited to a pool (the Boss, the Tinker; the
+Wardens campaign scripts every enemy, mission 8's two phases included), a "topple a Keep" win condition, and
+`npm run playtest -- --mission N`.
 
 ## 7. Plan of attack
 
 1. ~~**Goblin roster rework**~~ **Done (Oct 2026).**
 2. ~~**Mission framework**~~ **Done (Nov 2026)** (§6).
-3. ~~**Missions 1–3**~~ **Built (Nov 2, 2026).** Next: the owner playtests them as onboarding.
-4. Missions 4–8, then the replay-opener tech for Goblin mission 1 (an authored version of the Wardens finale, played
-   from the other side, since nothing is stored between missions).
+3. ~~**Missions 1–3**~~ **Built (Nov 2, 2026).**
+4. ~~**Missions 4–8**~~ **Built (Nov 2, 2026).** Next: the owner playtests them, then the replay-opener tech for Goblin
+   mission 1 (an authored version of the Wardens finale, played from the other side, since nothing is stored between
+   missions).
 5. Goblin campaign. Simulate the elementals' authored fights at the same time, then build their campaign.
 
 ## 8. Owner decisions
@@ -410,7 +479,7 @@ keep the matches different from each other. Plan (checked by simulation when eac
 
 | Independent | Hole it fills | Introduced in | Map and why |
 |---|---|---|---|
-| **Giant** | splash artillery: the Wardens have none | Wardens 8, *The Marches* | a rocky border pass. The Boss throws swarms at the pike line, and the Marshal hires outside the book for the first time: the book can grow |
+| **Giant** | splash artillery: the Wardens have none | Wardens 8, *The Marches* (built: in the shop, on Border Pass) | a rocky border pass, where the Marshal hires outside the book for the first time: the book can grow. **Tuning found** the finale's goblins are big units, fliers and wolves rather than swarms, so the Giant doesn't pay off there; a mission with mobs would show it off better |
 | **Bog Toad Riders** | anti-air and anti-medium for the goblins | Goblins 5, *Snobs* | a marsh of ponds and rough ground. Cloudlings and a flying Air Elemental own the sky until the toads pull them down (*Gulp*) |
 | **Dragon** | the late-game flier | Elementals 7, *The Field Is a Weapon* | Long Grass: the Wardens' crossbows hide in it from every ground shooter, but fliers see into grass, and the Dragon's breath splashes |
 
