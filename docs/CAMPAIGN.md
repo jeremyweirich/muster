@@ -1,4 +1,4 @@
-# Common Ground: campaign plan (Nov 2026)
+# Common Ground: campaigns
 
 Status: **the Wardens campaign is built and playable** (missions 1–8, the Story tab), with the owner's copy pass in
 (`docs/COPY.md`). The goblin and elemental campaigns are a plan. Inputs: `docs/VISION.md`
@@ -41,7 +41,7 @@ authored armies (a test per mission, §6), not by bending the open roster.
 - **No army carries over between missions.** Every Field match is a new match under the Compact. That avoids the
   veterancy snowball and needs no saved state. Progress is the *book*: each mission adds a page, and a page makes a
   unit or mechanic available in later missions.
-- **Progress is stored, and missions are played in order** (owner, Nov 2, 2026). This browser remembers which
+- **Progress is stored, and missions are played in order.** This browser remembers which
   missions were won and which commendations earned (`localStorage`, `src/ui/progress.ts`), and nothing else. A
   mission opens once the one before it is won; each shows a victory banner and a commendation star, empty until
   earned, so there's always something left to finish. The Story page has Reset all progress. Armies still never carry
@@ -137,8 +137,8 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   Round 3: three more Grunt mobs in the center. Nothing after.
 - **Punch.** The archers shoot from behind the goblin screen on the empty flank (Skirmishers beat Crossbowmen: "too
   many bodies for a few bolts").
-- **Checked by simulation:** a player who loses round 2, reads it and puts Knights on the flanks wins in four rounds
-  (26 HP left); one who guesses and covers both flanks in round 2 wins every round (the commendation). Never adding
+- **Checked by simulation:** a player who loses round 2, reads it and puts Knights on the flanks wins in four rounds;
+  one who guesses and covers both flanks in round 2 wins every round (the commendation). Never adding
   after round 1, adding only Crossbowmen, and all Crossbowmen lose.
 - **Commendation.** *Guess Right*: win every round of the appeal.
 - **Debrief hints.** Never added after round 1 ("Supply in your pocket doesn't fight"); no Knights; otherwise the
@@ -157,8 +157,8 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   falls the whole army is Dazed and the center collapses.
 - **Checked by simulation:** Knights beside the Keeps win, and so do Keep levels with a Knight squad on a flank, and
   buying levels and guarding the flank after the first raid. Crossbowmen and levels with no new Knights lose, and so
-  does all Crossbowmen. **What the tuning found:** a level-1 Keep only delays a Tower Raiders squad, so levels buy time
-  and Knights end raids. The hints say so.
+  does all Crossbowmen. **Design note:** a level-1 Keep only delays a Tower Raiders squad, so levels buy time and
+  Knights end raids. The hints say so.
 - **Commendation.** *Both Keeps Standing*: win without losing a Keep (Knights beside both Keeps from round 1 earn it).
 
 ### 4. Under the Bridge (built)
@@ -166,16 +166,16 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Page 4, Unlocks.** "Some units must be unlocked in the shop. Each unlock costs supply once per match, and after that
   you buy squads as usual. Ballistae need Knights in front of them."
 - **Kit.** 400 supply, Knights and Crossbowmen; the **Ballista in the shop** (the first unlock: 100 once, then 100 a
-  squad). **HP 160 for the player, 140 for the Boss.** Keeps on, Keeps tab only, veterancy off. Map: **Toll Bridge**
-  (new): a pond either side of the middle, so the middle is the short way across.
+  squad). **HP 160 for the player, 140 for the Boss.** Keeps on, Keeps tab only, veterancy off. Map: **Toll Bridge**:
+  a pond either side of the middle, so the middle is the short way across.
 - **Enemy.** Round 1: three Grunt mobs and Skirmishers. Rounds 2 and 3: three troll squads each. Round 4: three more and
   two mobs on the flanks. Rounds 5 and 6: four troll squads each, so the script never runs dry.
 - **Punch.** The trolls beat a Knight line ("the rage builds through the armor").
 - **Checked by simulation:** Ballistae behind Knights win, whether bought in round 1, the round the trolls show, or the
-  round after (99–136 HP left, 4–5 rounds). Knights and Crossbowmen only, Ballistae with no new Knights in front, all
-  Crossbowmen and never adding lose. **What the tuning found:** two troll squads mixed into the mob changed nothing (the
-  Boss's own Grunts soak the hits, and "grunts beat trolls"); the punch needed three, and a fifth and sixth round, or
-  Knights alone won late. A Ballista bought in round 1 loses that round (one bolt, one goblin), which the debrief
+  round after (4–5 rounds). Knights and Crossbowmen only, Ballistae with no new Knights in front, all Crossbowmen and
+  never adding lose. **Design notes:** the trolls come three squads at a time, apart from the mob, because the Boss's
+  own Grunts soak hits meant for trolls mixed among them ("grunts beat trolls"); and the script runs to round 6, or
+  Knights alone win late. A Ballista bought in round 1 loses that round (one bolt, one goblin), which the debrief
   explains.
 - **Commendation.** *Bridge Held*: win with Ballistae on the Field and lose none of them in the last battle.
 - **Debrief.** The troll goes back under the bridge and charges the goblins too. The Archivist has drawn the correct
@@ -187,18 +187,16 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   invented it can't be you.
 - **Page 5, Upgrades.** "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades
   show as a star beside the unit."
-- **Kit.** 400 supply, Knights and Crossbowmen; Ballista and **Cleric** in the shop. HP 180 / 160 (was 200, until units kept their targets). Keeps on,
-  **upgrades on**, veterancy off. Map: Standing Stones.
+- **Kit.** 400 supply, Knights and Crossbowmen; Ballista and **Cleric** in the shop. HP 180 / 160. Keeps on, **upgrades on**,
+  veterancy off. Map: Standing Stones.
 - **Enemy.** Upgrades arrive by round (`EnemyTurn.upgrades`): round 2 adds two mobs and archers and gives **every**
   Grunt *Scrap Armor*, including those placed in round 1; round 3 brings trolls with *Thick Blood*; then trolls and
   mobs to round 6. The Tinker says in the briefing that they look at your army before picking upgrades.
 - **Punch.** Armored mobs shrug off the first bolt each, and the player loses round 2.
 - **Checked by simulation:** any plan with *Repeaters* wins, bought before round 1, in round 2 or after the armor shows
-  (59–129 HP left, 5 rounds), and Repeaters followed by two Clerics behind the line wins with 80. The same supply spent
-  on more Crossbowmen or Ballistae instead loses, and so does the wrong upgrade (Knights' *Veterans*). **What the tuning
-  found:** at first no Cleric plan could win: Clerics cost 200, walked into the melee and died, and healing can't
-  outpace an armored swarm. The campaign balance pass (§10) made them cheap, keeps them behind the line and gave the
-  line a damage aura.
+  (5 rounds), and so does Repeaters followed by two Clerics behind the line. The same supply spent on more Crossbowmen
+  or Ballistae instead loses, and so does the wrong upgrade (Knights' *Veterans*). **Design note:** healing alone can't
+  outpace an armored swarm; Clerics earn their place with their damage aura, standing behind the line.
 - **Commendation.** *Right Upgrade*: once their armor shows, win every round after it.
 - **Debrief.** Dunmor learns he's been buying upgrades for forty years. The Tinker borrows the wheelbarrow. The Boss:
   "THE GROUND'S FULL ANYWAY. WE'LL USE THE SKY."
@@ -211,11 +209,10 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Enemy.** Round 1: mobs, a troll, Skirmishers. Round 2: **four squads of Giant Bats**. Then more bats, Skirmishers
   from round 4 (they shoot fliers), trolls, to round 7.
 - **Punch.** The bats fly over the line and land on the Crossbowmen and Ballistae.
-- **Checked by simulation** (after the balance pass, §10): *Skyhunters* Crossbowmen win (150 HP left, 5 rounds),
-  Crossbowmen with Griffons alongside win (144), and a Griffon-led plan wins (78). Plain Crossbowmen (half damage to
-  fliers without *Skyhunters*), Knights alone and Ballistae (the bats land on them) lose. **What the tuning found:**
-  before the pass, Crossbowmen shot down any flier at full strength, so the bats needed *Savage Claws* and four squads,
-  and then nothing but more Crossbowmen could win; no Griffon-led plan did.
+- **Checked by simulation:** *Skyhunters* Crossbowmen win (5 rounds), so do Crossbowmen with Griffons alongside, and
+  so does a Griffon-led plan. Plain Crossbowmen (half damage to fliers without *Skyhunters*), Knights alone and
+  Ballistae (the bats land on them) lose. **Design note:** the mission depends on Crossbowmen being weak against fliers
+  until *Skyhunters*; at full strength more Crossbowmen beat every flier and no Griffon-led plan could win.
 - **Commendation.** *Air Cover*: win with Griffon Riders on the Field.
 - **Debrief.** The sky over the Field belongs to the Field, and griffons do bite (the Archivist checked). The Boss:
   "FINE. I'M CALLING GRUMM." Sergeant: "...Grumm?"
@@ -230,10 +227,10 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Enemy.** Round 2 brings **Grumm, a level-3 Ogre Brute with *Warboss*** (`SquadSpec`'s fifth element is a level).
   Then wolves, trolls and more ogres, to round 7.
 - **Punch.** Grumm walks off the Field alive in round 2, whatever the player brings.
-- **Checked by simulation:** plans that promote their veterans win (191–244 HP left, 7 rounds); the same pike plan
-  that puts that supply into fresh squads instead of promotions loses. **What the tuning found:** at ×3.5 the pikes
-  won with 109 HP left against Knights' 244, because Grumm's cleave kills two or three dwarves a swing. At ×4.5 (the
-  balance pass, §10) the pike plan wins with 211; plain Knights and Crossbowmen still do well (244).
+- **Checked by simulation:** plans that promote their veterans win (7 rounds); the same pike plan that puts that
+  supply into fresh squads instead of promotions loses. Plain Knights and Crossbowmen do well too. **Design note:**
+  Grumm's cleave kills two or three dwarves a swing, which is why the Pikemen need ×4.5 against large units to make the
+  pike page worth reading.
 - **Commendation.** *Page Seven*: win with a promoted squad of Dwarven Pikemen on the Field.
 - **Debrief.** The Sergeant gets the helmet back, chewed, and reads his first page so he can say what's wrong with it. The
   Boss stakes the whole border.
@@ -245,20 +242,20 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Kit.** **The opening offer** (`opening`, packs named by their units): Knights and Crossbowmen, Crossbowmen and
   Pikemen, Knights and Pikemen, or the war chest. Nothing else is free; every Warden unit and **the Giant** (the
   first independent, 200 to unlock) are in the shop. HP 400 each. Keeps, upgrades and veterancy on. Map: **Border
-  Pass** (new). Blind from round 1.
+  Pass**. Blind from round 1.
 - **Enemy, in two phases**, scripted rather than the AI so the story beats land and the tests can fight it. The Boss
   sends his biggest (trolls, ogres, wolves, mobs) until he has lost two battles (`ScriptContext.winners`); then the
   Tinker takes over: **three squads of bats with *Shriek***, then **Tower Raiders wolves on both flanks**, then bats
   and *Ambush* Skirmishers, and the last wave repeats. Waves are fitted around the goblins already on the Field
   (`fit`). The Tinker and the Boss speak in the sidebar on the rounds they change plan (`EnemyTurn.line`).
-- **Checked by simulation** (after the balance pass, §10): the pike line wins (327 HP left, 7 rounds), and so do pikes
-  with levels on both Keeps (280) and Knights and Crossbowmen (218). Never adding, all Crossbowmen and a Ballista park
-  lose. Everyone loses the round the bats arrive, and the double raid takes both Keeps even with a level on each (as in
-  mission 3, levels only buy time).
-  **What the tuning found:** a Tinker wave much bigger than the round's income flattens every plan, because each wave
-  stays on the Field; and *Pike Wall* answers the bats on its own, since they claw in melee. The Giant pays off from
-  behind the pike line (a plan buying it in round 4 wins with 168 HP left); the first Giant plans lost only because
-  they left it exposed.
+- **Checked by simulation:** the pike line wins (7 rounds), and so do pikes with levels on both Keeps, and Knights and
+  Crossbowmen. Never adding, all Crossbowmen and a Ballista park lose. Everyone loses the round the bats arrive, and the
+  double raid takes both Keeps even with a level on each (as in mission 3, levels only buy time). The Boss's fourth
+  wave brings wolves: it only meets plans that are already losing, and keeps all Crossbowmen from winning before the
+  Tinker arrives.
+  **Design notes:** a Tinker wave much bigger than the round's income flattens every plan, because each wave stays on
+  the Field; *Pike Wall* answers the bats on its own, since they claw in melee; and the Giant pays off from behind the
+  pike line, not exposed in front of it.
 - **Commendation.** *Boring Wins*: win the final with only the two units your opening pack gave you.
 - **Ending.** The wheelbarrow comes back with two wheels. Sergeant: "Boring wins. Book says so." The Archivist starts to
   object, then finds it on page 9. "...SAME TIME NEXT SEASON?" On a win the debrief draws **Page 9, in the Marshal's
@@ -315,9 +312,9 @@ Notes:
 
 Every unit and upgrade it uses is built. What's left:
 
-- **Raids have to swing fights.** "Win by raiding" needs a fallen Keep to decide a round. Since the plan was written,
-  Keeps got levels worth 2,000 HP each, a 4 s collapse Daze and Wolf Riders *Tower Raiders*; whether a raid now swings
-  a close fight in practice is unchecked. Missions 1 and 4 should be simulated early.
+- **Raids have to swing fights.** "Win by raiding" needs a fallen Keep to decide a round. With Keep levels worth 2,000
+  HP each, a 4 s collapse Daze and Wolf Riders *Tower Raiders*, whether a raid swings a close fight in practice is
+  unchecked. Missions 1 and 4 should be simulated early.
 - **Friendly fire has to be readable.** The battle report counts it per squad; the field probably needs a clearer
   "that was your own fire" cue for the fire arc.
 - **A "topple a Keep" win condition** in the mission framework (goblin mission 1).
@@ -346,8 +343,7 @@ once, the Warden checks the calendar, the Elemental pauses, then says yes.
 
 ### What the story needs from the elementals
 
-The October suggestions were written against an older roster and are superseded by the per-unit balance pass. What
-still holds, as requirements for the missions rather than for skirmish balance:
+Requirements for the missions, rather than for skirmish balance:
 
 - **The friendly-fire cost has to be visible at base.** Ember's fear only works if unupgraded fire visibly burns
   neighbors. Today it does: the Fire Elemental's splash and Burning catch allies, and *Controlled Burn* ("its flames
@@ -383,10 +379,9 @@ These ideas are kept on purpose. Don't drop them when the plan changes.
   now, so the page could be kept alongside it, and later campaigns could refer back
   to it (for example the goblin campaign opening against *your* page-9 army, replaying the player's real finale
   instead of an authored one). Check with the owner before storing more than progress.
-- **Click-to-advance dialogue, and briefing length** (owner, Nov 3, 2026). After the copy pass, Wardens briefings run 7–8
-  lines, and the finale runs 12, which is a bit long as a wall of text. Leave them as written for now. The owner may
-  address this later by showing briefing lines one at a time, click to advance, instead of trimming them. Don't cut the
-  lines or build this during the copy integration unless the owner asks.
+- **Click-to-advance dialogue, and briefing length.** Wardens briefings run 7–8 lines, and the finale runs 12, which is
+  a bit long as a wall of text. Leave them as written. The owner may address this later by showing briefing lines one
+  at a time, click to advance, instead of trimming them. Don't cut the lines or build this unless the owner asks.
 
 ## 6. The mission framework
 
@@ -431,7 +426,7 @@ link mid-mission doesn't lose it.
 lines, debrief, hints, commendation) with what it teaches. It's generated: `npm run -s copy-doc > docs/COPY.md`.
 The owner edits it for consistency and tone; the edits go back into `src/data/campaign.ts`, then regenerate.
 
-### Making a mission (the recipe used for missions 1–8)
+### Making a mission
 
 1. **Story first.** Read `docs/VISION.md` and this mission's entry above: the dispute, the page, the punch and the
    counterpunch, the commendation. Check the punch against `RELATIONS` in `src/data/balance.ts` (who beats whom, and
@@ -448,14 +443,12 @@ The owner edits it for consistency and tone; the edits go back into `src/data/ca
    Keeps lost, HP, and the debrief hint on a loss); with no plan it plays the mission's reference plans. Iterate on
    the enemy's rounds and on per-side HP until the shape is right: the careless plans lose, the sensible ones win,
    the reactive one wins with some HP to spare, the commendation is reachable, and a match runs about the target
-   number of rounds. Lessons from 1–3:
+   number of rounds. Lessons from the Wardens campaign:
    - The punch needs to *land*: if the scripted unit doesn't do the thing (wolves chasing the nearest squad instead of
      a Keep), give the enemy the upgrade that makes it (`enemy.upgrades`, Tower Raiders) rather than hoping.
    - Rounds after the script ends are free wins for the player (the enemy adds nothing), so keep the script going
      until the target length, or a careless plan wins late.
    - A map can make or break a punch (the raid lands on Long Grass, not on the open field).
-
-   Lessons from 4–8:
    - Every squad the enemy adds fights in every later battle, so one extra squad early swings the whole match, and a
      wave much bigger than the round's income flattens every plan. Grow the script about as fast as the income.
    - Check the punch in a mixed fight, not just in `RELATIONS`: the Boss's own Grunts soaked hits meant for his trolls
@@ -473,22 +466,19 @@ The owner edits it for consistency and tone; the edits go back into `src/data/ca
    once per screen, and don't describe what the player can already see. A new speaker needs a `CAST` entry and a
    face in `src/ui/Portraits.tsx`.
 7. **Check it on screen** (Playwright, CLAUDE.md "Verifying UI changes"; the debug panel's "Open every story mission"
-   skips the earlier ones), then update this file's mission entry with what the tuning found.
+   skips the earlier ones), then update this file's mission entry: what wins, what loses, and design notes on why
+   the mission is shaped the way it is.
 
 Not built yet (each arrives with the mission that needs it): AI enemies limited to a pool (the Boss, the Tinker; the
 Wardens campaign scripts every enemy, mission 8's two phases included), a "topple a Keep" win condition, and
 `npm run playtest -- --mission N`.
 
-## 7. Plan of attack
+## 7. Next
 
-1. ~~**Goblin roster rework**~~ **Done (Oct 2026).**
-2. ~~**Mission framework**~~ **Done (Nov 2026)** (§6).
-3. ~~**Missions 1–3**~~ **Built (Nov 2, 2026).**
-4. ~~**Missions 4–8**~~ **Built (Nov 2, 2026).**
-5. ~~**The Wardens copy pass**~~ **Done (Nov 3, 2026).**
-6. Next: the owner playtests them, then the replay-opener tech for Goblin mission 1 (an authored version of the Wardens
-   finale, played from the other side, since nothing is stored between missions).
-7. Goblin campaign. Simulate the elementals' authored fights at the same time, then build their campaign.
+1. The owner's structural changes to the Wardens campaign, and a playtest.
+2. The replay-opener tech for Goblin mission 1 (an authored version of the Wardens finale, played from the other side,
+   since nothing is stored between missions).
+3. Goblin campaign. Simulate the elementals' authored fights at the same time, then build their campaign.
 
 ## 8. Owner decisions
 
@@ -496,13 +486,13 @@ Wardens campaign scripts every enemy, mission 8's two phases included), a "toppl
 - **Pikemen arrive in mission 7** (left to Claude): one new unit per mission, and the player learns the pikes before
   the finale leans on them.
 - **The goblin player is the Boss**, with the Tinker advising.
-- **Independents** (Nov 2, 2026): a mission has to show the player when and how to use each one, and in play they're
+- **Independents:** a mission has to show the player when and how to use each one, and in play they're
   there to add map-to-map variety. The rest was left to Claude (§9).
 - **Story is the left-most tab and where the site opens**, with a "Play the full game now" shortcut at the very top
   for impatient players. Progress is stored and missions are played in order (§1).
-- **Terrain** (Nov 2, 2026): new ground conditions for map variety, and a first step toward spells cast on no-man's
-  land between rounds (spells themselves are out of scope for now). Units and the AI don't plan around terrain.
-- **Story voices** (Nov 3, 2026): Dunmor has never read the book and knows the real world; Ithiel has never seen the real
+- **Terrain:** ground conditions for map variety, and a first step toward spells cast on no-man's land between rounds
+  (spells themselves are out of scope for now). Units and the AI don't plan around terrain.
+- **Story voices:** Dunmor has never read the book and knows the real world; Ithiel has never seen the real
   world and knows the book. They learn from each other and update the book. The Marshal is nervous and speaks out loud.
   In the Wardens campaign the Boss is about numbers and the Tinker about choosing upgrades; both are smart and sarcastic,
   and their personalities are developed in Campaign 2. Avoid dramatic language, and use plain game terms (`docs/VISION.md`).
@@ -523,24 +513,13 @@ keep the matches different from each other. Plan (checked by simulation when eac
 Terrain itself (rocks, ponds, rough ground, tall grass) is in DESIGN.md; missions name their map (`map`), and skirmish
 matches draw one at random.
 
-## 10. The campaign as balance tests (Nov 2, 2026)
+## 10. The campaign as balance tests
 
-The owner's call after the Wardens campaign: missions that are hard to design are a sign the balance needs adjusting,
-and the missions' authored battles matter more than one-unit matchups. Each mission's reference plans are integration
-tests, and the unit a mission introduces should have a plan that wins it.
+The owner's rule: missions that are hard to design are a sign the balance needs adjusting, and the missions' authored
+battles matter more than one-unit matchups. Each mission's reference plans are integration tests, and the unit a
+mission introduces should have a plan that wins it.
 
 `npm run mission -- all` plays every reference plan (about 10 s) and flags any that no longer do what they're meant
-to; run it before and after changing units. The first pass, from what missions 5–8 showed:
-
-| Change | Why (the mission that showed it) |
-|---|---|
-| Clerics stand 2 tiles behind the line they follow (`RULES.escortGap`), not in it | They walked into the melee and died within seconds (5) |
-| Cleric: 100 supply (was 200), 400 HP (was 300), and a +25% damage aura; *Blessing* raises it to +50% (was +35%) | Healing can't outpace an armored swarm; a Cleric pair cost a round's worth of fighters and couldn't win the map (5) |
-| Crossbowmen deal half damage to fliers; *Skyhunters* restores full damage | They were everyone's anti-air at full strength, so more Crossbowmen beat every flier and every flier answer (6, 8) |
-| Griffon Riders: ×1.5 against medium units | They're the anti-medium flier, but Crossbowmen out-damaged them 2:1 against medium targets (6) |
-| Pikemen: ×4.5 against large units and cavalry (was ×3.5) | Knights did the pike page's job better than the pikes (7, 8) |
-| Mission 6's round-2 bats lost *Savage Claws* | Sized for the old Crossbowmen; with Crossbowmen needing *Skyhunters*, four plain squads are enough |
-
-When units started keeping their targets once attacking (focus fire, Nov 2, 2026): mission 5's Tinker went to 160 HP
-(was 200), since its round 4 is a coin flip and two winning plans fell 10–24 HP short; and mission 8's fourth Boss
-wave brings wolves, since all Crossbowmen, losing early, met the Boss's ogres instead of the Tinker's raids and won.
+to; run it before and after changing units. When a rule or unit change flips a plan, decide whether the balance or the
+mission is wrong: fix the balance when a mission's lesson stops being true, and retune the mission (HP, a wave) when
+only its margins moved. Record what changed in `CHANGELOG.md`.

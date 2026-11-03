@@ -60,8 +60,8 @@ duplicate is ignored.
 ### Keeping both browsers in step
 
 - Only exact float maths in the sim: `+ − × ÷` and `sqrt` give the same answer in every browser. `sin`, `cos` and
-  `atan2` don't. Summoned models used to spawn at a `cos`/`sin` angle and now pick from a fixed table of 16
-  directions. `atan2` only sets which way a model faces on screen.
+  `atan2` don't. Summoned models pick a direction from a fixed table of 16. `atan2` only sets which way a model faces
+  on screen.
 - After each battle both browsers post an `outcome`. If they differ, the host's is right: the friend's browser
   rebuilds the match from the log using the host's results and says so.
 - The receiver checks a turn adds up (it didn't spend more than it had). Between friends this is a warning, not a
@@ -76,7 +76,7 @@ about the players; Cloudflare's own request logs see IP addresses, as any web ho
 
 ## Setup (owner, once)
 
-Done on November 1, 2026: the relay runs at `https://common-ground-relay.common-ground-relay.workers.dev` (Worker
+The relay runs at `https://common-ground-relay.common-ground-relay.workers.dev` (Worker
 `common-ground-relay` on the owner's Cloudflare account; the subdomain was registered automatically on the first deploy
 and can be renamed in the Cloudflare dashboard, then update `src/net/config.ts`). The steps, for reference or a fresh
 account:
@@ -114,8 +114,6 @@ connections from `https://jeremyweirich.github.io` and from local development ad
 
 ## Not yet checked
 
-- First real match (Nov 1, 2026): the owner and a friend on their own machines (the friend's a Mac). Their notes asked
-  for taking back Fight (now built) and reported no desync.
 - Cross-browser determinism: Firefox and Safari running the same battle as Chrome. Playwright's Firefox and WebKit
   could run `npm run bench`'s fights in each engine and compare fingerprints. A mismatch in play shows a notice and the
   host's result wins.

@@ -3,7 +3,9 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 3 November 2026 (v83–v84)
+## 3 November 2026 (v83–v85)
+
+- **Plain words everywhere:** the Story intro and the Codex say units, not champions or troops.
 
 - **The Wardens campaign's copy pass.** New briefings, pages, debriefs and hints in every mission, written to
   `docs/VISION.md`'s voices: Dunmor knows the Field and has never read the book, Ithiel knows the book and has never
@@ -76,7 +78,9 @@ tell which build you played. Every small fix is in the [commit history](https://
 ## 1 November 2026 (v29–v57)
 
 - **Balance rebuilt around Mechabellum's roles** (chaff, chaff clear, anti-medium, anti-giant, tanks, divers). Every
-  unit has a written job and a list of who it should beat and why, checked by a balance harness.
+  unit has a written job and a list of who it should beat and why, checked by a balance harness. Elven Archers became
+  **Crossbowmen** (few models, heavy bolts), and no unit is immune to an element any more: an element's own creatures
+  resist it mildly.
 - **Longer, more spread-out fights:** deployment zones are shallower, units move at half speed and the time limit is
   120 s, so positioning matters.
 - **Opening packs replace starter units:** round 1 offers three two-unit packs, or a war chest of supply.
@@ -98,6 +102,8 @@ tell which build you played. Every small fix is in the [commit history](https://
   written down: the Compact, three peoples settling disputes on the Field.
 - **Veterancy:** squads earn XP in battle and can be promoted for half their price.
 - **Goblin rework:** Grunts, Skirmishers, Wolf Riders (javelins), Troll, Ogre Brute and Giant Bats.
+- **Renames:** the Kingdom became the Wardens and the Greenskins the Goblins; Longbowmen became Elven Archers, and
+  Halberdiers Dwarven Pikemen.
 - **Elemental redesign:** four flames for the Fire Elemental, the Air Elemental can learn to fly, Wisps became
   Cloudlings, and a new ramping Frost Elemental. Fire now just burns.
 - Griffon Riders throw spears; the Stone Golem became huge.

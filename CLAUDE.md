@@ -66,7 +66,7 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   than a faction's own answer. Each patches named holes (DESIGN.md §8). Their flavor can be a little weird (the owner
   loves the Bog Toad Riders), and the owner wants **fewer archers**: give new units a fresh attack style, not another
   plain projectile.
-- Faction feel: the **Wardens** (formerly the Kingdom) are the most straightforward faction (plain stat upgrades).
+- Faction feel: the **Wardens** are the most straightforward faction (plain stat upgrades).
   **Elementals** are the most complex to play (combos). Goblins sit between them. This is about feel, not power:
   balance is per unit (see "Where things stand").
 - **Complexity budget:** baseline units apply statuses (Wet, Burning, Chilled/Frozen, Shocked, Oiled, Dazed; Snared
@@ -76,7 +76,7 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - Speed is in points: 10 = 1 tile/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
 - After changing units:
   - `npm test`, and `npm run mission -- all` (seconds): the story missions are the balance's integration tests, and
-    matter more than one-unit matchups (owner, Nov 2, 2026; CAMPAIGN.md §10). A mission's featured unit must be able
+    matter more than one-unit matchups (CAMPAIGN.md §10). A mission's featured unit must be able
     to win it; when a mission is hard to design, suspect the balance.
   - `npm run balance -- targets <unit…>` while tuning (seconds), then `npm run balance -- check` (minutes), which grades
     the equal-supply matrix and the upgrade intents against `src/data/balance.ts`. The other modes are listed at the top
@@ -154,13 +154,17 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 ## Where things stand
 
-See DESIGN.md §12 for the roadmap. As of November 2026:
-- **Balance** follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/MECHABELLUM.md`). `docs/BALANCE-PLAN.md` has the owner's decisions, the analogue mapping, the current
-  results and the open problems. Balance is per unit at equal supply, against the intent in `src/data/balance.ts`
-  (roles, `RELATIONS` with reasons, an intent per upgrade); the owner left that table to Claude to refine. The old
-  approach is gone; don't bring it back: the faction triangle as a balance goal (it's story only), the counter web,
-  faction reference armies, "Wardens are the strongest", "keep every non-goblin attack ≥ 10". The October playtest
-  reports (deleted; in git history) are superseded.
+The roadmap is DESIGN.md §12. What changed when is in `CHANGELOG.md` and the git history; the docs describe the game as
+it is now.
+
+- **Balance** follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/MECHABELLUM.md`).
+  `docs/BALANCE-PLAN.md` has the owner's decisions, the analogue mapping, the current results and the open problems.
+  Balance is per unit at equal supply, against the intent in `src/data/balance.ts` (roles, `RELATIONS` with reasons, an
+  intent per upgrade); the owner left that table to Claude to refine. Don't bring back the old approach: the faction
+  triangle as a balance goal (it's story only), the counter web, faction reference armies, "Wardens are the strongest",
+  "keep every non-goblin attack ≥ 10".
+- **The story missions are the balance's integration tests** (CAMPAIGN.md §10): a mission that's hard to design means
+  the balance needs adjusting.
 - **Fight shape:** fights should be spread out like Mechabellum's (about 40–60 s, a long approach, not everyone
   fighting at once), so positioning matters. Get there through space and movement, never by inflating HP.
 - **Opening:** nothing is unlocked at the start; round 1 offers three two-unit packs or a war chest
@@ -170,80 +174,48 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
 - **Simulation speed** matters and will matter more: `docs/SIMULATION.md` has the rules (fingerprint), the profile
   recipe, what's done and the next levers.
 - The owner playtests and brings revision notes. Expect redesigns, not just tuning.
-- Two upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and
-  Troll *Boulder Toss*. Expect the owner to replace them. History: Greenskins became Goblins; Longbowmen became Elven
-  Archers, then Crossbowmen; Halberdiers became Pikemen.
-- The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon Riders
-  throw spears; role `skirmisher`). Lean that way when designing new units.
-- Layout: the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
-  sideways (about 844 × 390).
-- Faction bonuses are designed but not built (DESIGN.md §8).
-- **Independents pass (Nov 2, 2026):** five matches against Hard found the missing role
-  was anti-medium (the goblins and elementals both lack it), and that the goblins' worst hole is the air. New
-  independent: **Bog Toad Riders** (tongue-lash beam, hits air, ×1.8 against medium; Spit Bile makes them chaff clear,
-  Gulp **Snares**, a new status that lets melee hit a held flier). The Giant got smaller, faster boulders and less HP;
-  the Dragon got more damage. Open: Gulp + Trolls against a real Dragon hasn't been tried in a full match.
-- **Owner's notes after that pass (Nov 2, 2026):**
+- **Owner's calls on units:**
   - **Dragons are late-game** and never meet one-unit fights in play, and fliers beating melee that can't hit up is
-    fine. Don't flag those matchups. It was too squishy: base HP is back to 4200, and *Ancient Scales* gives
-    **Toughness** (a new rule: a flat cut off every hit, at least a quarter gets through).
+    fine. Don't flag those matchups.
   - **Wolf Riders should be swingy**: a huge impact the round they arrive (one dropped on a flank kills a Keep, then the
-    archers), countered fairly cheaply. The owner wondered about ×2 → ×3 javelins; the data says ×2 loses to the
-    Crossbowmen it exists to kill, so the ×5 stayed pending the owner's call (`docs/BALANCE-PLAN.md` §3).
-  - **Bats** can claw fliers with *Bloodsuckers* only: the base bats fly over air units to reach the back line.
-  - The "untouchable Ballista park" was really **veterancy** on the screen in front of it (replayed: demote the
-    Lv2 Knights and Grunts and the Ballistae all die). Level N is N× HP and N× damage, about 4× the value for half the
-    price; that's where to look next.
-- **Campaigns (Nov 2, 2026):** planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; owner decisions
-  in §8, independents and maps in §9). **The whole Wardens campaign is built** (missions 1–8; what each teaches and
-  what its tuning found is in CAMPAIGN.md §2). A mission
-  is a `MissionDef` in `src/data/campaign.ts` played on the ordinary Play board (`PlayView`'s `mission` prop); each
-  lists reference plans that must win, lose and earn its commendation, and `tests/campaign.test.tsx` fights them.
-  Make new ones with the recipe in CAMPAIGN.md §6 and `npm run mission` (both use `src/game/missionRun.ts`). Story is the left-most tab and where the site
-  opens ("Play the full game now" at the top); progress is stored, missions open in order, each with a victory banner
-  and a commendation star, and Reset sits at the bottom. Speakers get a portrait and a parchment speech bubble
-  (`src/ui/Portraits.tsx`; a new speaker needs a face). The debug panel can open every mission for testing.
-  **Next:** the owner playtests 4–8, then the goblin campaign. Page 9 (the finale's winning board as a drill diagram)
-  is shown in the debrief, not kept.
-- **Campaign balance pass (Nov 2, 2026):** the owner took the hard-to-design missions as a sign the balance was off.
-  Clerics now cost 100, stand behind the line and give it +25% damage; Crossbowmen do half damage to fliers until
-  *Skyhunters*; Griffons get ×1.5 against medium units; Pikemen ×4.5 against large. Every featured unit now wins its
-  mission (CAMPAIGN.md §10, BALANCE-PLAN.md §3). To watch: the Ballista now leads the one-unit Nash mix.
-- **Small things (Nov 2, 2026):** a Hard win streak (Play, beside Restart); the version in the header is a pill that
-  opens the debug panel, whose first button is **Report a bug** (a prefilled GitHub issue).
-- **Terrain and maps (Nov 2, 2026):** rocks and ponds (impassable for ground units, who slide along the edge),
-  rough ground (half speed) and tall grass (hides ground units from ground shooters until they attack); fliers ignore
-  all of it. Eight point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule:
-  **units and the AI never plan around terrain** (no pathfinding); it's for map variety and a step toward spells cast
-  on no-man's land, which are out of scope until the owner asks.
+    Crossbowmen), countered fairly cheaply. ×5 opening javelin or ×2 raised to ×3 is pending the owner
+    (`docs/BALANCE-PLAN.md` §3).
+  - **Giant Bats** claw fliers only with *Bloodsuckers*: the base bats fly over air units to reach the back line.
+  - A Ballista park behind a screen is a **veterancy** problem (level N is N× HP and N× damage, about 4× the value for
+    half the price); that's where to look next.
+  - Two upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and
+    Troll *Boulder Toss*. Expect the owner to replace them.
+  - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon
+    Riders throw spears; role `skirmisher`). Lean that way when designing new units.
+- **Owner's calls on rules:** round damage ignores levels, on purpose; battles can't end early, because the survivors
+  set the round damage (only playback speeds up). **Deferred by the owner, don't raise again unprompted:** most fights
+  end in 15–25 s, short of the 40–60 s goal; and the report doesn't say why a hard-countered squad dealt 0.
+- **Layout:** the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
+  sideways (about 844 × 390).
+- **Faction bonuses** are designed but not built (DESIGN.md §8).
+- **Campaigns:** planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; owner decisions in §8,
+  independents and maps in §9). **The Wardens campaign is built** (missions 1–8). A mission is a `MissionDef` in
+  `src/data/campaign.ts` played on the ordinary Play board (`PlayView`'s `mission` prop); each lists reference plans
+  that must win, lose and earn its commendation, and `tests/campaign.test.tsx` fights them. Make new ones with the
+  recipe in CAMPAIGN.md §6 and `npm run mission` (both use `src/game/missionRun.ts`). Every word of the missions is in
+  `docs/COPY.md` (generated; the owner edits it, and the edits go back into `campaign.ts`). Speakers get a portrait and
+  a parchment speech bubble (`src/ui/Portraits.tsx`; a new speaker needs a face). Story is the left-most tab and where
+  the site opens; progress is stored and missions open in order. The debug panel can open every mission for testing.
+  **Next:** the owner's structural changes to the Wardens campaign, then the goblin campaign. Page 9 (the finale's
+  winning board) is shown in the debrief, not kept.
+- **Terrain:** rocks and ponds (impassable for ground units, who slide along the edge), rough ground (half speed) and
+  tall grass (hides ground units from ground shooters until they attack); fliers ignore all of it. Eight
+  point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule: **units and the AI
+  never plan around terrain** (no pathfinding); it's for map variety and a step toward spells cast on no-man's land,
+  which are out of scope until the owner asks.
+- **PvP:** play a friend by link is live (`docs/MULTIPLAYER.md`). The relay is deployed on the owner's Cloudflare
+  account and needs no upkeep; redeploy only when `relay/` changes.
+- **Phones:** 60 fps in every scenario on the owner's phone; no more rendering work is needed, and moving the sim to a
+  worker (the next lever) is shelved unless a slower device needs it. **Getting numbers from the owner's phone:** the
+  debug panel (click the version in the header, or `#debug`) runs a one-minute performance test and shows a text
+  report with Copy/Share; ask the owner to run it on the live site and paste the report.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.
-- **PvP (Nov 1, 2026):** play a friend by link is live (`docs/MULTIPLAYER.md`). The relay is deployed on the owner's
-  Cloudflare account and needs no upkeep; redeploy only when `relay/` changes. Tested with two scripted Chrome windows
-  against the real relay, then played by the owner and a friend on their own machines (no desync reported). Not yet
-  checked: whether Firefox and Safari run battles identically to Chrome (a desync shows a notice and the host's result
-  wins).
-- **Playtest with a friend (Nov 1, 2026):** the intro became three short pages in large type; after a battle each
-  surviving squad flies its damage to the HP bar (Keeps don't); placing shows a banner with Done/Esc; small tokens
-  (Skirmishers, Cloudlings, Grunts) now show their icon in battle; PvP players can take back Fight. Escape not cancelling
-  placement on the friend's Mac wasn't reproduced; the key handler was made more robust and Done added. Recheck on a Mac.
-- **Playtest vs Hard (Nov 1, 2026):** after it, veterancy got rarer (`veterancyXp` knobs, DESIGN.md §5c), Keep levels
-  became +3,000 HP each (later cut to +2,000), and playback fast-forwards once a fight is decided. Owner decisions: round damage ignoring
-  levels is intentional; battles can't end early because the survivors set the round damage (only playback speeds up).
-  Deferred by the owner, don't raise again unprompted: most fights end in 15–25 s, short of the 40–60 s goal; and the
-  report doesn't say why a hard-countered squad dealt 0. Not yet checked: whether the AI now buys Keep levels, and
-  how the new XP curve plays over a full match.
-- **Phone black-field bug (Nov 1, 2026):** in a big battle on the owner's phone the field turned black and units left
-  trails, until reload. Cause: a GPU reset blanked the cached grass canvas, and nothing else cleared the field.
-  Reproduced on desktop with CDP `Browser.crashGpuProcess` and fixed (DESIGN.md §10b); the field's pixel buffer now
-  matches its on-screen size too (3.5× fewer pixels on a phone), which should ease the lag. Not yet rechecked on the phone.
-- **Mobile performance pass (Nov 1, 2026):** measured with Playwright at 844 × 390, 3× DPR, CPU throttled 4–6×
-  (scripts kept out of the repo; recipe: play rounds, then record `requestAnimationFrame` intervals). Unit drawing was
-  over half the frame; tokens now come from a sprite atlas, the background bakes its overlays, and the field's buffer
-  is capped at 2× DPR. At 4× throttle, round 5: deploy screen 22–28 → 60 fps, battle 43–47 → 59–60 fps.
-  **On the owner's phone** (Android 10, Chrome 156, 1.88× DPR, 8 cores; debug-panel report, Nov 1): 60 fps in every
-  scenario, ≤ 0.7% slow frames, 4–6 ms JS per frame (p95 ≤ 8.6) with 436 models, sim 0.6 ms per tick. No more
-  rendering work needed; moving the sim to a worker (the next lever) is shelved unless a slower device needs it.
-  **Getting numbers from the owner's phone:** the debug panel (click the version in the header, or `#debug`)
-  runs a one-minute performance test and shows a text report with Copy/Share; ask the owner to run it on the live
-  site and paste the report. Same scenarios as the desktop scripts, plus sprite-atlas stats. Desktop result at 4×
-  throttle (Nov 1): deploy 56 fps, battles 56–60 fps.
+- **Not yet checked:** whether Firefox and Safari run battles identically to Chrome (a desync shows a notice and the
+  host's result wins); Escape cancelling placement on a Mac (a friend saw it fail; not reproduced, and Done was added);
+  the black-field fix on the owner's phone (a GPU reset, DESIGN.md §10b); whether the AI buys Keep levels; how the XP
+  curve plays over a full match; Gulp + Trolls against a real Dragon in a full match.

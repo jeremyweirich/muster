@@ -66,7 +66,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 16,
       bonusVs: [
         { selector: { hasTag: "size:medium" }, mult: 1.5 },
-        { selector: { layer: "air" }, mult: 0.5 }, // heavy bolts are slow to aim at fliers: Skyhunters is the drill for it
+        { selector: { layer: "air" }, mult: 0.5 }, // heavy bolts are slow to aim at fliers: Skyhunters is the upgrade for it
       ],
     },
     upgrades: [

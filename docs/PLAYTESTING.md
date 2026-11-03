@@ -45,7 +45,7 @@ npm run playtest -- log w1 2                       # reprint the last 2 round re
   showed last round; a new unlock surprises it once.
 - The headless script runs one search. The browser runs Hard on up to 4 cores (DESIGN.md §9), so in-browser Hard is a
   little stronger.
-- Habits seen so far (Nov 2026): Wolf Riders on both flanks, promoted early; Cloudlings massed (Overcast) against
+- Habits seen so far: Wolf Riders on both flanks, promoted early; Cloudlings massed (Overcast) against
   ground-only armies; Pikemen against anything large; Ballista parks on row 0 behind a wall of Grunts; Skirmishers or
   Air Elementals against swarms; Take Flight when you bring ground-only splash.
 

@@ -42,7 +42,7 @@ export function StoryView({
       <p className="lede">
         Generations ago, the three peoples fought a war that nearly wrecked the world: walls against swarms against storms. It ended in a
         treaty, the Compact. Now every dispute over land, insults and old grudges is settled on the Field. Each commander chooses
-        champions and places them, and once the horn sounds, no one may touch the fight. The rules are the same for everyone.
+        units and places them, and once the horn sounds, no one may touch the fight. The rules are the same for everyone.
       </p>
       <p className="muted">
         Start with the Wardens, and play the missions in order. More are on the way. The <CodexLink topic="compact">Codex</CodexLink> explains

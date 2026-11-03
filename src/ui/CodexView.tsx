@@ -246,13 +246,13 @@ export function CodexView({ topic }: { topic?: string }) {
       <Entry id="friendly-fire" title="Who gets hurt" focus={topic}>
         <p>
           Attacks, and the splash around them, only hurt enemies. Everything elemental is <b>neutral</b>: statuses, surfaces and reactions
-          hit whoever is there, your own troops included. Your fire can burn your own knights, and the enemy&apos;s lightning can
+          hit whoever is there, your own units included. Your fire can burn your own Knights, and the enemy&apos;s lightning can
           electrify a puddle you made. The battle report counts this as friendly fire.
         </p>
       </Entry>
       <Entry id="targets" title="Picking targets" focus={topic}>
         <p>
-          Each champion picks the nearest enemy it can hit, unless its card says it prefers something else nearby, and walks
+          Each unit picks the nearest enemy it can hit, unless its card says it prefers something else nearby, and walks
           to it. On the way it looks round about once a second and may switch. Once it starts attacking, it <b>keeps its
           target</b> until that enemy dies, hides or gets out of range, whatever else walks up to it. Raiders that arrive while
           the back line is busy with something else get a free moment.
@@ -270,7 +270,7 @@ export function CodexView({ topic }: { topic?: string }) {
       <Entry id="terrain" title="Maps" focus={topic}>
         <p>
           Every Field has its own ground. Terrain lies only in no-man&apos;s land, and each map is the same from both sides, turned
-          round. Your champions don&apos;t plan around it: they head straight for their target and walk round whatever is in the way.
+          round. Your units don&apos;t plan around it: they head straight for their target and walk round whatever is in the way.
           Fliers ignore the ground entirely. Placing your squads so the ground works for you, and not for them, is up to you.
         </p>
         <p className="muted small">Maps: {MAPS.map((m) => m.name).join(", ")}.</p>

@@ -111,8 +111,8 @@ and towers.
 
 ### Terrain and maps — Decided (values open)
 
-Owner, Nov 2, 2026: new ground conditions for map-to-map variety, and a first experiment toward spells (cast on
-no-man's land between rounds; spells themselves are out of scope for now). Data in `src/data/terrain.ts`, the sim in
+Ground conditions for map-to-map variety, and a first step toward spells (cast on no-man's land between rounds;
+spells themselves are out of scope for now). Data in `src/data/terrain.ts`, the sim in
 `src/sim/terrain.ts`.
 
 | Terrain | Effect (ground units only; fliers ignore all terrain) |
@@ -187,8 +187,8 @@ A unit definition is pure data (`src/sim/types.ts`, `UnitDef`):
 | `tags` | `category:value` labels used by selectors, including `faction:*` and `role:*` |
 | `structure` | towers only: anchored and not counted toward winning |
 
-**Behavior.** Each model picks a target among the layers it can hit: the nearest, unless a preference applies (highest HP, lowest HP, towers first, or enemies matching `prefers`). **Preferences are local**: they only choose among enemies within attack range + `RULES.preferReach` (2 tiles; 4 until Nov 3, 2026). Of the enemies in front of it, a unit takes the one it prefers; it never crosses the field for one. Raiders reach the back line by speed, by flying, or by being placed on a flank. Then it
-walks until it is in range, and attacks. While walking, units look round for a better target about once a second. **Once attacking** (target in range), a unit keeps its target until it dies, hides or gets out of range (owner, Nov 2, 2026); units with no attack keep looking round. A `windup` unit (the Ballista) aims for its windup after every reload, and only while its target is in range; a target that leaves range resets the aim. Its sustained rate is cooldown + windup. Units with no attack (the Cleric) walk with the nearest ground ally that fights at close range (attack range ≤ `RULES.escortMeleeRange`, 2.5: the line, where the hits land), or the nearest armed ally if there is none, and stop `RULES.escortGap` (2 tiles) short of it: just behind the line, out of the melee, still close enough to heal it. Models push each other apart; heavier models get pushed less, and towers never move. Enemies block each other fully, but allies only nudge each other (`RULES.allyPush` = 0.15), so units behind a front line can squeeze through to reach the fight. There is no pathfinding yet. Each tick, models act in a freshly shuffled (seeded) order, so neither side always strikes first, and a squad’s short last row stands at the back of its footprint for both sides.
+**Behavior.** Each model picks a target among the layers it can hit: the nearest, unless a preference applies (highest HP, lowest HP, towers first, or enemies matching `prefers`). **Preferences are local**: they only choose among enemies within attack range + `RULES.preferReach` (2 tiles). Of the enemies in front of it, a unit takes the one it prefers; it never crosses the field for one. Raiders reach the back line by speed, by flying, or by being placed on a flank. Then it
+walks until it is in range, and attacks. While walking, units look round for a better target about once a second. **Once attacking** (target in range), a unit keeps its target until it dies, hides or gets out of range; units with no attack keep looking round. A `windup` unit (the Ballista) aims for its windup after every reload, and only while its target is in range; a target that leaves range resets the aim. Its sustained rate is cooldown + windup. Units with no attack (the Cleric) walk with the nearest ground ally that fights at close range (attack range ≤ `RULES.escortMeleeRange`, 2.5: the line, where the hits land), or the nearest armed ally if there is none, and stop `RULES.escortGap` (2 tiles) short of it: just behind the line, out of the melee, still close enough to heal it. Models push each other apart; heavier models get pushed less, and towers never move. Enemies block each other fully, but allies only nudge each other (`RULES.allyPush` = 0.15), so units behind a front line can squeeze through to reach the fight. There is no pathfinding yet. Each tick, models act in a freshly shuffled (seeded) order, so neither side always strikes first, and a squad’s short last row stands at the back of its footprint for both sides.
 
 **Damage pipeline:**
 `attack damage × aura buffs × attacker status (Dazed) → reactions with the target's statuses (Conduct ×2, Shatter ×2, …) → bonusVs → target resist → target status (Dazed ×2) → toughness (hits only: a flat cut, but a quarter always gets through)`
@@ -262,12 +262,12 @@ Balance follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs
 - **Fight shape: like Mechabellum, not one blob.** Fights should run about 40–60 s, and they should get there through
   space and movement, not extra HP, so placement matters: what stands in front, how deep the line is, which flank
   meets which. Each side deploys in 7 rows with 13 rows of no-man's-land between them, so nothing starts in range of
-  anything. Units move at half the old speed (`RULES.speedScale` 0.1). `npm run balance -- density` measures time to
+  anything. Units are slow (`RULES.speedScale` 0.1: 10 speed points is 1 tile/s). `npm run balance -- density` measures time to
   first contact, fight length and the share of each army fighting at once. Self-TTK bands stay Mechabellum's
   (`FIGHT_SCALE` = 1).
 - **The closing tax is real.** Slower approaches give shooters many free shots, so melee units, divers and chaff get
   their value from toughness, speed or numbers. Pikes have reach (1.5) to fight two ranks deep. Ramping units (Troll,
-  Frost Elemental) keep hitting the target they're building on while it stays in reach.
+  Frost Elemental) build up on one target, and like every unit they stay on it once attacking.
 - **Anchors.** Crossbowmen are the neutral baseline (value 1.0); Knights are the second anchor.
 - **Tolerances** (`TOLERANCE` in `src/data/balance.ts`): a mirror is 50%; a soft counter wins at least 60% at equal
   supply; a hard counter beats twice its own supply of the target; nothing hard-counters more than half the roster;
@@ -376,10 +376,10 @@ make it stronger.
   Leveling should feel great but happen rarely, and each level should be much harder than the last. The table comes
   from two knobs, `veterancyXp(base, growth)`:
   - **base** (2,000) is the XP for level 2. In a typical battle the MVP deals about 2,000, so the first level takes
-    one great fight or two good ones (it was 2,500 until Nov 2, 2026).
+    one great fight or two good ones.
   - **growth** (1.75) is how many more fights each later level takes than the one before. Because a level-N squad deals
     N× damage, it also earns N× XP, so step k is also scaled by k to cancel that. Without that factor, every level
-    would take about the same number of fights, which is what the old 1,200 / 4,000 / 9,000 / 16,000 table did. In
+    would take about the same number of fights. In
     fights at a fresh squad's strength the steps now cost 1, 1.75, 3.1 and 5.4. Bigger late-game armies still get
     there faster.
 - **One level at a time.** A squad holds at most one unpaid level: while a level is waiting, its XP stops at that
@@ -426,13 +426,13 @@ There are three layers:
   - Frost on Puddle → **Ice**
   - Water on Fire → **Steam**, which blocks ranged targeting and scalds whoever stands in it (6 fire per tick)
   - Fire or Lightning on Oil → **Fire**, which spreads
-- **Fire just burns** (Oct 2026, owner's call): fire doesn't boil puddles, melt ice, thaw Frozen or Chilled units, or
-  dry off Wet ones, and frost doesn't snuff Burning. Only water puts fire out. Elemental armies stopped undoing their
-  own combos (fire thawing what frost froze, frost putting out what fire lit).
+- **Fire just burns** (owner's call): fire doesn't boil puddles, melt ice, thaw Frozen or Chilled units, or dry off
+  Wet ones, and frost doesn't snuff Burning. Only water puts fire out, so elemental armies don't undo their own combos
+  (fire thawing what frost froze, frost putting out what fire lit).
 
-**Dial setting (Oct 2026):** the first prototype was far too complex and was cut back hard. The current pass turns it up
-a little, with no new statuses, surfaces or elements: lightning now also sparks oil and shatters ice, Ignite leaves
-targets burning, steam scalds, and more upgrades (Wildfire, Oil Bombs, Downpour) put surfaces down.
+**Dial setting:** keep the system simple: no new statuses, surfaces or elements without the owner. Within that,
+lightning sparks oil and shatters ice, Ignite leaves targets burning, steam scalds, and a few upgrades (Wildfire, Oil
+Bombs, Downpour) put surfaces down.
 - Placing a surface onto another counts as its element hitting it, so a puddle poured onto fire becomes steam.
 
 ### Friendly fire — Decided
@@ -450,7 +450,7 @@ New units should **not** add new surfaces or statuses by default. Prefer reusing
 Oiled, Dazed and Snared. Surfaces belong behind upgrades (section 5b). Adding a new element (Earth, Poison) is a
 deliberate, separate decision.
 
-**Snared** (Nov 2026, the owner's idea): held in place, and a Snared **flier can be hit by attacks that only reach the
+**Snared** (the owner's idea): held in place, and a Snared **flier can be hit by attacks that only reach the
 ground**, so swords, claws and pikes can reach it. It's elementless, and only the Bog Toad Riders' *Gulp* applies it.
 The rule is one exception in the targeting check (`grounded` on the status); fliers stay in the air layer, so nothing
 about movement or collisions changes.
@@ -543,7 +543,7 @@ Because the AI only uses the simulator, it handles any unit you design without n
 - Plan unlocks over several rounds.
 - Learn placement (flanking, tower snipes) instead of using templates.
 
-**Parked (owner's plan, Oct 2026; keep the current AI for now):** difficulty as personality, not just search effort.
+**Parked (owner's plan; keep the current AI for now):** difficulty as personality, not just search effort.
 - **Easy:** slowly builds a nice symmetric board with an even mix of big, small, air, ground, ranged, melee and so on,
   but doesn't directly counter units until it has taken significant damage from them. It leaves temporary gaps (no
   chaff, no chaff clear, not enough damage, no anti-air) that the player can exploit.
@@ -558,8 +558,8 @@ The campaign outline (docs/CAMPAIGN.md) casts these as commanders: the goblin Bo
 ## 10. Tabs and tools — Decided
 
 The tabs, in order: **Story** (the campaigns), **Play** (the full game against the AI, every unit available), **PvP**,
-**Units**, **Codex**, **Counters**, **Spectate**. The site opens on Story (owner, Nov 2, 2026: new players start with
-the first mission), and the first thing on it is **Play the full game now**, for players who'd rather skip the story. A
+**Units**, **Codex**, **Counters**, **Spectate**. The site opens on Story (new players start with the first
+mission), and the first thing on it is **Play the full game now**, for players who'd rather skip the story. A
 PvP link (`?join=…`) still opens on Play. Play stays mounted behind the other tabs (a Codex
 link mid-game keeps the match), but its field doesn't draw while hidden, so a battle waits until you come back. Story
 and Spectate stay mounted the same way once opened. A mission is a second board, so only the board on screen listens
@@ -577,7 +577,7 @@ marks only units whose price differs (the independents), so tiles have room for 
 | **Hard streak** | A vanity counter: matches won in a row against the AI on Hard (every round on Hard, as for the love letter), and the best run, kept in `localStorage` (`src/ui/progress.ts`). A finished Hard match won adds one, lost ends the run; other difficulties and abandoned matches don't count. Shown beside Restart once there's a best, and under the result when a Hard match ends. Story's Reset leaves it alone |
 | **Love letter** | An easter egg: winning a match against the AI with it on Hard every round shows a popup ("This game is a love letter to Mechabellum. If you liked this game, you'll love the real thing.") with a link to Mechabellum's Steam page (`src/ui/LoveLetter.tsx`). It shows once ever: the browser remembers it (its own `localStorage` key, so a story reset doesn't bring it back; once per visit where storage is blocked). Changing the AI difficulty mid-deployment replans that round, so switching to Hard in round 1 still counts |
 | **Units** | Browse the roster: pick a unit for its card (stats, effects, upgrades) and a small looping fight that shows it doing its thing, with the unit haloed in gold. Each fight is curated in `src/data/showcases.ts` (who it fights and a one-line caption) and runs in a small left-vs-right arena (`src/game/showcase.ts`). "Try it" on an upgrade restarts the fight with it. A test checks the featured side wins every showcase at level 1 with no upgrades. `#units/<unit>` links to one unit; Codex unit chips, Counters rows and the Play unit card link there |
-| **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md). Playable missions open at `#story/<mission>`: a briefing (the cast's lines, each a portrait beside a parchment speech bubble, Wardens on the left and goblins on the right, `src/ui/Portraits.tsx`; then a Drill Book page with its rule, its formation drawn and the Marshal's pencil note), then the ordinary Play board with the mission's setup (its supply, units, HP, Keeps on or off, a scripted enemy, an objective line above the shop, and the cast's lines between rounds), then a debrief in the sidebar (lines and a pencil note on a win, a hint read from your army on a loss, the commendation, Try again). One-battle missions hide the HP bars. **Progress is stored** in this browser (`src/ui/progress.ts`): missions open in order, each once the one before is won (a lock says which to win first); every mission shows a victory banner and, if it has one, a commendation star, each an empty dashed slot until earned, and each campaign counts both. Reset all progress (with a confirm step) sits at the bottom. The debug panel can open every mission for the visit. Data in `src/data/campaign.ts`, match setup in `src/game/mission.ts`, the framework in docs/CAMPAIGN.md §6. Wardens missions 1–3 are built |
+| **Story** | The Compact and the three campaigns (docs/CAMPAIGN.md). Playable missions open at `#story/<mission>`: a briefing (the cast's lines, each a portrait beside a parchment speech bubble, Wardens on the left and goblins on the right, `src/ui/Portraits.tsx`; then a Drill Book page with its rule, its formation drawn and the Marshal's pencil note), then the ordinary Play board with the mission's setup (its supply, units, HP, Keeps on or off, a scripted enemy, an objective line above the shop, and the cast's lines between rounds), then a debrief in the sidebar (lines and a pencil note on a win, a hint read from your army on a loss, the commendation, Try again). One-battle missions hide the HP bars. **Progress is stored** in this browser (`src/ui/progress.ts`): missions open in order, each once the one before is won (a lock says which to win first); every mission shows a victory banner and, if it has one, a commendation star, each an empty dashed slot until earned, and each campaign counts both. Reset all progress (with a confirm step) sits at the bottom. The debug panel can open every mission for the visit. Data in `src/data/campaign.ts`, match setup in `src/game/mission.ts`, the framework in docs/CAMPAIGN.md §6. The Wardens campaign (missions 1–8) is built |
 | **Codex** | The rulebook, written for a brand-new player: the Compact, rounds and HP, ground and air, Keeps, friendly fire, unlocks, upgrades, veterans, every role, element, status, surface and reaction. Every topic has an anchor (`#codex/<topic>`). Numbers come from the data files |
 | **Counters** | "I'm getting wrecked by X, what do I build?" Pick an enemy unit; every other unit fights it at equal supply (one-unit armies, level 1, no upgrades, no Keeps) in a Web Worker, sorted into Build these / Even fights / Don't send these, with plain-word reasons read from the data (`src/game/counters.ts`). Upgrades are out of scope. Cached per session; `#counters/<unit>` links to one unit |
 | **Spectate** | Watch the AI play itself (`#spectate`, `src/ui/SpectateView.tsx`, logic in `src/game/spectate.ts`): a whole match, Blue at the bottom and Red at the top, each side's difficulty set apart (Hard by default), for watching unit interactions. Both sides take an opening pack. Each round's battle is fought headless as soon as both have planned, and the next round is planned while it plays (never more than one round ahead), so watching doesn't wait. Every round starts at 1×, as in Play. The sidebar logs what each side bought, shows the result with MVPs and every squad's stats, and lists past rounds to watch again. Auto-advance counts down 3, 2, 1 after a battle (on the field and the Next round button); New match sits beside Next round. Hovering a unit shows its card. **Copy round** copies the battle's exact setup (armies, upgrades, Keep levels, seed) as JSON, to reproduce it in a script. Once opened it stays mounted, like Play, so a Codex link doesn't lose the match |
@@ -660,14 +660,12 @@ src/ui/      React views
 
 Rough priority order. Everything is open to reshuffling.
 
-1. **Balance pass** following `docs/BALANCE.md` (section 4, Balance; `docs/BALANCE-PLAN.md`). The first pass on the
-   new roster is done (95 of 97 relations, 36 of 38 upgrade intents), and so is the independents pass (Nov 2, 2026;
-   open items in `docs/BALANCE-PLAN.md` §3). Next: veterancy's value (the Ballista parks behind chaff), fliers in one-unit fights, hard counters for
-   Crossbowmen, Frost and Toad Riders, mixed-army tests. Then human playtests (pick rate, win rate when picked).
+1. **Balance** following `docs/BALANCE.md` (section 4, Balance; open items in `docs/BALANCE-PLAN.md`): veterancy's
+   value (the Ballista parks behind chaff), fliers in one-unit fights, hard counters for Crossbowmen, Frost and Toad
+   Riders, mixed-army tests. Then human playtests (pick rate, win rate when picked).
 2. **Faction bonuses** (section 8).
-3. **Campaigns** (docs/CAMPAIGN.md): the mission framework and the whole Wardens campaign (missions 1–8) are built
-   (Nov 2, 2026); next, the owner's playtest of 4–8, then the goblin campaign. The finale's debrief draws the player's
-   winning board as the Drill Book's page 9, shown and not kept; keeping it is parked (CAMPAIGN.md §5).
+3. **Campaigns** (docs/CAMPAIGN.md): the Wardens campaign is built; next, the owner's structural changes and
+   playtest, then the goblin campaign. Keeping the finale's page 9 is parked (CAMPAIGN.md §5).
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
 5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary. The owner's plan: cast

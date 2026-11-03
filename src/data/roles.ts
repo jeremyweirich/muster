@@ -65,7 +65,7 @@ export const ROLES: Record<string, { name: string; description: string; detail: 
     name: "Anti-large",
     description: "Bonus damage against big targets.",
     detail:
-      "Bonus damage against big targets: ogres, trolls, golems and cavalry. Big units that charge into anti-large troops regret it. Swarms of small units don't care.",
+      "Bonus damage against big targets: ogres, trolls, golems and cavalry. Big units that charge into anti-large units regret it. Swarms of small units don't care.",
   },
   flier: {
     name: "Flier",
