@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { CAST, type Line, type MissionDef, type MissionEntry } from "../data/campaign";
 import { DEFAULT_UNITS } from "../data/units";
 import type { MissionOutcome } from "../game/mission";
@@ -22,6 +23,43 @@ export function Say({ line, small }: { line: Line; small?: boolean }) {
         <b>{who.name}</b> {line.text}
       </p>
     </div>
+  );
+}
+
+// A conversation, one line at a time: Continue (or a click on the lines, Space or Enter) shows the next, and Skip
+// shows them all. `after` appears once every line has been read. With `reveal` off, everything shows at once.
+export function Dialogue({ lines, small, after, reveal = true }: { lines: Line[]; small?: boolean; after?: ReactNode; reveal?: boolean }) {
+  const [shown, setShown] = useState(reveal ? Math.min(1, lines.length) : lines.length);
+  const last = useRef<HTMLDivElement>(null);
+  const next = useRef<HTMLButtonElement>(null);
+  const done = shown >= lines.length;
+  useEffect(() => {
+    if (shown > 1) last.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (!done) next.current?.focus({ preventScroll: true });
+  }, [shown, done]);
+  const advance = () => setShown((n) => Math.min(lines.length, n + 1));
+  return (
+    <>
+      <div className={`dialogue ${done ? "" : "reading"}`} onClick={done ? undefined : advance}>
+        {lines.slice(0, shown).map((l, i) => (
+          <div key={i} ref={i === shown - 1 ? last : undefined} className={i === shown - 1 && shown > 1 ? "say-new" : undefined}>
+            <Say line={l} small={small} />
+          </div>
+        ))}
+      </div>
+      {done ? (
+        after
+      ) : (
+        <div className="dialogue-controls">
+          <button ref={next} className="primary" onClick={advance}>
+            Continue
+          </button>
+          <button className="link-btn" onClick={() => setShown(lines.length)}>
+            Skip
+          </button>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -70,7 +108,7 @@ export function boardDiagram(army: PlacedSquad[]): string[][] {
   return [...ranks.entries()].sort(([a], [b]) => a - b).map(([, sqs]) => sqs.sort((a, b) => a.x - b.x).map((sq) => sq.defId));
 }
 
-export function Briefing({ entry, onStart, onBack }: { entry: MissionEntry; onStart: () => void; onBack: () => void }) {
+export function Briefing({ entry, onStart, onBack, reveal = true }: { entry: MissionEntry; onStart: () => void; onBack: () => void; reveal?: boolean }) {
   const m = entry.def;
   return (
     <div className="page mission">
@@ -83,30 +121,56 @@ export function Briefing({ entry, onStart, onBack }: { entry: MissionEntry; onSt
         </div>
         <h2>{entry.title}</h2>
         <div className="brief-lines">
-          {m.briefing.map((l, i) => (
-            <Say key={i} line={l} />
-          ))}
+          <Dialogue
+            lines={m.briefing}
+            reveal={reveal}
+            after={
+              <>
+                <DrillPage page={m.page} />
+                <p className="brief-kit">
+                  <Linked text={m.objective} />
+                </p>
+                <button className="primary big" onClick={onStart}>
+                  Take the Field
+                </button>
+              </>
+            }
+          />
         </div>
-        <DrillPage page={m.page} />
-        <p className="brief-kit">
-          <Linked text={m.objective} />
-        </p>
-        <button className="primary big" onClick={onStart}>
-          Take the Field
-        </button>
       </div>
     </div>
   );
 }
 
-// In the sidebar once the match is over, in place of the skirmish's "You win the war!".
-export function Debrief({ def, outcome, army, onRetry, onLeave }: { def: MissionDef; outcome: MissionOutcome; army: PlacedSquad[]; onRetry: () => void; onLeave: () => void }) {
+// In the sidebar once the match is over, in place of the skirmish's "You win the war!". After a win the next mission
+// comes first, then playing this one again; going back to the list is a quiet link (the Story tab does it too).
+export function Debrief({
+  def,
+  outcome,
+  army,
+  onRetry,
+  onLeave,
+  onNext,
+  reveal = true,
+}: {
+  def: MissionDef;
+  outcome: MissionOutcome;
+  army: PlacedSquad[];
+  onRetry: () => void;
+  onLeave: () => void;
+  onNext?: () => void;
+  reveal?: boolean;
+}) {
   const c = def.commendation;
+  const after = outcome.won && (
+    <>
+      {def.winNote && <PencilNote text={def.winNote} />}
+      {def.lastPage && <DrillPage page={{ ...def.lastPage, diagram: boardDiagram(army) }} />}
+    </>
+  );
   return (
     <div className="debrief">
-      {outcome.won ? def.win.map((l, i) => <Say key={i} line={l} small />) : outcome.hint && <Say line={outcome.hint} small />}
-      {outcome.won && def.winNote && <PencilNote text={def.winNote} />}
-      {outcome.won && def.lastPage && <DrillPage page={{ ...def.lastPage, diagram: boardDiagram(army) }} />}
+      {outcome.won ? <Dialogue lines={def.win} small after={after} reveal={reveal} /> : outcome.hint && <Say line={outcome.hint} small />}
       {c &&
         (outcome.commended ? (
           <p className="commendation earned">
@@ -118,12 +182,24 @@ export function Debrief({ def, outcome, army, onRetry, onLeave }: { def: Mission
           </p>
         ))}
       <div className="debrief-buttons">
+        {outcome.won && onNext && (
+          <button className="primary big" onClick={onNext}>
+            Next mission →
+          </button>
+        )}
+        {outcome.won && !onNext && (
+          <button className="primary big" onClick={onLeave}>
+            Back to the campaigns
+          </button>
+        )}
         <button className={outcome.won ? "" : "primary big"} onClick={onRetry}>
           {outcome.won ? "Play again" : "Try again"}
         </button>
-        <button className={outcome.won ? "primary big" : ""} onClick={onLeave}>
-          Back to the campaigns
-        </button>
+        {(!outcome.won || onNext) && (
+          <button className="link-btn" onClick={onLeave}>
+            Back to the campaigns
+          </button>
+        )}
       </div>
     </div>
   );

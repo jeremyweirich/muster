@@ -13,12 +13,14 @@ const TEACHES: Record<string, string> = {
   "wardens-2":
     "Rounds and HP: what is placed stays placed. You see their last army, never what they will add, so read it and answer (they hit the flank you left thin).",
   "wardens-3": "Keeps: when one falls, the whole army is Dazed. Guard the flanks with Knights; Keep levels only buy time.",
-  "wardens-4": "Unlocks and big units: trolls beat a Knight line, so unlock the Ballista in the shop and put Knights in front of it.",
-  "wardens-5":
+  "wardens-4":
+    "Ballistae and depth: trolls beat a Knight line, so put Ballistae behind Knights, and keep the Knights at the back so the trolls come to them through the slow ground under the bolts.",
+  "wardens-5": "Clerics: hold the one way across with Knights, and keep them standing with Clerics behind them. The river rules out flanking.",
+  "wardens-6":
     "Upgrades, yours and theirs: the enemy's upgrades show as stars, and the answer is an upgrade of your own (Repeaters), which reaches every squad already on the Field.",
-  "wardens-6": "The air: Knights can't hit what flies. Know which units can (Crossbowmen, Ballistae, Griffon Riders).",
-  "wardens-7": "Veterancy: squads that live earn levels. Promote them, and put Dwarven Pikemen where the biggest enemy walks.",
-  "wardens-8": "The full Compact: choose an opening, deploy blind from round 1, and use everything from the book at once.",
+  "wardens-7": "The air: Knights can't hit what flies. Know which units can (Crossbowmen, Ballistae, Griffon Riders).",
+  "wardens-8": "Veterancy: squads that live earn levels. Promote them, and put Dwarven Pikemen where the biggest enemy walks.",
+  "wardens-9": "The full Compact: choose an opening, deploy blind from round 1, and use everything from the book at once.",
 };
 
 const say = (l: Line) => `**${CAST[l.who].name}:** ${l.text}`;

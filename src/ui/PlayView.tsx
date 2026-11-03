@@ -94,6 +94,7 @@ export interface MissionProps {
   title: string;
   onLeave: () => void;
   onWon: (commended: boolean) => void;
+  onNext?: () => void; // the next mission, once this one is won (absent after the last)
 }
 
 export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?: MissionProps; onStatus?: (s: PlayStatus) => void }) {
@@ -1378,7 +1379,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
                 You took <b>{report.damage[0]}</b> · {pvp ? "Your friend" : rival} took <b>{report.damage[1]}</b>
               </p>
             )}
-            {outcome && mission && <Debrief def={mission.def} outcome={outcome} army={match.armies[0]} onRetry={restart} onLeave={mission.onLeave} />}
+            {outcome && mission && <Debrief def={mission.def} outcome={outcome} army={match.armies[0]} onRetry={restart} onLeave={mission.onLeave} onNext={mission.onNext} />}
             {fought?.result && !singleBattle && <PromotionsEarned result={fought.result} army={match.armies[0]} defs={defs} />}
             {fought?.result && view === "report" && (
               <MvpBoard result={fought.result} defs={defs} selected={pinned} onSelect={setPinned} onHover={setHoverSquad} />

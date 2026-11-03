@@ -34,7 +34,7 @@ Each unit's role and analogue, as `src/data/balance.ts` records them. Numbers ar
 | Crossbowmen | Anti-medium (Void Eye), **baseline 1.0** | Half damage to fliers until *Skyhunters*. *Repeaters* makes them chaff clear |
 | Ballista | Anti-giant (Marksman) | Winds up every shot. ×2 against large and huge, range 11 |
 | Griffon Riders | Anti-medium (Phantom Ray) | ×1.5 against medium units. *Giant Slayers* → Phoenix |
-| Cleric | Utility | Heals, and allies nearby deal +25% damage. Stands behind the line it follows |
+| Cleric | Utility | Heals the line it stands behind; *Blessing* adds a damage aura. Stands behind the line it follows |
 | Pikemen | Anti-giant: an anti-large line | Reach 1.5, ×4.5 against large units and cavalry, no splash. *Heavy Halberds* → chaff clear, *Long Pikes* → beats Wolf Riders |
 | Grunts | Chaff (Crawler) | |
 | Skirmishers | Chaff (Fang) | |

@@ -5,10 +5,12 @@ import { DEFAULT_UNITS } from "../src/data/units";
 import { defMap } from "../src/game/army";
 import { newMatch } from "../src/game/match";
 import { Battle } from "../src/sim/battle";
-import type { TerrainPatch } from "../src/sim/terrain";
+import { isObstacle, Terrain, type TerrainPatch } from "../src/sim/terrain";
 import type { PlacedSquad } from "../src/sim/types";
 
 const defs = defMap(DEFAULT_UNITS);
+// the biggest ground unit's width, and a little room
+const MIN_GAP = 2 * Math.max(...DEFAULT_UNITS.filter((u) => u.layer === "ground").map((u) => u.size)) + 0.5;
 const sq = (defId: string, x: number, y: number, uid = `${defId}-${x}-${y}`): PlacedSquad => ({ uid, defId, x, y, round: 1 });
 
 describe("maps", () => {
@@ -23,12 +25,34 @@ describe("maps", () => {
         const ry = p.ry ?? p.r;
         expect(p.y - ry, `${p.kind} at ${p.x},${p.y}`).toBeGreaterThanOrEqual(RULES.deployDepth);
         expect(p.y + ry, `${p.kind} at ${p.x},${p.y}`).toBeLessThanOrEqual(RULES.fieldH - RULES.deployDepth);
-        expect(p.x - p.r).toBeGreaterThanOrEqual(0);
-        expect(p.x + p.r).toBeLessThanOrEqual(RULES.fieldW);
-        if (p.kind === "rocks" || p.kind === "pond") expect(p.ry === undefined || p.ry === p.r, "obstacles are circles").toBe(true);
+        if (isObstacle(p.kind)) expect(p.ry === undefined || p.ry === p.r, "obstacles are circles or capsules").toBe(true);
+        else if (p.kind !== "rough" && p.kind !== "grass") {
+          expect(p.x - p.r).toBeGreaterThanOrEqual(0);
+          expect(p.x + p.r).toBeLessThanOrEqual(RULES.fieldW);
+        }
         // turned 180° about the center, every patch lands on a patch of the same kind and size
-        const twin = map.terrain.find((q) => q.kind === p.kind && q.r === p.r && q.ry === p.ry && Math.abs(q.x - (RULES.fieldW - p.x)) < 1e-9 && Math.abs(q.y - (RULES.fieldH - p.y)) < 1e-9);
+        const twin = map.terrain.find((q) => q.kind === p.kind && q.r === p.r && q.ry === p.ry && q.len === p.len && Math.abs(q.x - (RULES.fieldW - p.x)) < 1e-9 && Math.abs(q.y - (RULES.fieldH - p.y)) < 1e-9);
         expect(twin, `${p.kind} at ${p.x},${p.y} has no twin`).toBeDefined();
+      }
+    });
+
+    // Obstacles are convex (circles and capsules), and they stay far enough apart, and far enough from the field's
+    // edges, that the biggest ground unit fits between any two: no pockets to get stuck in. A river may run off one
+    // side of the field (units on its bank head for the open end).
+    it(`${map.name}: no pockets between obstacles, or between an obstacle and the edge`, () => {
+      const t = new Terrain(map.terrain, RULES.fieldW, RULES.fieldH);
+      for (const [i, a] of t.obstacles.entries()) {
+        const offW = a.x0 - a.r <= 0;
+        const offE = a.x1 + a.r >= RULES.fieldW;
+        expect(offW && offE, "a river can't block the whole field").toBe(false);
+        if (!offW) expect(a.x0 - a.r, `obstacle at ${a.x0},${a.y} vs the west edge`).toBeGreaterThanOrEqual(MIN_GAP);
+        if (!offE) expect(RULES.fieldW - a.x1 - a.r, `obstacle at ${a.x1},${a.y} vs the east edge`).toBeGreaterThanOrEqual(MIN_GAP);
+        for (const b of t.obstacles.slice(i + 1)) {
+          // the gap between two capsules on horizontal segments
+          const dx = Math.max(0, a.x0 - b.x1, b.x0 - a.x1);
+          const gap = Math.hypot(dx, a.y - b.y) - a.r - b.r;
+          expect(gap, `obstacles at ${a.x0},${a.y} and ${b.x0},${b.y}`).toBeGreaterThanOrEqual(MIN_GAP);
+        }
       }
     });
   }
@@ -53,6 +77,27 @@ describe("terrain in battle", () => {
       for (const m of b.models) if (m.alive) expect(Math.hypot(m.x - 24, m.y - 13.5)).toBeGreaterThan(2.5 + m.def.size - 0.05);
     }
     expect(b.timedOut).toBe(false);
+    expect(b.winner).toBe(0);
+  });
+
+  it("a river sends ground units along its bank to the bridge, never into the corner at the field's edge", () => {
+    const river = mapTerrain("toll-bridge");
+    const t = new Terrain(river, RULES.fieldW, RULES.fieldH);
+    // Knights on the far west, a ballista straight across the river from them
+    const b = new Battle(defs, [[sq("knights", 2, 20)], [sq("ballista", 2, 5)]], { seed: 1, towers: false, terrain: river });
+    let crossed = false;
+    while (!b.over) {
+      b.step();
+      for (const m of b.models) {
+        if (!m.alive || m.def.id !== "knights") continue;
+        for (const o of t.obstacles) {
+          const px = Math.min(Math.max(m.x, o.x0), o.x1);
+          expect(Math.hypot(m.x - px, m.y - o.y)).toBeGreaterThan(o.r + m.def.size - 0.05);
+        }
+        if (m.y < 12) crossed = true;
+      }
+    }
+    expect(crossed, "the knights crossed by the bridge").toBe(true);
     expect(b.winner).toBe(0);
   });
 

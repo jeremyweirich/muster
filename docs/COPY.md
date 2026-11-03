@@ -171,62 +171,115 @@ Drill Book page, **Page 3: Two Keeps**:
 
 ---
 
-## The Drill Book, mission 4: Under the Bridge
+## The Drill Book, mission 4: The Troll
 
-**Teaches** (design note, not shown): Unlocks and big units: trolls beat a Knight line, so unlock the Ballista in the shop and put Knights in front of it.
+**Teaches** (design note, not shown): Ballistae and depth: trolls beat a Knight line, so put Ballistae behind Knights, and keep the Knights at the back so the trolls come to them through the slow ground under the bolts.
 
-**On the Story list:** The goblins have adopted the troll under the toll bridge. And its toll.
+**On the Story list:** The goblins have got hold of a troll. Several, in fact.
 
 ### Take the Field screen
 
 Briefing:
 
-- **Archivist Ithiel:** There's a troll under the toll bridge at Hob's Crossing, and it's been there longer than the bridge! I have three volumes on trolls. I can't wait to see if they got the knees right.
+- **Archivist Ithiel:** A troll! I have three volumes on trolls, and I can finally see if they got the knees right.
 - **Sergeant Dunmor:** Knees are the last thing you'll notice. They go through Knights like a boot through a hedge. Every blow in a row lands harder, and they heal while they fight.
-- **The Boss:** THE TROLL WORKS FOR US NOW. SO DOES THE TOLL. EXACT CHANGE ONLY.
+- **The Boss:** WE GOT TROLLS. AND ENOUGH SKIRMISHERS FOR EVERY KNIGHT YOU OWN.
 - **Marshal:** What do we do about a troll?
 - **Sergeant Dunmor:** Ballista. Big, slow, and goes for the biggest thing it can see. Put Knights in front, or a mob will wreck it. Book says so.
 - **Archivist Ithiel:** It actually does, for once! Page 4! How did you know?
-- **Sergeant Dunmor:** Stood in front of one once. River's deep on both sides of the bridge, too, so the short way across is the middle.
+- **Sergeant Dunmor:** Stood in front of one once. And they've ploughed the middle of the Field. Anything on foot crosses it at half speed, trolls included.
 
-Drill Book page, **Page 4: Unlocks**:
+Drill Book page, **Page 4: Ballistae**:
 
-> "Some units must be unlocked in the shop. Each unlock costs supply once per match, and after that you buy squads as usual. Ballistae need Knights in front of them."
+> "Ballistae deal double damage to large units. Ballistae need Knights in front of them."
 
-*Pencil note: Sgt. and the book agree. Marking the date.*
+*Pencil note: Ploughed ground: half speed on foot. Theirs and ours. In front, but how far in front? Sgt. says don't be in a hurry.*
+
+**Objective:** Win the match.
+
+### During the match
+
+- Round 2: **The Boss:** HERE COME THE TROLLS.
+- Round 3: **Archivist Ithiel:** An actual troll! Volume One has the knees completely wrong! Oh, and it's healing. It's still healing. Look at that!
+
+### Debrief after a win
+
+- **Sergeant Dunmor:** Big, slow, and it worked. That's what I like in a plan.
+- **Archivist Ithiel:** The trolls have gone home, and I've drawn the correct knees.
+- **Marshal:** Is that going in the book?
+- **Archivist Ithiel:** It had better be!
+- **The Boss:** FINE. KEEP YOUR FIELD. WE'RE TAKING THE BRIDGE.
+
+*Pencil note: Trolls get worse the longer they keep hitting something (Sgt.). Knights waited at the back and met them in the mud. For knees, see Ithiel's drawing.*
+
+### Hints after a loss (the first that matches)
+
+- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** You stopped adding units after round 1. The trolls didn't stop.
+- When `!fielded(c,"ballista")`: **Sergeant Dunmor:** Knights against trolls is a fair fight, and they brought more trolls. Ballistae go for the biggest thing on the Field.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Nothing stood in front of the Ballistae, and a mob that reaches a Ballista wrecks it. Knights in front.
+- When `c.army.some(sq=>sq.defId==="knights"&&sq.y<24)`: **Sergeant Dunmor:** Your Knights marched out to meet them, and the Skirmishers shot them on the way. Keep them at the back. The trolls will come to you, slowly, through the mud.
+- When otherwise: **Sergeant Dunmor:** The trolls still got through. Add Ballistae every round, behind your Knights, and leave the trolls to them.
+
+### Commendation
+
+**In No Hurry:** Win with every Knight squad in your back two rows.
+
+---
+
+## The Drill Book, mission 5: Under the Bridge
+
+**Teaches** (design note, not shown): Clerics: hold the one way across with Knights, and keep them standing with Clerics behind them. The river rules out flanking.
+
+**On the Story list:** The goblins have put a toll on the bridge at Hob's Crossing.
+
+### Take the Field screen
+
+Briefing:
+
+- **Archivist Ithiel:** The river at Hob's Crossing runs right across the Field, and there's only one bridge. The goblins have put a toll on it!
+- **The Boss:** THE BRIDGE IS OURS NOW. SO IS THE TOLL. EXACT CHANGE ONLY.
+- **Sergeant Dunmor:** One way across, and it's wide. Put Knights on our end of it and they'll have to come through them.
+- **Marshal:** Won't the Knights get worn down?
+- **Sergeant Dunmor:** They would. That's what Clerics are for. They stand behind the Knights and patch them up.
+- **Archivist Ithiel:** Page 5! It's mostly hymns, but the healing is very well described.
+
+Drill Book page, **Page 5: Clerics**:
+
+> "Clerics heal the units around them. They don't fight, so keep them behind the line."
+
+*Pencil note: One bridge, so they all come the same way. Knights on it, Clerics behind. Ithiel has marked his favorite hymns.*
 
 **Objective:** Win the match.
 
 ### During the match
 
 - Round 2: **The Boss:** TOLL'S GONE UP.
-- Round 3: **Archivist Ithiel:** An actual troll! Volume One has the knees completely wrong! Oh, and it's healing. It's still healing. Look at that!
+- Round 3: **Sergeant Dunmor:** They'll keep coming over that bridge. Keep Knights on it and Clerics behind them.
 
 ### Debrief after a win
 
-- **Sergeant Dunmor:** Big, slow, and it worked. That's what I like in a plan.
-- **Archivist Ithiel:** The troll has gone back under the bridge, and it's agreed to charge the goblins as well. Also, I've drawn the correct knees.
-- **Marshal:** Is that going in the book?
-- **Archivist Ithiel:** It had better be!
+- **Sergeant Dunmor:** Nobody crossed. That's the job.
+- **Archivist Ithiel:** The toll is abolished! I kept a receipt.
+- **Marshal:** Did we pay it?
+- **Sergeant Dunmor:** No.
 - **The Boss:** YOU WANT TO PLAY CLEVER? MEET THE TINKER.
 
-*Pencil note: Trolls get worse the longer they keep hitting something (Sgt.). For knees, see Ithiel's drawing.*
+*Pencil note: Knights on the bridge, Clerics behind them. Nobody crosses. Ithiel kept a receipt for a toll we never paid.*
 
 ### Hints after a loss (the first that matches)
 
-- When `c.army.every(sq=>sq.round===1)`: **Archivist Ithiel:** You finished with supply unspent, and the goblins kept adding units. I've checked, and unspent supply has never won a battle. Not once in four hundred years of records!
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** The mob got to your Crossbowmen with no Knights in the way. Buy some Knights.
-- When `!fielded(c,"ballista")`: **Sergeant Dunmor:** Knights against trolls is a fair fight, and they brought more trolls. Unlock the Ballista in the shop. It goes for the biggest thing on the Field.
-- When `c.army.filter(sq=>sq.defId==="knights").length<2`: **Sergeant Dunmor:** Your Ballistae had nothing in front of them, and a mob that reaches a Ballista wrecks it. Knights in front, Ballistae behind.
-- When otherwise: **Sergeant Dunmor:** The trolls still got through. Add Ballistae every round, behind your Knights, and leave the trolls to them.
+- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** You stopped adding units after round 1. They kept coming over that bridge.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** Nothing held the bridge, so they walked straight over it. Put Knights on it.
+- When `!fielded(c,"cleric")`: **Archivist Ithiel:** The Knights held the bridge until they wore out! Clerics behind them would have kept them standing.
+- When otherwise: **Sergeant Dunmor:** Close. Add Knights on the bridge and Clerics behind them, every round.
 
 ### Commendation
 
-**Bridge Held:** Win with Ballistae on the Field, and lose none of them in the last battle.
+**Nobody Crosses:** Win every round.
 
 ---
 
-## The Drill Book, mission 5: The Wheelbarrow
+## The Drill Book, mission 6: The Wheelbarrow
 
 **Teaches** (design note, not shown): Upgrades, yours and theirs: the enemy's upgrades show as stars, and the answer is an upgrade of your own (Repeaters), which reaches every squad already on the Field.
 
@@ -242,10 +295,10 @@ Briefing:
 - **Archivist Ithiel:** It's a very good one!
 - **The Tinker:** I'll have a look at your army, then I'll pick my upgrades. It's called thinking! It's free, you should try it!
 - **Sergeant Dunmor:** Our squads get better all at once sometimes, even the ones already out there. Never knew why.
-- **Archivist Ithiel:** That's Page 5! Those are upgrades, and someone has to buy them!
+- **Archivist Ithiel:** That's Page 6! Those are upgrades, and someone has to buy them!
 - **Sergeant Dunmor:** Ah. That explains the invoices.
 
-Drill Book page, **Page 5: Upgrades**:
+Drill Book page, **Page 6: Upgrades**:
 
 > "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades show as a star beside the unit."
 
@@ -255,10 +308,9 @@ Drill Book page, **Page 5: Upgrades**:
 
 ### During the match
 
-- Round 1: **Sergeant Dunmor:** Shop's got a Cleric now. Stands behind the Knights, patches them up, and they hit harder for it.
 - Round 2: **The Tinker:** Just a small change this round! You'll notice!
 - Round 3: **Archivist Ithiel:** That star is Scrap Armor. It stops one hit per Grunt! So one big hit is wasted, but lots of small hits... oh, what a lovely problem!
-- Round 4: **The Tinker:** Thick Blood on the trolls! I considered something flashier, but it wouldn't have been as annoying.
+- Round 3: **The Tinker:** Thick Blood on the trolls! I considered something flashier, but it wouldn't have been as annoying.
 
 ### Debrief after a win
 
@@ -285,7 +337,7 @@ Drill Book page, **Page 5: Upgrades**:
 
 ---
 
-## The Drill Book, mission 6: Look Up
+## The Drill Book, mission 7: Look Up
 
 **Teaches** (design note, not shown): The air: Knights can't hit what flies. Know which units can (Crossbowmen, Ballistae, Griffon Riders).
 
@@ -300,10 +352,10 @@ Briefing:
 - **Archivist Ithiel:** He's right!
 - **Sergeant Dunmor:** Bats. Big ones, with goblins on. They go over your Knights and come down on whoever's behind them. The Mire won't slow them down, either.
 - **Marshal:** What can hit them?
-- **Archivist Ithiel:** Page 6 has a list! Griffon Riders are on it. The griffon is described here as noble and gentle-natured.
+- **Archivist Ithiel:** Page 7 has a list! Griffon Riders are on it. The griffon is described here as noble and gentle-natured.
 - **Sergeant Dunmor:** They bite.
 
-Drill Book page, **Page 6: Fliers**:
+Drill Book page, **Page 7: Fliers**:
 
 > "Knights cannot hit what flies. Crossbowmen, Ballistae and Griffon Riders can."
 
@@ -341,7 +393,7 @@ Drill Book page, **Page 6: Fliers**:
 
 ---
 
-## The Drill Book, mission 7: Old Grumm
+## The Drill Book, mission 8: Old Grumm
 
 **Teaches** (design note, not shown): Veterancy: squads that live earn levels. Promote them, and put Dwarven Pikemen where the biggest enemy walks.
 
@@ -353,13 +405,13 @@ Briefing:
 
 - **Sergeant Dunmor:** Thirty years ago, Grumm ate my helmet. I was nearly still in it. Nothing you can do about an ogre that size. Book says so.
 - **The Boss:** GRUMM REMEMBERS YOUR SERGEANT. SAYS THE HELMET NEEDED SALT.
-- **Archivist Ithiel:** Page 7 is entirely about large things! Dwarven Pikemen, with very long pikes. Nobody's opened it in two hundred years!
+- **Archivist Ithiel:** Page 8 is entirely about large things! Dwarven Pikemen, with very long pikes. Nobody's opened it in two hundred years!
 - **Sergeant Dunmor:** ...There's a page.
 - **Marshal:** Are you all right?
 - **Sergeant Dunmor:** Thirty years.
 - **Sergeant Dunmor:** Right. Squads that live through a battle get better at this. A gold ▲ means one has a level waiting. Promote it for half its price. That part I do know.
 
-Drill Book page, **Page 7: The Pike Line**:
+Drill Book page, **Page 8: The Pike Line**:
 
 > "Dwarven Pikemen do extra damage to large units. Put them where large units walk."
 
@@ -393,11 +445,11 @@ Drill Book page, **Page 7: The Pike Line**:
 
 ### Commendation
 
-**Page Seven:** Win with a promoted squad of Dwarven Pikemen on the Field.
+**Page Eight:** Win with a promoted squad of Dwarven Pikemen on the Field.
 
 ---
 
-## The Drill Book, mission 8: The Marches
+## The Drill Book, mission 9: The Marches
 
 **Teaches** (design note, not shown): The full Compact: choose an opening, deploy blind from round 1, and use everything from the book at once.
 
@@ -409,7 +461,7 @@ Briefing:
 
 - **Archivist Ithiel:** The season final! The Boss has staked the whole border, from the Toll Bridge to the hills. I've brought a hat.
 - **The Boss:** EVERYTHING. ALL OF IT. AND THE GOAT.
-- **Marshal:** Full Compact rules, page 8. Nobody sees the other army before the horn, and we choose an opening. I've read it three times.
+- **Marshal:** Full Compact rules, page 9. Nobody sees the other army before the horn, and we choose an opening. I've read it three times.
 - **Sergeant Dunmor:** Page 3. If a Keep falls, the whole army is Dazed. I looked it up.
 - **Archivist Ithiel:** You looked it up?
 - **Sergeant Dunmor:** Griffons?
@@ -420,7 +472,7 @@ Briefing:
 - **Archivist Ithiel:** It absolutely does not!
 - **Marshal:** Hire it if we need it. We'll write it in.
 
-Drill Book page, **Page 8: The Full Compact**:
+Drill Book page, **Page 9: The Full Compact**:
 
 > "Every commander chooses, every commander places, and no one sees the other's army before the horn."
 
@@ -442,12 +494,12 @@ Drill Book page, **Page 8: The Full Compact**:
 - **Archivist Ithiel:** It isn't in the book!
 - **Marshal:** It could be.
 - **Sergeant Dunmor:** Boring wins. Book says so.
-- **Archivist Ithiel:** It doesn't, as I've told you every... oh. Oh! Page 9! In ink!
+- **Archivist Ithiel:** It doesn't, as I've told you every... oh. Oh! Page 10! In ink!
 - **Marshal:** It kept coming up.
 - **Sergeant Dunmor:** Told you it was in there.
 - **The Boss:** ...SAME TIME NEXT SEASON?
 
-Then a page of the book, **Page 9, in the Marshal's hand, in ink**: "Boring wins." Below it, what we fielded at the Marches, and what held.
+Then a page of the book, **Page 10, in the Marshal's hand, in ink**: "Boring wins." Below it, what we fielded at the Marches, and what held.
 
 ### Hints after a loss (the first that matches)
 

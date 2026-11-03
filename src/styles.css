@@ -2478,10 +2478,45 @@ button.primary.warn-btn {
 .mission-back:hover {
   color: var(--text);
 }
-.brief-lines {
+.brief-lines,
+.dialogue {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+.brief-lines {
+  gap: 12px;
+}
+/* a conversation read a line at a time: click anywhere on it, or Continue, for the next */
+.dialogue.reading {
+  cursor: pointer;
+}
+.say-new {
+  animation: say-in 0.25s ease-out;
+}
+@keyframes say-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.dialogue-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.link-btn {
+  background: none;
+  border: none;
+  padding: 2px 0;
+  color: var(--muted);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+.link-btn:hover {
+  color: var(--text);
 }
 /* dialogue: a portrait beside a parchment speech bubble whose tail points at it; goblins speak from the right */
 .say {

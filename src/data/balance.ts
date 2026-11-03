@@ -113,8 +113,8 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     },
   },
   cleric: {
-    // Cheap (100), and the line it stands behind fights harder: +25% damage at base, +50% with Blessing. Judged in mixed
-    // armies (the campaign, `npm run mission -- all`), never alone: it has no attack, so one-unit fights always lose
+    // Cheap (100): it heals the line it stands behind, and with Blessing the line hits harder. Judged in mixed armies (the
+    // campaign, `npm run mission -- all`), never alone: it has no attack, so one-unit fights always lose
     role: "utility",
     analogue: "",
     upgrades: {

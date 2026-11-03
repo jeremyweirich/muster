@@ -52,7 +52,7 @@ describe("story missions", () => {
   it("a finale's debrief draws the winning board as the book's last page", { timeout: 30_000 }, () => {
     for (const { def: m } of MISSIONS.filter((e) => e.def.lastPage)) {
       const run = play(m, m.reference.wins[0]);
-      const html = renderToStaticMarkup(<Debrief def={m} outcome={run} army={run.state.armies[0]} onRetry={() => {}} onLeave={() => {}} />);
+      const html = renderToStaticMarkup(<Debrief def={m} outcome={run} army={run.state.armies[0]} onRetry={() => {}} onLeave={() => {}} reveal={false} />);
       expect(html).toContain(m.lastPage!.title.replace(/'/g, "&#x27;"));
       if (m.lastPage!.handwritten) expect(html).toContain(m.lastPage!.handwritten);
       if (m.winNote) expect(html).toContain("pencil-note");
@@ -64,7 +64,7 @@ describe("story missions", () => {
   it("every Codex link in a briefing has a target", () => {
     const codex = renderToStaticMarkup(<CodexView />);
     for (const entry of MISSIONS) {
-      const html = renderToStaticMarkup(<Briefing entry={entry} onStart={() => {}} onBack={() => {}} />);
+      const html = renderToStaticMarkup(<Briefing entry={entry} onStart={() => {}} onBack={() => {}} reveal={false} />);
       for (const [, topic] of html.matchAll(/href="#codex\/([^"]+)"/g)) expect(codex, topic).toContain(`id="codex-${topic}"`);
     }
   });

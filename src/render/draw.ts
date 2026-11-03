@@ -116,7 +116,7 @@ function paintGrass(ctx: CanvasRenderingContext2D, tile: number, field: { w: num
 // Terrain under the overlays (src/data/terrain.ts). Areas get soft edges; ponds and rocks are drawn inside their
 // collision circle, so units brush the edge rather than overlapping it. Each patch's details come from its own seed.
 function paintTerrain(ctx: CanvasRenderingContext2D, tile: number, patches: TerrainPatch[]) {
-  const order = { rough: 0, grass: 1, pond: 2, rocks: 3 } as const;
+  const order = { rough: 0, grass: 1, pond: 2, bridge: 3, rocks: 4 } as const;
   for (const p of [...patches].sort((a, b) => order[a.kind] - order[b.kind])) {
     let seed = Math.floor(p.x * 7919 + p.y * 104729 + p.r * 31) % 2147483646 || 1;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -172,6 +172,62 @@ function paintTerrain(ctx: CanvasRenderingContext2D, tile: number, patches: Terr
         ctx.lineTo(x + (rnd() - 0.5) * tile * 0.3, y - h);
         ctx.stroke();
       }
+    } else if (p.kind === "pond" && p.len) {
+      // a river: a capsule with gently wavy banks, drawn just inside its collision shape
+      const half = p.len * tile;
+      const r = rx * 0.96;
+      ctx.beginPath();
+      for (let i = 0; i <= 32; i++) {
+        const x = cx - half + (i / 32) * half * 2;
+        ctx.lineTo(x, cy - r * (0.94 + 0.06 * Math.sin(i * 0.9 + wobble[0])));
+      }
+      ctx.arc(cx + half, cy, r, -Math.PI / 2, Math.PI / 2);
+      for (let i = 32; i >= 0; i--) {
+        const x = cx - half + (i / 32) * half * 2;
+        ctx.lineTo(x, cy + r * (0.94 + 0.06 * Math.sin(i * 0.8 + wobble[1])));
+      }
+      ctx.arc(cx - half, cy, r, Math.PI / 2, Math.PI * 1.5);
+      ctx.closePath();
+      const g = ctx.createLinearGradient(0, cy - r, 0, cy + r);
+      g.addColorStop(0, "#24506f");
+      g.addColorStop(0.5, "#16324a");
+      g.addColorStop(1, "#24506f");
+      ctx.fillStyle = g;
+      ctx.fill();
+      ctx.strokeStyle = "rgba(160, 200, 220, 0.45)";
+      ctx.lineWidth = Math.max(1, tile * 0.08);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(200, 230, 255, 0.25)";
+      ctx.lineWidth = 1;
+      for (let i = 0; i < Math.round(p.len * 0.8); i++) {
+        const x = cx + (rnd() - 0.5) * half * 2;
+        const y = cy + (rnd() - 0.5) * r;
+        ctx.beginPath();
+        ctx.moveTo(x - tile * 0.3, y);
+        ctx.lineTo(x + tile * 0.3, y);
+        ctx.stroke();
+      }
+    } else if (p.kind === "bridge") {
+      // the river runs on under a wide plank deck; railings along both sides
+      const w = rx;
+      const h = ry;
+      const river = Math.max(0, h - tile);
+      ctx.fillStyle = "#16324a";
+      ctx.fillRect(cx - w, cy - river, w * 2, river * 2);
+      ctx.fillStyle = "#7a5a3a";
+      ctx.fillRect(cx - w, cy - h, w * 2, h * 2);
+      ctx.strokeStyle = "rgba(40, 26, 14, 0.55)";
+      ctx.lineWidth = Math.max(1, tile * 0.05);
+      for (let y = cy - h + tile * 0.5; y < cy + h; y += tile * 0.5) {
+        ctx.beginPath();
+        ctx.moveTo(cx - w, y);
+        ctx.lineTo(cx + w, y);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#4e3620";
+      const rail = Math.max(2, tile * 0.18);
+      ctx.fillRect(cx - w - rail, cy - h, rail, h * 2);
+      ctx.fillRect(cx + w, cy - h, rail, h * 2);
     } else if (p.kind === "pond") {
       blob(rx * 0.98, ry * 0.98, 0.1);
       const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);

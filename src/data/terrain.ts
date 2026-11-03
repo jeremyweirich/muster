@@ -15,6 +15,7 @@ export const TERRAIN: Record<TerrainKind, TerrainInfo> = {
   rocks: { name: "Rocks", rule: "Ground units can't cross rocks: they walk round them. Fliers pass over." },
   pond: { name: "Pond", rule: "Deep water. Ground units can't cross it: they walk round. Fliers pass over." },
   rough: { name: "Rough ground", rule: "Ground units cross it at half speed. Fliers aren't slowed.", moveMult: 0.5 },
+  bridge: { name: "Bridge", rule: "The way across a river for ground units. Fliers cross anywhere." },
   grass: {
     name: "Tall grass",
     rule: "Hides ground units from ground shooters. A unit in it can be shot only for 2 s after it attacks. Melee, fliers' attacks and splash still find it.",
@@ -46,10 +47,10 @@ export const MAPS: MapDef[] = [
     id: "standing-stones",
     name: "Standing Stones",
     terrain: twin(
-      { kind: "rocks", x: 11, y: 11, r: 1.2 },
-      { kind: "rocks", x: 19, y: 15, r: 1 },
+      { kind: "rocks", x: 9, y: 11, r: 1.2 },
+      { kind: "rocks", x: 19, y: 13.5, r: 1 },
       { kind: "rocks", x: 24, y: 10, r: 0.9 },
-      { kind: "rocks", x: 31, y: 11.5, r: 1.1 },
+      { kind: "rocks", x: 34, y: 9.5, r: 1.1 },
     ),
   },
   {
@@ -72,10 +73,16 @@ export const MAPS: MapDef[] = [
     ),
   },
   {
-    // the river under the toll bridge: deep water either side of the middle, so the bridge is the short way across
+    // a river right across the field, and one wide bridge in the middle third: the only way over on foot
     id: "toll-bridge",
     name: "Toll Bridge",
-    terrain: twin({ kind: "pond", x: 14, y: 13.5, r: 4 }),
+    terrain: twin({ kind: "pond", x: 4.2, y: 13.5, r: 1.6, len: 10.2 }, { kind: "bridge", x: 24, y: 13.5, r: 8, ry: 2.6 }),
+  },
+  {
+    // a ploughed band right across the middle: anything on foot wades through it at half speed
+    id: "the-furrows",
+    name: "The Furrows",
+    terrain: twin({ kind: "rough", x: 24, y: 13.5, r: 60, ry: 2.6 }),
   },
   {
     // the pass through the border hills: rocks either side of the middle and scree on the flanks

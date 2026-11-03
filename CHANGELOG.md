@@ -3,7 +3,23 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 3 November 2026 (v83–v85)
+## 3 November 2026 (v83–v86)
+
+- **The Wardens campaign, missions 1–6 reworked** from the owner's playthrough:
+  - **No unlock prices in the campaign.** Every unit you've met is ready from the start, and each mission adds one.
+  - **Starting supply grows** from mission to mission (400, 500, … 900), so round 1 has more than one good opening.
+  - **New mission 4, *The Troll*,** on a new map, The Furrows: a ploughed band across the middle slows everything on
+    foot. Ballistae shoot the trolls in the mud; the trick is keeping your Knights at the back.
+  - ***Under the Bridge* is now mission 5,** on a river with one wide bridge, and introduces the **Cleric**: hold the
+    bridge with Knights and keep them standing.
+  - *The Wheelbarrow* is mission 6; Look Up, Old Grumm and The Marches are now 7–9, and the Drill Book's pages are
+    renumbered to match. New and changed mission text is a draft for the owner's next copy pass.
+- **Clerics heal more and no longer boost damage** on their own (120 every 2 s, was 80); *Blessing* gives the damage
+  aura (+30%).
+- **Story dialogue is read a line at a time:** click or Continue for the next line, Skip for the rest. After a win,
+  **Next mission** comes first.
+- **No more pockets:** rocks and ponds are kept far enough apart that nothing gets stuck between them (Standing Stones
+  had two that touched). Rivers are a new kind of pond, and units on the bank head for the crossing.
 
 - **Plain words everywhere:** the Story intro and the Codex say units, not champions or troops.
 

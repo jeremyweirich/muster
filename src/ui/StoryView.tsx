@@ -27,7 +27,10 @@ export function StoryView({
 }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const entry = MISSIONS.find((m) => m.def.id === topic && missionOpen(progress, m.def.id, allOpen));
-  if (entry) return <MissionView key={entry.def.id} entry={entry} onWon={(c) => onWon(entry.def.id, c)} onLeave={() => onOpen(null)} />;
+  if (entry) {
+    const next = MISSIONS[MISSIONS.indexOf(entry) + 1];
+    return <MissionView key={entry.def.id} entry={entry} onWon={(c) => onWon(entry.def.id, c)} onLeave={() => onOpen(null)} onNext={next ? () => onOpen(next.def.id) : undefined} />;
+  }
   const started = progress.won.length > 0 || progress.commended.length > 0;
   return (
     <div className="page story">
@@ -149,11 +152,12 @@ export function StoryView({
   );
 }
 
-// A mission: its briefing, then the Field. Leaving goes back to the list; Try again restarts the match.
-function MissionView({ entry, onWon, onLeave }: { entry: MissionEntry; onWon: (commended: boolean) => void; onLeave: () => void }) {
+// A mission: its briefing, then the Field. Leaving goes back to the list; Try again restarts the match; Next opens
+// the next mission's briefing.
+function MissionView({ entry, onWon, onLeave, onNext }: { entry: MissionEntry; onWon: (commended: boolean) => void; onLeave: () => void; onNext?: () => void }) {
   const [briefed, setBriefed] = useState(false);
   if (!briefed) return <Briefing entry={entry} onStart={() => setBriefed(true)} onBack={onLeave} />;
-  return <PlayView mission={{ def: entry.def, title: entry.title, onLeave, onWon }} />;
+  return <PlayView mission={{ def: entry.def, title: entry.title, onLeave, onWon, onNext }} />;
 }
 
 // A won mission's banner; an empty, dashed slot until then.

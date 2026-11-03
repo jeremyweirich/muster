@@ -168,7 +168,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "cleric",
     name: "Cleric",
-    description: "The Wardens' priests. They don't fight: they stand just behind the line, heal it, and steady its hand (allies nearby deal +25% damage). Each prayer they learn makes the line stronger.",
+    description: "The Wardens' priests. They don't fight: they stand just behind the line and heal it. Each prayer they learn makes the line stronger.",
     cost: 100,
     unlockCost: 100,
     squadSize: 2,
@@ -178,8 +178,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     speed: 8,
     size: 0.3,
     traits: [
-      { type: "periodic", interval: 2, effects: [{ type: "heal", amount: 80, radius: 4 }] },
-      { type: "aura", radius: 4, selector: { side: "ally" }, damage: 1.25 },
+      { type: "periodic", interval: 2, effects: [{ type: "heal", amount: 120, radius: 4 }] },
     ],
     upgrades: [
       {
@@ -188,7 +187,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         description: "A second prayer heals 50 every 2s, in a much wider circle.",
         traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 50, radius: 6 }] }],
       },
-      { id: "blessing", name: "Blessing", description: "Allies nearby deal +50% damage (not +25%).", traits: [{ type: "aura", radius: 4, selector: { side: "ally" }, damage: 1.5 }] },
+      { id: "blessing", name: "Blessing", description: "Allies nearby deal +30% damage.", traits: [{ type: "aura", radius: 4, selector: { side: "ally" }, damage: 1.3 }] },
       {
         id: "purify",
         name: "Purify",
