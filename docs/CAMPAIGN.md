@@ -181,9 +181,11 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   mobs to round 6. The Tinker gives wrong odds in the briefing.
 - **Punch.** Armored mobs shrug off the first bolt each, and the player loses round 2.
 - **Checked by simulation:** any plan with *Repeaters* wins, bought before round 1, in round 2 or after the armor shows
-  (59–129 HP left, 5 rounds). The same supply spent on more Crossbowmen or Ballistae instead loses, and so does the
-  wrong drill (Knights' *Veterans*). **What the tuning found:** the Cleric isn't the answer here. A Cleric and a
-  prayer cost about 500 supply of non-fighters, and every plan that bought them lost a round that more steel won.
+  (59–129 HP left, 5 rounds), and Repeaters followed by two Clerics behind the line wins with 80. The same supply spent
+  on more Crossbowmen or Ballistae instead loses, and so does the wrong drill (Knights' *Veterans*). **What the tuning
+  found:** at first no Cleric plan could win: Clerics cost 200, walked into the melee and died, and healing can't
+  outpace an armored swarm. The campaign balance pass (§10) made them cheap, keeps them behind the line and gave the
+  line a damage aura.
 - **Commendation.** *Well Drilled*: once their armor shows, win every round after it.
 - **Debrief.** "Boring, repeated quickly, wins faster." The Boss: "NOBODY OWNS THE SKY."
 
@@ -193,14 +195,14 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   sky. Wings against wings.*
 - **Kit.** 400 supply, Knights and Crossbowmen; Ballista, Cleric and **Griffon Riders** in the shop. HP 240 each.
   Upgrades on. Map: The Mire (it slows anything on foot, nothing with wings).
-- **Enemy.** Round 1: mobs, a troll, Skirmishers. Round 2: **four squads of Giant Bats with *Savage Claws***. Then more
-  bats, Skirmishers from round 4 (they shoot fliers), trolls, to round 7.
+- **Enemy.** Round 1: mobs, a troll, Skirmishers. Round 2: **four squads of Giant Bats**. Then more bats, Skirmishers
+  from round 4 (they shoot fliers), trolls, to round 7.
 - **Punch.** The bats fly over the line and land on the bows and engines.
-- **Checked by simulation:** Crossbowmen behind the steel win (126–128 HP left, 6 rounds), sooner with *Skyhunters*;
-  Griffons alongside the bows win too. Steel alone, Ballistae (the bats land on them) and Griffons in place of bows
-  lose. **What the tuning found:** two bat squads did nothing (Crossbowmen beat bats at equal supply), so it takes four
-  with claws. At these prices more bows beat a pricier flier, and Griffons die to the Skirmishers, so the commendation
-  is what asks for them.
+- **Checked by simulation** (after the balance pass, §10): *Skyhunters* bows win (150 HP left, 5 rounds), bows with
+  Griffons alongside win (144), and a Griffon-led plan wins (78). Plain bows (half damage to fliers without
+  *Skyhunters*), steel alone and Ballistae (the bats land on them) lose. **What the tuning found:** before the pass,
+  Crossbowmen shot down any flier at full strength, so the bats needed *Savage Claws* and four squads, and then nothing
+  but more bows could win; no Griffon-led plan did.
 - **Commendation.** *Wings Against Wings*: win with Griffon Riders on the Field.
 - **Debrief.** "Looking up is boring too." The Boss: "I'M CALLING GRUMM." Sergeant: "...Grumm?"
 
@@ -213,12 +215,10 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Enemy.** Round 2 brings **Grumm, a level-3 Ogre Brute with *Warboss*** (`SquadSpec`'s fifth element is a level).
   Then wolves, trolls and more ogres, to round 7.
 - **Punch.** Grumm walks off the Field alive in round 2, whatever the player brings.
-- **Checked by simulation:** plans that promote their veterans win (109–244 HP left, 7–8 rounds); the same pike plan
-  that puts that supply into fresh squads instead of promotions loses. **What the tuning found:** the Pikemen are a
-  winning choice but **not the strongest one**. Grumm's cleave kills two or three dwarves a swing (600 damage against
-  300 HP each), and Knights and bows win with more HP to spare, against level 2 Grumm too and against rounds made only
-  of wolves, trolls and ogres. Making the pike page the clear answer is a balance question (Pikemen against splash
-  veterans), not a mission one, so it's left for the owner. The commendation asks for promoted pikes.
+- **Checked by simulation:** plans that promote their veterans win (191–244 HP left, 7 rounds); the same pike plan
+  that puts that supply into fresh squads instead of promotions loses. **What the tuning found:** at ×3.5 the pikes
+  won with 109 HP left against Knights' 244, because Grumm's cleave kills two or three dwarves a swing. At ×4.5 (the
+  balance pass, §10) the pike plan wins with 211; plain Knights and bows still do well (244).
 - **Commendation.** *Old Page, New Ink*: win with a promoted squad of Dwarven Pikemen on the Field.
 - **Debrief.** The Sergeant gets the helmet back, chewed. The Boss stakes the whole border.
 
@@ -235,12 +235,13 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   Tinker takes over: **three squads of bats with *Shriek***, then **Tower Raiders wolves on both flanks**, then bats
   and *Ambush* Skirmishers, and the last wave repeats. Waves are fitted around the goblins already on the Field
   (`fit`). The Tinker and the Boss speak in the sidebar on the rounds they change plan (`EnemyTurn.line`).
-- **Checked by simulation:** the pike line wins (267 HP left, 8 rounds), and so do Knights and bows (258); pikes with
-  levels on both Keeps win (216). Never adding, all bows and a Ballista park lose. Everyone loses the round the bats
+- **Checked by simulation** (after the balance pass, §10): the pike line wins (327 HP left, 7 rounds), and so do pikes
+  with levels on both Keeps (280) and Knights and bows (218). Never adding, all bows and a Ballista park lose. Everyone loses the round the bats
   arrive, and the double raid takes both Keeps even with a level on each (as in mission 3, levels only buy time).
   **What the tuning found:** a Tinker wave much bigger than the round's income flattens every plan, because each wave
-  stays on the Field; and *Pike Wall* answers the bats on its own, since they claw in melee. The Giant, offered here
-  as §9 planned, doesn't pay off against this enemy (big units, fliers and wolves, not mobs): every Giant plan lost.
+  stays on the Field; and *Pike Wall* answers the bats on its own, since they claw in melee. The Giant pays off from
+  behind the pike line (a plan buying it in round 4 wins with 168 HP left); the first Giant plans lost only because
+  they left it exposed.
 - **Commendation.** *Boring Wins*: win the final with only the two units your opening pack gave you.
 - **Ending.** "...SAME TIME NEXT SEASON?" On a win the debrief draws the player's own board as **Page 9, in the
   Marshal's hand** (`lastPage`: ranks by depth, front rank first). It's shown, not kept (§5).
@@ -479,9 +480,27 @@ keep the matches different from each other. Plan (checked by simulation when eac
 
 | Independent | Hole it fills | Introduced in | Map and why |
 |---|---|---|---|
-| **Giant** | splash artillery: the Wardens have none | Wardens 8, *The Marches* (built: in the shop, on Border Pass) | a rocky border pass, where the Marshal hires outside the book for the first time: the book can grow. **Tuning found** the finale's goblins are big units, fliers and wolves rather than swarms, so the Giant doesn't pay off there; a mission with mobs would show it off better |
+| **Giant** | splash artillery: the Wardens have none | Wardens 8, *The Marches* (built: in the shop, on Border Pass) | a rocky border pass, where the Marshal hires outside the book for the first time: the book can grow. A Giant behind the pike line wins the finale |
 | **Bog Toad Riders** | anti-air and anti-medium for the goblins | Goblins 5, *Snobs* | a marsh of ponds and rough ground. Cloudlings and a flying Air Elemental own the sky until the toads pull them down (*Gulp*) |
 | **Dragon** | the late-game flier | Elementals 7, *The Field Is a Weapon* | Long Grass: the Wardens' crossbows hide in it from every ground shooter, but fliers see into grass, and the Dragon's breath splashes |
 
 Terrain itself (rocks, ponds, rough ground, tall grass) is in DESIGN.md; missions name their map (`map`), and skirmish
 matches draw one at random.
+
+## 10. The campaign as balance tests (Nov 2, 2026)
+
+The owner's call after the Wardens campaign: missions that are hard to design are a sign the balance needs adjusting,
+and the missions' authored battles matter more than one-unit matchups. Each mission's reference plans are integration
+tests, and the unit a mission introduces should have a plan that wins it.
+
+`npm run mission -- all` plays every reference plan (about 10 s) and flags any that no longer do what they're meant
+to; run it before and after changing units. The first pass, from what missions 5–8 showed:
+
+| Change | Why (the mission that showed it) |
+|---|---|
+| Clerics stand 2 tiles behind the line they follow (`RULES.escortGap`), not in it | They walked into the melee and died within seconds (5) |
+| Cleric: 100 supply (was 200), 400 HP (was 300), and a +25% damage aura; *Blessing* raises it to +50% (was +35%) | Healing can't outpace an armored swarm; a Cleric pair cost a round's worth of fighters and couldn't win the map (5) |
+| Crossbowmen deal half damage to fliers; *Skyhunters* restores full damage | They were everyone's anti-air at full strength, so more bows beat every flier and every flier answer (6, 8) |
+| Griffon Riders: ×1.5 against medium units | They're the anti-medium flier, but Crossbowmen out-damaged them 2:1 against medium targets (6) |
+| Pikemen: ×4.5 against large units and cavalry (was ×3.5) | Knights did the pike page's job better than the pikes (7, 8) |
+| Mission 6's round-2 bats lost *Savage Claws* | Sized for the old Crossbowmen; with bows needing *Skyhunters*, four plain squads are enough |

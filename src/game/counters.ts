@@ -32,8 +32,10 @@ export function strengths(unit: UnitDef, enemy: UnitDef): Reason[] {
   if (enemy.layer === "air" && hitsAir(unit)) out.push({ text: "Shoots down fliers", topic: "role-antiair" });
   if (unit.layer === "air" && (!e || !hitsAir(enemy))) out.push({ text: `Flies, and ${enemy.name} can't hit air`, topic: "role-flier" });
   if (!e) out.push({ text: `${enemy.name} can't fight back` });
+  // a multiplier below 1 is a weakness of the attacker (Crossbowmen against fliers)
   for (const b of a.bonusVs ?? [])
-    if (hits(b.selector, enemy)) out.push({ text: `×${b.mult} damage to ${describeSelector(b.selector)}`, topic: hasRole(unit, "antilarge") ? "role-antilarge" : undefined });
+    if (b.mult > 1 && hits(b.selector, enemy)) out.push({ text: `×${b.mult} damage to ${describeSelector(b.selector)}`, topic: hasRole(unit, "antilarge") ? "role-antilarge" : undefined });
+  for (const b of e?.bonusVs ?? []) if (b.mult < 1 && hits(b.selector, unit)) out.push({ text: `Takes only ×${b.mult} damage from it` });
   if (a.prefers && hits(a.prefers, enemy)) out.push({ text: "Picks it out when it's close", topic: "role-raider" });
   if (e && range(unit) >= 4 && range(unit) > range(enemy) + 2) out.push({ text: `Outranges it (${range(unit)} vs ${range(enemy)} tiles)`, topic: "role-ranged" });
   if (a.splash && isSwarm(enemy)) out.push({ text: "Splash hits the whole swarm", topic: "role-splash" });
@@ -57,7 +59,8 @@ export function weaknesses(unit: UnitDef, enemy: UnitDef): Reason[] {
   if (!a) out.push({ text: "Has no attack of its own", topic: "role-support" });
   else if (enemy.layer === "air" && !hitsAir(unit)) out.push({ text: "Can't hit fliers", topic: "layers" });
   if (!e) return out;
-  for (const b of e.bonusVs ?? []) if (hits(b.selector, unit)) out.push({ text: `Takes ×${b.mult} damage from it`, topic: hasRole(enemy, "antilarge") ? "role-antilarge" : undefined });
+  for (const b of e.bonusVs ?? []) if (b.mult > 1 && hits(b.selector, unit)) out.push({ text: `Takes ×${b.mult} damage from it`, topic: hasRole(enemy, "antilarge") ? "role-antilarge" : undefined });
+  for (const b of a?.bonusVs ?? []) if (b.mult < 1 && hits(b.selector, enemy)) out.push({ text: `Only ×${b.mult} damage to ${describeSelector(b.selector)}` });
   if (e.prefers && hits(e.prefers, unit)) out.push({ text: "Gets picked out when it's close", topic: "role-raider" });
   if (e.splash && isSwarm(unit)) out.push({ text: "Its splash shreds swarms", topic: "role-splash" });
   if (a && range(enemy) >= 4 && range(enemy) > range(unit) + 2) out.push({ text: "Gets shot on the way in", topic: "role-ranged" });

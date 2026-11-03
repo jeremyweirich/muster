@@ -17,6 +17,7 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Costs | Multiples of 100 |
 | Goblins' one-hit design | Flexible (now 40 HP: most hits kill one, but not all) |
 | Fight length | Match Mechabellum (about 40–60 s), **through space and movement, not HP**, so positioning matters |
+| The campaign as tests (Nov 2, 2026) | Missions that are hard to design mean the balance needs adjusting. The missions' authored battles matter more than one-unit matchups, which don't all need preserving: each mission's reference plans are integration tests, and the unit a mission introduces must be able to win it (`docs/CAMPAIGN.md` §10) |
 | Wolf Riders | A real diver (Rhino) |
 | Immunities | None: an element's own creatures resist it mildly (0.3). Weaknesses stay |
 | Focus priority | Local only: of the enemies in front of you, prefer this one. Never cross the field for it |
@@ -38,11 +39,11 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 | Unit | Role (analogue) | What changed |
 |---|---|---|
 | Knights | Tank (Sledgehammer), anchor | 600 HP, 40 damage, speed 12. *Warded Plate* +50%, *Veterans* +30% |
-| Crossbowmen (was Elven Archers) | Anti-medium (Void Eye), **baseline 1.0** | 3 heavy crossbows: 85 damage every 3 s, range 7, ×1.5 against medium units. Upgrades: Longshot, Fire Bolts, *Repeaters* (→ chaff clear), Skyhunters |
+| Crossbowmen (was Elven Archers) | Anti-medium (Void Eye), **baseline 1.0** | 3 heavy crossbows: 85 damage every 3 s, range 7, ×1.5 against medium units, **half damage to fliers** (campaign pass). Upgrades: Longshot, Fire Bolts, *Repeaters* (→ chaff clear), *Skyhunters* (full damage to fliers, picks them out, +2 range) |
 | Ballista | Anti-giant (Marksman) | 100 cost, ×2 against large and huge, range 11 |
-| Griffon Riders | Anti-medium (Phantom Ray) | *Giant Slayers* replaces Pride: ×2.5 against large and huge (→ Phoenix) |
-| Cleric | Utility | 200 cost, heals 80 |
-| Pikemen | Anti-giant: an anti-large line | 6 × 300 HP, reach 1.5, ×3.5 against large units and cavalry, no splash. *Heavy Halberds* (→ chaff clear), *Long Pikes* (→ beats Wolf Riders) |
+| Griffon Riders | Anti-medium (Phantom Ray) | ×1.5 against medium units (campaign pass). *Giant Slayers* replaces Pride: ×2.5 against large and huge (→ Phoenix) |
+| Cleric | Utility | 100 cost (campaign pass; was 200), 2 × 400 HP, heals 80 every 2 s, and allies nearby deal +25% damage (*Blessing*: +50%). Stands 2 tiles behind the line it follows |
+| Pikemen | Anti-giant: an anti-large line | 6 × 300 HP, reach 1.5, ×4.5 against large units and cavalry (campaign pass; was ×3.5), no splash. *Heavy Halberds* (→ chaff clear), *Long Pikes* (→ beats Wolf Riders) |
 | Grunts | Chaff (Crawler) | 40 HP, 8 damage every 0.6 s, speed 20 |
 | Skirmishers | Chaff (Fang) | 12 per squad, 30 HP, speed 16 |
 | Wolf Riders | Diver (Rhino) | 200 cost, 540 HP, 45 damage with a ×5 opening javelin, speed 24 |
@@ -63,6 +64,20 @@ Claude to refine. Targets live in `src/data/balance.ts`; `npm run balance` measu
 Knights cut down the swarm. The How to Play page says so.
 
 ## 3. Where it stands
+
+**Campaign balance pass (Nov 2, 2026)**, judged by the Wardens missions (`npm run mission -- all`; the table of
+changes and why is in `docs/CAMPAIGN.md` §10). Each mission's featured unit now has a winning plan: Clerics in
+mission 5 (two behind the line after *Repeaters*: 80 HP left, the best plan without them 78), Griffons in mission 6
+(78 led by Griffons, 144 beside bows), Pikemen in 7 and 8 (211 against Knights' 244; 327 against 218). Then
+`npm run balance -- check`: **94 of 96 relations and 39 of 41 upgrade intents hold**, the same misses as before.
+Changed in the table: Griffons now beat the Ballista (×1.5 against its medium crew), Crossbowmen no longer beat Giant
+Bats (even, 50%) but *Skyhunters* does, and *Bloodsuckers* no longer flips Griffons. One-unit fights now list nearly
+everything as a "hard counter" to the Cleric, which has no attack: judge it in mixed armies. The **Nash mix moved
+from Crossbowmen 45% to Ballista 35%, Dragon 29%, Skirmishers 18%, Cloudlings 15%**: with bows weaker against fliers,
+fliers and the Ballista (full damage to air) take their place in one-unit fights, which exaggerate fliers. Watch
+whether the Ballista becomes the next "answer to everything" in the missions.
+
+The rest of this section predates the campaign pass.
 
 `npm run balance -- check` (8 seeds, about 1000 supply, level 1), after the independents pass (Nov 2, 2026):
 
@@ -129,7 +144,8 @@ Knights cut down the swarm. The How to Play page says so.
 
 1. Change intent first: a line in `RELATIONS` or an upgrade's intent in `src/data/balance.ts`, in words.
 2. Change numbers in `src/data/units.ts`.
-3. `npm run balance -- targets <unit…>` (seconds) while iterating; `npm run balance -- check` (minutes) before
+3. `npm run mission -- all` (seconds): every story mission's reference plans, before and after; the campaign's
+   battles are the integration tests (`docs/CAMPAIGN.md` §10). `npm run balance -- targets <unit…>` (seconds) while iterating; `npm run balance -- check` (minutes) before
    committing; `density` when movement, range or the field changes.
 4. `sensitivity <unit>` before calling a unit done; `upgrades <unit>` for the upgrade and veterancy curve; `matrix
    --scale 1,2,4` for swarms and splash.

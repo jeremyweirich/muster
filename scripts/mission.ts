@@ -3,6 +3,8 @@
 // use too): newMissionMatch, missionPlan, the real battle seed and map.
 // Usage:
 //   npm run mission                         list the missions
+//   npm run mission -- all                  every mission's reference plans, one line each: the campaign as a balance
+//                                           dashboard (run it before and after changing units; see docs/BALANCE-PLAN.md)
 //   npm run mission -- <id>                 play the mission's reference plans (wins, loses, commended)
 //   npm run mission -- <id> '<plan json>'   play one plan: a JSON array with one entry per round, each a list of
 //                                           squads [unitId, x, y, rot?] or an object
@@ -24,8 +26,31 @@ function play(m: MissionDef, plan: Plan, label: string) {
   if (!run.won && run.hint) console.log(`${"".padEnd(12)} hint: ${run.hint.text}`);
 }
 
+// One line per reference plan: the result it's meant to have, the result it got, and by how much (the player's HP
+// left on a win, the enemy's on a loss). A plan that no longer does what it's meant to is flagged.
+function dashboard() {
+  let broken = 0;
+  for (const e of MISSIONS) {
+    const m = e.def;
+    const plans: [string, Plan, boolean][] = [
+      ...m.reference.wins.map((p, i): [string, Plan, boolean] => [`wins[${i}]`, p, true]),
+      ...m.reference.loses.map((p, i): [string, Plan, boolean] => [`loses[${i}]`, p, false]),
+      ...(m.reference.commended ? [["commended", m.reference.commended, true] as [string, Plan, boolean]] : []),
+    ];
+    for (const [label, plan, shouldWin] of plans) {
+      const run = runMission(m, plan);
+      const ok = run.won === shouldWin && (label !== "commended" || run.commended) && !run.problems.length;
+      if (!ok) broken++;
+      const margin = run.won ? `${run.state.hp[0]} HP left` : `enemy on ${run.state.hp[1]}`;
+      console.log(`${ok ? "  " : "!!"} ${m.id.padEnd(10)} ${label.padEnd(10)} ${run.won ? "WON " : "LOST"}${run.commended ? "★" : " "} ${margin.padEnd(15)} ${run.rounds.length} rounds`);
+    }
+  }
+  console.log(broken ? `${broken} reference plan(s) no longer do what they're meant to` : "every reference plan does what it's meant to");
+}
+
 const [id, planJson] = process.argv.slice(2);
-if (!id) {
+if (id === "all") dashboard();
+else if (!id) {
   for (const e of MISSIONS) console.log(`${e.def.id.padEnd(12)} ${e.campaign.title} ${e.number}: ${e.title}`);
 } else {
   const entry = MISSIONS.find((e) => e.def.id === id);

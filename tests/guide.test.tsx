@@ -93,7 +93,7 @@ describe("counter reasons", () => {
   });
 
   it("bonus damage and splash", () => {
-    expect(texts(strengths(byId("pikemen"), byId("ogre_brute"))).some((t) => t.startsWith("×3.5 damage"))).toBe(true);
+    expect(texts(strengths(byId("pikemen"), byId("ogre_brute"))).some((t) => t.startsWith("×4.5 damage"))).toBe(true);
     expect(texts(strengths(byId("ogre_brute"), byId("grunts")))).toContain("Splash hits the whole swarm");
     expect(texts(weaknesses(byId("grunts"), byId("ogre_brute")))).toContain("Its splash shreds swarms");
   });

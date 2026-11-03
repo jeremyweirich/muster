@@ -23,6 +23,7 @@ export const RULES: Rules = {
   allyPush: 0.15, // allies squeeze past each other, so melee units can reach the fight
   preferReach: 4, // preferred targets win only among enemies this close (beyond attack range); farther, nearest wins
   escortMeleeRange: 2.5, // Clerics walk with the nearest ground ally this short-ranged (the line), else the nearest armed ally
+  escortGap: 2, // ...and keep this gap to it: behind the line, still close enough to heal it
   upgradeCosts: [200, 400, 600, 800], // flat, whatever the unit: each specialist step costs more
   // Opening offer (src/data/openings.ts): three packs, or flat supply. A pack's two unlocks are worth 2 × 100, so
   // flat 700 ends up 100 behind a pack once you unlock two units yourself: a mild price for choosing freely.

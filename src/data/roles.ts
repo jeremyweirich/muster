@@ -76,7 +76,7 @@ export const ROLES: Record<string, { name: string; description: string; detail: 
   support: {
     name: "Support",
     description: "Makes nearby allies better. Weak on its own.",
-    detail: "Makes nearby allies better instead of fighting. Weak on its own. In battle it walks with your nearest ground squad that fights up close, or your nearest armed squad if there is none.",
+    detail: "Makes nearby allies better instead of fighting. Weak on its own. In battle it walks with your nearest ground squad that fights up close, or your nearest armed squad if there is none, and stays a couple of tiles behind it, out of the melee.",
   },
   healer: {
     name: "Healer",

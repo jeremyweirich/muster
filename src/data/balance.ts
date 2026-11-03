@@ -86,7 +86,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
       longshot: { intent: "Outrange other shooters and artillery", beats: ["fire_elemental"] },
       fire_bolts: { intent: "Fire: stops a troll regenerating and ignites oil", beats: ["troll"] },
       repeaters: { intent: "Many small bolts instead of a few big ones: the Wardens' chaff clear", role: "chaffClear", beats: ["grunts", "skirmishers", "cloudlings"] },
-      skyhunters: { intent: "Anti-air: shoot fliers down before they reach the line (range and focus, not more bolts)" },
+      skyhunters: { intent: "Anti-air: full damage to fliers (half without it), picked out first and from further away", beats: ["giant_bats"] },
     },
   },
   ballista: {
@@ -100,6 +100,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     },
   },
   griffon_riders: {
+    // ×1.5 against medium units, like the Crossbowmen: that's what makes them the Wardens' air answer to bats
     role: "antiMedium",
     analogue: "Phantom Ray",
     upgrades: {
@@ -110,6 +111,8 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     },
   },
   cleric: {
+    // Cheap (100), and the line it stands behind fights harder: +25% damage at base, +50% with Blessing. Judged in mixed
+    // armies (the campaign, `npm run mission -- all`), never alone: it has no attack, so one-unit fights always lose
     role: "utility",
     analogue: "",
     upgrades: {
@@ -192,7 +195,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
       shriek: { intent: "Disrupt: Daze the back line it lands on" },
       // its claws reach fliers too, so the bats can stop for air units on the way in: the price of the upgrade.
       // Alone they still lose to a Dragon (its breath splashes the whole squad)
-      bloodsuckers: { intent: "Sustain, and claws for fliers: feed on the air units that used to hunt them", beats: ["griffon_riders", "cloudlings"] },
+      bloodsuckers: { intent: "Sustain, and claws for fliers: feed on the air units that used to hunt them", beats: ["cloudlings"] },
       savage_claws: { intent: "More damage" },
     },
   },
@@ -348,7 +351,7 @@ export const RELATIONS: [string, string, string][] = [
   ["griffon_riders", "fire_elemental", "it can't hit fliers"],
 
   // Anti-giant: snipers, ramping damage and pikes on big units.
-  ["ballista", "griffon_riders", "a sniper that hits fliers"],
+  ["griffon_riders", "ballista", "spears at its crew, faster than it can reload"],
   ["ballista", "frost_elemental", "it outranges them"],
   ["ballista", "air_elemental", "it outranges them"],
   ["ballista", "stone_golem", "×2 against huge, from far away"],
@@ -384,7 +387,6 @@ export const RELATIONS: [string, string, string][] = [
   ["wolf_riders", "knights", "fast javelins, too quick to pin down"],
   ["wolf_riders", "ogre_brute", "too fast for its swing"],
   ["wolf_riders", "giant", "too fast for its boulders"],
-  ["crossbowmen", "giant_bats", "heavy bolts that hit fliers"],
   ["giant_bats", "ballista", "they land on it"],
   ["giant_bats", "fire_elemental", "it can't hit fliers"],
   ["giant_bats", "frost_elemental", "they land on the back line"],

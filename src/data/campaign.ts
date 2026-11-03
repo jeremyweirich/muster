@@ -629,8 +629,7 @@ const UNDER_THE_BRIDGE: MissionDef = {
 // placed, gets Scrap Armor (each goblin shrugs off its first hit), and in round 3 the trolls get Thick Blood. The
 // counter is a drill of your own: Repeaters (many small bolts) reaches every Crossbowman. Tuned by simulation: any
 // plan with Repeaters wins, whenever it's bought; the same supply spent on more squads loses, and so does the wrong
-// drill (Knights' Veterans). The Cleric is in the shop but isn't the answer here: it and a prayer cost a round's
-// worth of fighters.
+// drill (Knights' Veterans). Two Clerics behind the line after Repeaters win too (docs/CAMPAIGN.md §10).
 const PLAIN_STEEL: MissionDef = {
   id: "wardens-5",
   supply: 400,
@@ -761,6 +760,14 @@ const PLAIN_STEEL: MissionDef = {
         [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
         { squads: [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25]], upgrades: [["knights", "shield_wall"]] },
       ],
+      // Repeaters after the armor, then two Clerics behind the line
+      [
+        [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        { squads: [["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 22, 24]], upgrades: [["crossbowmen", "repeaters"]] },
+        [["cleric", 18, 21], ["cleric", 26, 21], ["knights", 10, 20], ["crossbowmen", 31, 24]],
+        [["knights", 34, 20], ["knights", 4, 20], ["crossbowmen", 17, 25], ["crossbowmen", 27, 25], ["crossbowmen", 6, 22]],
+      ],
     ],
     loses: [
       // never adds after round 1
@@ -800,11 +807,10 @@ const PLAIN_STEEL: MissionDef = {
   },
 };
 
-// Mission 6: the air layer. In round 2 the Boss's Giant Bats (with Savage Claws) fly over the line and land on the
-// bows; from round 4 his Skirmishers shoot at anything that flies. Tuned by simulation: Crossbowmen behind the steel
-// win (with Skyhunters they win sooner), and Griffon Riders alongside them win too; steel alone, Ballistae (the
-// bats land on them) and Griffons in place of bows all lose. At these prices more bows beat a pricier flier, so the
-// commendation is what asks for Griffons.
+// Mission 6: the air layer. In round 2 four squads of the Boss's Giant Bats fly over the line and land on the bows;
+// from round 4 his Skirmishers shoot at anything that flies. Tuned by simulation: Crossbowmen with Skyhunters win, and
+// so do Griffon Riders (alone or beside the bows); plain bows (half damage to fliers), steel alone and Ballistae (the
+// bats land on them) lose.
 const LOOK_UP: MissionDef = {
   id: "wardens-6",
   supply: 400,
@@ -825,15 +831,12 @@ const LOOK_UP: MissionDef = {
         ["grunts", 30, 4],
         ["skirmishers", 22, 0],
       ],
-      {
-        squads: [
-          ["giant_bats", 4, 2],
-          ["giant_bats", 42, 2],
-          ["giant_bats", 18, 1],
-          ["giant_bats", 28, 1],
-        ],
-        upgrades: { giant_bats: ["savage_claws"] },
-      },
+      [
+        ["giant_bats", 4, 2],
+        ["giant_bats", 42, 2],
+        ["giant_bats", 18, 1],
+        ["giant_bats", 28, 1],
+      ],
       [
         ["giant_bats", 8, 4],
         ["giant_bats", 38, 4],
@@ -928,14 +931,14 @@ const LOOK_UP: MissionDef = {
         { squads: [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25]], upgrades: [["knights", "shield_wall"]] },
         [["knights", 40, 20], ["knights", 22, 26], ["crossbowmen", 4, 22], ["crossbowmen", 40, 22], ["crossbowmen", 38, 24], ["crossbowmen", 6, 24]],
       ],
-      // plain bows, every round
+      // Griffons with Sky Patrol after the bats show, then bows and Griffons
       [
         [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
-        [["knights", 16, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22]],
-        [["knights", 28, 20], ["crossbowmen", 17, 24], ["crossbowmen", 27, 24], ["crossbowmen", 22, 24]],
-        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
-        [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25], ["knights", 40, 20], ["crossbowmen", 22, 26]],
-        [["knights", 4, 22], ["knights", 40, 22], ["crossbowmen", 4, 24], ["crossbowmen", 40, 24], ["crossbowmen", 33, 26], ["crossbowmen", 9, 26]],
+        [["knights", 16, 20], ["knights", 28, 20]],
+        { squads: [["griffon_riders", 15, 23]], upgrades: [["griffon_riders", "sky_patrol"]] },
+        [["griffon_riders", 30, 23], ["knights", 10, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22]],
+        [["knights", 34, 20], ["knights", 4, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26], ["crossbowmen", 6, 22]],
+        [["knights", 40, 20], ["griffon_riders", 6, 24], ["griffon_riders", 38, 22], ["crossbowmen", 30, 26], ["crossbowmen", 14, 26]],
       ],
     ],
     loses: [
@@ -957,13 +960,14 @@ const LOOK_UP: MissionDef = {
         { squads: [["knights", 10, 20], ["knights", 34, 20]], upgrades: [["ballista", "heavy_bolts"]] },
         [["knights", 4, 20], ["knights", 40, 20], ["ballista", 17, 25], ["ballista", 26, 23], ["ballista", 33, 24]],
       ],
-      // Griffons in place of more bows
+      // plain bows, no Skyhunters: half damage to fliers
       [
         [["knights", 22, 20], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22]],
-        [["knights", 16, 20], ["knights", 28, 20]],
-        [["griffon_riders", 15, 23], ["griffon_riders", 30, 23]],
-        { squads: [["knights", 10, 20], ["griffon_riders", 22, 24]], upgrades: [["griffon_riders", "sky_patrol"]] },
-        [["knights", 34, 20], ["knights", 4, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26], ["crossbowmen", 6, 22]],
+        [["knights", 16, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22]],
+        [["knights", 28, 20], ["crossbowmen", 17, 24], ["crossbowmen", 27, 24], ["crossbowmen", 22, 24]],
+        [["knights", 10, 20], ["knights", 34, 20], ["crossbowmen", 17, 26], ["crossbowmen", 27, 26]],
+        [["knights", 4, 20], ["crossbowmen", 31, 24], ["crossbowmen", 14, 25], ["knights", 40, 20], ["crossbowmen", 22, 26]],
+        [["knights", 4, 22], ["knights", 40, 22], ["crossbowmen", 4, 24], ["crossbowmen", 40, 24], ["crossbowmen", 33, 26], ["crossbowmen", 9, 26]],
       ],
     ],
     // bows and Skyhunters first, then Griffons alongside them
@@ -981,9 +985,7 @@ const LOOK_UP: MissionDef = {
 // Mission 7: veterancy and promotions. Old Grumm, a level-3 Ogre Brute with Warboss (he calls a grunt every 5 s),
 // arrives in round 2 and walks off the Field alive; then wolves, trolls and more ogres. Pikemen are the page the
 // Archivist revives. Tuned by simulation: Pikemen whose veterans are promoted win, and the same plan putting that
-// supply into fresh squads instead loses. What the tuning also found: Knights and bows (no pikes) win with more HP to
-// spare, because Grumm's cleave kills several dwarves a swing; the commendation is what asks for a promoted pike
-// squad.
+// supply into fresh squads instead loses. Knights and bows (no pikes) win too.
 const OLD_GRUMM: MissionDef = {
   id: "wardens-7",
   supply: 400,

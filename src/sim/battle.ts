@@ -635,7 +635,7 @@ export class Battle {
     const dy = target.y - m.y;
     const d = Math.sqrt(dx * dx + dy * dy);
     const gap = d - m.def.size - target.def.size;
-    const range = atk ? atk.range + this.rangeBonus(m, atk, target) : 1;
+    const range = atk ? atk.range + this.rangeBonus(m, atk, target) : this.rules.escortGap;
     if (!anchored) m.facing = Math.atan2(dy, dx);
 
     m.engaged = gap <= range;

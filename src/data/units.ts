@@ -52,7 +52,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "crossbowmen",
     name: "Crossbowmen",
-    description: "A few heavy crossbows. Every bolt hits like a hammer and punches through armor, but a swarm soaks them up.",
+    description: "A few heavy crossbows. Every bolt hits like a hammer and punches through armor, but a swarm soaks them up, and they're slow to aim at fliers (half damage) until they learn Skyhunters.",
     cost: 100,
     unlockCost: 100,
     squadSize: 3,
@@ -64,7 +64,10 @@ export const DEFAULT_UNITS: UnitDef[] = [
     attack: {
       damage: 85, element: "physical", cooldown: 3, range: 7,
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 16,
-      bonusVs: [{ selector: { hasTag: "size:medium" }, mult: 1.5 }],
+      bonusVs: [
+        { selector: { hasTag: "size:medium" }, mult: 1.5 },
+        { selector: { layer: "air" }, mult: 0.5 }, // heavy bolts are slow to aim at fliers: Skyhunters is the drill for it
+      ],
     },
     upgrades: [
       { id: "longshot", name: "Longshot", description: "+3 range.", mods: [{ stat: "range", add: 3 }] },
@@ -78,8 +81,9 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "skyhunters",
         name: "Skyhunters",
-        description: "Pick out nearby fliers first, with +2 range against them.",
+        description: "Full damage to fliers (not half), picking them out first, with +2 range against them.",
         prefers: { layer: "air" },
+        bonusVs: [{ selector: { layer: "air" }, mult: 2 }],
         rangeVs: [{ selector: { layer: "air" }, add: 2 }],
       },
     ],
@@ -126,7 +130,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "griffon_riders",
     name: "Griffon Riders",
-    description: "Halflings on griffons, hurling spears from just above the fight. Fast fliers that ignore the ground and its hazards.",
+    description: "Halflings on griffons, hurling spears from just above the fight: ×1.5 damage to medium units, fliers among them. Fast, and they ignore the ground and its hazards.",
     cost: 200,
     unlockCost: 100,
     squadSize: 3,
@@ -138,6 +142,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     attack: {
       damage: 45, element: "physical", cooldown: 1, range: 2,
       targets: ["ground", "air"], targeting: "nearest", delivery: "projectile", projectileSpeed: 14,
+      bonusVs: [{ selector: { hasTag: "size:medium" }, mult: 1.5 }],
     },
     upgrades: [
       { id: "dive", name: "Dive Attack", description: "The first strike deals ×4 damage.", traits: [{ type: "charge", mult: 4 }] },
@@ -163,16 +168,19 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "cleric",
     name: "Cleric",
-    description: "The Wardens' priests. They don't fight: they heal the line around them, and each prayer they learn makes it stronger.",
-    cost: 200,
+    description: "The Wardens' priests. They don't fight: they stand just behind the line, heal it, and steady its hand (allies nearby deal +25% damage). Each prayer they learn makes the line stronger.",
+    cost: 100,
     unlockCost: 100,
     squadSize: 2,
     footprint: { w: 2, h: 1 },
     layer: "ground",
-    hp: 300,
+    hp: 400,
     speed: 8,
     size: 0.3,
-    traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 80, radius: 4 }] }],
+    traits: [
+      { type: "periodic", interval: 2, effects: [{ type: "heal", amount: 80, radius: 4 }] },
+      { type: "aura", radius: 4, selector: { side: "ally" }, damage: 1.25 },
+    ],
     upgrades: [
       {
         id: "sanctuary",
@@ -180,7 +188,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         description: "A second prayer heals 50 every 2s, in a much wider circle.",
         traits: [{ type: "periodic", interval: 2, effects: [{ type: "heal", amount: 50, radius: 6 }] }],
       },
-      { id: "blessing", name: "Blessing", description: "Allies nearby deal +35% damage.", traits: [{ type: "aura", radius: 4, selector: { side: "ally" }, damage: 1.35 }] },
+      { id: "blessing", name: "Blessing", description: "Allies nearby deal +50% damage (not +25%).", traits: [{ type: "aura", radius: 4, selector: { side: "ally" }, damage: 1.5 }] },
       {
         id: "purify",
         name: "Purify",
@@ -200,7 +208,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "pikemen",
     name: "Dwarven Pikemen",
-    description: "A long line of dwarven pikes. Plenty of sturdy bodies soak up big blows, and the long pikes deal ×3.5 damage to large units and cavalry. Fire and splash cut through the ranks.",
+    description: "A long line of dwarven pikes. Plenty of sturdy bodies soak up big blows, and the long pikes deal ×4.5 damage to large units and cavalry. Fire and splash cut through the ranks.",
     cost: 200,
     unlockCost: 100,
     squadSize: 6,
@@ -213,7 +221,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
     attack: {
       damage: 36, element: "physical", cooldown: 1.2, range: 1.5,
       targets: ["ground"], targeting: "nearest", delivery: "instant",
-      bonusVs: [{ selector: { hasAnyTag: ["class:cavalry", "size:large", "size:huge"] }, mult: 3.5 }],
+      bonusVs: [{ selector: { hasAnyTag: ["class:cavalry", "size:large", "size:huge"] }, mult: 4.5 }],
     },
     upgrades: [
       {

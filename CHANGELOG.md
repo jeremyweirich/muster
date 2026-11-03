@@ -3,8 +3,15 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 2 November 2026 (v58–v78)
+## 2 November 2026 (v58–v79)
 
+- **Balance pass, judged by the story missions.** Every unit a mission introduces can now win it.
+  - **Clerics** cost 100 (was 200), have more HP, stand just behind the line instead of in it, and allies near them
+    deal +25% damage (*Blessing*: +50%).
+  - **Crossbowmen** are slow to aim at fliers: half damage to them, until they learn *Skyhunters*.
+  - **Griffon Riders** deal ×1.5 damage to medium units, Giant Bats among them.
+  - **Dwarven Pikemen** deal ×4.5 to large units and cavalry (was ×3.5).
+  - *Look Up*'s first bat swarm no longer has *Savage Claws*.
 - **The whole Wardens campaign.** Five new story missions finish *The Drill Book*: *Under the Bridge* (your first
   unlock, the Ballista, against the Boss's trolls), *Plain Steel* (upgrades, and the Tinker's gadgets), *Look Up*
   (Giant Bats and the air), *Old Grumm* (a legendary veteran ogre, Dwarven Pikemen and promotions) and the finale,

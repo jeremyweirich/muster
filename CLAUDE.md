@@ -75,7 +75,9 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   without the owner agreeing.
 - Speed is in points: 10 = 1 tile/s (`RULES.speedScale`); the range is about 5 (siege) to 20 (wolves).
 - After changing units:
-  - `npm test`
+  - `npm test`, and `npm run mission -- all` (seconds): the story missions are the balance's integration tests, and
+    matter more than one-unit matchups (owner, Nov 2, 2026; CAMPAIGN.md §10). A mission's featured unit must be able
+    to win it; when a mission is hard to design, suspect the balance.
   - `npm run balance -- targets <unit…>` while tuning (seconds), then `npm run balance -- check` (minutes), which grades
     the equal-supply matrix and the upgrade intents against `src/data/balance.ts`. The other modes are listed at the top
     of `scripts/balance.ts`; `density` checks fight shape.
@@ -117,6 +119,7 @@ npm run ai-duel -- snapshot | run   # judge an AI change in full AI-vs-AI matche
 npm run relay         # local PvP relay for `npm run dev` (docs/MULTIPLAYER.md); deploy the real one from relay/
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
 npm run mission -- <id> ['<plan json>']  # play a story mission's reference plans, or one plan, round by round
+npm run mission -- all                   # every mission's reference plans, one line each: the balance dashboard
 npx tsx scripts/faction-holes.ts <csv>   # each faction's best answer to every unit, from `balance -- matrix --csv`
 ```
 
@@ -199,10 +202,12 @@ See DESIGN.md §12 for the roadmap. As of November 2026:
   opens ("Play the full game now" at the top); progress is stored, missions open in order, each with a victory banner
   and a commendation star, and Reset sits at the bottom. Speakers get a portrait and a parchment speech bubble
   (`src/ui/Portraits.tsx`; a new speaker needs a face). The debug panel can open every mission for testing.
-  **Next:** the owner playtests 4–8, then the goblin campaign. Open questions for the owner from the tuning (CAMPAIGN.md
-  §2): Pikemen lose to a cleaving veteran ogre, so in missions 7–8 the pike line wins but isn't the strongest answer
-  (Knights and bows do better); the Cleric, Griffon Riders and the Giant are each a valid but pricier choice where
-  they're introduced. Page 9 (the finale's winning board as a drill diagram) is shown in the debrief, not kept.
+  **Next:** the owner playtests 4–8, then the goblin campaign. Page 9 (the finale's winning board as a drill diagram)
+  is shown in the debrief, not kept.
+- **Campaign balance pass (Nov 2, 2026):** the owner took the hard-to-design missions as a sign the balance was off.
+  Clerics now cost 100, stand behind the line and give it +25% damage; Crossbowmen do half damage to fliers until
+  *Skyhunters*; Griffons get ×1.5 against medium units; Pikemen ×4.5 against large. Every featured unit now wins its
+  mission (CAMPAIGN.md §10, BALANCE-PLAN.md §3). To watch: the Ballista now leads the one-unit Nash mix.
 - **Small things (Nov 2, 2026):** a Hard win streak (Play, beside Restart); the version in the header is a pill that
   opens the debug panel, whose first button is **Report a bug** (a prefilled GitHub issue).
 - **Terrain and maps (Nov 2, 2026):** rocks and ponds (impassable for ground units, who slide along the edge),
