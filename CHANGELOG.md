@@ -3,6 +3,18 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
+## 4 November 2026 (v89)
+
+- **The Wardens campaign, missions 5–9 reworked:**
+  - ***The Wheelbarrow* is now mission 5, before the Clerics.** Knights and Clerics beat most goblin mobs on their own,
+    so a player could win it without the upgrade it teaches. Without Clerics it's harder: only a good upgrade wins.
+  - ***Under the Bridge* is mission 6** and keeps the Upgrades tab.
+  - **Missions 7–9 follow the campaign's rules too:** no unlock prices, and starting supply keeps growing (1000, 1100,
+    1200). Their enemies are rebuilt to match. In *Look Up* the bats come with *Savage Claws*. *The Marches* no longer
+    has an opening offer: every Warden unit and the Giant are ready, and *Boring Wins* asks for Knights and Crossbowmen
+    only.
+- **Scrap Armor shows:** an armored Grunt wears gray plates until the hit it blocks knocks them off.
+
 ## 3 November 2026 (v83–v86)
 
 - **The Wardens campaign, missions 1–6 reworked** from the owner's playthrough:

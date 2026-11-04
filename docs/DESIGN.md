@@ -628,6 +628,9 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
   Troll's) grows bigger and hotter with each hit in a row on the same target: a red-orange glow, then a second ring,
   more debris. A unit attacking faster at full HP (`unhurt`, the Troll) has a faint red pulse under it while the
   bonus is on.
+- A goblin wearing scrap armor (Grunts' *Scrap Armor*) has gray plates around its token, on the deploy board too,
+  until the hit it blocks knocks them off in a shower of scrap. Knights' *Veterans* block a hit the same way but
+  aren't drawn.
 - A unit winding up a shot (Ballista) shows a dashed sight line in its team color to its target, firming up as the
   shot comes.
 - A unit with an aura that summons (Ogre *Warboss*) pulses its aura as it calls: a faint red wash over the radius and a

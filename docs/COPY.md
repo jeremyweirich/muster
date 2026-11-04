@@ -208,7 +208,7 @@ Drill Book page, **Page 4: Ballistae**:
 - **Archivist Ithiel:** The trolls have gone home, and I've drawn the correct knees.
 - **Marshal:** Is that going in the book?
 - **Archivist Ithiel:** It had better be!
-- **The Boss:** FINE. KEEP YOUR FIELD. WE'RE TAKING THE BRIDGE.
+- **The Boss:** FINE. YOU WANT TO PLAY CLEVER? MEET THE TINKER.
 
 *Pencil note: Trolls get worse the longer they keep hitting something (Sgt.). Knights waited at the back and met them in the mud. For knees, see Ithiel's drawing.*
 
@@ -226,7 +226,65 @@ Drill Book page, **Page 4: Ballistae**:
 
 ---
 
-## The Drill Book, mission 5: Under the Bridge
+## The Drill Book, mission 5: The Wheelbarrow
+
+**Teaches** (design note, not shown): Upgrades, yours and theirs: the enemy's upgrades show as stars, and the answer is an upgrade of your own (Repeaters), which reaches every squad already on the Field.
+
+**On the Story list:** A goblin Tinker accuses the Wardens of stealing the wheelbarrow.
+
+### Take the Field screen
+
+Briefing:
+
+- **Archivist Ithiel:** We've been accused of theft! A goblin says we stole the wheelbarrow. We've had wheelbarrows for four hundred and twelve years. I brought the records!
+- **The Tinker:** Four hundred and twelve years, and it still has one wheel! Nobody who invented that would have stopped there. So you must have stolen it.
+- **Marshal:** Is that an argument?
+- **Archivist Ithiel:** It's a very good one!
+- **The Tinker:** I'll have a look at your army, then I'll pick my upgrades. It's called thinking! It's free, you should try it!
+- **Sergeant Dunmor:** Our squads get better all at once sometimes, even the ones already out there. Never knew why.
+- **Archivist Ithiel:** That's Page 5! Those are upgrades, and someone has to buy them!
+- **Sergeant Dunmor:** Ah. That explains the invoices.
+
+Drill Book page, **Page 5: Upgrades**:
+
+> "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades show as a star beside the unit."
+
+*Pencil note: Check for stars, then pick an upgrade that answers them. Does Sgt. know he's been paying for these? He does now.*
+
+**Objective:** Win the match.
+
+### During the match
+
+- Round 2: **The Tinker:** Just a small change this round! You'll notice!
+- Round 3: **Archivist Ithiel:** That star is Scrap Armor. It stops one hit per Grunt! So one big hit is wasted, but lots of small hits... oh, what a lovely problem!
+- Round 3: **The Tinker:** Thick Blood on the trolls! I considered something flashier, but it wouldn't have been as annoying.
+
+### Debrief after a win
+
+- **Sergeant Dunmor:** The right upgrade. Forty years, I thought they just turned up like that some seasons.
+- **The Tinker:** You picked the right upgrade! Most people don't look. Can I see one up close?
+- **Archivist Ithiel:** The wheelbarrow stays with us. The Tinker has asked to borrow it.
+- **Marshal:** Should we let them?
+- **Sergeant Dunmor:** It's a wheelbarrow.
+- **The Boss:** ENOUGH THINKING. WE'RE TAKING THE BRIDGE.
+
+*Pencil note: Sgt. has been buying upgrades for forty years without knowing it. Wheelbarrow: is one wheel a problem? Nobody here has ever asked.*
+
+### Hints after a loss (the first that matches)
+
+- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** They kept adding squads and you stopped. That's the whole story.
+- When `!fielded(c,"knights")`: **Sergeant Dunmor:** The mob ran straight onto your Crossbowmen. Put Knights in front.
+- When `Object.keys(c.upgrades).length===0`: **Archivist Ithiel:** Every Grunt shrugged off its first hit, and we never answered! Open the Upgrades tab. An upgrade reaches every squad already on the Field.
+- When `!c.upgrades.crossbowmen?.includes("repeaters")`: **Archivist Ithiel:** Scrap Armor stops one hit per Grunt, so a heavy bolt is wasted on it. Repeaters fire lots of small bolts, and the armor only stops the first!
+- When otherwise: **Sergeant Dunmor:** Close. Buy the upgrade the round you see the star, and keep adding Knights in front of your Crossbowmen.
+
+### Commendation
+
+**Right Upgrade:** Once their armor shows, win every round after it.
+
+---
+
+## The Drill Book, mission 6: Under the Bridge
 
 **Teaches** (design note, not shown): Clerics: hold the one way across with Knights, and keep them standing with Clerics behind them. The river rules out flanking.
 
@@ -241,9 +299,9 @@ Briefing:
 - **Sergeant Dunmor:** One way across, and it's wide. Put Knights on our end of it and they'll have to come through them.
 - **Marshal:** Won't the Knights get worn down?
 - **Sergeant Dunmor:** They would. That's what Clerics are for. They stand behind the Knights and patch them up.
-- **Archivist Ithiel:** Page 5! It's mostly hymns, but the healing is very well described.
+- **Archivist Ithiel:** Page 6! It's mostly hymns, but the healing is very well described.
 
-Drill Book page, **Page 5: Clerics**:
+Drill Book page, **Page 6: Clerics**:
 
 > "Clerics heal the units around them. They don't fight, so keep them behind the line."
 
@@ -262,7 +320,7 @@ Drill Book page, **Page 5: Clerics**:
 - **Archivist Ithiel:** The toll is abolished! I kept a receipt.
 - **Marshal:** Did we pay it?
 - **Sergeant Dunmor:** No.
-- **The Boss:** YOU WANT TO PLAY CLEVER? MEET THE TINKER.
+- **The Boss:** THE GROUND'S FULL ANYWAY. WE'LL USE THE SKY.
 
 *Pencil note: Knights on the bridge, Clerics behind them. Nobody crosses. Ithiel kept a receipt for a toll we never paid.*
 
@@ -276,64 +334,6 @@ Drill Book page, **Page 5: Clerics**:
 ### Commendation
 
 **Nobody Crosses:** Win every round.
-
----
-
-## The Drill Book, mission 6: The Wheelbarrow
-
-**Teaches** (design note, not shown): Upgrades, yours and theirs: the enemy's upgrades show as stars, and the answer is an upgrade of your own (Repeaters), which reaches every squad already on the Field.
-
-**On the Story list:** A goblin Tinker accuses the Wardens of stealing the wheelbarrow.
-
-### Take the Field screen
-
-Briefing:
-
-- **Archivist Ithiel:** We've been accused of theft! A goblin says we stole the wheelbarrow. We've had wheelbarrows for four hundred and twelve years. I brought the records!
-- **The Tinker:** Four hundred and twelve years, and it still has one wheel! Nobody who invented that would have stopped there. So you must have stolen it.
-- **Marshal:** Is that an argument?
-- **Archivist Ithiel:** It's a very good one!
-- **The Tinker:** I'll have a look at your army, then I'll pick my upgrades. It's called thinking! It's free, you should try it!
-- **Sergeant Dunmor:** Our squads get better all at once sometimes, even the ones already out there. Never knew why.
-- **Archivist Ithiel:** That's Page 6! Those are upgrades, and someone has to buy them!
-- **Sergeant Dunmor:** Ah. That explains the invoices.
-
-Drill Book page, **Page 6: Upgrades**:
-
-> "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades show as a star beside the unit."
-
-*Pencil note: Check for stars, then pick an upgrade that answers them. Does Sgt. know he's been paying for these? He does now.*
-
-**Objective:** Win the match.
-
-### During the match
-
-- Round 2: **The Tinker:** Just a small change this round! You'll notice!
-- Round 3: **Archivist Ithiel:** That star is Scrap Armor. It stops one hit per Grunt! So one big hit is wasted, but lots of small hits... oh, what a lovely problem!
-- Round 3: **The Tinker:** Thick Blood on the trolls! I considered something flashier, but it wouldn't have been as annoying.
-
-### Debrief after a win
-
-- **Sergeant Dunmor:** Repeaters. Forty years, I thought they just turned up like that some seasons.
-- **The Tinker:** You picked the right upgrade! Most people don't look. Can I see one up close?
-- **Archivist Ithiel:** The wheelbarrow stays with us. The Tinker has asked to borrow it.
-- **Marshal:** Should we let them?
-- **Sergeant Dunmor:** It's a wheelbarrow.
-- **The Boss:** THE GROUND'S FULL ANYWAY. WE'LL USE THE SKY.
-
-*Pencil note: Sgt. has been buying upgrades for forty years without knowing it. Wheelbarrow: is one wheel a problem? Nobody here has ever asked.*
-
-### Hints after a loss (the first that matches)
-
-- When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** They kept adding squads and you stopped. That's the whole story.
-- When `!fielded(c,"knights")`: **Sergeant Dunmor:** The mob ran straight onto your Crossbowmen. Put Knights in front.
-- When `Object.keys(c.upgrades).length===0`: **Archivist Ithiel:** Every Grunt shrugged off its first hit, and we never answered! Open the Upgrades tab. An upgrade reaches every squad already on the Field.
-- When `!c.upgrades.crossbowmen?.includes("repeaters")`: **Archivist Ithiel:** Scrap Armor stops one hit per Grunt, so a heavy bolt is wasted on it. Repeaters fire lots of small bolts, and the armor only stops the first!
-- When otherwise: **Sergeant Dunmor:** Close. Buy the upgrade the round you see the star, and keep adding Knights in front of your Crossbowmen.
-
-### Commendation
-
-**Right Upgrade:** Once their armor shows, win every round after it.
 
 ---
 
@@ -366,7 +366,7 @@ Drill Book page, **Page 7: Fliers**:
 ### During the match
 
 - Round 2: **The Boss:** YOU MIGHT WANT TO LOOK UP.
-- Round 3: **Archivist Ithiel:** Giant Bats! Actual ones! Did you see how they fold their wings before they land on the Crossbowmen? Volume Two gets that completely wrong!
+- Round 3: **Archivist Ithiel:** Giant Bats! Actual ones, and with Savage Claws! Did you see how they fold their wings before they land on the Crossbowmen? Volume Two gets that completely wrong!
 - Round 5: **Sergeant Dunmor:** More Skirmishers, and they shoot fliers. Don't send your Griffon Riders in alone.
 
 ### Debrief after a win
@@ -451,7 +451,7 @@ Drill Book page, **Page 8: The Pike Line**:
 
 ## The Drill Book, mission 9: The Marches
 
-**Teaches** (design note, not shown): The full Compact: choose an opening, deploy blind from round 1, and use everything from the book at once.
+**Teaches** (design note, not shown): The full Compact: deploy blind from round 1, and use everything from the book at once.
 
 **On the Story list:** The season final. The Boss stakes the whole border.
 
@@ -461,7 +461,7 @@ Briefing:
 
 - **Archivist Ithiel:** The season final! The Boss has staked the whole border, from the Toll Bridge to the hills. I've brought a hat.
 - **The Boss:** EVERYTHING. ALL OF IT. AND THE GOAT.
-- **Marshal:** Full Compact rules, page 9. Nobody sees the other army before the horn, and we choose an opening. I've read it three times.
+- **Marshal:** Full Compact rules, page 9. Nobody sees the other army before the horn. I've read it three times.
 - **Sergeant Dunmor:** Page 3. If a Keep falls, the whole army is Dazed. I looked it up.
 - **Archivist Ithiel:** You looked it up?
 - **Sergeant Dunmor:** Griffons?
@@ -483,8 +483,8 @@ Drill Book page, **Page 9: The Full Compact**:
 ### During the match
 
 - Round 2: **Archivist Ithiel:** The histories never mention the noise!
-- Round 3–5 (scripted: when depends on how the match goes). **The Tinker:** My turn! Bats, with Shriek. I checked your army first, so you're going to hate this.
-- Round 4–6 (scripted: when depends on how the match goes). **The Tinker:** Tower Raiders, on both flanks. You'd have answered one raid, so I sent two.
+- Round 3 (scripted: when depends on how the match goes). **The Tinker:** My turn! Bats, with Shriek. I checked your army first, so you're going to hate this.
+- Round 4 (scripted: when depends on how the match goes). **The Tinker:** Tower Raiders, on both flanks. You'd have answered one raid, so I sent two.
 - Round 5 (scripted: when depends on how the match goes). **The Boss:** NO. MORE.
 
 ### Debrief after a win
@@ -511,4 +511,4 @@ Then a page of the book, **Page 10, in the Marshal's hand, in ink**: "Boring win
 
 ### Commendation
 
-**Boring Wins:** Win the final with only the two units your opening pack gave you.
+**Boring Wins:** Win the final with only Knights and Crossbowmen.

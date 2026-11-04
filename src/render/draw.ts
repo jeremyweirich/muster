@@ -593,7 +593,13 @@ export interface UnitDrawOpts {
   noPip?: boolean; // leave out the level number on the token
   scale?: number; // the canvas's scale, when the caller already knows it
   fury?: boolean; // an "unhurt" bonus is on (attacking faster at full HP): a faint red pulse underneath
+  scrap?: boolean; // wearing scrap armor that hasn't blocked its hit yet: plates around the token
 }
+
+// Goblins whose shield is scrap (Grunts' Scrap Armor) show it on the token until the first hit knocks it off. Knights'
+// shield isn't drawn.
+export const wearsScrap = (def: UnitDef) => def.tags.includes("faction:goblin") && !!def.traits?.some((t) => t.type === "shield");
+const SCRAP_COLORS = ["#c3c8cd", "#6e7378", "#a8693a"];
 
 export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side, x: number, y: number, tile: number, o: UnitDrawOpts = {}) {
   const r = Math.max(2.5, def.size * tile);
@@ -654,6 +660,18 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     const body = tokenSprite(def, tile, scale, SLOT_BODY + k, () => sprite(`body|${look()}`, scale, r * 1.3 + 1.5, (c) => paintBody(c, def, side, 0, 0, r, bodyFacing, flash, shadow)));
     if (body) stamp(ctx, body, px, py);
     else paintBody(ctx, def, side, px, py, r, facing, flash, shadow);
+  }
+  if (o.scrap) {
+    // dull plates with gaps between them, following the token's outline
+    shapePath(ctx, def.look.shape, px, py, r * 0.98, def.look.shape === "triangle" ? bodyFacing : facing);
+    ctx.strokeStyle = SCRAP_COLORS[1];
+    ctx.lineWidth = Math.max(1.6, r * 0.42);
+    ctx.setLineDash([r * 0.9, r * 0.35]);
+    ctx.stroke();
+    ctx.strokeStyle = SCRAP_COLORS[0];
+    ctx.lineWidth = Math.max(0.8, r * 0.18);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
   if (r >= 3.5 && def.speed > 0) {
     // facing notch in the team color
@@ -730,10 +748,11 @@ export function drawSquad(
     ctx.setLineDash([]);
   }
   const scale = ctx.getTransform().a || 1;
+  const scrap = wearsScrap(def);
   formation(def, sq.x, sq.y, sq.rot, side).forEach(([x, y], i) => {
     const dead = o.alive !== undefined && i >= o.alive;
     // a tower's level is a property of its def, so it shows as the squad's badge, not on the token as well
-    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3, noPip: def.structure, scale });
+    drawUnit(ctx, def, side, x, y, tile, { alpha: dead ? 0.18 : o.alpha, time: o.time, phase: i * 1.3, noPip: def.structure, scale, scrap });
   });
   ctx.globalAlpha = 1;
   const level = (sq.level ?? 1) > 1 ? sq.level! : def.structure ? shownLevel(def) : undefined;
@@ -816,6 +835,7 @@ const TONGUE_LIFE = 0.32; // out and back: long enough to see the lick
 
 export class FxLayer {
   items: LiveFx[] = [];
+  private armored = new WeakSet<Model>(); // models last drawn wearing scrap armor
   parts = new Particles();
   shots = new Shots();
   // `flip`: draw the field turned 180° (see drawBattle).
@@ -861,6 +881,15 @@ export class FxLayer {
     for (const i of this.items) i.age += dt;
     this.items = this.items.filter((i) => i.age < i.life);
     this.parts.update(dt);
+  }
+  // Whether a model wears scrap armor this frame. Armor knocked off since the last frame falls away in pieces.
+  scrapOn(m: Model, x: number, y: number) {
+    if (m.shield > 0 && wearsScrap(m.def)) {
+      this.armored.add(m);
+      return true;
+    }
+    if (this.armored.delete(m)) this.parts.spawn(x, y, 9, { colors: SCRAP_COLORS, glow: false, grav: 9, speed: 2.6, life: 0.8, size: 3.2 });
+    return false;
   }
   clear() {
     this.items = [];
@@ -1215,6 +1244,7 @@ export function drawBattle(
       scale,
       alpha: battle.hiddenInGrass(m) ? 0.45 : undefined, // hidden from shooters in tall grass
       fury: m.hp >= m.maxHp && !!m.def.traits?.some((t) => t.type === "unhurt"),
+      scrap: fx.scrapOn(m, x, y),
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);

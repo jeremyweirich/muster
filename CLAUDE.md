@@ -201,7 +201,7 @@ it is now.
 - **Faction bonuses** are designed but not built (DESIGN.md §8).
 - **Campaigns:** planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; owner decisions in §8,
   independents and maps in §9). **The Wardens campaign is built** (missions 1–9). Campaign missions charge no unlock prices (every unit met so far is
-  free) and starting supply grows mission by mission; missions 1–6 follow that, 7–9 still use the shop until redone. A mission is a `MissionDef` in
+  free) and starting supply grows mission by mission (400 to 1200). A mission is a `MissionDef` in
   `src/data/campaign.ts` played on the ordinary Play board (`PlayView`'s `mission` prop); each lists reference plans
   that must win, lose and earn its commendation, and `tests/campaign.test.tsx` fights them. Make new ones with the
   recipe in CAMPAIGN.md §6 and `npm run mission` (both use `src/game/missionRun.ts`). Every word of the missions is in
