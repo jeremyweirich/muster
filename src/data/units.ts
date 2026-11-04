@@ -379,7 +379,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
   {
     id: "troll",
     name: "Troll",
-    description: "A pair of berserk bruisers. Every blow in a row on the same target lands harder, so they tear down big units, but small fry waste the rage. They heal as they fight, except while burning.",
+    description: "Two tough melee brutes. They attack faster while at full HP, and each hit in a row on the same target deals more damage. They regenerate HP, except while Burning.",
     cost: 200,
     unlockCost: 100,
     squadSize: 2,
@@ -403,13 +403,13 @@ export const DEFAULT_UNITS: UnitDef[] = [
       {
         id: "thick_blood",
         name: "Thick Blood",
-        description: "Regenerates 20 HP/s, even while Burning.",
+        description: "Regenerates an additional 20 HP/s, even while Burning.",
         traits: [{ type: "regen", perSecond: 20 }],
       },
       {
         id: "gorge",
         name: "Gorge",
-        description: "Heals for 30% of the damage it deals.",
+        description: "Each hit heals it.",
         traits: [{ type: "lifesteal", fraction: 0.3 }],
       },
       { id: "rock_skin", name: "Rock Skin", description: "+40% HP.", mods: [{ stat: "hp", mult: 1.4 }] },

@@ -125,3 +125,9 @@ export function describeUpgrade(u: UpgradeDef): string[] {
   for (const [el, v] of Object.entries(u.resist ?? {})) out.push(`${v! > 0 ? "+" : "−"}${Math.abs(Math.round(v! * 100))}% ${el} resistance`);
   return out;
 }
+
+// Whether an upgrade's mechanical summary only repeats its description (then the summary isn't shown).
+export function sameText(a: string, b: string | undefined): boolean {
+  const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9%+−-]+/g, "");
+  return norm(a) === norm(b ?? "");
+}

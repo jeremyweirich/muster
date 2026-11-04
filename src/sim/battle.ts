@@ -126,7 +126,7 @@ export type Fx =
   | { kind: "burst"; x: number; y: number; r: number; color: string }
   | { kind: "heal"; x: number; y: number; r: number }
   | { kind: "aura"; x: number; y: number; r: number }
-  | { kind: "slash"; x: number; y: number; angle: number; color: string; size: number }
+  | { kind: "slash"; x: number; y: number; angle: number; color: string; size: number; power?: number }
   | { kind: "text"; x: number; y: number; text: string; color: string; big?: boolean }
   | { kind: "death"; x: number; y: number; color: string; size: number };
 
@@ -687,10 +687,13 @@ export class Battle {
     if (m.ambush) m.revealedUntil = this.time + m.ambush;
     m.shotAt = this.time;
     const ramp = trait(m.def, "ramp");
+    let power = 0; // how far up its ramp this hit is (0–1), for the slash's look
     if (ramp) {
       m.rampHits = m.rampTarget === target.id ? m.rampHits + 1 : 0;
       m.rampTarget = target.id;
-      src.dmgMult *= Math.min(ramp.max, 1 + ramp.perHit * m.rampHits);
+      const mult = Math.min(ramp.max, 1 + ramp.perHit * m.rampHits);
+      src.dmgMult *= mult;
+      power = (mult - 1) / (ramp.max - 1);
     }
     if (m.charged) {
       m.charged = false;
@@ -718,7 +721,7 @@ export class Battle {
     if (atk.delivery === "beam") {
       this.emit({ kind: "beam", x1: m.x, y1: m.y, x2: target.x, y2: target.y, color: ELEMENT_COLORS[atk.element], side: m.side, width: beamWidth(atk.damage * src.dmgMult), look: m.def.look.beam });
     } else {
-      this.emit({ kind: "slash", x: target.x, y: target.y, angle: m.facing, color: ELEMENT_COLORS[atk.element], size: Math.max(0.35, target.def.size + 0.15) });
+      this.emit({ kind: "slash", x: target.x, y: target.y, angle: m.facing, color: ELEMENT_COLORS[atk.element], size: Math.max(0.35, target.def.size + 0.15), power });
     }
     this.impact(src, target, target.x, target.y, target.def.layer, 1);
     if (atk.chain) this.chain(src, target, atk);

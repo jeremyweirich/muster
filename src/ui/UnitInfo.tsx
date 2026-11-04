@@ -7,7 +7,7 @@ import { shownLevel } from "../sim/levels";
 import { describeSelector } from "../sim/selectors";
 import type { Element, UnitDef } from "../sim/types";
 import { CodexLink, Linked, UnitLink } from "./codexLinks";
-import { derived, describeEffect, describeTrait, describeUpgrade } from "./describe";
+import { derived, describeEffect, describeTrait, describeUpgrade, sameText } from "./describe";
 
 export function Swatch({ def, size = 22 }: { def: UnitDef; size?: number }) {
   const icon = def.look.icon && def.look.icon in ICONS ? ICONS[def.look.icon as IconId] : null;
@@ -250,7 +250,9 @@ export function UnitInfo({
       {def.upgrades?.length ? (
         <div className="upgrade-list">
           <div className="muted small">Upgrades</div>
-          {def.upgrades.map((u) => (
+          {def.upgrades.map((u) => {
+            const mechanics = describeUpgrade(u).join(" · ");
+            return (
             <div key={u.id} className={`upgrade-preview ${owned?.includes(u.id) ? "owned" : ""}`}>
               <div className="upgrade-head">
                 <b>
@@ -262,9 +264,10 @@ export function UnitInfo({
               <span className="small">
                 <Linked text={u.description ?? ""} />
               </span>
-              <div className="muted small">{describeUpgrade(u).join(" · ")}</div>
+              {!sameText(mechanics, u.description) && <div className="muted small">{mechanics}</div>}
             </div>
-          ))}
+            );
+          })}
         </div>
       ) : null}
       <div className="tags">

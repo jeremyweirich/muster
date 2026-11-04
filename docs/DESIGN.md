@@ -224,7 +224,7 @@ recruit list; faction bonuses come later (section 8).
 | Grunts | 100 | 100 | 16 (4×2) | 20 | 40 | 8 physical / 0.6s, range 0.4 | Swarm, Fast, Melee, Glass cannon | **Scrap Armor**: +20 HP, and each goblin blocks the first hit it takes. 15% slower.<br>**Feral Frenzy**: Run 30% faster and stab 40% faster.<br>**Party Time**: +8 goblins per squad.<br>**Oil Bombs**: Goblins spill oil where they die. Oil slows; fire makes it burning ground. |
 | Skirmishers | 100 | 100 | 12 (4×2) | 16 | 30 | 12 physical / 1.2s, range 3.5 | Skirmisher, Anti-air, Swarm | **Ambush**: Can't be targeted except for 2s after each shot. Splash still hits.<br>**Barbed Arrows**: +60% damage.<br>**Improvised Bombs**: One fire grenade per squad: a wide blast that sets all in it Burning.<br>**Skyshot**: Hunt fliers first, with ×1.5 damage to them. |
 | Wolf Riders | 200 | 100 | 4 (2×2) | 24 | 540 | 45 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: +50% HP and +20% damage.<br>**Tower Raiders**: 15% faster, and pick out a Keep over the army when one is near.<br>**Flankers**: Pick out nearby archers, casters and siege, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×5 charge javelin. |
-| Troll | 200 | 100 | 2 (2×1) | 10 | 1250 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates 20 HP/s, even while Burning.<br>**Gorge**: Heals for 30% of the damage it deals.<br>**Rock Skin**: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching. |
+| Troll | 200 | 100 | 2 (2×1) | 10 | 1250 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates an additional 20 HP/s, even while Burning.<br>**Gorge**: Each hit heals it.<br>**Rock Skin**: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching. |
 | Ogre Brute | 300 | 100 | 1 (2×2) | 7 | 2200 | 200 physical / 1.8s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP, no fire weakness. 40% of hits kill a nearby goblin instead.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: +0.8 splash radius and +20% damage.<br>**Warboss**: Nearby goblins hit 25% harder and faster. Calls a grunt every 5s. |
 | Giant Bats | 200 | 100 | 4 (2×2, air) | 20 | 280 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Leather Wings**: +35% physical resistance, and 40% faster for the first 3s.<br>**Shriek**: On diving in, then every 10s: enemies around its target are Dazed for 3s.<br>**Bloodsuckers**: Heal for 40% of the damage they deal, and latch onto fliers too.<br>**Savage Claws**: +15% HP and +60% damage. |
 
@@ -624,7 +624,10 @@ Codex entry and, if players will meet the word in descriptions, a keyword.
   single-target shots spark where they land, and deaths burst into bits of the unit's color. All of this is
   renderer-only and never touches the sim.
 - Size marks *how hard*: projectile size and beam thickness scale with damage per hit.
-- Melee units lunge on attack and leave a slash arc on the target; ranged units recoil.
+- Melee units lunge on attack and leave a slash arc on the target; ranged units recoil. A ramping hitter's slash (the
+  Troll's) grows bigger and hotter with each hit in a row on the same target: a red-orange glow, then a second ring,
+  more debris. A unit attacking faster at full HP (`unhurt`, the Troll) has a faint red pulse under it while the
+  bonus is on.
 - A unit winding up a shot (Ballista) shows a dashed sight line in its team color to its target, firming up as the
   shot comes.
 - A unit with an aura that summons (Ogre *Warboss*) pulses its aura as it calls: a faint red wash over the radius and a

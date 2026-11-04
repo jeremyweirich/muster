@@ -592,6 +592,7 @@ export interface UnitDrawOpts {
   statuses?: Partial<Record<StatusId, number>>;
   noPip?: boolean; // leave out the level number on the token
   scale?: number; // the canvas's scale, when the caller already knows it
+  fury?: boolean; // an "unhurt" bonus is on (attacking faster at full HP): a faint red pulse underneath
 }
 
 export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side, x: number, y: number, tile: number, o: UnitDrawOpts = {}) {
@@ -616,6 +617,16 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.fill();
     if (def.structure || def.tags.includes("race:elemental")) drawGlow(ctx, def, tile, scale, px, py, r, time, phase);
     else drawWings(ctx, px, py, r, facing, def.look.color, side, time, phase);
+  }
+  if (o.fury) {
+    const R = r * (1.55 + Math.sin(time * 9 + phase) * 0.12);
+    const g = ctx.createRadialGradient(px, py, r * 0.6, px, py, R);
+    g.addColorStop(0, "rgba(255,60,30,0.55)");
+    g.addColorStop(1, "rgba(255,60,30,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(px, py, R, 0, Math.PI * 2);
+    ctx.fill();
   }
   const shadow = !air && r >= 4;
   const level = o.noPip ? 0 : (shownLevel(def) ?? 0);
@@ -813,7 +824,11 @@ export class FxLayer {
       const fx = flip ? flipFx(raw, battle.rules.fieldW, battle.rules.fieldH) : raw;
       // keep reaction labels from piling up on top of each other
       if (fx.kind === "text" && this.items.some((i) => i.fx.kind === "text" && i.fx.text === fx.text && i.age < 0.3 && Math.hypot((i.fx as typeof fx).x - fx.x, (i.fx as typeof fx).y - fx.y) < 2)) continue;
-      const life = fx.kind === "text" && fx.big ? BIG_TEXT_LIFE : fx.kind === "beam" && fx.look === "tongue" ? TONGUE_LIFE : FX_LIFE[fx.kind];
+      const life =
+        fx.kind === "text" && fx.big ? BIG_TEXT_LIFE
+        : fx.kind === "beam" && fx.look === "tongue" ? TONGUE_LIFE
+        : fx.kind === "slash" ? FX_LIFE.slash * (1 + 0.6 * (fx.power ?? 0))
+        : FX_LIFE[fx.kind];
       this.items.push({ fx, age: 0, life });
       this.spark(fx);
     }
@@ -829,9 +844,11 @@ export class FxLayer {
         else this.parts.spawn(fx.x, fx.y, n, { colors: [fx.color], glow: false, grav: 3, speed: 1.5 + fx.r, life: 0.45, size: 2.2 });
         break;
       }
-      case "slash":
-        this.parts.debris(fx.x, fx.y, 2, elementOfColor(fx.color) ?? "physical", 1.6, 0.6);
+      case "slash": {
+        const p = fx.power ?? 0;
+        this.parts.debris(fx.x, fx.y, 2 + Math.round(p * 6), elementOfColor(fx.color) ?? "physical", 1.6 + p, 0.6 + 0.3 * p);
         break;
+      }
       case "beam":
         this.parts.debris(fx.x2, fx.y2, 3, elementOfColor(fx.color) ?? "physical", 1.8, 0.7);
         break;
@@ -859,9 +876,25 @@ export class FxLayer {
           drawBeam(ctx, fx, tile, k, age);
           break;
         case "slash": {
-          const r = fx.size * tile * (0.8 + (1 - k) * 0.6);
+          // a ramping hitter (Trolls) swings bigger and hotter with each hit in a row on one target
+          const p = fx.power ?? 0;
+          const r = fx.size * tile * (0.8 + (1 - k) * 0.6) * (1 + 0.45 * p);
+          if (p > 0) {
+            ctx.globalCompositeOperation = "lighter";
+            ctx.strokeStyle = `rgba(255,90,40,${0.25 + 0.5 * p})`;
+            ctx.lineWidth = 3 + 5 * p;
+            ctx.beginPath();
+            ctx.arc(fx.x * tile, fx.y * tile, r, fx.angle - 1.1, fx.angle + 1.1);
+            if (p >= 0.5) {
+              // and a second ring of shock beyond it
+              ctx.moveTo(fx.x * tile + Math.cos(fx.angle - 0.7) * r * 1.25, fx.y * tile + Math.sin(fx.angle - 0.7) * r * 1.25);
+              ctx.arc(fx.x * tile, fx.y * tile, r * 1.25, fx.angle - 0.7, fx.angle + 0.7);
+            }
+            ctx.stroke();
+            ctx.globalCompositeOperation = "source-over";
+          }
           ctx.strokeStyle = fx.color;
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 2.5 + 1.5 * p;
           ctx.beginPath();
           ctx.arc(fx.x * tile, fx.y * tile, r, fx.angle - 1.1, fx.angle + 1.1);
           ctx.stroke();
@@ -1181,6 +1214,7 @@ export function drawBattle(
       phase: m.id * 1.618,
       scale,
       alpha: battle.hiddenInGrass(m) ? 0.45 : undefined, // hidden from shooters in tall grass
+      fury: m.hp >= m.maxHp && !!m.def.traits?.some((t) => t.type === "unhurt"),
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);
