@@ -79,11 +79,17 @@ Knights cut down the swarm. The How to Play page says so.
   2 divers, 2 utility, 1 late-game, and six upgrade paths into other roles.
 
 **Open problems, most important first**
-1. **Veterancy is worth too much.** Level N is N× HP and N× damage, about 4× the combat value for 1.5× the price (a
-   promotion costs half the unit). It's what makes a Ballista park behind a Grunt screen untouchable: replayed with
-   everyone at level 1, all 12 Ballistae die. Range 11 from row 0 reaches mid-field, where the screen meets the
-   attackers, and divers' preferences are local, so they fight the screen. Levers: veterancy's value or price first,
-   Ballista range only after. The AI promoting Wolf Riders early is the same problem.
+1. **Veterancy is strong, and the owner wants it that way** (4 November): it rewards placing well early, and the same
+   layout plays differently depending on who levelled. Level N is N× HP and N× damage, about 4× the combat value for
+   1.5× the price. **Price stays** (other prices would leave odd leftovers); the knobs are the XP for the first level
+   and the curve after it (`veterancyXp` in `rules.ts`). Measured in 40 Hard AI-vs-AI matches (median 7 rounds):
+   the first promotion comes in round 5 (median), no squad passes level 2, at most ~10% of squads are veterans, and
+   promotions take 2% of spending; a side with a 25%+ level edge wins 71% of those rounds. With the first level at
+   1200 XP instead of 2000, more squads earn a level by round 3–4 but promotions still start in round 5: the limit
+   is the AI, which only promotes inside random candidate plans (60% per squad) and often prefers more squads. So
+   levels are rare against the AI, not too common; a human who promotes eagerly will see far more of them. Next:
+   whether the AI should value promotions better (judge with `ai-duel`), then the Ballista park behind a screen
+   (replayed at level 1, all 12 Ballistae die; Ballista range only after).
 2. **The Ballista leads the Nash mix.** Watch whether it becomes the "answer to everything" in the missions.
 3. **Wolf Riders: ×5 opening javelin, or ×2 raised to ×3 by an upgrade?** Pending the owner. At equal supply, ×5 has a
    mean margin of 24 and loses only to fliers, Pikemen (25%) and the Golem (38%); plain ×2 drops to 4 and loses to the

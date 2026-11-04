@@ -190,8 +190,9 @@ it is now.
     no attacks, 25% less physical damage, passing through enemy fliers; then they fight, and their claws reach fliers.
     Where they're placed decides where they land. *Long Dive* goes further; *Bloodsuckers* has no dive (an anti-air
     escort). Kept light on purpose: Warden anti-air is all physical.
-  - A Ballista park behind a screen is a **veterancy** problem (level N is N× HP and N× damage, about 4× the value for
-    half the price); that's where to look next.
+  - **Veterancy stays strong** (owner): it rewards early placement and makes matches differ. Promotion price is
+    fixed; the only knobs are the first level's XP and the curve. The AI promotes late and rarely (BALANCE-PLAN.md §3,
+    problem 1), so that's the next place to look, before the Ballista park behind a screen.
   - Two upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and
     Troll *Boulder Toss*. Expect the owner to replace them.
   - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon
@@ -228,4 +229,4 @@ it is now.
 - **Not yet checked:** a PvP match on a real iPhone (Firefox and WebKit run battles bit-identical to Chrome: checked
   4 November, docs/MULTIPLAYER.md); Escape cancelling placement on a Mac (a friend saw it fail; not reproduced, and Done was added);
   the black-field fix on the owner's phone (a GPU reset, DESIGN.md §10b); whether the AI buys Keep levels; how the XP
-  curve plays over a full match; Gulp + Trolls against a real Dragon in a full match.
+  curve plays over a full match for a human (AI-vs-AI is measured); Gulp + Trolls against a real Dragon in a full match.
