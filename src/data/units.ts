@@ -322,13 +322,11 @@ export const DEFAULT_UNITS: UnitDef[] = [
           },
         ],
       },
-      // Placeholder for the slot the owner deferred until after the campaign.
       {
-        id: "skyshot",
-        name: "Skyshot",
-        description: "Hunt fliers first, with ×1.5 damage to them.",
-        prefers: { layer: "air" },
-        bonusVs: [{ selector: { layer: "air" }, mult: 1.5 }],
+        id: "recruiters",
+        name: "Recruiters",
+        description: "Every kill pulls another goblin archer into the squad for the rest of the battle.",
+        traits: [{ type: "onKill", effects: [{ type: "summon", unit: "skirmishers", count: 1 }] }],
       },
     ],
     tags: ["faction:goblin", "race:goblin", "class:ranged", "size:small", "role:skirmisher", "role:antiair", "role:swarm"],
@@ -413,15 +411,31 @@ export const DEFAULT_UNITS: UnitDef[] = [
         description: "Each hit heals it.",
         traits: [{ type: "lifesteal", fraction: 0.3 }],
       },
-      { id: "rock_skin", name: "Rock Skin", description: "+40% HP.", mods: [{ stat: "hp", mult: 1.4 }] },
-      // Placeholder for the slot the owner deferred: the campaign's "bigger thing" (docs/CAMPAIGN.md).
       {
-        id: "boulder_toss",
-        name: "Boulder Toss",
-        description: "Throws rocks from 3 tiles away instead of punching.",
-        mods: [{ stat: "range", add: 2.4 }],
-        delivery: "projectile",
-        projectileSpeed: 9,
+        id: "grab_and_throw",
+        name: "Grab and Throw",
+        description:
+          "At once, then every 8s: picks up the small or medium enemy it's fighting and throws it 3 tiles back into its own lines. It crashes down for 60 damage to every enemy within 1 tile, all of them Dazed for 2s.",
+        traits: [
+          {
+            type: "grab",
+            interval: 8,
+            distance: 3,
+            daze: 2,
+            selector: { hasAnyTag: ["size:small", "size:medium"] },
+            land: [
+              { type: "damage", amount: 60, element: "physical", radius: 1 },
+              { type: "status", status: "dazed", duration: 2, radius: 1, affects: "enemies" },
+            ],
+          },
+        ],
+      },
+      // the goblin campaign's "bigger thing" (docs/CAMPAIGN.md): out of reach of a pike wall hitting back
+      {
+        id: "uprooted_tree",
+        name: "Uprooted Tree",
+        description: "Swings a whole tree: +1 range, out of reach of pikes hitting back, and each hit splashes a little, for 20% less damage.",
+        mods: [{ stat: "range", add: 1 }, { stat: "splash", add: 0.3 }, { stat: "damage", mult: 0.8 }],
       },
     ],
     tags: ["faction:goblin", "race:troll", "size:large", "role:antilarge", "role:sturdy", "role:regen", "role:melee"],

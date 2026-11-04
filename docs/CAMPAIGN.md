@@ -305,11 +305,11 @@ curve. **This is where the goblins' personalities get developed**; the Wardens c
 upgrades (`docs/VISION.md`).
 
 **The goblin "X" against the pike line.** Don't go through it. Go around it (Keeps), over it (Bats) or shoot from
-outside it (Skirmishers, a rock-throwing Troll). The rigid, predictable Wardens AI (Normal, playing by the book) becomes
+outside it (Skirmishers, a Troll with a tree). The rigid, predictable Wardens AI (Normal, playing by the book) becomes
 the thing to exploit. "They had pointy sticks and we had nothing. So I made a bigger thing": the bigger thing is
-the Troll's fourth upgrade, ***Boulder Toss***: it throws rocks from 3 tiles instead of punching, so it never touches
-the pikes. It's built as a **placeholder**, like Skirmishers *Skyshot*; the owner deferred both slots until after the
-campaign, so expect them to change.
+the Troll's ***Uprooted Tree***: +1 range, so a Pike Wall can't hit it back, and a little splash. Against Pikemen with
+*Pike Wall* it turns a 0% fight into an even one; plain Pikemen still win. *Grab and Throw* is the other way through a
+line: it throws a pikeman back into its own ranks.
 
 **The fire arc.** The Tinker's line is split across three missions: "Fire's hot." / "Fire's also free." / "Point it
 at THEM." Goblins who go out in a blaze get cheered, not mourned.
@@ -317,10 +317,10 @@ at THEM." Goblins who go out in a blaze get cheered, not mourned.
 | # | Mission | Opponent | New for the player | Goblin unit / upgrade |
 |---|---|---|---|---|
 | 1 | Pointy Sticks | the Marshal (Wardens M8 replayed) | win by toppling a Keep, not by beating the army | Grunts, Wolves, Troll, Ogre |
-| 2 | A Bigger Thing | Marshal | shoot, don't stab: short range against Pike Wall | Skirmishers, Troll *Boulder Toss* |
+| 2 | A Bigger Thing | Marshal | shoot, don't stab: short range against Pike Wall | Skirmishers, Troll *Uprooted Tree* |
 | 3 | The Gang | Marshal | chaff and screening; numbers absorb the losses | Grunt *Party Time*, Ogre *Warboss* and *Thick Skull* |
 | 4 | Both Keeps | Marshal | tempo: a double Keep raid against a rigid army; first statuses you wield (Dazed) | Giant Bats (*Shriek*), Wolf Riders *Tower Raiders* |
-| 5 | Snobs | elementals | statuses from the receiving end; splash punishes clumps; anti-air against Cloudlings and flying Air Elementals | Skirmishers *Skyshot*; maybe hired Bog Toad Riders (below) |
+| 5 | Snobs | elementals | statuses from the receiving end; splash punishes clumps; anti-air against Cloudlings and flying Air Elementals | Giant Bats *Bloodsuckers* (no dive, hunt fliers); maybe hired Bog Toad Riders (below) |
 | 6 | Fire's Hot | elementals | your own fire burns your own gang (friendly fire) | Skirmisher *Improvised Bombs* |
 | 7 | Fire's Free | elementals | the first surface: dead grunts leave oil; Oiled → Ignite | Grunt *Oil Bombs* |
 | 8 | Point It at Them | elementals (fire-heavy) | steer *their* fire: oil under their line, their fireballs light it | everything |
@@ -526,7 +526,8 @@ Wardens campaign scripts every enemy, mission 9's two phases included), a "toppl
 
 ## 8. Owner decisions
 
-- Skirmishers are goblin archers that hit air. *Boulder Toss* exists as a placeholder until after the campaign.
+- Skirmishers are goblin archers that hit air. The deferred slots are filled: Skirmishers *Recruiters*, Troll *Grab and
+  Throw* and *Uprooted Tree* (4 November).
 - **Pikemen arrive in mission 8** (left to Claude): one new unit per mission, and the player learns the pikes before
   the finale leans on them.
 - **The goblin player is the Boss**, with the Tinker advising.

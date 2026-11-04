@@ -154,7 +154,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
       ambush: { intent: "Hidden until they shoot: beat single-target shooters that outrange them (splash still finds them)", beats: ["crossbowmen"] },
       barbed_arrows: { intent: "More damage" },
       improvised_bombs: { intent: "One fire grenade per squad: a single burst of chaff clear on contact", beats: ["grunts"] },
-      skyshot: { intent: "Placeholder (owner deferred): anti-air", beats: ["griffon_riders"] },
+      recruiters: { intent: "Snowball through chaff: every kill adds an archer, so a crowd of small targets grows the squad", beats: ["grunts"] },
     },
   },
   wolf_riders: {
@@ -174,8 +174,9 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     upgrades: {
       thick_blood: { intent: "The counterpunch to fire: regenerate while burning, so burning ground and fire arrows stop working on it" },
       gorge: { intent: "Outlast giants: ramping hits heal it more" },
-      rock_skin: { intent: "Tougher" },
-      boulder_toss: { intent: "Placeholder (owner deferred): range, so it never touches a pike wall" },
+      grab_and_throw: { intent: "Break a line: throw the unit in front of it back into its own ranks, Dazed, and walk into the gap" },
+      // against Pikemen with Pike Wall it turns 0% into an even fight (the pikes can't hit back); plain Pikemen still win
+      uprooted_tree: { intent: "The bigger thing: reach past a pike wall's retaliation, and splash the chaff around its target", beats: ["grunts"] },
     },
   },
   ogre_brute: {

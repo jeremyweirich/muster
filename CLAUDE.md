@@ -193,8 +193,9 @@ it is now.
   - **Veterancy stays strong** (owner): it rewards early placement and makes matches differ. Promotion price is
     fixed; the only knobs are the first level's XP and the curve. The AI promotes late and rarely (BALANCE-PLAN.md §3,
     problem 1), so that's the next place to look, before the Ballista park behind a screen.
-  - Two upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and
-    Troll *Boulder Toss*. Expect the owner to replace them.
+  - The deferred upgrade slots are filled (owner's picks, 4 November): Skirmishers *Recruiters* (each kill adds an
+    archer), Troll *Grab and Throw* (in *Rock Skin*'s place) and *Uprooted Tree* (in *Boulder Toss*'s place: the goblin
+    campaign's "bigger thing" that reaches past a Pike Wall).
   - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon
     Riders throw spears; role `skirmisher`). Lean that way when designing new units.
 - **Owner's calls on rules:** round damage ignores levels, on purpose; battles can't end early, because the survivors

@@ -51,6 +51,11 @@ export interface Model {
   aim: number; // windup: seconds spent aiming at the current target since the reload
   dive: number; // dive trait: tiles of its opening dive still to fly (0 = done, or no dive)
   diveResist: number; // ...and the physical resistance it has until then
+  flight: number; // thrown (grab trait): seconds left in the air; it can't act until it lands
+  flightVx: number;
+  flightVy: number;
+  flightBy: number; // the thrower's squad, credited for what the landing does
+  flightLand: Effect[] | null; // what goes off where it lands
   summoned: boolean; // spawned mid-battle (Warboss); not part of the placed squad's survivors
   engaged: boolean; // in range of its target this tick (spacing only applies while advancing)
   buffAttack: number;
@@ -166,6 +171,7 @@ const RANGED = 2.5; // attacks longer than this count as ranged (blocked by stea
 const SURFACE_TICK = 0.5;
 const AURA_TICK = 0.25;
 const FORWARD = { x: 0, y: -1 }; // side 0 advances up the field unless the rules say otherwise
+export const THROW_TIME = 0.5; // seconds a thrown unit spends in the air
 // Sixteen evenly spaced unit directions, written out: Math.cos and Math.sin can differ in the last bit between
 // browsers, and PvP needs both players' browsers to run exactly the same battle.
 const C = 0.9238795325112867;
@@ -321,6 +327,11 @@ export class Battle {
       aim: 0,
       dive: summoned ? 0 : (trait(def, "dive")?.distance ?? 0),
       diveResist: trait(def, "dive")?.resist ?? 0,
+      flight: 0,
+      flightVx: 0,
+      flightVy: 0,
+      flightBy: -1,
+      flightLand: null,
       summoned,
       engaged: false,
       buffAttack: 1,
@@ -472,6 +483,15 @@ export class Battle {
         if (t.type === "regen") {
           if (t.suppressedBy === undefined || m.statuses[t.suppressedBy] === undefined) m.hp = Math.min(m.maxHp, m.hp + t.perSecond * dt);
         }
+        else if (t.type === "grab") {
+          m.periodic[i] = Math.max(0, m.periodic[i] - dt);
+          if (m.periodic[i] > 0 || !m.engaged || m.flight > 0 || this.isStunned(m)) return;
+          const target = this.byId.get(m.targetId);
+          if (!target?.alive || target.def.structure || target.def.layer !== "ground" || target.flight > 0) return;
+          if (!matches(t.selector, target.def, target.side, m.side)) return; // too big: it keeps punching, the grab stays ready
+          m.periodic[i] = t.interval;
+          this.throwModel(m, target, t);
+        }
         else if (t.type === "periodic") {
           m.periodic[i] = Math.max(0, m.periodic[i] - dt);
           if (m.periodic[i] > 0) return;
@@ -502,6 +522,23 @@ export class Battle {
         }
       });
     }
+  }
+
+  // straight on, away from the thrower, over THROW_TIME; it lands Dazed (applied now, for the flight plus `daze`)
+  private throwModel(m: Model, target: Model, t: Extract<TraitDef, { type: "grab" }>) {
+    const dx = target.x - m.x;
+    const dy = target.y - m.y;
+    const d = Math.sqrt(dx * dx + dy * dy) || 1;
+    target.flight = THROW_TIME;
+    target.flightVx = ((dx / d) * t.distance) / THROW_TIME;
+    target.flightVy = ((dy / d) * t.distance) / THROW_TIME;
+    target.engaged = false;
+    target.targetId = -1;
+    target.aim = 0;
+    target.flightBy = m.squad;
+    target.flightLand = t.land ?? null;
+    this.applyStatus(target, "dazed", THROW_TIME + t.daze, this.attrFor(m.squad, "Grab"));
+    this.emit({ kind: "text", x: target.x, y: target.y - 0.5, text: "Thrown!", color: "#ffffff" });
   }
 
   // restarts a periodic trait's timer; a perSquad trait restarts it for the whole squad
@@ -625,6 +662,22 @@ export class Battle {
     const unhurt = trait(m.def, "unhurt");
     if (unhurt && m.hp >= m.maxHp) attackRate *= unhurt.attackSpeed;
     if (m.cooldown > 0) m.cooldown -= dt * attackRate;
+    if (m.flight > 0) {
+      // thrown: flies on (walls and water are sorted out on landing, in separate)
+      const step = Math.min(dt, m.flight);
+      m.x = clamp(m.x + m.flightVx * step, m.def.size, this.rules.fieldW - m.def.size);
+      m.y = clamp(m.y + m.flightVy * step, m.def.size, this.rules.fieldH - m.def.size);
+      m.flight -= step;
+      if (m.flight <= 0 && m.flightLand) {
+        const land = m.flightLand;
+        m.flightLand = null;
+        const attr = this.attrFor(m.flightBy, "Grab");
+        const side = this.squads[m.flightBy].side;
+        for (const e of land) this.applyEffect(e, m.x, m.y, "ground", side, m, attr);
+        this.emit({ kind: "burst", x: m.x, y: m.y, r: 1, color: "#c9b58a" });
+      }
+      return;
+    }
     if (this.isStunned(m)) return;
     if (m.dive > 0) {
       this.diveStep(m, dt);
@@ -1149,6 +1202,7 @@ export class Battle {
             const ao = o.def.speed <= 0;
             if (am && ao) continue;
             if (m.side !== o.side && (m.dive > 0 || o.dive > 0)) continue; // a diver flies straight through
+            if (m.flight > 0 || o.flight > 0) continue; // so does a thrown unit
             const dx = o.x - m.x;
             const dy = o.y - m.y;
             // spread out while advancing; close ranks once fighting

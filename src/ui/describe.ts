@@ -54,6 +54,8 @@ export function describeTrait(t: TraitDef): string {
     case "dive":
       if (t.distance <= 0) return "No opening dive: picks targets from the start";
       return `Opens the battle with a dive: flies ${Math.round(t.distance)} tiles straight ahead without attacking, taking ${Math.round(t.resist * 100)}% less physical damage`;
+    case "grab":
+      return `Every ${t.interval}s: throws the ${describeSelector(t.selector).replace(/ units$/, "")} enemy it's fighting ${t.distance} tiles back, Dazed for ${t.daze}s${t.land?.length ? `; where it lands: ${t.land.map(describeEffect).join(", ")}` : ""}`;
     case "lifesteal":
       return `Heals for ${Math.round(t.fraction * 100)}% of the damage it deals`;
     case "meatShield":

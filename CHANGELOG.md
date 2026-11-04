@@ -3,8 +3,16 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 4 November 2026 (v89–v92)
+## 4 November 2026 (v89–v94)
 
+- **New upgrades in the deferred slots** (the owner's picks):
+  - Skirmishers ***Recruiters*** (in *Skyshot*'s place): every kill pulls another goblin archer into the squad for
+    the rest of the battle.
+  - Troll ***Grab and Throw*** (in *Rock Skin*'s place): at once, then every 8 s, it throws the small or medium enemy
+    it's fighting 3 tiles back into its own lines. It crashes down for 60 damage to every enemy within 1 tile, all of
+    them Dazed for 2 s.
+  - Troll ***Uprooted Tree*** (in *Boulder Toss*'s place): +1 range, out of reach of a Pike Wall hitting back, and
+    each hit splashes a little, for 20% less damage.
 - **From the campaign to the full game.** Winning *The Marches* now offers **Play the full game**, which opens a
   short walkthrough of what the campaign didn't cover: every faction in the shop, round 1's packs or war chest and
   unlock prices, and elements combining.

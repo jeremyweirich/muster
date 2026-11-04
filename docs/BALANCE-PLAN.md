@@ -60,7 +60,7 @@ Knights cut down the swarm. The How to Play page says so.
 `npm run balance -- check` (8 seeds, about 1000 supply, level 1):
 
 - **93 of 95 relations hold.** Both misses are even fights (50%): Troll against Ogre, and Frost against the Giant.
-- **38 of 40 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (0%), Fire Elemental
+- **39 of 41 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (0%), Fire Elemental
   *Living Inferno* against Wolf Riders (38%).
 - **Nash mix:** Ballista 35%, Dragon 30%, Skirmishers 20%, Cloudlings 11%, Wolf Riders 4%. With Crossbowmen weak against
   fliers, fliers and the Ballista take their place in one-unit fights, which exaggerate fliers. One-unit fights list
