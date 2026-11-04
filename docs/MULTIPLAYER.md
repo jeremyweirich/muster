@@ -112,11 +112,19 @@ connections from `https://jeremyweirich.github.io` and from local development ad
 - A player who reloads before sending their turn comes back to the last battle's result and clicks **Next round**
   again; whatever they had placed but not sent is gone. A turn that was sent is kept.
 
-## Not yet checked
+## Cross-browser determinism
 
-- Cross-browser determinism: Firefox and Safari running the same battle as Chrome. Playwright's Firefox and WebKit
-  could run `npm run bench`'s fights in each engine and compare fingerprints. A mismatch in play shows a notice and the
-  host's result wins.
+Checked on 4 November 2026 (v92): Chrome 156, Firefox 157 and WebKit 27.2 (Safari's engine, Playwright's Windows build)
+ran 354 battles to the same bit as Node: every model's final position and HP, compared exactly, not rounded. The set was
+`npm run bench`'s pairs plus four mixed armies (all three factions and the independents) on every map, half with two
+upgrades per unit and a third of the squads promoted. A mismatch in play would still show a notice, and the host's
+result wins.
+
+To repeat it after a big `src/sim` change: write a probe outside the repo that builds those battles and hashes the
+Float64 bits of each model's `x`, `y` and `hp` at the end, bundle it with `npx esbuild probe.ts --bundle
+--format=iife`, then run the bundle in Node and, through `playwright-core` (`page.addScriptTag` on a blank page), in
+Chromium, Firefox and WebKit (`node node_modules/playwright-core/cli.js install firefox webkit`). Not checked: Safari on
+a real iPhone (same engine, different CPU), which only a friend's phone can tell.
 
 ## Not built (ideas)
 

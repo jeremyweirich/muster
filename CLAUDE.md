@@ -225,7 +225,7 @@ it is now.
   debug panel (click the version in the header, or `#debug`) runs a one-minute performance test and shows a text
   report with Copy/Share; ask the owner to run it on the live site and paste the report.
 - Ideas not yet built: combo pairs in the balance harness, reinforcement cards, spells, pathfinding.
-- **Not yet checked:** whether Firefox and Safari run battles identically to Chrome (a desync shows a notice and the
-  host's result wins); Escape cancelling placement on a Mac (a friend saw it fail; not reproduced, and Done was added);
+- **Not yet checked:** a PvP match on a real iPhone (Firefox and WebKit run battles bit-identical to Chrome: checked
+  4 November, docs/MULTIPLAYER.md); Escape cancelling placement on a Mac (a friend saw it fail; not reproduced, and Done was added);
   the black-field fix on the owner's phone (a GPU reset, DESIGN.md §10b); whether the AI buys Keep levels; how the XP
   curve plays over a full match; Gulp + Trolls against a real Dragon in a full match.
