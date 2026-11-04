@@ -3,8 +3,12 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 4 November 2026 (v89)
+## 4 November 2026 (v89–v90)
 
+- **Clerics reworked:** a bigger, slower prayer (250 every 5s, was 120 every 2s), and **prayers don't stack**: a unit
+  a Cleric heals can't be healed by another Cleric's prayer for 5s, so more Clerics heal more units, not the same
+  ones faster. The new upgrade ***Constant Prayer*** (in *Sanctuary*'s place) prays every second instead, 70 at a
+  time: more healing, less wasted. *Under the Bridge* now asks for it (HP 260 each).
 - **The Wardens campaign, missions 5–9 reworked:**
   - ***The Wheelbarrow* is now mission 5, before the Clerics.** Knights and Clerics beat most goblin mobs on their own,
     so a player could win it without the upgrade it teaches. Without Clerics it's harder: only a good upgrade wins.

@@ -312,7 +312,7 @@ Drill Book page, **Page 6: Clerics**:
 ### During the match
 
 - Round 2: **The Boss:** TOLL'S GONE UP.
-- Round 3: **Sergeant Dunmor:** They'll keep coming over that bridge. Keep Knights on it and Clerics behind them.
+- Round 3: **Sergeant Dunmor:** They'll keep coming over that bridge. Keep Knights on it, Clerics behind them, and get those Clerics praying faster.
 
 ### Debrief after a win
 
@@ -329,7 +329,8 @@ Drill Book page, **Page 6: Clerics**:
 - When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** You stopped adding units after round 1. They kept coming over that bridge.
 - When `!fielded(c,"knights")`: **Sergeant Dunmor:** Nothing held the bridge, so they walked straight over it. Put Knights on it.
 - When `!fielded(c,"cleric")`: **Archivist Ithiel:** The Knights held the bridge until they wore out! Clerics behind them would have kept them standing.
-- When otherwise: **Sergeant Dunmor:** Close. Add Knights on the bridge and Clerics behind them, every round.
+- When `!c.upgrades.cleric?.includes("constant_prayer")`: **Archivist Ithiel:** The Clerics couldn't keep up! One big prayer every five seconds, and the bridge never stops. Constant Prayer heals a little every second. It's on the Upgrades tab!
+- When otherwise: **Sergeant Dunmor:** Close. Add Knights on the bridge and Clerics behind them, every round, and Ballistae when the trolls come.
 
 ### Commendation
 

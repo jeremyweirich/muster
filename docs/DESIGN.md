@@ -214,7 +214,7 @@ recruit list; faction bonuses come later (section 8).
 | Crossbowmen | 100 | 100 | 3 (3×1) | 8 | 220 | 85 physical / 3s, range 7 | Ranged, Anti-air | **Longshot**: +3 range.<br>**Fire Bolts**: Fire damage, +25%, that ignites Oiled targets.<br>**Repeaters**: Shoot 2.5× as fast for 60% damage per bolt.<br>**Skyhunters**: Full damage to fliers (not half), picking them out first, with +2 range against them. |
 | Ballista | 100 | 100 | 1 (2×2) | 5 | 250 | 260 physical / 2.5s + 1.25s windup, range 11 | Sniper, Anti-large, Anti-air, Slow | **Heavy Bolts**: +50% damage.<br>**Repeater**: Fires twice as fast for 60% damage per bolt.<br>**Chain Harpoons**: Bolts Chill. A second hit freezes; the next shatters for double.<br>**Reinforced Frame**: +100% HP and +30% physical resistance. |
 | Griffon Riders | 200 | 100 | 3 (3×2, air) | 18 | 360 | 45 physical / 1s, range 2 | Flier, Fast, Skirmisher | **Dive Attack**: The first strike deals ×4 damage.<br>**Armored Saddles**: +40% HP and +20% physical resistance.<br>**Sky Patrol**: Pick out nearby fliers first, with ×1.75 damage to them.<br>**Giant Slayers**: ×2.5 damage to large and huge units, and pick them out when near. |
-| Cleric | 100 | 100 | 2 (2×1) | 8 | 400 | none | Healer, Support | **Sanctuary**: A second prayer heals 50 every 2s, in a much wider circle.<br>**Blessing**: Allies nearby deal +30% damage.<br>**Purify**: Every 1.5s, clears all statuses from nearby allies.<br>**Battle Hymn**: Allies nearby attack 30% faster and move 25% faster. |
+| Cleric | 100 | 100 | 2 (2×1) | 8 | 400 | none | Healer, Support | **Constant Prayer**: Heal 70 every second instead of 250 every 5s: more healing, and less of it wasted.<br>**Blessing**: Allies nearby deal +30% damage.<br>**Purify**: Every 1.5s, clears all statuses from nearby allies.<br>**Battle Hymn**: Allies nearby attack 30% faster and move 25% faster. |
 | Dwarven Pikemen | 200 | 100 | 6 (4×2) | 9 | 300 | 36 physical / 1.2s, range 1.5 | Anti-large, Swarm, Melee | **Pike Wall**: Melee attackers take 40 damage back on every hit.<br>**Long Pikes**: +1 range, so the back rank fights too.<br>**Heavy Halberds**: +40% damage, and every blow sweeps a wide arc.<br>**Drilled Ranks**: +3 dwarves per squad. |
 
 #### Goblins
@@ -467,7 +467,8 @@ about movement or collisions changes.
   - `damage` (element, radius)
   - `status` (radius or global, `affects`)
   - `surface`
-  - `heal`
+  - `heal`; with a `lockout` it's a prayer (the Cleric's): a unit it heals can't be healed by another prayer for that
+    long, so prayers don't stack and more Clerics heal more units, not the same ones faster
   - `cleanse`: removes every status from allies in a radius (Cleric Purify)
   - `summon`: new models of a unit join the source's squad for this battle (Warboss). They fight and earn the squad
     XP, but don't count among its survivors for round damage

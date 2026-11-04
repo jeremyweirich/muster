@@ -118,7 +118,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     role: "utility",
     analogue: "",
     upgrades: {
-      sanctuary: { intent: "More healing, over a wider circle" },
+      constant_prayer: { intent: "More healing: a small prayer every second instead of a big one every 5s, so less is wasted on units already near full HP" },
       blessing: { intent: "A damage aura for the line" },
       purify: { intent: "The counterpunch to elemental combos: cleanse statuses" },
       battle_hymn: { intent: "Attack and move speed for the line; with Blessing, a hard-hitting line" },

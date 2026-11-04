@@ -797,15 +797,16 @@ const THE_WHEELBARROW: MissionDef = {
 
 // Mission 6: Clerics, at the toll bridge: a river right across the Field with one wide bridge in the middle, so
 // nothing on foot can flank. Mobs pour over the bridge with Skirmishers behind them, then trolls. Knights holding the
-// bridge wear down without healing; Clerics behind them keep them standing. Tuned by simulation: Knights with Clerics
-// behind them win every round, and a player who starts without Clerics and adds them after losing two rounds wins too;
-// so does Shield Wall on the Knights instead of Clerics (both keep the Knights standing). No Clerics (Crossbowmen,
-// Ballistae or Repeaters instead), all Crossbowmen and never adding lose.
+// bridge wear down without healing; Clerics behind them keep them standing, once they pray every second (Constant
+// Prayer): prayers don't stack, so the base prayer every 5s can't keep a busy bridge up. Tuned by simulation: Clerics
+// with Constant Prayer win, bought before round 1 (every round) or in round 2, and so does Shield Wall on the Knights
+// instead (both keep the Knights standing). Clerics without the prayer, no Clerics (Crossbowmen, Ballistae or
+// Repeaters instead), all Crossbowmen and never adding lose. Round 6's five trolls finish any plan still going.
 const UNDER_THE_BRIDGE: MissionDef = {
   id: "wardens-6",
   supply: 900,
   units: ["knights", "crossbowmen", "ballista", "cleric"],
-  hp: [220,300],
+  hp: [260, 260],
   towers: true,
   upgrades: true,
   veterancy: false,
@@ -839,7 +840,7 @@ const UNDER_THE_BRIDGE: MissionDef = {
   objective: "Win the match.",
   roundLines: {
     2: { who: "boss", text: "TOLL'S GONE UP." },
-    3: { who: "sergeant", text: "They'll keep coming over that bridge. Keep Knights on it and Clerics behind them." },
+    3: { who: "sergeant", text: "They'll keep coming over that bridge. Keep Knights on it, Clerics behind them, and get those Clerics praying faster." },
   },
   win: [
     { who: "sergeant", text: "Nobody crossed. That's the job." },
@@ -856,26 +857,30 @@ const UNDER_THE_BRIDGE: MissionDef = {
       when: (c) => !fielded(c, "cleric"),
       line: { who: "archivist", text: "The Knights held the bridge until they wore out! Clerics behind them would have kept them standing." },
     },
-    { line: { who: "sergeant", text: "Close. Add Knights on the bridge and Clerics behind them, every round." } },
+    {
+      when: (c) => !c.upgrades.cleric?.includes("constant_prayer"),
+      line: { who: "archivist", text: "The Clerics couldn't keep up! One big prayer every five seconds, and the bridge never stops. Constant Prayer heals a little every second. It's on the Upgrades tab!" },
+    },
+    { line: { who: "sergeant", text: "Close. Add Knights on the bridge and Clerics behind them, every round, and Ballistae when the trolls come." } },
   ],
   commendation: { name: "Nobody Crosses", text: "Win every round.", earned: allRoundsWon },
   reference: {
     wins: [
-      // Knights holding the bridge with Clerics behind them
+      // Knights on the bridge, Clerics behind them, and Constant Prayer before the first battle
       [
-        [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22]],
-        [["knights", 22, 20], ["cleric", 23, 21], ["crossbowmen", 22, 22]],
+        { squads: [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 22, 23]], upgrades: [["cleric", "constant_prayer"]] },
+        [["knights", 22, 20], ["knights", 14, 20]],
+        [["knights", 30, 20], ["crossbowmen", 19, 23], ["crossbowmen", 26, 23], ["crossbowmen", 16, 22]],
+        [["cleric", 17, 21], ["cleric", 30, 21], ["knights", 10, 20], ["knights", 34, 20]],
+        [["ballista", 20, 24], ["ballista", 26, 24], ["knights", 18, 26], ["knights", 26, 26], ["cleric", 23, 22]],
+      ],
+      // Constant Prayer in round 2
+      [
+        [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22], ["crossbowmen", 22, 23]],
+        { squads: [["knights", 22, 20]], upgrades: [["cleric", "constant_prayer"]] },
         [["knights", 14, 20], ["knights", 30, 20], ["crossbowmen", 16, 22]],
         [["cleric", 17, 21], ["cleric", 30, 21], ["knights", 10, 20], ["knights", 34, 20]],
-        [["ballista", 20, 24], ["ballista", 26, 24], ["knights", 18, 25], ["knights", 26, 25], ["cleric", 23, 23]],
-      ],
-      // no Clerics at first; adds them after losing two rounds
-      [
-        [["knights", 18, 20], ["knights", 26, 20], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22], ["crossbowmen", 22, 23], ["crossbowmen", 15, 22]],
-        [["cleric", 20, 21], ["cleric", 26, 21], ["knights", 22, 25]],
-        [["cleric", 16, 21], ["cleric", 30, 21], ["knights", 14, 20], ["crossbowmen", 30, 23]],
-        [["cleric", 23, 21], ["knights", 10, 20], ["knights", 34, 20], ["cleric", 33, 23]],
-        [["ballista", 14, 24], ["ballista", 29, 24], ["knights", 18, 25], ["knights", 26, 26], ["cleric", 23, 23]],
+        [["ballista", 20, 24], ["ballista", 26, 24], ["knights", 18, 26], ["knights", 26, 26], ["cleric", 23, 22]],
       ],
       // no Clerics, but Shield Wall keeps the Knights standing too
       [
@@ -887,6 +892,14 @@ const UNDER_THE_BRIDGE: MissionDef = {
       ],
     ],
     loses: [
+      // Clerics without Constant Prayer: one prayer every 5s can't keep up
+      [
+        [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22], ["crossbowmen", 22, 23]],
+        [["knights", 22, 20], ["cleric", 23, 21], ["crossbowmen", 22, 24]],
+        [["knights", 14, 20], ["knights", 30, 20], ["crossbowmen", 16, 22]],
+        [["cleric", 17, 21], ["cleric", 30, 21], ["knights", 10, 20], ["knights", 34, 20]],
+        [["ballista", 20, 24], ["ballista", 26, 24], ["knights", 18, 26], ["knights", 26, 26], ["cleric", 23, 22]],
+      ],
       // no Clerics, and Repeaters (last mission's answer) instead
       [
         [["knights", 18, 20], ["knights", 26, 20], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22], ["crossbowmen", 22, 23], ["crossbowmen", 15, 22], ["crossbowmen", 30, 22]],
@@ -923,13 +936,13 @@ const UNDER_THE_BRIDGE: MissionDef = {
         [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22]],
       ],
     ],
-    // Knights holding the bridge with Clerics behind them
+    // Constant Prayer before the first battle
     commended: [
-      [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 19, 22], ["crossbowmen", 26, 22]],
-      [["knights", 22, 20], ["cleric", 23, 21], ["crossbowmen", 22, 22]],
-      [["knights", 14, 20], ["knights", 30, 20], ["crossbowmen", 16, 22]],
+      { squads: [["knights", 18, 20], ["knights", 26, 20], ["cleric", 20, 21], ["cleric", 26, 21], ["crossbowmen", 22, 23]], upgrades: [["cleric", "constant_prayer"]] },
+      [["knights", 22, 20], ["knights", 14, 20]],
+      [["knights", 30, 20], ["crossbowmen", 19, 23], ["crossbowmen", 26, 23], ["crossbowmen", 16, 22]],
       [["cleric", 17, 21], ["cleric", 30, 21], ["knights", 10, 20], ["knights", 34, 20]],
-      [["ballista", 20, 24], ["ballista", 26, 24], ["knights", 18, 25], ["knights", 26, 25], ["cleric", 23, 23]],
+      [["ballista", 20, 24], ["ballista", 26, 24], ["knights", 18, 26], ["knights", 26, 26], ["cleric", 23, 22]],
     ],
   },
 };
@@ -1093,8 +1106,8 @@ const LOOK_UP: MissionDef = {
 // Mission 8: veterancy and promotions. Old Grumm, a level-3 Ogre Brute with Warboss (he calls a grunt every 5 s),
 // arrives in round 2 and walks off the Field alive unless pikes are already waiting for him; then wolves, trolls and
 // more ogres. Pikemen are the page the Archivist revives. Tuned by simulation (a player who promotes every veteran
-// first, then buys squads): Pikemen from round 1 or 2 and Knights and bows all win when their veterans are promoted,
-// and the same plans putting that supply into fresh squads instead lose.
+// first, then buys squads): Pikemen from round 1, and Knights and bows, win when their veterans are promoted; Knights
+// and bows putting that supply into fresh squads instead lose, and so do Pikemen from round 2 without promotions.
 const OLD_GRUMM: MissionDef = {
   id: "wardens-8",
   supply: 1100,
@@ -1161,45 +1174,26 @@ const OLD_GRUMM: MissionDef = {
   },
   reference: {
     wins: [
-      // pikes from round 2, and every veteran promoted
-      [
-        [["knights", 16, 20], ["knights", 22, 20], ["knights", 28, 20], ["crossbowmen", 13, 22], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22], ["crossbowmen", 31, 22], ["cleric", 22, 23]],
-        { squads: [["pikemen", 8, 20]], promote: true },
-        { squads: [["crossbowmen", 10, 22]], promote: true },
-        { squads: [["crossbowmen", 37, 23], ["crossbowmen", 6, 24], ["pikemen", 16, 24]], upgrades: [["pikemen", "pike_wall"]], promote: true },
-        { squads: [["pikemen", 2, 24], ["pikemen", 40, 24]], promote: true },
-        { squads: [["knights", 10, 25], ["crossbowmen", 34, 25]], promote: true },
-      ],
       // pikes from round 1, on the Archivist's word, and every veteran promoted
       [
         [["pikemen", 10, 20], ["pikemen", 22, 20], ["pikemen", 34, 20], ["knights", 16, 20], ["knights", 28, 20], ["cleric", 22, 23]],
         { squads: [["crossbowmen", 13, 22]], promote: true },
         { squads: [["pikemen", 40, 20]], promote: true },
-        { upgrades: [["pikemen", "pike_wall"]], promote: true },
+        { squads: [["crossbowmen", 37, 23]], upgrades: [["pikemen", "pike_wall"]], promote: true },
       ],
       // the old way: Knights and bows, and every veteran promoted
       [
         [["knights", 16, 20], ["knights", 22, 20], ["knights", 28, 20], ["crossbowmen", 13, 22], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22], ["crossbowmen", 31, 22], ["cleric", 22, 23]],
-        { squads: [["knights", 10, 20]], promote: true },
-        { squads: [["crossbowmen", 10, 22], ["crossbowmen", 37, 23]], promote: true },
-        { squads: [["knights", 4, 20], ["crossbowmen", 14, 25]], upgrades: [["crossbowmen", "repeaters"]], promote: true },
-        { squads: [["crossbowmen", 14, 24], ["crossbowmen", 28, 25], ["crossbowmen", 2, 23]], promote: true },
-        { squads: [["knights", 4, 25], ["knights", 38, 25], ["crossbowmen", 22, 26], ["crossbowmen", 10, 26]], promote: true },
+        { squads: [["knights", 10, 20], ["crossbowmen", 10, 22]], promote: true },
+        { promote: true },
+        { squads: [["knights", 4, 20], ["knights", 40, 20]], upgrades: [["crossbowmen", "repeaters"]], promote: true },
+        { squads: [["crossbowmen", 14, 25], ["crossbowmen", 28, 25]], promote: true },
       ],
     ],
     loses: [
       // never adds after round 1
       [
         [["knights", 16, 20], ["knights", 22, 20], ["knights", 28, 20], ["crossbowmen", 13, 22], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22], ["crossbowmen", 31, 22], ["cleric", 22, 23]],
-      ],
-      // the first plan, but fresh squads instead of promotions
-      [
-        [["knights", 16, 20], ["knights", 22, 20], ["knights", 28, 20], ["crossbowmen", 13, 22], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22], ["crossbowmen", 31, 22], ["cleric", 22, 23]],
-        [["pikemen", 8, 20], ["pikemen", 34, 20]],
-        [["pikemen", 40, 20], ["pikemen", 4, 20], ["crossbowmen", 10, 22]],
-        { squads: [["crossbowmen", 37, 23], ["crossbowmen", 6, 24], ["pikemen", 16, 24]], upgrades: [["pikemen", "pike_wall"]] },
-        [["pikemen", 2, 24], ["pikemen", 40, 24], ["crossbowmen", 13, 25], ["crossbowmen", 28, 25], ["crossbowmen", 20, 26]],
-        [["knights", 9, 25], ["pikemen", 20, 24], ["crossbowmen", 34, 25], ["crossbowmen", 0, 26], ["pikemen", 0, 22]],
       ],
       // the old way, but fresh squads instead of promotions
       [
@@ -1208,6 +1202,16 @@ const OLD_GRUMM: MissionDef = {
         [["crossbowmen", 10, 22], ["crossbowmen", 37, 23], ["crossbowmen", 6, 22], ["knights", 4, 20]],
         { squads: [["knights", 4, 21], ["knights", 40, 20]], upgrades: [["crossbowmen", "repeaters"]] },
         [["crossbowmen", 14, 25], ["crossbowmen", 28, 25], ["crossbowmen", 2, 23], ["crossbowmen", 42, 23], ["knights", 20, 25]],
+        [["knights", 4, 25], ["knights", 38, 25], ["crossbowmen", 22, 26], ["crossbowmen", 10, 26], ["crossbowmen", 34, 26], ["crossbowmen", 16, 26]],
+      ],
+      // pikes from round 2, and fresh squads instead of promotions
+      [
+        [["knights", 16, 20], ["knights", 22, 20], ["knights", 28, 20], ["crossbowmen", 13, 22], ["crossbowmen", 19, 22], ["crossbowmen", 25, 22], ["crossbowmen", 31, 22], ["cleric", 22, 23]],
+        [["pikemen", 8, 20], ["pikemen", 34, 20]],
+        [["pikemen", 40, 20], ["pikemen", 4, 20], ["crossbowmen", 10, 22]],
+        { squads: [["crossbowmen", 37, 23], ["crossbowmen", 6, 24], ["pikemen", 16, 24]], upgrades: [["pikemen", "pike_wall"]] },
+        [["pikemen", 2, 24], ["pikemen", 40, 24], ["crossbowmen", 13, 25], ["crossbowmen", 28, 25], ["crossbowmen", 20, 26]],
+        [["knights", 9, 25], ["pikemen", 20, 24], ["crossbowmen", 34, 25], ["crossbowmen", 0, 26], ["pikemen", 0, 22]],
       ],
     ],
     // pikes from round 1, promoted: the pike squads reach level 3
@@ -1215,7 +1219,7 @@ const OLD_GRUMM: MissionDef = {
       [["pikemen", 10, 20], ["pikemen", 22, 20], ["pikemen", 34, 20], ["knights", 16, 20], ["knights", 28, 20], ["cleric", 22, 23]],
       { squads: [["crossbowmen", 13, 22]], promote: true },
       { squads: [["pikemen", 40, 20]], promote: true },
-      { upgrades: [["pikemen", "pike_wall"]], promote: true },
+      { squads: [["crossbowmen", 37, 23]], upgrades: [["pikemen", "pike_wall"]], promote: true },
     ],
   },
 };

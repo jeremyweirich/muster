@@ -42,6 +42,7 @@ export interface Model {
   periodic: number[];
   charged: boolean; // a charge trait's first-hit bonus is still unused
   shield: number; // hits it can still ignore (shield trait)
+  prayedUntil: number; // battle time until which no other prayer can heal it (a heal with a lockout)
   ambush: number; // ambush trait: seconds it stays targetable after attacking (0 = always targetable)
   revealedUntil: number; // ambush: battle time until which it can be targeted
   shotAt: number; // battle time of its last attack (tall grass hides it from shooters until it attacks)
@@ -308,6 +309,7 @@ export class Battle {
       periodic: (def.traits ?? []).map((t) => (t.type === "periodic" && !t.atTarget ? t.interval : 0)),
       charged: !!trait(def, "charge"),
       shield: trait(def, "shield")?.hits ?? 0,
+      prayedUntil: -1,
       ambush: trait(def, "ambush")?.reveal ?? 0,
       revealedUntil: -1,
       shotAt: -Infinity,
@@ -821,9 +823,13 @@ export class Battle {
         for (const layerOf of ["ground", "air"] as Layer[]) {
           for (const m of this.inRadius(x, y, e.radius, layerOf)) {
             if (side !== null && m.side !== side) continue;
+            // a prayer skips a unit another prayer healed recently (a hair of slack for float time)
+            if (e.lockout && m.prayedUntil > this.time + 1e-6) continue;
             const amt = Math.min(e.amount, m.maxHp - m.hp);
+            if (amt <= 0) continue;
             m.hp += amt;
             healed += amt;
+            if (e.lockout) m.prayedUntil = this.time + e.lockout;
           }
         }
         if (attr.squad >= 0) this.squads[attr.squad].stats.healed += healed;

@@ -33,7 +33,7 @@ authored armies (a test per mission, §6), not by bending the open roster.
 
   | Mission | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
   |---|---|---|---|---|---|---|---|---|---|
-  | HP per player | one battle | 70 | 100 | 200 | 180 | 220 | 240 | 300 | 400 |
+  | HP per player | one battle | 70 | 100 | 200 | 180 | 260 | 240 | 300 | 400 |
   | Target length | 1 round | ~3 | ~4 | ~4 | ~4–5 | ~3–4 | ~4–5 | ~5 | 5–7 |
 
   Later campaigns could end higher (Goblins at 450, Elementals at 500) so each finale feels bigger than the last.
@@ -111,7 +111,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 | 3 | Two Keeps | a rude drawing on a Keep | towers, collapse Daze, flanks, tower levels | | Wolf Riders | 100 / 200 |
 | 4 | The Troll | a troll | big units, regeneration, slow ground, depth | Ballista | Troll | 200 / 180 |
 | 5 | The Wheelbarrow | the wheelbarrow patent | upgrades, yours and theirs | | the Tinker's upgrades | 180 / 200 |
-| 6 | Under the Bridge | the bridge toll | healing, holding a crossing | Cleric | | 220 / 300 |
+| 6 | Under the Bridge | the bridge toll | healing, holding a crossing | Cleric | | 260 |
 | 7 | Look Up | who owns the sky | the air layer | Griffon Riders | Giant Bats | 240 |
 | 8 | Old Grumm | an old grudge | veterancy, promotions | Dwarven Pikemen | Ogre Brute (veteran) | 300 |
 | 9 | The Marches | the border itself | the full Compact: everything at once, blind from round 1 | Giant | (all) | 400 |
@@ -219,16 +219,18 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 ### 6. Under the Bridge (built)
 - **Dispute.** The goblins have put a toll on the bridge at Hob's Crossing.
 - **Page 6, Clerics.** "Clerics heal the units around them. They don't fight, so keep them behind the line."
-- **Kit.** 900 supply; Knights, Crossbowmen, Ballistae and the **Cleric**. **HP 220 for the player, 300 for the Boss.**
+- **Kit.** 900 supply; Knights, Crossbowmen, Ballistae and the **Cleric**. **HP 260 each.**
   Keeps and upgrades on, veterancy off. Map: **Toll Bridge**, a river right across the Field with one wide bridge in
   the middle third. Nothing on foot can flank.
 - **Enemy.** Grunt mobs pour over the bridge with Skirmishers behind them, then trolls from round 3. Mostly swarms, so
   Ballistae (one bolt, one goblin) don't replace the Clerics.
-- **Punch.** Knights holding the bridge wear down and break without healing.
-- **Checked by simulation:** Knights on the bridge with Clerics behind them win every round (3 rounds). A player who
-  starts without Clerics, loses two rounds and then adds them wins too. Knights' *Shield Wall* instead of Clerics also
-  holds the bridge (both keep the Knights standing; set `upgrades: false` to make Clerics the only answer). No Clerics
-  (Crossbowmen, Ballistae, or last mission's *Repeaters* instead), all Crossbowmen and never adding lose.
+- **Punch.** Knights holding the bridge wear down and break without healing, and a Cleric's big prayer every 5s
+  can't keep up: prayers don't stack, and every Knight stands in the same place.
+- **Checked by simulation:** Knights on the bridge with Clerics behind them and *Constant Prayer* (a prayer every
+  second) win, bought before round 1 (every round won) or in round 2; Ballistae for round 5's trolls. Knights' *Shield
+  Wall* instead of Clerics also holds the bridge (both keep the Knights standing). Clerics without *Constant Prayer*,
+  no Clerics (Crossbowmen, Ballistae, or last mission's *Repeaters* instead), all Crossbowmen and never adding lose.
+  Round 6's five trolls finish any plan still going, so a good plan wins by round 4 or 5.
 - **Commendation.** *Nobody Crosses*: win every round.
 - **Debrief.** The toll is abolished (the Archivist kept a receipt). The Boss: "THE GROUND'S FULL ANYWAY. WE'LL USE
   THE SKY."
@@ -245,8 +247,9 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Checked by simulation:** *Skyhunters* Crossbowmen win, bought on the Sergeant's warning or once the bats show, and
   so do Griffon Riders (from round 1 with *Sky Patrol*, or once the bats show). Plain Crossbowmen (half damage to fliers
   without *Skyhunters*), Clerics healing plain bows through it, Knights alone and Ballistae (the bats land on them)
-  lose. **Design notes:** the mission depends on Crossbowmen being weak against fliers until *Skyhunters*. Without
-  *Savage Claws*, Clerics heal through the bats and plain bows win.
+  lose. **Design notes:** the mission depends on Crossbowmen being weak against fliers until *Skyhunters*. *Savage
+  Claws* was added when Clerics stacked and healed plain bows through the bats; prayers no longer stack, so it may
+  not be needed now.
 - **Commendation.** *Air Cover*: win with Griffon Riders on the Field.
 - **Debrief.** The sky over the Field belongs to the Field, and griffons do bite (the Archivist checked). The Boss:
   "FINE. I'M CALLING GRUMM." Sergeant: "...Grumm?"
@@ -493,9 +496,9 @@ The owner edits it for consistency and tone; the edits go back into `src/data/ca
      only what's left, so a plan that spends everything never promotes, and one that lists too little leaves supply
      unspent. To judge a veterancy lesson fairly, compare a player who promotes every veteran first and then buys
      squads from a list against one who only buys fresh squads, and keep the plans the first one played.
-   - Clerics heal about 120 HP/s to everything near them, which outheals small hits: whenever Clerics are offered,
-     check a plan that just adds Clerics. They healed plain bows through a bat swarm until the bats got *Savage Claws*
-     (mission 7).
+   - Healing outheals small hits: whenever Clerics are offered, check a plan that just adds Clerics. Before prayers
+     stopped stacking, they healed plain bows through a bat swarm (mission 7). Now the opposite: where every unit stands
+     in one place (a bridge), one prayer every 5s isn't enough and *Constant Prayer* is the answer (mission 6).
    - When the new unit is a valid but not the best answer in the sim, say so in the mission entry and let the
      commendation ask for it, rather than bending the open roster (missions 5–8).
    - For quick iteration, a scratch script can import `MISSIONS` and `runMission` and try many plans and enemy variants

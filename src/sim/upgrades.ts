@@ -11,6 +11,7 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
   const ups = upgradeIds.map((id) => def.upgrades?.find((u) => u.id === id)).filter((u): u is UpgradeDef => !!u);
   if (!ups.length) return def;
   const out: UnitDef = structuredClone(def);
+  const own = new Set(out.traits ?? []); // the unit's own traits, which replaceTraits replaces
   for (const up of ups) {
     const mods = (stat: ModStat) => (up.mods ?? []).filter((m) => m.stat === stat);
     out.hp = Math.round(modValue(out.hp, mods("hp")));
@@ -41,7 +42,7 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
     }
     if (up.traits?.length || up.replaceTraits) {
       const added = structuredClone(up.traits ?? []);
-      out.traits = up.replaceTraits ? added : [...(out.traits ?? []), ...added];
+      out.traits = [...(out.traits ?? []).filter((t) => !up.replaceTraits || !own.has(t)), ...added];
     }
     if (up.resist) {
       const r = { ...out.resist };

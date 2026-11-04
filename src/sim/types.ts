@@ -37,7 +37,8 @@ export type Effect =
       affects?: "all" | "enemies" | "allies"; // relative to the source; default follows the friendly-fire rule
     }
   | { type: "surface"; surface: SurfaceId; radius: number; duration?: number }
-  | { type: "heal"; amount: number; radius: number }
+  // `lockout`: a prayer. A unit it heals can't be healed by another prayer for that many seconds, so prayers don't stack
+  | { type: "heal"; amount: number; radius: number; lockout?: number }
   | { type: "cleanse"; radius: number } // removes every status from allies in the radius
   | { type: "summon"; unit: string; count: number }; // new models of that unit join the source's squad for this battle
 
@@ -135,7 +136,7 @@ export interface UpgradeDef {
   rangeVs?: { selector: Selector; add: number }[]; // appended to the attack's bonus range
   prefers?: Selector; // replaces who the attack hunts first
   immuneStatuses?: StatusId[]; // added
-  traits?: TraitDef[]; // appended (or replace existing ones with replaceTraits)
+  traits?: TraitDef[]; // appended (or, with replaceTraits, they replace the unit's own traits; other upgrades' stay)
   replaceTraits?: boolean;
   resist?: Partial<Record<Element, number>>; // added to existing resistances
   tags?: string[]; // added

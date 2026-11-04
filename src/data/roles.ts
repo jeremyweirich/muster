@@ -81,7 +81,7 @@ export const ROLES: Record<string, { name: string; description: string; detail: 
   healer: {
     name: "Healer",
     description: "Restores allies' HP.",
-    detail: "Restores allies' HP during the battle. Place healers just behind the line, within reach of the units taking the hits.",
+    detail: "Restores allies' HP during the battle. Place healers just behind the line, within reach of the units taking the hits. Clerics' prayers don't stack: a unit healed by one can't be healed by another until that prayer comes round again, so more Clerics heal more units, not the same ones faster.",
   },
   combo: {
     name: "Combo",

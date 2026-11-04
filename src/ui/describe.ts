@@ -15,7 +15,7 @@ export function describeEffect(e: Effect): string {
     case "surface":
       return `creates ${SURFACES[e.surface].name}${area}`;
     case "heal":
-      return `heals allies ${e.amount}${area}`;
+      return `heals allies ${e.amount}${area}${e.lockout ? `; a unit it heals can't be healed by another prayer for ${e.lockout}s` : ""}`;
     case "cleanse":
       return `clears every status off allies${area}`;
     case "summon":
