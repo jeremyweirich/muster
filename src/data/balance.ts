@@ -174,7 +174,7 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
     upgrades: {
       thick_blood: { intent: "The counterpunch to fire: regenerate while burning, so burning ground and fire arrows stop working on it" },
       gorge: { intent: "Outlast giants: ramping hits heal it more" },
-      grab_and_throw: { intent: "Break a line: throw the unit in front of it back into its own ranks, Dazed, and walk into the gap" },
+      rock_skin: { intent: "Tougher" },
       // against Pikemen with Pike Wall it turns 0% into an even fight (the pikes can't hit back); plain Pikemen still win
       uprooted_tree: { intent: "The bigger thing: reach past a pike wall's retaliation, and splash the chaff around its target", beats: ["grunts"] },
     },

@@ -1,7 +1,7 @@
 import { STATUSES, SURFACES } from "../data/elements";
 import { deployZone, RULES } from "../data/rules";
 import { towerPlacements, TOWER_MAP } from "../data/towers";
-import { footprintOf, formation, THROW_TIME, type Battle, type Fx, type Model } from "../sim/battle";
+import { footprintOf, formation, type Battle, type Fx, type Model } from "../sim/battle";
 import { shownLevel } from "../sim/levels";
 import { SurfaceGrid } from "../sim/surfaces";
 import type { TerrainPatch } from "../sim/terrain";
@@ -618,7 +618,6 @@ export interface UnitDrawOpts {
   fury?: boolean; // an "unhurt" bonus is on (attacking faster at full HP): a faint red pulse underneath
   scrap?: boolean; // wearing scrap armor that hasn't blocked its hit yet: plates around the token
   diving?: boolean; // still in its opening dive (Giant Bats): wings folded, speed streaks behind
-  thrown?: number; // thrown through the air (Troll Grab and Throw): 0 → 1 over the flight, drawn as an arc
 }
 
 // Goblins whose shield is scrap (Grunts' Scrap Armor) show it on the token until the first hit knocks it off. Knights'
@@ -635,18 +634,11 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
   const phase = o.phase ?? 0;
   const air = def.layer === "air";
   // fliers hover above their ground position and bob gently
-  const arc = o.thrown !== undefined ? 4 * o.thrown * (1 - o.thrown) * tile * 1.5 : 0;
-  const lift = air ? Math.max(5, r * 0.9) + Math.sin(time * 2.4 + phase) * r * 0.14 : arc;
+  const lift = air ? Math.max(5, r * 0.9) + Math.sin(time * 2.4 + phase) * r * 0.14 : 0;
   const py = gy - lift;
   const scale = o.scale ?? (ctx.getTransform().a || 1);
   const flash = !!o.flash;
   ctx.globalAlpha = o.alpha ?? 1;
-  if (arc > 0) {
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.beginPath();
-    ctx.ellipse(px, gy + r * 0.25, r * 0.8, r * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
-  }
   if (air) {
     // shadow on the ground, where the flier really is; fainter the higher it hovers
     ctx.fillStyle = `rgba(0,0,0,${0.32 - Math.min(0.12, lift / 120)})`;
@@ -667,7 +659,7 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.arc(px, py, R, 0, Math.PI * 2);
     ctx.fill();
   }
-  const shadow = !air && !arc && r >= 4;
+  const shadow = !air && r >= 4;
   const level = o.noPip ? 0 : (shownLevel(def) ?? 0);
   const st = o.statuses;
   const frozen = st?.frozen !== undefined;
@@ -1279,7 +1271,6 @@ export function drawBattle(
       fury: m.hp >= m.maxHp && !!m.def.traits?.some((t) => t.type === "unhurt"),
       scrap: fx.scrapOn(m, x, y),
       diving: m.dive > 0,
-      thrown: m.flight > 0 ? 1 - m.flight / THROW_TIME : undefined,
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);

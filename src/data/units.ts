@@ -411,25 +411,7 @@ export const DEFAULT_UNITS: UnitDef[] = [
         description: "Each hit heals it.",
         traits: [{ type: "lifesteal", fraction: 0.3 }],
       },
-      {
-        id: "grab_and_throw",
-        name: "Grab and Throw",
-        description:
-          "At once, then every 8s: picks up the small or medium enemy it's fighting and throws it 3 tiles back into its own lines. It crashes down for 60 damage to every enemy within 1 tile, all of them Dazed for 2s.",
-        traits: [
-          {
-            type: "grab",
-            interval: 8,
-            distance: 3,
-            daze: 2,
-            selector: { hasAnyTag: ["size:small", "size:medium"] },
-            land: [
-              { type: "damage", amount: 60, element: "physical", radius: 1 },
-              { type: "status", status: "dazed", duration: 2, radius: 1, affects: "enemies" },
-            ],
-          },
-        ],
-      },
+      { id: "rock_skin", name: "Rock Skin", description: "+40% HP.", mods: [{ stat: "hp", mult: 1.4 }] },
       // the goblin campaign's "bigger thing" (docs/CAMPAIGN.md): out of reach of a pike wall hitting back
       {
         id: "uprooted_tree",

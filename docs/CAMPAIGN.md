@@ -308,8 +308,7 @@ upgrades (`docs/VISION.md`).
 outside it (Skirmishers, a Troll with a tree). The rigid, predictable Wardens AI (Normal, playing by the book) becomes
 the thing to exploit. "They had pointy sticks and we had nothing. So I made a bigger thing": the bigger thing is
 the Troll's ***Uprooted Tree***: +1 range, so a Pike Wall can't hit it back, and a little splash. Against Pikemen with
-*Pike Wall* it turns a 0% fight into an even one; plain Pikemen still win. *Grab and Throw* is the other way through a
-line: it throws a pikeman back into its own ranks.
+*Pike Wall* it turns a 0% fight into an even one; plain Pikemen still win.
 
 **The fire arc.** The Tinker's line is split across three missions: "Fire's hot." / "Fire's also free." / "Point it
 at THEM." Goblins who go out in a blaze get cheered, not mourned.
@@ -526,8 +525,8 @@ Wardens campaign scripts every enemy, mission 9's two phases included), a "toppl
 
 ## 8. Owner decisions
 
-- Skirmishers are goblin archers that hit air. The deferred slots are filled: Skirmishers *Recruiters*, Troll *Grab and
-  Throw* and *Uprooted Tree* (4 November).
+- Skirmishers are goblin archers that hit air. The deferred slots are filled: Skirmishers *Recruiters* and Troll *Uprooted
+  Tree* (4 November).
 - **Pikemen arrive in mission 8** (left to Claude): one new unit per mission, and the player learns the pikes before
   the finale leans on them.
 - **The goblin player is the Boss**, with the Tinker advising.

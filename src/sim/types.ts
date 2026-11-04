@@ -97,10 +97,6 @@ export type TraitDef =
   // at the start of the battle, flies `distance` tiles straight ahead without picking targets or attacking, taking
   // `resist` less physical damage, then fights (Giant Bats). The "dive" stat scales the distance; 0 turns it off
   | { type: "dive"; distance: number; resist: number }
-  // every `interval` seconds (ready from the start), throws the enemy it's fighting `distance` tiles further away, if
-  // that enemy matches `selector`; it flies for a moment, lands Dazed for `daze` seconds, and `land` goes off where it
-  // lands, as the thrower's (Troll Grab and Throw)
-  | { type: "grab"; interval: number; distance: number; daze: number; selector: Selector; land?: Effect[] }
   // heals itself for a share of the damage its attacks deal to enemies
   | { type: "lifesteal"; fraction: number }
   // when hit by an attack: chance that a nearby ally matching the selector dies in its place (smallest first)

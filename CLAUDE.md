@@ -194,8 +194,9 @@ it is now.
     fixed; the only knobs are the first level's XP and the curve. The AI promotes late and rarely (BALANCE-PLAN.md §3,
     problem 1), so that's the next place to look, before the Ballista park behind a screen.
   - The deferred upgrade slots are filled (owner's picks, 4 November): Skirmishers *Recruiters* (each kill adds an
-    archer), Troll *Grab and Throw* (in *Rock Skin*'s place) and *Uprooted Tree* (in *Boulder Toss*'s place: the goblin
-    campaign's "bigger thing" that reaches past a Pike Wall).
+    archer) and Troll *Uprooted Tree* (in *Boulder Toss*'s place: the goblin campaign's "bigger thing" that reaches past a
+    Pike Wall). Troll *Grab and Throw* was built and taken out again: the owner loved it but it added too much complexity
+    (it's in git history, commit 0352a17).
   - The owner wants **fewer pure melee units and more short-range attacks** (Wolf Riders throw javelins, Griffon
     Riders throw spears; role `skirmisher`). Lean that way when designing new units.
 - **Owner's calls on rules:** round damage ignores levels, on purpose; battles can't end early, because the survivors

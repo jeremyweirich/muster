@@ -10,7 +10,7 @@ import { towerPlacements } from "../src/data/towers";
 import { deployZone, RULES } from "../src/data/rules";
 import { planAiRound } from "../src/game/ai";
 import { runMatchup } from "../src/game/lab";
-import { Battle, THROW_TIME } from "../src/sim/battle";
+import { Battle } from "../src/sim/battle";
 import { Rng } from "../src/sim/rng";
 import { SurfaceGrid } from "../src/sim/surfaces";
 
@@ -232,25 +232,6 @@ describe("targeting and self-destruct", () => {
     const c = new Battle(sucked, [[sq("giant_bats", 22, 22)], [sq("crossbowmen", 30, 20)]], { seed: 1, towers: false });
     c.step();
     expect(bats(c).every((m) => m.dive === 0 && c.get(m.targetId)?.def.id === "crossbowmen")).toBe(true);
-  });
-
-  it("Grab and Throw: the Troll throws a small enemy 3 tiles back, Dazed; an Ogre is too big", () => {
-    const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${y}`, defId, x, y, round: 1 });
-    const grabby = new Map(defs).set("troll", applyUpgrades(byId("troll"), ["grab_and_throw"]));
-    const thrown = (enemy: string) => {
-      const b = new Battle(grabby, [[sq("troll", 22, 15)], [sq(enemy, 22, 12)]], { seed: 1, towers: false });
-      for (let i = 0; i < 200; i++) {
-        b.step();
-        const m = b.models.find((m) => m.side === 1 && m.flight > 0);
-        if (m) return m;
-      }
-      return undefined;
-    };
-    const g = thrown("grunts")!;
-    expect(g.statuses.dazed).toBeGreaterThan(0);
-    expect(Math.hypot(g.flightVx, g.flightVy) * THROW_TIME).toBeCloseTo(3, 5);
-    expect(g.flightVy).toBeLessThan(0); // away from the Troll, up the field into its own lines
-    expect(thrown("ogre_brute")).toBeUndefined();
   });
 
   it("Recruiters: every kill adds an archer to the squad for the battle", () => {
