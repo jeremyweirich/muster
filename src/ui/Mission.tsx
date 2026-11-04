@@ -143,7 +143,8 @@ export function Briefing({ entry, onStart, onBack, reveal = true }: { entry: Mis
 }
 
 // In the sidebar once the match is over, in place of the skirmish's "You win the war!". After a win the next mission
-// comes first, then playing this one again; going back to the list is a quiet link (the Story tab does it too).
+// comes first (after the last one, the full game), then playing this one again; going back to the list is a quiet link
+// (the Story tab does it too).
 export function Debrief({
   def,
   outcome,
@@ -151,6 +152,7 @@ export function Debrief({
   onRetry,
   onLeave,
   onNext,
+  onFinale,
   reveal = true,
 }: {
   def: MissionDef;
@@ -159,6 +161,7 @@ export function Debrief({
   onRetry: () => void;
   onLeave: () => void;
   onNext?: () => void;
+  onFinale?: () => void;
   reveal?: boolean;
 }) {
   const c = def.commendation;
@@ -187,7 +190,12 @@ export function Debrief({
             Next mission →
           </button>
         )}
-        {outcome.won && !onNext && (
+        {outcome.won && !onNext && onFinale && (
+          <button className="primary big" onClick={onFinale}>
+            Play the full game →
+          </button>
+        )}
+        {outcome.won && !onNext && !onFinale && (
           <button className="primary big" onClick={onLeave}>
             Back to the campaigns
           </button>
@@ -195,7 +203,7 @@ export function Debrief({
         <button className={outcome.won ? "" : "primary big"} onClick={onRetry}>
           {outcome.won ? "Play again" : "Try again"}
         </button>
-        {(!outcome.won || onNext) && (
+        {(!outcome.won || onNext || onFinale) && (
           <button className="link-btn" onClick={onLeave}>
             Back to the campaigns
           </button>

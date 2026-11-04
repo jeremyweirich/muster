@@ -16,6 +16,7 @@ export function StoryView({
   onReset,
   onOpen,
   onPlayFull,
+  onGraduate,
 }: {
   topic?: string;
   progress: Progress;
@@ -24,12 +25,13 @@ export function StoryView({
   onReset: () => void;
   onOpen: (id: string | null) => void;
   onPlayFull: () => void;
+  onGraduate: () => void; // after the last mission: on to the full game, with what the campaign didn't cover
 }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const entry = MISSIONS.find((m) => m.def.id === topic && missionOpen(progress, m.def.id, allOpen));
   if (entry) {
     const next = MISSIONS[MISSIONS.indexOf(entry) + 1];
-    return <MissionView key={entry.def.id} entry={entry} onWon={(c) => onWon(entry.def.id, c)} onLeave={() => onOpen(null)} onNext={next ? () => onOpen(next.def.id) : undefined} />;
+    return <MissionView key={entry.def.id} entry={entry} onWon={(c) => onWon(entry.def.id, c)} onLeave={() => onOpen(null)} onNext={next ? () => onOpen(next.def.id) : undefined} onFinale={next ? undefined : onGraduate} />;
   }
   const started = progress.won.length > 0 || progress.commended.length > 0;
   return (
@@ -154,10 +156,22 @@ export function StoryView({
 
 // A mission: its briefing, then the Field. Leaving goes back to the list; Try again restarts the match; Next opens
 // the next mission's briefing.
-function MissionView({ entry, onWon, onLeave, onNext }: { entry: MissionEntry; onWon: (commended: boolean) => void; onLeave: () => void; onNext?: () => void }) {
+function MissionView({
+  entry,
+  onWon,
+  onLeave,
+  onNext,
+  onFinale,
+}: {
+  entry: MissionEntry;
+  onWon: (commended: boolean) => void;
+  onLeave: () => void;
+  onNext?: () => void;
+  onFinale?: () => void;
+}) {
   const [briefed, setBriefed] = useState(false);
   if (!briefed) return <Briefing entry={entry} onStart={() => setBriefed(true)} onBack={onLeave} />;
-  return <PlayView mission={{ def: entry.def, title: entry.title, onLeave, onWon, onNext }} />;
+  return <PlayView mission={{ def: entry.def, title: entry.title, onLeave, onWon, onNext, onFinale }} />;
 }
 
 // A won mission's banner; an empty, dashed slot until then.

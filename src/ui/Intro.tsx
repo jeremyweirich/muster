@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { RULES } from "../data/rules";
 import { TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import type { UnitDef } from "../sim/types";
@@ -7,6 +8,8 @@ import { Swatch } from "./UnitInfo";
 // A short walkthrough for players who have never played a deploy-then-autobattle game.
 // Shown when the app opens on the Play tab, and from the header's "How to play" button.
 // The site stores nothing, so it can't remember that someone has seen it; Skip is always one click away.
+// `graduate`: the version for players arriving from the Wardens campaign's finale, about what the campaign didn't
+// cover (the other factions, the round-1 offer and unlocks, elements).
 
 interface Step {
   title: string;
@@ -14,13 +17,52 @@ interface Step {
   body: ReactNode;
 }
 
-export function Intro({ onClose }: { onClose: () => void }) {
+export function Intro({ onClose, graduate = false }: { onClose: () => void; graduate?: boolean }) {
   const units = DEFAULT_UNITS;
   const u = (id: string) => units.find((x) => x.id === id);
   const [i, setI] = useState(0);
+  const unlock = units.find((x) => x.tags.includes("faction:warden"))?.unlockCost;
+  const hire = units.find((x) => x.tags.includes("faction:independent"))?.unlockCost;
+
+  const graduateSteps: Step[] = [
+    {
+      title: "Every unit, every faction",
+      art: <Icons defs={[u("knights"), u("grunts"), u("fire_elemental"), u("dragon")]} />,
+      body: (
+        <p>
+          The campaign was Wardens against goblins. Here the shop has every unit: Wardens, Goblins, <b>Elementals</b>, and
+          three independents for hire. The AI can field any of them too.
+        </p>
+      ),
+    },
+    {
+      title: "Round 1: pick a pack",
+      art: <Icons defs={[u("crossbowmen"), u("wolf_riders")]} />,
+      body: (
+        <p>
+          Units start locked. In round 1, take one of three <b>packs</b> (two units unlocked, with squads already placed) or the{" "}
+          <b>war chest</b> ({RULES.openingFlat} supply, nothing unlocked). Later, unlocking a unit costs {unlock}, or {hire} for an
+          independent.
+        </p>
+      ),
+    },
+    {
+      title: "Elements combine",
+      art: <Icons defs={[u("water_elemental"), u("air_elemental"), u("frost_elemental"), u("fire_elemental")]} />,
+      body: (
+        <>
+          <p>
+            Elementals leave statuses behind, like Wet or Burning, and a second element on top sets off a reaction: lightning
+            hits a Wet unit twice as hard, and frost freezes it solid. Statuses hit whoever is there, your own units too.
+          </p>
+          <p className="intro-small">The AI starts on Easy. Normal and Hard are at the bottom of the sidebar.</p>
+        </>
+      ),
+    },
+  ];
 
   // Kept short on purpose: three screens, a line or two each, then play. The Codex has the rest.
-  const steps: Step[] = [
+  const steps: Step[] = graduate ? graduateSteps : [
     {
       title: "Build, then watch",
       art: <Icons defs={[u("knights"), u("crossbowmen"), u("grunts"), u("fire_elemental")]} />,

@@ -5,6 +5,7 @@ import { DEFAULT_UNITS } from "../src/data/units";
 import { defMap } from "../src/game/army";
 import { runMission } from "../src/game/missionRun";
 import { CodexView } from "../src/ui/CodexView";
+import { Intro } from "../src/ui/Intro";
 import { boardDiagram, Briefing, Debrief } from "../src/ui/Mission";
 
 const defs = defMap(DEFAULT_UNITS);
@@ -52,7 +53,8 @@ describe("story missions", () => {
   it("a finale's debrief draws the winning board as the book's last page", { timeout: 30_000 }, () => {
     for (const { def: m } of MISSIONS.filter((e) => e.def.lastPage)) {
       const run = play(m, m.reference.wins[0]);
-      const html = renderToStaticMarkup(<Debrief def={m} outcome={run} army={run.state.armies[0]} onRetry={() => {}} onLeave={() => {}} reveal={false} />);
+      const html = renderToStaticMarkup(<Debrief def={m} outcome={run} army={run.state.armies[0]} onRetry={() => {}} onLeave={() => {}} onFinale={() => {}} reveal={false} />);
+      expect(html).toContain("Play the full game"); // the last mission leads on to the full game
       expect(html).toContain(m.lastPage!.title.replace(/'/g, "&#x27;"));
       if (m.lastPage!.handwritten) expect(html).toContain(m.lastPage!.handwritten);
       if (m.winNote) expect(html).toContain("pencil-note");
@@ -67,5 +69,12 @@ describe("story missions", () => {
       const html = renderToStaticMarkup(<Briefing entry={entry} onStart={() => {}} onBack={() => {}} reveal={false} />);
       for (const [, topic] of html.matchAll(/href="#codex\/([^"]+)"/g)) expect(codex, topic).toContain(`id="codex-${topic}"`);
     }
+  });
+});
+
+describe("after the campaign", () => {
+  it("the walkthrough for campaign graduates opens on what the campaign didn't cover", () => {
+    const html = renderToStaticMarkup(<Intro graduate onClose={() => {}} />);
+    expect(html).toContain("Every unit, every faction");
   });
 });

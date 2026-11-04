@@ -62,7 +62,8 @@ export function App() {
   const [progress, setProgress] = useState(loadProgress);
   const [allMissions, setAllMissions] = useState(false);
   // players who land on Play (a shared #play link) get the walkthrough; Story's "Play the full game" shows it too
-  const [intro, setIntro] = useState(() => parseHash().tab === "play" && !parsePvpLink(location.search, () => ""));
+  // (the finale's "Play the full game" opens the version for players who've finished the campaign)
+  const [intro, setIntro] = useState<"new" | "graduate" | null>(() => (parseHash().tab === "play" && !parsePvpLink(location.search, () => "") ? "new" : null));
   // a PvP match, when the address has one (?join=… or ?match=…); see docs/MULTIPLAYER.md
   const [pvp, setPvp] = useState<PvpLink | null>(() => parsePvpLink(location.search, () => randomId(16)));
   // what Play reports about its match, for the PvP tab
@@ -115,7 +116,7 @@ export function App() {
             </button>
           ))}
         </nav>
-        <button className="help-btn" onClick={() => setIntro(true)}>
+        <button className="help-btn" onClick={() => setIntro("new")}>
           How to play
         </button>
         <button className="version muted" title={`Debug tools and Report a bug · built ${new Date(__BUILD_TIME__).toLocaleString()}`} onClick={() => go("debug")}>
@@ -144,7 +145,11 @@ export function App() {
             onOpen={(id) => go("story", id)}
             onPlayFull={() => {
               go("play");
-              setIntro(true);
+              setIntro("new");
+            }}
+            onGraduate={() => {
+              go("play");
+              setIntro("graduate");
             }}
           />
         </div>
@@ -154,7 +159,7 @@ export function App() {
           <SpectateView />
         </div>
       )}
-      {intro && <Intro onClose={() => setIntro(false)} />}
+      {intro && <Intro graduate={intro === "graduate"} onClose={() => setIntro(null)} />}
       <RotateHint />
     </div>
   );
