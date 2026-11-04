@@ -21,6 +21,12 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   (the AI plays itself, round by round, for watching unit interactions; Copy round exports a battle's setup to
   reproduce). Game screens don't explain rules:
   keywords link to Codex entries (DESIGN.md §10, "Codex links").
+- **Reference text is plain.** Unit descriptions, upgrade descriptions, showcase captions and Codex entries are read to
+  understand the game, so flourishes are distractions: say what it does in simple words and name the facts a player
+  needs (e.g. "attacks faster while at full HP"). The model is the Troll's description: "Two tough melee brutes. They
+  attack faster while at full HP, and each hit in a row on the same target deals more damage. They regenerate HP,
+  except while Burning." Story text keeps its voice (VISION.md). Not enforced as a sweep: whenever a change touches an
+  entry, take the chance to simplify its wording.
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 - **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
   When a commit carries something big (a new unit, a big rebalance, a new rule, tab or feature), add a line to
