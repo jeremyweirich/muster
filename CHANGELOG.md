@@ -3,8 +3,14 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 4 November 2026 (v89–v90)
+## 4 November 2026 (v89–v91)
 
+- **Giant Bats dive.** Every battle opens with the bats flying 16 tiles straight ahead, over everything, without
+  picking a target or attacking, and taking 25% less physical damage on the way. Where they land, they fight, and
+  their claws now reach fliers. Where you place them decides where they come down (Codex: *Diving*). Diving bats fly
+  straight through enemy fliers. ***Long Dive*** (in *Leather Wings*' place) dives 40% further;
+  ***Bloodsuckers*** now skips the dive and hunts fliers first, keeping its lifesteal. Goblin mirrors end now (their
+  bats used to be unable to touch each other). In *Look Up*, the Boss's bats no longer have *Savage Claws*.
 - **Clerics reworked:** a bigger, slower prayer (250 every 5s, was 120 every 2s), and **prayers don't stack**: a unit
   a Cleric heals can't be healed by another Cleric's prayer for 5s, so more Clerics heal more units, not the same
   ones faster. The new upgrade ***Constant Prayer*** (in *Sanctuary*'s place) prays every second instead, 70 at a

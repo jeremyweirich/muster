@@ -226,7 +226,7 @@ recruit list; faction bonuses come later (section 8).
 | Wolf Riders | 200 | 100 | 4 (2×2) | 24 | 540 | 45 physical / 1s, range 2.5 | Fast, Raider, Skirmisher | **Dire Wolves**: +50% HP and +20% damage.<br>**Tower Raiders**: 15% faster, and pick out a Keep over the army when one is near.<br>**Flankers**: Pick out nearby archers, casters and siege, with ×1.5 damage to them.<br>**Bloodthirst**: Every kill readies another ×5 charge javelin. |
 | Troll | 200 | 100 | 2 (2×1) | 10 | 1250 | 90 physical / 1.3s, range 0.6 | Anti-large, Sturdy, Regenerates, Melee | **Thick Blood**: Regenerates an additional 20 HP/s, even while Burning.<br>**Gorge**: Each hit heals it.<br>**Rock Skin**: +40% HP.<br>**Boulder Toss**: Throws rocks from 3 tiles away instead of punching. |
 | Ogre Brute | 300 | 100 | 1 (2×2) | 7 | 2200 | 200 physical / 1.8s, range 0.7, splash 1.1 | Sturdy, Splash, Slow, Melee | **Thick Skull**: +40% HP, no fire weakness. 40% of hits kill a nearby goblin instead.<br>**Rampage**: Swings 50% faster and moves 30% faster.<br>**Wrecking Swing**: +0.8 splash radius and +20% damage.<br>**Warboss**: Nearby goblins hit 25% harder and faster. Calls a grunt every 5s. |
-| Giant Bats | 200 | 100 | 4 (2×2, air) | 20 | 280 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Leather Wings**: +35% physical resistance, and 40% faster for the first 3s.<br>**Shriek**: On diving in, then every 10s: enemies around its target are Dazed for 3s.<br>**Bloodsuckers**: Heal for 40% of the damage they deal, and latch onto fliers too.<br>**Savage Claws**: +15% HP and +60% damage. |
+| Giant Bats | 200 | 100 | 4 (2×2, air) | 20 | 280 | 45 physical / 1s, range 0.6 | Flier, Fast, Raider | **Long Dive**: The dive goes 40% further (22 tiles), deep enough to reach the back of the enemy's deployment.<br>**Shriek**: At their first target, then every 10s: enemies around it are Dazed for 3s.<br>**Bloodsuckers**: No dive: they pick targets from the start, fliers first, and heal for 40% of the damage they deal.<br>**Savage Claws**: +15% HP and +60% damage. |
 
 #### Elementals
 
@@ -492,7 +492,10 @@ about movement or collisions changes.
     (Skirmishers Ambush)
   - `ramp`: each hit in a row on the same target deals +X% more, up to a cap (Troll Berserk, Frost Elemental)
   - `unhurt`: attacks faster while at full HP (Troll Berserk)
-  - `sprint`: moves faster for the first N seconds of a battle (Giant Bats Leather Wings)
+  - `sprint`: moves faster for the first N seconds of a battle
+  - `dive`: opens the battle flying N tiles straight ahead (towards the enemy's edge) without picking targets or
+    attacking, with extra physical resistance, then fights (Giant Bats; *Long Dive* scales it, *Bloodsuckers* turns it
+    off). Diving models pass through enemy fliers. Placement decides where they land; Codex "Diving"
   - `lifesteal`: heals for a share of the damage its attacks deal to enemies (Bloodsuckers)
   - `meatShield`: when hit by an enemy attack, a chance that a nearby ally matching a selector (the smallest first)
     dies in its place (Ogre Thick Skull)

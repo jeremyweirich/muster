@@ -46,6 +46,7 @@ export const KEYWORDS: [RegExp, string][] = [
   [/\bsnared?\b/i, "status-snared"],
   [/\btoughness\b/i, "toughness"],
   [/\bwind(s|ing)? up\b|\bwindup\b/i, "windup"],
+  [/\bdive\b/i, "dive"],
   [/\btall grass\b/i, "terrain-grass"],
   [/\brough ground\b/i, "terrain-rough"],
   [/\boil\b/i, "surface-oil"],

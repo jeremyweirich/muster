@@ -131,6 +131,7 @@ const CONTENTS: { title: string; items: [string, string][] }[] = [
       ["friendly-fire", "Who gets hurt"],
       ["targets", "Picking targets"],
       ["windup", "Winding up"],
+      ["dive", "Diving"],
     ],
   },
   { title: "Terrain", items: [["terrain", "Maps"], ...Object.entries(TERRAIN).map(([id, t]): [string, string] => [`terrain-${id}`, t.name])] },
@@ -263,6 +264,15 @@ export function CodexView({ topic }: { topic?: string }) {
           Most units fire the moment they&apos;ve reloaded. A few heavy weapons, like the Ballista, <b>wind up</b> every shot: once
           reloaded, they spend a moment aiming at their target first (a line shows where), and only fire if it&apos;s still in
           range. Each new target means a fresh windup, so many small enemies waste a lot of their time.
+        </p>
+      </Entry>
+
+      <Entry id="dive" title="Diving" focus={topic}>
+        <p>
+          Giant Bats open every battle with a <b>dive</b>: they fly a fixed distance straight ahead, over everything, without picking a
+          target or attacking, and take less physical damage on the way. Only when the dive ends do they look for enemies. So where you
+          place them decides where they land: put them so the dive ends on the enemy&apos;s back line, remembering that both armies
+          move while the bats are in the air. Their card says how far they dive.
         </p>
       </Entry>
 

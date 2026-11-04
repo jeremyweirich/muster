@@ -367,7 +367,7 @@ Drill Book page, **Page 7: Fliers**:
 ### During the match
 
 - Round 2: **The Boss:** YOU MIGHT WANT TO LOOK UP.
-- Round 3: **Archivist Ithiel:** Giant Bats! Actual ones, and with Savage Claws! Did you see how they fold their wings before they land on the Crossbowmen? Volume Two gets that completely wrong!
+- Round 3: **Archivist Ithiel:** Giant Bats! Actual ones! Did you see how they fold their wings and dive, straight over the Knights and down onto the Crossbowmen? Volume Two gets that completely wrong!
 - Round 5: **Sergeant Dunmor:** More Skirmishers, and they shoot fliers. Don't send your Griffon Riders in alone.
 
 ### Debrief after a win

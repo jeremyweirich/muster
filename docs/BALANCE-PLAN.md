@@ -59,8 +59,8 @@ Knights cut down the swarm. The How to Play page says so.
 
 `npm run balance -- check` (8 seeds, about 1000 supply, level 1):
 
-- **94 of 96 relations hold.** Both misses are even fights (50%): Troll against Ogre, and Frost against the Giant.
-- **39 of 41 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (0%), Fire Elemental
+- **93 of 95 relations hold.** Both misses are even fights (50%): Troll against Ogre, and Frost against the Giant.
+- **38 of 40 upgrade intents hold.** Misses: Ballista *Reinforced Frame* against Giant Bats (0%), Fire Elemental
   *Living Inferno* against Wolf Riders (38%).
 - **Nash mix:** Ballista 35%, Dragon 30%, Skirmishers 20%, Cloudlings 11%, Wolf Riders 4%. With Crossbowmen weak against
   fliers, fliers and the Ballista take their place in one-unit fights, which exaggerate fliers. One-unit fights list
@@ -99,8 +99,9 @@ Knights cut down the swarm. The How to Play page says so.
 8. **Crossbowmen and Toad Riders have no hard counter.** Their soft counters win at equal supply, but not at 2:1.
 9. **Small side bias.** Crossbowmen (63%) and Air Elementals (72%) lean to the bottom side in their mirrors. It may be
    target tie-breaking or the geometry.
-10. **The goblin mirror never ends.** Once the Skirmishers are gone, neither side's bats can hit the other's. It times
-    out at 120 s.
+10. **The goblin mirror ended** once the bats' claws reached fliers (with the opening dive, 4 November). Full goblin
+    mirrors now last about 30 s, and the bat mirror is 56% for the bottom side. Diving bats pass through enemy fliers;
+    when they bumped, the mirror was 9%.
 11. **Coin-flip intents.** At 16 seeds, Knights *Shield Wall* vs Wolf Riders (44%) and *Veterans* vs Troll (50%) sit on
     the line; Troll vs Ogre too (50%).
 12. **Two intents have no matchup to move:** Griffon *Dive Attack* and *Armored Saddles* can't flip the Crossbowmen or

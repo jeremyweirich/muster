@@ -94,6 +94,9 @@ export type TraitDef =
   | { type: "unhurt"; attackSpeed: number }
   // moves faster for the first `duration` seconds of the battle
   | { type: "sprint"; mult: number; duration: number }
+  // at the start of the battle, flies `distance` tiles straight ahead without picking targets or attacking, taking
+  // `resist` less physical damage, then fights (Giant Bats). The "dive" stat scales the distance; 0 turns it off
+  | { type: "dive"; distance: number; resist: number }
   // heals itself for a share of the damage its attacks deal to enemies
   | { type: "lifesteal"; fraction: number }
   // when hit by an attack: chance that a nearby ally matching the selector dies in its place (smallest first)
@@ -111,7 +114,8 @@ export type ModStat =
   | "range"
   | "splash"
   | "chainCount"
-  | "toughness";
+  | "toughness"
+  | "dive"; // scales a dive trait's distance
 
 export interface StatMod {
   stat: ModStat;
@@ -272,4 +276,5 @@ export interface Rules {
   towerDazeMin: number;
   toughnessFloor: number; // share of a hit that always gets through toughness
   levelXp: number[]; // total XP that unlocks level 2, 3, 4...
+  forward?: { x: number; y: number }; // the way side 0 advances (side 1 the opposite); default up the field, {x: 0, y: -1}
 }

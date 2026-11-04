@@ -947,11 +947,10 @@ const UNDER_THE_BRIDGE: MissionDef = {
   },
 };
 
-// Mission 7: the air layer. In round 2 four squads of the Boss's Giant Bats, with Savage Claws, fly over the line and
-// land on the bows; more bats come every round, and from round 4 his Skirmishers shoot at anything that flies. Tuned by
-// simulation: Crossbowmen with Skyhunters win (bought on the Sergeant's warning or once the bats show), and so do
+// Mission 7: the air layer. In round 2 four squads of the Boss's Giant Bats dive over the line and land on the bows;
+// more bats come every round, and from round 4 his Skirmishers shoot at anything that flies. Tuned by simulation: Crossbowmen with Skyhunters win (bought on the Sergeant's warning or once the bats show), and so do
 // Griffon Riders (from round 1, or once the bats show); plain bows (half damage to fliers), Clerics healing through
-// it, steel alone and Ballistae (the bats land on them) lose. Without Savage Claws, Clerics heal through the bats.
+// it, steel alone and Ballistae (the bats land on them) lose. With Savage Claws on top of the dive, even Skyhunters lose.
 const LOOK_UP: MissionDef = {
   id: "wardens-7",
   supply: 1000,
@@ -966,7 +965,7 @@ const LOOK_UP: MissionDef = {
     units: ["grunts", "skirmishers", "troll", "giant_bats"],
     rounds: fitted([
       [["grunts", 6, 4], ["grunts", 14, 4], ["grunts", 30, 4], ["troll", 23, 3], ["troll", 38, 3], ["skirmishers", 10, 0], ["skirmishers", 22, 0]],
-      { squads: [["giant_bats", 4, 2], ["giant_bats", 42, 2], ["giant_bats", 18, 1], ["giant_bats", 28, 1]], upgrades: { giant_bats: ["savage_claws"] } },
+      [["giant_bats", 4, 2], ["giant_bats", 42, 2], ["giant_bats", 18, 1], ["giant_bats", 28, 1]],
       [["giant_bats", 8, 4], ["giant_bats", 38, 4], ["giant_bats", 23, 3], ["grunts", 22, 4]],
       [["skirmishers", 4, 0], ["skirmishers", 40, 0], ["troll", 18, 3], ["giant_bats", 26, 1], ["giant_bats", 12, 1]],
       [["giant_bats", 16, 0], ["giant_bats", 30, 0], ["giant_bats", 6, 0], ["grunts", 2, 4], ["grunts", 42, 4], ["troll", 26, 5]],
@@ -992,7 +991,7 @@ const LOOK_UP: MissionDef = {
   objective: "Win the match.",
   roundLines: {
     2: { who: "boss", text: "YOU MIGHT WANT TO LOOK UP." },
-    3: { who: "archivist", text: "Giant Bats! Actual ones, and with Savage Claws! Did you see how they fold their wings before they land on the Crossbowmen? Volume Two gets that completely wrong!" },
+    3: { who: "archivist", text: "Giant Bats! Actual ones! Did you see how they fold their wings and dive, straight over the Knights and down onto the Crossbowmen? Volume Two gets that completely wrong!" },
     5: { who: "sergeant", text: "More Skirmishers, and they shoot fliers. Don't send your Griffon Riders in alone." },
   },
   win: [

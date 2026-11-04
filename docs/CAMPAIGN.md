@@ -240,16 +240,16 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Page 7, Fliers.** "Knights cannot hit what flies. Crossbowmen, Ballistae and Griffon Riders can."
 - **Kit.** 1000 supply; every unit so far and the **Griffon Riders**. HP 240 each. Upgrades on. Map: The Mire (it
   slows anything on foot, nothing with wings).
-- **Enemy.** Round 1: mobs, two trolls, Skirmishers. Round 2: **four squads of Giant Bats with *Savage Claws***. Then
+- **Enemy.** Round 1: mobs, two trolls, Skirmishers. Round 2: **four squads of Giant Bats**, diving over the line. Then
   more bats every round, Skirmishers from round 4 (they shoot fliers), trolls, to round 7. Each round is fitted around
   the goblins already on the Field (`fit`).
-- **Punch.** The bats fly over the line and land on the Crossbowmen and Ballistae.
+- **Punch.** The bats dive over the line and land on the Crossbowmen and Ballistae.
 - **Checked by simulation:** *Skyhunters* Crossbowmen win, bought on the Sergeant's warning or once the bats show, and
   so do Griffon Riders (from round 1 with *Sky Patrol*, or once the bats show). Plain Crossbowmen (half damage to fliers
   without *Skyhunters*), Clerics healing plain bows through it, Knights alone and Ballistae (the bats land on them)
-  lose. **Design notes:** the mission depends on Crossbowmen being weak against fliers until *Skyhunters*. *Savage
-  Claws* was added when Clerics stacked and healed plain bows through the bats; prayers no longer stack, so it may
-  not be needed now.
+  lose. **Design notes:** the mission depends on Crossbowmen being weak against fliers until *Skyhunters*. Since the
+  bats' opening dive (25% less physical damage on the way in, claws that reach the Griffons) the Boss's bats carry no
+  upgrade: with *Savage Claws* as well, even *Skyhunters* and the Griffons lost.
 - **Commendation.** *Air Cover*: win with Griffon Riders on the Field.
 - **Debrief.** The sky over the Field belongs to the Field, and griffons do bite (the Archivist checked). The Boss:
   "FINE. I'M CALLING GRUMM." Sergeant: "...Grumm?"

@@ -186,7 +186,10 @@ it is now.
   - **Wolf Riders should be swingy**: a huge impact the round they arrive (one dropped on a flank kills a Keep, then the
     Crossbowmen), countered fairly cheaply. ×5 opening javelin or ×2 raised to ×3 is pending the owner
     (`docs/BALANCE-PLAN.md` §3).
-  - **Giant Bats** claw fliers only with *Bloodsuckers*: the base bats fly over air units to reach the back line.
+  - **Giant Bats** open every battle with a **dive** (the owner's design): a fixed distance straight ahead, no targets,
+    no attacks, 25% less physical damage, passing through enemy fliers; then they fight, and their claws reach fliers.
+    Where they're placed decides where they land. *Long Dive* goes further; *Bloodsuckers* has no dive (an anti-air
+    escort). Kept light on purpose: Warden anti-air is all physical.
   - A Ballista park behind a screen is a **veterancy** problem (level N is N× HP and N× damage, about 4× the value for
     half the price); that's where to look next.
   - Two upgrades are **placeholders** for slots the owner deferred until after the campaign: Skirmishers *Skyshot* and

@@ -191,13 +191,15 @@ export const BALANCE_TARGETS: Record<string, BalanceTarget> = {
   },
   giant_bats: {
     role: "diver",
-    analogue: "", // an air diver; nearest are Wasp (air, beats ground-only units) and Rhino (hunts the back line)
+    // an air diver; nearest are Wasp (air, beats ground-only units) and Rhino (hunts the back line). The opening dive
+    // (no targets, less physical damage) makes it a placement puzzle: deploy so the dive ends on their back line
+    analogue: "",
     upgrades: {
-      leather_wings: { intent: "Survive arrows on the way in", beats: ["skirmishers"] },
+      long_dive: { intent: "Land deeper: deployed at the back, the dive still ends on the casters and siege at the back of theirs" },
       shriek: { intent: "Disrupt: Daze the back line it lands on" },
-      // its claws reach fliers too, so the bats can stop for air units on the way in: the price of the upgrade.
-      // Alone they still lose to a Dragon (its breath splashes the whole squad)
-      bloodsuckers: { intent: "Sustain, and claws for fliers: feed on the air units that used to hunt them", beats: ["cloudlings"] },
+      // no dive: they hunt fliers from the start and feed on them, the goblins' anti-air escort. Alone they still lose to a
+      // Dragon (its breath splashes the whole squad)
+      bloodsuckers: { intent: "Anti-air escort: no dive, hunt the fliers that used to hunt them and feed on them", beats: ["cloudlings"] },
       savage_claws: { intent: "More damage" },
     },
   },
@@ -325,7 +327,6 @@ export const RELATIONS: [string, string, string][] = [
   ["cloudlings", "pikemen", "they can't hit fliers"],
   ["cloudlings", "troll", "it can't hit fliers"],
   ["cloudlings", "stone_golem", "it can't hit fliers"],
-  ["cloudlings", "giant_bats", "bats can't hit fliers"],
 
   // Chaff clear clears chaff.
   ["air_elemental", "grunts", "chain lightning through the mob"],
@@ -397,7 +398,7 @@ export const RELATIONS: [string, string, string][] = [
   ["giant_bats", "troll", "it can't hit fliers"],
   ["giant_bats", "ogre_brute", "it can't hit fliers"],
   ["giant_bats", "stone_golem", "it can't hit fliers"],
-  ["griffon_riders", "giant_bats", "bats can't hit fliers"],
+  ["griffon_riders", "giant_bats", "tougher in the air, and their spears land first"],
   ["griffon_riders", "wolf_riders", "javelins can't reach fliers"],
 
   // Late game.

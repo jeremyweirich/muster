@@ -23,7 +23,7 @@ export const SHOWCASES: Record<string, Showcase> = {
   wolf_riders: { vs: ["crossbowmen", "crossbowmen"], caption: "The fastest unit on the Field reaches the shooters before they can thin it." },
   troll: { squads: 2, vs: ["stone_golem"], caption: "Each hit on the same target hits harder. The rage builds on one big Golem." },
   ogre_brute: { vs: ["grunts", "grunts", "grunts"], caption: "A cleaving club: every swing splashes through the mob." },
-  giant_bats: { vs: ["ballista", "ballista"], caption: "They fly straight over the Field and land on the Ballistae." },
+  giant_bats: { vs: ["ballista", "ballista"], caption: "They dive straight over the Field, shrugging off bolts, and land on the Ballistae." },
 
   // Elementals
   fire_elemental: { vs: ["grunts", "grunts"], caption: "Fireballs splash a crowd and leave it burning." },

@@ -51,6 +51,9 @@ export function describeTrait(t: TraitDef): string {
       return `Attacks ${Math.round((t.attackSpeed - 1) * 100)}% faster while at full HP`;
     case "sprint":
       return `Moves ${Math.round((t.mult - 1) * 100)}% faster for the first ${t.duration}s of a battle`;
+    case "dive":
+      if (t.distance <= 0) return "No opening dive: picks targets from the start";
+      return `Opens the battle with a dive: flies ${Math.round(t.distance)} tiles straight ahead without attacking, taking ${Math.round(t.resist * 100)}% less physical damage`;
     case "lifesteal":
       return `Heals for ${Math.round(t.fraction * 100)}% of the damage it deals`;
     case "meatShield":
@@ -98,9 +101,11 @@ const STAT_NAMES: Record<StatMod["stat"], string> = {
   splash: "splash",
   chainCount: "chain jumps",
   toughness: "toughness",
+  dive: "dive distance",
 };
 
 function describeMod(m: StatMod): string {
+  if (m.stat === "dive" && m.mult === 0) return "no opening dive";
   const parts: string[] = [];
   if (m.mult !== undefined && m.mult !== 1) parts.push(`${m.mult > 1 ? "+" : "−"}${Math.round(Math.abs(m.mult - 1) * 100)}%`);
   if (m.add) parts.push(`${m.add > 0 ? "+" : "−"}${Math.abs(m.add)}`);

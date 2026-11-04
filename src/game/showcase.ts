@@ -6,9 +6,17 @@ import type { PlacedSquad, Rules, Side, UnitDef } from "../sim/types";
 import { defMap, preferredDepth } from "./army";
 
 // The Units tab's mini-fights (src/data/showcases.ts). A small arena, with the featured unit's side on the left and
-// the enemy on the right, so the fight reads across a landscape panel. The sim doesn't care which way sides face.
-export const ARENA: Rules = { ...RULES, fieldW: 24, fieldH: 13.5, towers: [], battleTimeLimit: 45 };
+// the enemy on the right, so the fight reads across a landscape panel. `forward` points the bats' dive that way.
+export const ARENA: Rules = { ...RULES, fieldW: 24, fieldH: 13.5, towers: [], battleTimeLimit: 45, forward: { x: 1, y: 0 } };
 const FRONT = 7; // the front line's distance from each side's edge, in tiles
+
+// The arena's front lines are closer than the Field's, so a dive (Giant Bats) is shortened to match: it still ends
+// where it would on the Field, on the enemy's back line.
+const DIVE_SCALE = (ARENA.fieldW - 2 * FRONT) / (RULES.fieldH - 2 * RULES.deployDepth);
+const arenaDef = (def: UnitDef): UnitDef =>
+  def.traits?.some((t) => t.type === "dive")
+    ? { ...def, traits: def.traits.map((t) => (t.type === "dive" ? { ...t, distance: t.distance * DIVE_SCALE } : t)) }
+    : def;
 
 // Featured squads' uids start with this, so the renderer can pick them out.
 export const FEATURED = "f";
@@ -56,10 +64,10 @@ function place(squads: { def: UnitDef; uid: string }[], side: Side): PlacedSquad
 // The showcase fight for `unitId`, with the featured unit's upgrades applied (to its own side only).
 export function showcaseBattle(units: UnitDef[], unitId: string, upgrades: string[] = [], seed = 1): Battle {
   const sc = SHOWCASES[unitId];
-  const theirs = defMap(units);
+  const theirs = defMap(units.map(arenaDef));
   const get = (id: string) => theirs.get(id)!;
-  const featured = applyUpgrades(get(unitId), upgrades);
-  const mine = defMap(units).set(unitId, featured);
+  const featured = arenaDef(applyUpgrades(units.find((u) => u.id === unitId)!, upgrades));
+  const mine = defMap(units.map(arenaDef)).set(unitId, featured);
   const left = [
     ...Array.from({ length: sc.squads ?? 1 }, (_, i) => ({ def: featured, uid: `${FEATURED}${i}` })),
     ...(sc.allies ?? []).map((id, i) => ({ def: mine.get(id)!, uid: `a${i}` })),

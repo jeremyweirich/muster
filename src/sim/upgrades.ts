@@ -44,6 +44,9 @@ export function applyUpgrades(def: UnitDef, upgradeIds: string[]): UnitDef {
       const added = structuredClone(up.traits ?? []);
       out.traits = [...(out.traits ?? []).filter((t) => !up.replaceTraits || !own.has(t)), ...added];
     }
+    if (mods("dive").length) {
+      out.traits = out.traits?.map((t) => (t.type === "dive" ? { ...t, distance: modValue(t.distance, mods("dive")) } : t));
+    }
     if (up.resist) {
       const r = { ...out.resist };
       for (const [el, v] of Object.entries(up.resist)) r[el as keyof typeof r] = (r[el as keyof typeof r] ?? 0) + (v ?? 0);

@@ -49,6 +49,8 @@ export interface Model {
   rampTarget: number; // ramp trait: the target of its current streak of hits
   rampHits: number;
   aim: number; // windup: seconds spent aiming at the current target since the reload
+  dive: number; // dive trait: tiles of its opening dive still to fly (0 = done, or no dive)
+  diveResist: number; // ...and the physical resistance it has until then
   summoned: boolean; // spawned mid-battle (Warboss); not part of the placed squad's survivors
   engaged: boolean; // in range of its target this tick (spacing only applies while advancing)
   buffAttack: number;
@@ -163,6 +165,7 @@ const STATUS_IDS = Object.keys(STATUSES) as StatusId[];
 const RANGED = 2.5; // attacks longer than this count as ranged (blocked by steam)
 const SURFACE_TICK = 0.5;
 const AURA_TICK = 0.25;
+const FORWARD = { x: 0, y: -1 }; // side 0 advances up the field unless the rules say otherwise
 // Sixteen evenly spaced unit directions, written out: Math.cos and Math.sin can differ in the last bit between
 // browsers, and PvP needs both players' browsers to run exactly the same battle.
 const C = 0.9238795325112867;
@@ -316,6 +319,8 @@ export class Battle {
       rampTarget: -1,
       rampHits: 0,
       aim: 0,
+      dive: summoned ? 0 : (trait(def, "dive")?.distance ?? 0),
+      diveResist: trait(def, "dive")?.resist ?? 0,
       summoned,
       engaged: false,
       buffAttack: 1,
@@ -621,6 +626,10 @@ export class Battle {
     if (unhurt && m.hp >= m.maxHp) attackRate *= unhurt.attackSpeed;
     if (m.cooldown > 0) m.cooldown -= dt * attackRate;
     if (this.isStunned(m)) return;
+    if (m.dive > 0) {
+      this.diveStep(m, dt);
+      return;
+    }
 
     m.retarget -= dt;
     let target = m.targetId >= 0 ? this.byId.get(m.targetId) : undefined;
@@ -661,9 +670,7 @@ export class Battle {
     }
     m.aim = 0;
     if (anchored) return;
-    let speed = m.def.speed * this.rules.speedScale * this.statusMult(m, "moveMult") * m.buffMove;
-    const sprint = trait(m.def, "sprint");
-    if (sprint && this.time < sprint.duration) speed *= sprint.mult;
+    let speed = this.moveSpeed(m);
     if (m.def.layer === "ground") {
       const s = this.surfaces.at(m.x, m.y);
       if (s && SURFACES[s].moveMult) speed *= SURFACES[s].moveMult!;
@@ -677,6 +684,29 @@ export class Battle {
     }
     m.x += (dx / d) * stepLen;
     m.y += (dy / d) * stepLen;
+  }
+
+  private moveSpeed(m: Model): number {
+    const speed = m.def.speed * this.rules.speedScale * this.statusMult(m, "moveMult") * m.buffMove;
+    const sprint = trait(m.def, "sprint");
+    return sprint && this.time < sprint.duration ? speed * sprint.mult : speed;
+  }
+
+  // the opening dive: straight towards the enemy's edge, whatever is around (fliers ignore terrain). The edge ends it early
+  private diveStep(m: Model, dt: number) {
+    m.engaged = false;
+    m.targetId = -1;
+    const f = this.rules.forward ?? FORWARD;
+    const dx = m.side === 0 ? f.x : -f.x;
+    const dy = m.side === 0 ? f.y : -f.y;
+    m.facing = dy ? (dy * Math.PI) / 2 : dx > 0 ? 0 : Math.PI;
+    const stepLen = Math.min(this.moveSpeed(m) * dt, m.dive);
+    const r = m.def.size;
+    const x = m.x + dx * stepLen;
+    const y = m.y + dy * stepLen;
+    m.x = clamp(x, r, this.rules.fieldW - r);
+    m.y = clamp(y, r, this.rules.fieldH - r);
+    m.dive = m.x !== x || m.y !== y ? 0 : m.dive - stepLen;
   }
 
   private sourceOf(m: Model): Source {
@@ -968,6 +998,7 @@ export class Battle {
     if (!m.alive) return;
     const resist = m.def.resist?.[element] ?? 0;
     let dmg = amount * (1 - resist) * this.statusMult(m, "damageTakenMult");
+    if (m.dive > 0 && element === "physical") dmg *= 1 - m.diveResist;
     if (isHit && m.def.toughness) dmg = Math.max(dmg - m.def.toughness, dmg * this.rules.toughnessFloor);
     if (dmg <= 0) return;
     if (m.shield > 0) {
@@ -1117,6 +1148,7 @@ export class Battle {
             if (o.id <= m.id) continue;
             const ao = o.def.speed <= 0;
             if (am && ao) continue;
+            if (m.side !== o.side && (m.dive > 0 || o.dive > 0)) continue; // a diver flies straight through
             const dx = o.x - m.x;
             const dy = o.y - m.y;
             // spread out while advancing; close ranks once fighting

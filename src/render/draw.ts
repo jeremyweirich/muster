@@ -392,9 +392,32 @@ function shapePath(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: nu
 // How big an icon fits inside each token shape, as a multiple of the token radius.
 const ICON_FIT: Record<Shape, number> = { circle: 1.5, square: 1.5, hex: 1.45, diamond: 1.15, triangle: 1.05 };
 
+// A diver's speed streaks: three lines trailing behind it in its team color, flickering a little.
+function drawStreaks(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, facing: number, side: Side, time: number, phase: number) {
+  const fx = Math.cos(facing);
+  const fy = Math.sin(facing);
+  ctx.save();
+  ctx.strokeStyle = SIDE_COLORS[side];
+  ctx.lineWidth = Math.max(1, r * 0.12);
+  ctx.lineCap = "round";
+  for (const s of [-1, 0, 1]) {
+    const len = r * (2.2 + 0.5 * Math.sin(time * 13 + phase + s * 2) - Math.abs(s) * 0.6);
+    const ox = -fy * s * r * 0.55;
+    const oy = fx * s * r * 0.55;
+    const x0 = px + ox - fx * r * 0.9;
+    const y0 = py + oy - fy * r * 0.9;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x0 - fx * len, y0 - fy * len);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 // Two flapping wings, perpendicular to the facing, drawn behind a winged flier's token.
-function drawWings(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, facing: number, color: string, side: Side, time: number, phase: number) {
-  const flap = 0.5 + 0.5 * Math.sin(time * 9 + phase); // 0 = folded in, 1 = spread
+function drawWings(ctx: CanvasRenderingContext2D, px: number, py: number, r: number, facing: number, color: string, side: Side, time: number, phase: number, folded = false) {
+  const flap = folded ? 0 : 0.5 + 0.5 * Math.sin(time * 9 + phase); // 0 = folded in, 1 = spread
   const fx = Math.cos(facing);
   const fy = Math.sin(facing);
   for (const s of [-1, 1]) {
@@ -594,6 +617,7 @@ export interface UnitDrawOpts {
   scale?: number; // the canvas's scale, when the caller already knows it
   fury?: boolean; // an "unhurt" bonus is on (attacking faster at full HP): a faint red pulse underneath
   scrap?: boolean; // wearing scrap armor that hasn't blocked its hit yet: plates around the token
+  diving?: boolean; // still in its opening dive (Giant Bats): wings folded, speed streaks behind
 }
 
 // Goblins whose shield is scrap (Grunts' Scrap Armor) show it on the token until the first hit knocks it off. Knights'
@@ -621,8 +645,9 @@ export function drawUnit(ctx: CanvasRenderingContext2D, def: UnitDef, side: Side
     ctx.beginPath();
     ctx.ellipse(px + lift * 0.25, gy + r * 0.25, r * 0.8, r * 0.42, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (o.diving) drawStreaks(ctx, px, py, r, facing, side, time, phase);
     if (def.structure || def.tags.includes("race:elemental")) drawGlow(ctx, def, tile, scale, px, py, r, time, phase);
-    else drawWings(ctx, px, py, r, facing, def.look.color, side, time, phase);
+    else drawWings(ctx, px, py, r, facing, def.look.color, side, time, phase, o.diving);
   }
   if (o.fury) {
     const R = r * (1.55 + Math.sin(time * 9 + phase) * 0.12);
@@ -1245,6 +1270,7 @@ export function drawBattle(
       alpha: battle.hiddenInGrass(m) ? 0.45 : undefined, // hidden from shooters in tall grass
       fury: m.hp >= m.maxHp && !!m.def.traits?.some((t) => t.type === "unhurt"),
       scrap: fx.scrapOn(m, x, y),
+      diving: m.dive > 0,
     });
   };
   for (const m of battle.models) if (m.alive && m.def.layer === "ground") draw(m);

@@ -204,11 +204,34 @@ describe("targeting and self-destruct", () => {
     const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${y}`, defId, x, y, round: 1 });
     const targets = (crossbowY: number) => {
       const b = new Battle(defs, [[sq("giant_bats", 22, 14)], [sq("knights", 20, 12), sq("crossbowmen", 22, crossbowY)]], { seed: 1, towers: false });
+      for (const m of b.models) m.dive = 0; // landed
       b.step();
       return b.models.filter((m) => m.def.id === "giant_bats").map((m) => b.get(m.targetId)?.def.id);
     };
     expect(targets(13)).toEqual(Array(4).fill("crossbowmen")); // right under them
     expect(targets(0)).toEqual(Array(4).fill("knights")); // the far side of the field
+  });
+
+  it("bats open with a dive: straight ahead, no targets, less physical damage; Bloodsuckers skip it", () => {
+    const sq = (defId: string, x: number, y: number) => ({ uid: `${defId}${y}`, defId, x, y, round: 1 });
+    const bats = (b: Battle) => b.models.filter((m) => m.def.id === "giant_bats");
+    const b = new Battle(defs, [[sq("giant_bats", 22, 22)], [sq("crossbowmen", 30, 20)]], { seed: 1, towers: false });
+    const x0 = bats(b).map((m) => m.x);
+    for (let i = 0; i < 20; i++) b.step();
+    expect(bats(b).every((m) => m.targetId < 0 && m.dive > 0)).toBe(true); // the crossbowmen beside them are ignored
+    expect(bats(b).map((m) => m.x)).toEqual(x0); // straight ahead
+    // the same battle without the dive's protection: the bolts hit harder by exactly the dive's resistance
+    const dive = byId("giant_bats").traits!.find((t) => t.type === "dive")!;
+    const bare = new Battle(defs, [[sq("giant_bats", 22, 22)], [sq("crossbowmen", 30, 20)]], { seed: 1, towers: false });
+    for (const m of bats(bare)) m.diveResist = 0;
+    for (let i = 0; i < 20; i++) bare.step();
+    expect(b.squads[0].stats.taken).toBeGreaterThan(0);
+    expect(b.squads[0].stats.taken / bare.squads[0].stats.taken).toBeCloseTo(1 - (dive.type === "dive" ? dive.resist : 0), 2);
+
+    const sucked = new Map(defs).set("giant_bats", applyUpgrades(byId("giant_bats"), ["bloodsuckers"]));
+    const c = new Battle(sucked, [[sq("giant_bats", 22, 22)], [sq("crossbowmen", 30, 20)]], { seed: 1, towers: false });
+    c.step();
+    expect(bats(c).every((m) => m.dive === 0 && c.get(m.targetId)?.def.id === "crossbowmen")).toBe(true);
   });
 
   it("a Snared flier can be hit by attacks that only reach the ground", () => {
