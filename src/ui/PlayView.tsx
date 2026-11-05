@@ -786,10 +786,13 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
         continue;
       }
       drawSquad(ctx, sq, d, 0, TILE, { outline: isNew(sq) ? "rgba(140,220,140,0.8)" : canPromote(sq) ? "rgba(245,197,66,0.7)" : "rgba(255,255,255,0.15)", time });
-      if (canPromote(sq)) {
-        const r = squadRect(sq, d);
-        drawPromoteIcon(ctx, (r.x + r.w / 2) * TILE, r.y * TILE, time);
-      }
+    }
+    // Promote icons after every squad, so the squad above one can't cover it.
+    for (const sq of myArmy) {
+      const d = myDefs.get(sq.defId);
+      if (!d || sq.uid === held || !canPromote(sq)) continue;
+      const r = squadRect(sq, d);
+      drawPromoteIcon(ctx, (r.x + r.w / 2) * TILE, r.y * TILE, time);
     }
     if (placingDef) {
       const { y0, y1 } = deployZone(0);
