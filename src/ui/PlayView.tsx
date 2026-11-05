@@ -44,7 +44,7 @@ import { PvpPanel } from "./PvpPanel";
 import type { PlayStatus } from "./PvpView";
 import { CodexLink } from "./codexLinks";
 import { Debrief, Say } from "./Mission";
-import { loadHardStreak, recordHardMatch } from "./progress";
+import { loadDifficulty, loadHardStreak, recordHardMatch, saveDifficulty } from "./progress";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
 
@@ -103,7 +103,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const defs = useMemo(() => defMap(units), [units]);
   const freshMatch = () => (mission ? newMissionMatch(mission.def) : newMatch(units, matchSeed()));
   const [match, setMatch] = useState<MatchState>(() => (pvp ? newMatch(units, 1, { aiOpening: false }) : freshMatch()));
-  const [difficulty, setDifficulty] = useState<Difficulty>("easy");
+  const [difficulty, setDifficulty] = useState<Difficulty>(loadDifficulty);
   const [selected, setSelected] = useState<string | null>(null);
   const [held, setHeld] = useState<string | null>(null);
   const [rot, setRot] = useState(false);
@@ -894,7 +894,14 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     <div className="game-opts">
       <label>
         AI{" "}
-        <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
+        <select
+          value={difficulty}
+          onChange={(e) => {
+            const d = e.target.value as Difficulty;
+            setDifficulty(d);
+            saveDifficulty(d);
+          }}
+        >
           <option value="easy">Easy</option>
           <option value="normal">Normal</option>
           <option value="hard">Hard</option>

@@ -1,4 +1,5 @@
 import { MISSIONS } from "../data/campaign";
+import type { Difficulty } from "../game/ai";
 
 // Story progress: the one thing the site keeps, in this browser's localStorage (CLAUDE.md, Invariants). Which
 // missions were won and which commendations earned, nothing else; Reset on the Story page clears it. Storage can
@@ -84,4 +85,25 @@ export function recordHardMatch(won: boolean): HardStreak {
     // blocked: the streak lasts for this visit only through the return value
   }
   return next;
+}
+
+// The AI difficulty last picked on Play, so the next visit starts there. Easy until a player picks another.
+const DIFFICULTY_KEY = "common-ground:difficulty";
+
+export function loadDifficulty(): Difficulty {
+  try {
+    const d = localStorage.getItem(DIFFICULTY_KEY);
+    if (d === "easy" || d === "normal" || d === "hard") return d;
+  } catch {
+    // blocked: the default
+  }
+  return "easy";
+}
+
+export function saveDifficulty(d: Difficulty) {
+  try {
+    localStorage.setItem(DIFFICULTY_KEY, d);
+  } catch {
+    // blocked: the choice lasts for this visit
+  }
 }

@@ -103,7 +103,7 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
 - The AI only uses the simulator, so new units must work with it without special-casing.
 - Don't add `localStorage`, analytics, network calls or external scripts. The site is a static page with no data
   collection. Two exceptions, both owner decisions: **story progress** (missions won, commendations earned), the
-  Hard win streak and the love letter's "already shown" flag live in this browser's `localStorage`
+  Hard win streak, the AI difficulty last picked on Play and the love letter's "already shown" flag live in this browser's `localStorage`
   (`src/ui/progress.ts`, `src/ui/LoveLetter.tsx`), guarded so the game works when storage is blocked; nothing else
   is stored. And PvP (`docs/MULTIPLAYER.md`): it talks to the owner's relay (`relay/`, a Cloudflare
   Worker), and only after a player starts or joins a match. Single-player stays offline.
