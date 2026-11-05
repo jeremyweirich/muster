@@ -117,6 +117,8 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const [hoverSquad, setHoverSquad] = useState<string | null>(null);
   const [actions, setActions] = useState<Action[]>([]);
   const [fightArmed, setFightArmed] = useState(false);
+  // Restart and Leave ask once more when there's a match to lose (a second click within 3 s goes ahead)
+  const [quitArmed, setQuitArmed] = useState<"restart" | "leave" | null>(null);
   const [fightQueued, setFightQueued] = useState(false);
   const [matchNo, setMatchNo] = useState(0); // a restart in round 1 needs a fresh plan too
   const [sideTab, setSideTab] = useState<"recruit" | "upgrades">("recruit");
@@ -272,6 +274,12 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
     const t = setTimeout(() => setFightArmed(false), 3000);
     return () => clearTimeout(t);
   }, [fightArmed]);
+
+  useEffect(() => {
+    if (!quitArmed) return;
+    const t = setTimeout(() => setQuitArmed(null), 3000);
+    return () => clearTimeout(t);
+  }, [quitArmed]);
 
   const myArmy = match.armies[0];
   // You see the enemy as it stood last round: its opening pack, placed in round 1, stays hidden until the battle.
@@ -884,14 +892,25 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       : fightArmed
         ? `Fight without spending ${match.supply[0]}?`
         : "Fight!";
+  const inProgress = match.phase !== "over" && (match.round > 1 || actions.length > 0 || match.openings[0].choice !== null);
+  const quitBtn = (kind: "restart" | "leave", label: string, go: () => void) => (
+    <button
+      className={quitArmed === kind ? "warn-btn" : ""}
+      onClick={() => {
+        if (inProgress && quitArmed !== kind) return setQuitArmed(kind);
+        setQuitArmed(null);
+        go();
+      }}
+    >
+      {quitArmed === kind ? `${label}?` : label}
+    </button>
+  );
   const gameOpts = pvp ? (
-    <div className="game-opts">
-      <button onClick={pvp.onLeave}>Leave match</button>
-    </div>
+    <div className="game-opts">{quitBtn("leave", "Leave match", pvp.onLeave)}</div>
   ) : mission ? (
     <div className="game-opts">
-      <button onClick={restart}>Restart mission</button>
-      <button onClick={mission.onLeave}>Leave mission</button>
+      {quitBtn("restart", "Restart mission", restart)}
+      {quitBtn("leave", "Leave mission", mission.onLeave)}
     </div>
   ) : (
     <div className="game-opts">
@@ -910,7 +929,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
           <option value="hard">Hard</option>
         </select>
       </label>
-      <button onClick={restart}>Restart</button>
+      {quitBtn("restart", "Restart", restart)}
       {streak.best > 0 && (
         <span className="muted small" title="Matches won in a row with the AI on Hard every round">
           Hard streak {streak.current} · best {streak.best}

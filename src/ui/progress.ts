@@ -1,8 +1,8 @@
 import { MISSIONS } from "../data/campaign";
 import type { Difficulty } from "../game/ai";
 
-// Story progress: the one thing the site keeps, in this browser's localStorage (CLAUDE.md, Invariants). Which
-// missions were won and which commendations earned, nothing else; Reset on the Story page clears it. Storage can
+// What the site keeps, in this browser's localStorage (CLAUDE.md, Invariants). First, story progress: which
+// missions were won and which commendations earned; Reset on the Story page clears it. Storage can
 // be missing or blocked (private windows, embedded previews), so every access is guarded and the game works
 // without it: progress then lasts for the visit.
 
@@ -105,5 +105,25 @@ export function saveDifficulty(d: Difficulty) {
     localStorage.setItem(DIFFICULTY_KEY, d);
   } catch {
     // blocked: the choice lasts for this visit
+  }
+}
+
+// Whether this browser has seen the How to play walkthrough, so landing on Play opens it only the first time (the
+// header's How to play button always does).
+const INTRO_KEY = "common-ground:intro-seen";
+
+export function introSeen(): boolean {
+  try {
+    return localStorage.getItem(INTRO_KEY) === "seen";
+  } catch {
+    return false;
+  }
+}
+
+export function markIntroSeen() {
+  try {
+    localStorage.setItem(INTRO_KEY, "seen");
+  } catch {
+    // blocked: it opens again next visit
   }
 }

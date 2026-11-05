@@ -11,7 +11,7 @@ import { RotateHint } from "./ui/RotateHint";
 import { SpectateView } from "./ui/SpectateView";
 import { StoryView } from "./ui/StoryView";
 import { UnitsView } from "./ui/UnitsView";
-import { loadProgress, recordWin, resetProgress } from "./ui/progress";
+import { introSeen, loadProgress, markIntroSeen, recordWin, resetProgress } from "./ui/progress";
 import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
 
 const TABS = [
@@ -61,9 +61,12 @@ export function App() {
   // switch that opens every mission for this visit
   const [progress, setProgress] = useState(loadProgress);
   const [allMissions, setAllMissions] = useState(false);
-  // players who land on Play (a shared #play link) get the walkthrough; Story's "Play the full game" shows it too
-  // (the finale's "Play the full game" opens the version for players who've finished the campaign)
-  const [intro, setIntro] = useState<"new" | "graduate" | null>(() => (parseHash().tab === "play" && !parsePvpLink(location.search, () => "") ? "new" : null));
+  // players who land on Play (a shared #play link) get the walkthrough; Story's "Play the full game" shows it too.
+  // Both only until this browser has seen it once (progress.ts); the header button always opens it. The finale's
+  // "Play the full game" opens the version for players who've finished the campaign.
+  const [intro, setIntro] = useState<"new" | "graduate" | null>(() =>
+    parseHash().tab === "play" && !parsePvpLink(location.search, () => "") && !introSeen() ? "new" : null,
+  );
   // a PvP match, when the address has one (?join=… or ?match=…); see docs/MULTIPLAYER.md
   const [pvp, setPvp] = useState<PvpLink | null>(() => parsePvpLink(location.search, () => randomId(16)));
   // what Play reports about its match, for the PvP tab
@@ -107,7 +110,7 @@ export function App() {
             <path d="M11 14 L15 18 M13 12 L17 16 M13 14 L9 18 M11 12 L7 16" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             <path d="M16.5 17.5 L19.5 20.5 M7.5 17.5 L4.5 20.5" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
           </svg>
-          Common Ground
+          <span className="logo-name">Common Ground</span>
         </div>
         <nav>
           {TABS.map((t) => (
@@ -145,7 +148,7 @@ export function App() {
             onOpen={(id) => go("story", id)}
             onPlayFull={() => {
               go("play");
-              setIntro("new");
+              if (!introSeen()) setIntro("new");
             }}
             onGraduate={() => {
               go("play");
@@ -159,7 +162,15 @@ export function App() {
           <SpectateView />
         </div>
       )}
-      {intro && <Intro graduate={intro === "graduate"} onClose={() => setIntro(null)} />}
+      {intro && (
+        <Intro
+          graduate={intro === "graduate"}
+          onClose={() => {
+            if (intro === "new") markIntroSeen();
+            setIntro(null);
+          }}
+        />
+      )}
       <RotateHint />
     </div>
   );

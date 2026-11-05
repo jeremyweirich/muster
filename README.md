@@ -14,6 +14,8 @@ blinds archers.
 
 ## Tabs
 
+- **Story**: where the site opens. The Wardens campaign, nine missions that teach the game a rule at a time; the
+  Goblin and Elemental campaigns are coming.
 - **Play**: you against the AI (Easy, Normal or Hard). Click a unit, then click your blue zone to place it.
   Right-click or **R** rotates, **Esc** stops placing, **Delete** sells the squad you're holding and **Ctrl+Z** undoes
   your last purchase. After each battle a report shows who hurt whom, and you can replay the fight.
@@ -21,16 +23,18 @@ blinds archers.
 - **Units**: the whole roster, with a small showcase fight for each unit and a "Try it" button on every upgrade.
 - **Codex**: the rules, for a brand-new player. Keywords anywhere in the game link here.
 - **Counters**: pick a unit and see what beats it, from simulated fights.
+- **Spectate**: the AI plays itself, round by round, for watching how units interact.
 
-It works on a phone held sideways. The site is static, with no accounts, storage or analytics. Single-player makes no
-network calls; PvP talks only to a small relay (`relay/`, `docs/MULTIPLAYER.md`).
+It works on a phone held sideways. The site is static, with no accounts or analytics. Your browser keeps your story
+progress and a few settings (`localStorage`), and nothing leaves it: single-player makes no network calls, and PvP
+talks only to a small relay (`relay/`, `docs/MULTIPLAYER.md`).
 
 ## Running it locally
 
 ```bash
 npm ci
 npm run dev           # http://localhost:5173
-npm test              # simulation, upgrades, AI, Codex links, PvP
+npm test              # simulation, upgrades, AI, Codex links, PvP, story missions
 npm run build         # typecheck + static build in dist/
 npm run balance -- check   # the balance harness (modes listed at the top of scripts/balance.ts)
 ```

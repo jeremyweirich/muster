@@ -6,8 +6,8 @@ import type { UnitDef } from "../sim/types";
 import { Swatch } from "./UnitInfo";
 
 // A short walkthrough for players who have never played a deploy-then-autobattle game.
-// Shown when the app opens on the Play tab, and from the header's "How to play" button.
-// The site stores nothing, so it can't remember that someone has seen it; Skip is always one click away.
+// Shown the first time the app opens on the Play tab (the browser remembers it, progress.ts), and from the header's
+// "How to play" button.
 // `graduate`: the version for players arriving from the Wardens campaign's finale, about what the campaign didn't
 // cover (the other factions, the round-1 offer and unlocks, elements).
 

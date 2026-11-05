@@ -23,6 +23,11 @@ body,
   margin: 0;
   height: 100%;
 }
+/* no pull-to-refresh: a reload ends a match against the AI */
+html,
+body {
+  overscroll-behavior: none;
+}
 
 body {
   background: var(--bg);
@@ -1259,6 +1264,12 @@ a.reason:hover {
   .version {
     font-size: 10px;
   }
+  /* iPhones in Safari leave about 750px beside the notch: the logo keeps only its icon so the header stays one row */
+  @media (max-width: 800px) {
+    .logo-name {
+      display: none;
+    }
+  }
   /* the field takes the full height it can, and the sidebar takes whatever width is left */
   .play {
     gap: 6px;
@@ -1670,6 +1681,10 @@ a.role:hover {
 button.primary.warn-btn {
   background: #ff9f43;
   border-color: #ff9f43;
+}
+.game-opts button.warn-btn {
+  border-color: #ff9f43;
+  color: #ff9f43;
 }
 .key-dealt {
   color: var(--accent);

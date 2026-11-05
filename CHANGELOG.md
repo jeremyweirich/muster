@@ -3,6 +3,13 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
+## 5 November 2026 (v96–v99)
+
+- **Polish before sharing the game with friends.** Restart, Restart mission and Leave mission/match ask once more
+  ("Restart?") when a match is under way. The How to play walkthrough opens by itself only the first time (the button
+  always opens it). On an iPhone held sideways the header keeps to one row (the logo shows just its icon), and
+  pulling down no longer reloads the page mid-match. Links shared in chat apps show a preview picture.
+
 ## 4 November 2026 (v89–v95)
 
 - **New upgrades in the deferred slots** (the owner's picks):
