@@ -10,6 +10,7 @@ import { PvpView, type PlayStatus } from "./ui/PvpView";
 import { RotateHint } from "./ui/RotateHint";
 import { SpectateView } from "./ui/SpectateView";
 import { StoryView } from "./ui/StoryView";
+import { ThoughtsView } from "./ui/ThoughtsView";
 import { UnitsView } from "./ui/UnitsView";
 import { introSeen, loadProgress, markIntroSeen, recordWin, resetProgress } from "./ui/progress";
 import { parsePvpLink, setPageQuery, type PvpLink } from "./ui/usePvp";
@@ -22,6 +23,7 @@ const TABS = [
   { id: "codex", label: "Codex" },
   { id: "counters", label: "Counters" },
   { id: "spectate", label: "Spectate" },
+  { id: "thoughts", label: "Thoughts" },
 ] as const;
 
 // "debug" is a hidden tab for development, opened by clicking the version in the corner.
@@ -136,6 +138,7 @@ export function App() {
       {tab === "units" && <UnitsView topic={route.topic} />}
       {tab === "codex" && <CodexView topic={route.topic} />}
       {tab === "counters" && <CountersView topic={route.topic} />}
+      {tab === "thoughts" && <ThoughtsView />}
       {tab === "debug" && <DebugView allMissions={allMissions} onAllMissions={setAllMissions} />}
       {storyOpened && (
         <div style={{ display: storying ? "contents" : "none" }}>

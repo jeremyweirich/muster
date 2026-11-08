@@ -1264,8 +1264,9 @@ a.reason:hover {
   .version {
     font-size: 10px;
   }
-  /* iPhones in Safari leave about 750px beside the notch: the logo keeps only its icon so the header stays one row */
-  @media (max-width: 800px) {
+  /* phones (about 750px beside an iPhone's notch, 844px elsewhere): the logo keeps only its icon so the header stays
+     one row */
+  @media (max-width: 900px) {
     .logo-name {
       display: none;
     }
@@ -2720,4 +2721,29 @@ a.primary-link {
   padding: 8px 10px;
   font-weight: 600;
   text-decoration: none;
+}
+
+/* The Thoughts tab: the owner's essay (docs/THOUGHTS.md), set for reading. */
+.thoughts article {
+  max-width: 720px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.thoughts article p,
+.thoughts article ul {
+  margin: 0 0 12px;
+}
+.thoughts article ul ul {
+  margin: 2px 0 0;
+}
+.thoughts article pre {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }

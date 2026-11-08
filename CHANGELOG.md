@@ -3,8 +3,9 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 8 November 2026 (v100–v101)
+## 8 November 2026 (v100–v102)
 
+- **A Thoughts tab:** the owner's short essay on building the game, with a note from Claude at the end.
 - **The owner's copy pass on the Wardens campaign.** Shorter briefings and debriefs, plainer hints, a new Story
   intro ("...finally able to find Common Ground"), new taglines, and the elemental campaign is now *The Volatile
   Grimoire*. Mission 5 is now *The Tinker* (the wheelbarrow thread is gone). `docs/COPY.md` now holds every word a

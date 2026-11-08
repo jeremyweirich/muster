@@ -19,7 +19,8 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   roster; each unit has a small showcase fight from `src/data/showcases.ts`, links are `#units/<id>`), **Codex** (the
   rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades), **Spectate**
   (the AI plays itself, round by round, for watching unit interactions; Copy round exports a battle's setup to
-  reproduce). Game screens don't explain rules:
+  reproduce), **Thoughts** (the owner's essay on building the game, `docs/THOUGHTS.md`, rendered as is, with a
+  signed note from Claude at the end). Game screens don't explain rules:
   keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - **Reference text is plain.** Unit descriptions, upgrade descriptions, showcase captions and Codex entries are read to
   understand the game, so flourishes are distractions: say what it does in simple words and name the facts a player
