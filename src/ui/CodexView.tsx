@@ -2,7 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { ELEMENT_COLORS, STATUSES, SURFACES, SURFACE_REACTIONS, UNIT_REACTIONS } from "../data/elements";
 import { ROLES } from "../data/roles";
 import { RULES } from "../data/rules";
-import { MAPS, TERRAIN } from "../data/terrain";
+import { SKIRMISH_MAPS, TERRAIN } from "../data/terrain";
 import { TOWER_DEFS, towerDaze } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import { ELEMENTS, type Element, type StatusDef, type SurfaceDef, type UnitDef, type UnitReaction } from "../sim/types";
@@ -283,7 +283,9 @@ export function CodexView({ topic }: { topic?: string }) {
           round. Your units don&apos;t plan around it: they head straight for their target and walk round whatever is in the way.
           Fliers ignore the ground entirely. Placing your squads so the ground works for you, and not for them, is up to you.
         </p>
-        <p className="muted small">Maps: {MAPS.map((m) => m.name).join(", ")}.</p>
+        <p className="muted small">
+          Maps: {SKIRMISH_MAPS.map((m) => m.name).join(", ")}. Some story missions have a map of their own.
+        </p>
       </Entry>
       {Object.entries(TERRAIN).map(([id, t]) => (
         <Entry key={id} id={`terrain-${id}`} title={t.name} focus={topic}>

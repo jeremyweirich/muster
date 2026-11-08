@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { RULES } from "../src/data/rules";
-import { MAPS, mapTerrain } from "../src/data/terrain";
+import { MAPS, mapTerrain, SKIRMISH_MAPS } from "../src/data/terrain";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { defMap } from "../src/game/army";
 import { newMatch } from "../src/game/match";
@@ -63,7 +63,8 @@ describe("maps", () => {
       expect(newMatch(DEFAULT_UNITS, seed).map).toBe(newMatch(DEFAULT_UNITS, seed).map);
       seen.add(newMatch(DEFAULT_UNITS, seed).map);
     }
-    expect(seen.size).toBe(MAPS.length);
+    expect(seen.size).toBe(SKIRMISH_MAPS.length);
+    expect(seen.has("toll-bridge")).toBe(false); // a mission's map only
   });
 });
 

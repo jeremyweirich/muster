@@ -220,8 +220,9 @@ changed when is in `CHANGELOG.md` and the git history; the docs describe the gam
   **Next:** the owner's structural changes to the Wardens campaign, then the goblin campaign. Page 9 (the finale's
   winning board) is shown in the debrief, not kept.
 - **Terrain:** rocks and ponds (impassable for ground units, who slide along the edge), rough ground (half speed) and
-  tall grass (hides ground units from ground shooters until they attack); fliers ignore all of it. Eight
-  point-symmetric maps; skirmish draws one per match, missions name one (DESIGN.md §3). Owner rule: **units and the AI
+  tall grass (hides ground units from ground shooters until they attack); fliers ignore all of it. Nine
+  point-symmetric maps; skirmish draws one per match (not Toll Bridge, a mission map only), missions name one
+  (DESIGN.md §3). Owner rule: **units and the AI
   never plan around terrain** (no pathfinding); it's for map variety and a step toward spells cast on no-man's land,
   which are out of scope until the owner asks.
 - **PvP:** play a friend by link is live (`docs/MULTIPLAYER.md`). The relay is deployed on the owner's Cloudflare

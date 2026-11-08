@@ -61,6 +61,7 @@ Drill Book page, **Page 1: The Compact**:
 
 ### Hints after a loss (the first that matches)
 
+- When `c.army.length===0`: **Sergeant Dunmor:** You have to put some units on the Field first! Knights in front, Crossbowmen behind.
 - When `!fielded(c,"knights")`: **Sergeant Dunmor:** Crossbowmen are a little too fragile without some Knights to defend them.
 - When otherwise: **Sergeant Dunmor:** They got through your Knights. Put them where the goblins are heading, between the mob and your Crossbowmen.
 
@@ -884,7 +885,7 @@ Giant Bats open every battle with a **dive**: they fly a fixed distance straight
 
 Every Field has its own ground. Terrain lies only in no-man's land, and each map is the same from both sides, turned round. Your units don't plan around it: they head straight for their target and walk round whatever is in the way. Fliers ignore the ground entirely. Placing your squads so the ground works for you, and not for them, is up to you.
 
-Maps: Open Field, Millbrook Ford, Standing Stones, Long Grass, The Mire, Broken Hills, Toll Bridge, The Furrows, Border Pass.
+Maps: Open Field, Millbrook Ford, Standing Stones, Long Grass, The Mire, Broken Hills, The Furrows, Border Pass. Some story missions have a map of their own.
 
 #### Rocks
 

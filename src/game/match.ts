@@ -5,7 +5,7 @@ import { capXp, earnedLevel } from "../sim/levels";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { OPENING_PACKS, type OpeningPack } from "../data/openings";
-import { MAPS } from "../data/terrain";
+import { SKIRMISH_MAPS } from "../data/terrain";
 import { autoPlace, defMap, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "./army";
 
 export type Phase = "deploy" | "battle" | "result" | "over";
@@ -79,7 +79,7 @@ export function newMatch(units: UnitDef[], seed = 1, opts: { aiOpening?: boolean
 
 // Each match's map, from its seed (its own stream, so the opening packs don't change). Both PvP browsers get the same.
 export function pickMap(seed: number): string {
-  return MAPS[new Rng((seed ^ 0x2545f491) >>> 0).int(MAPS.length)].id;
+  return SKIRMISH_MAPS[new Rng((seed ^ 0x2545f491) >>> 0).int(SKIRMISH_MAPS.length)].id;
 }
 
 // Take an opening: the flat supply, or a pack's supply, unlocks and squads (placed for you, and free, so not sellable).

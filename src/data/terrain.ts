@@ -29,6 +29,7 @@ export interface MapDef {
   id: string;
   name: string;
   terrain: TerrainPatch[];
+  missionOnly?: boolean; // only a story mission plays it: skirmish and PvP never draw it
 }
 
 // Each patch with its 180° twin, through the field's center (48 × 27 tiles: 24, 13.5).
@@ -73,9 +74,11 @@ export const MAPS: MapDef[] = [
     ),
   },
   {
-    // a river right across the field, and one wide bridge in the middle third: the only way over on foot
+    // a river right across the field, and one wide bridge in the middle third: the only way over on foot. Under the
+    // Bridge's map only (owner: not in the skirmish draw)
     id: "toll-bridge",
     name: "Toll Bridge",
+    missionOnly: true,
     terrain: twin({ kind: "pond", x: 4.2, y: 13.5, r: 1.6, len: 10.2 }, { kind: "bridge", x: 24, y: 13.5, r: 8, ry: 2.6 }),
   },
   {
@@ -97,6 +100,8 @@ export const MAPS: MapDef[] = [
 ];
 
 export const MAP_BY_ID = new Map(MAPS.map((m) => [m.id, m]));
+// the maps a skirmish (and PvP, and Spectate) draws from
+export const SKIRMISH_MAPS = MAPS.filter((m) => !m.missionOnly);
 
 // A map's terrain; an unknown or missing id is the open field.
 export function mapTerrain(id: string | undefined): TerrainPatch[] {

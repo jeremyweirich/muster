@@ -137,10 +137,11 @@ spells themselves are out of scope for now). Data in `src/data/terrain.ts`, the 
   Hills (grass in the middle, rocks and rough ground off-center), The Furrows (a ploughed band of rough ground right
   across the middle), Toll Bridge (a river right across the field, with one wide bridge in the middle third) and Border
   Pass (rocks either side of the middle, scree on the flanks); the Furrows, Toll Bridge and Border Pass were made for
-  story missions 4, 5 and 9 and are in the skirmish draw too. Every map is **point-symmetric** (turned 180° it's the
+  story missions 4, 5 and 9. The Furrows and Border Pass are in the skirmish draw too; Toll Bridge is a mission map only
+  (`missionOnly`, owner's call), and the Codex lists only the skirmish maps. Every map is **point-symmetric** (turned 180° it's the
   same), so both sides face the same ground and a PvP guest's turned-round view needs nothing special. A test checks
   this and the no-man's-land rule.
-- **Which map:** a skirmish draws one from the match seed (`pickMap`, its own random stream, so the opening packs don't
+- **Which map:** a skirmish draws one of `SKIRMISH_MAPS` from the match seed (`pickMap`, its own random stream, so the opening packs don't
   change), so both PvP browsers get the same; Spectate too. Story missions name theirs (`map`). The map's name shows
   under the round number and links to the Codex's Terrain entries.
 - The balance harness, Counters and the Units showcases stay on the open field: terrain is variety, not a balance input.

@@ -741,6 +741,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       }
     }
     // MVP medals: the top three damage dealers on each side, with what they dealt
+    const tags: { x0: number; x1: number; y: number }[] = []; // damage tags drawn so far, so neighbours don't overlap
     for (const sq of squads) {
       const medal = medals.get(sq.uid);
       const st = stats[sq.uid];
@@ -763,8 +764,17 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       ctx.textBaseline = "middle";
       ctx.fillText(String(medal + 1), mx, my + 0.5);
       if (!focusStats) {
+        const text = `${Math.round(st.dealt).toLocaleString()} dmg`;
+        const cx = (r.x + r.w / 2) * TILE;
         const below = (r.y + r.h) * TILE + 16;
-        pill(ctx, `${Math.round(st.dealt).toLocaleString()} dmg`, (r.x + r.w / 2) * TILE, below > RULES.fieldH * TILE - 2 ? r.y * TILE - 4 : below, MEDAL_COLORS[medal]);
+        const up = below > RULES.fieldH * TILE - 2;
+        let y = up ? r.y * TILE - 4 : below;
+        ctx.font = "bold 11px system-ui, sans-serif";
+        const half = ctx.measureText(text).width / 2 + 5;
+        // step away from the squad until clear of the tags already drawn
+        while (tags.some((t) => Math.abs(t.y - y) < 16 && t.x0 < cx + half && cx - half < t.x1)) y += up ? -16 : 16;
+        tags.push({ x0: cx - half, x1: cx + half, y });
+        pill(ctx, text, cx, y, MEDAL_COLORS[medal]);
       }
     }
   };

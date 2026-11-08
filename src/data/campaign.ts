@@ -225,6 +225,7 @@ const HANDS_OFF: MissionDef = {
   ],
   winNote: "\"Boring wins\" (Sgt.). Not in the book, says Ithiel. Sgt. says it should be.",
   hints: [
+    { when: (c) => c.army.length === 0, line: { who: "sergeant", text: "You have to put some units on the Field first! Knights in front, Crossbowmen behind." } },
     { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "Crossbowmen are a little too fragile without some Knights to defend them." } },
     { line: { who: "sergeant", text: "They got through your Knights. Put them where the goblins are heading, between the mob and your Crossbowmen." } },
   ],
