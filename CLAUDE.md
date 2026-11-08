@@ -161,8 +161,8 @@ Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 ## Where things stand
 
-The roadmap is DESIGN.md §12. What changed when is in `CHANGELOG.md` and the git history; the docs describe the game as
-it is now.
+The roadmap is DESIGN.md §12, and the owner's open to-do items are in `docs/TODO.md` (repo only, not in the app). What
+changed when is in `CHANGELOG.md` and the git history; the docs describe the game as it is now.
 
 - **Balance** follows `docs/BALANCE.md`, with Mechabellum as the reference game (`docs/MECHABELLUM.md`).
   `docs/BALANCE-PLAN.md` has the owner's decisions, the analogue mapping, the current results and the open problems.
