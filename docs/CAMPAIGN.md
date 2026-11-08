@@ -14,7 +14,7 @@ faction's campaign teaches a different layer of the game:
 |---|---|---|---|
 | **1. Wardens: The Drill Book** | the book against the real world | **The basics.** Placement, rounds, reading the enemy, towers, unlocks, upgrades, air, veterancy. Almost no elements | the pike line beats the goblins |
 | **2. Goblins: *The Tinker's Notebook*** | smart, sarcastic, chaos with heart | **Tempo and chaos.** Flanks, tower raids, chaff, statuses, the first surfaces, friendly fire, risk and reward | oil plus the elementals' own fire beats the elementals |
-| **3. Elementals: We Burn** | careful, not arrogant | **Precision.** Reactions, combos, surfaces, positioning as care | the storm field beats the shield wall |
+| **3. Elementals: The Volatile Grimoire** | careful, not arrogant | **Precision.** Reactions, combos, surfaces, positioning as care | the storm field beats the shield wall |
 | Epilogue (Wardens) | | `spacing`: "Against storms, spread out" | tied standings |
 
 This keeps the complexity budget honest. The Wardens campaign barely touches elements, which fits a faction with plain
@@ -90,15 +90,13 @@ and wants to swarm the player with numbers. The Tinker shows up halfway and care
 Campaign 2.
 
 **Arc.** Dunmor and Ithiel learn from each other, and the Marshal writes it down in pencil. Dunmor finds out what the
-book says (mission 5 explains the invoices; mission 8 reveals a page on ogres he never knew about), and Ithiel finds out
-what the world is like (the pond on his map, the grass, the troll's knees, griffons that bite). In the finale they swap:
-Dunmor quotes page 3 and Ithiel offers the griffon bite as evidence. Mission 9's last page is the first one the Marshal
-writes in ink. It says "Boring wins," which finally makes the book say what Dunmor always claimed it did. Below that, the
-owner loves the idea of **generating the page from the player's own winning board**, drawn as a Drill Book diagram. Built
-as shown, not kept: the finale's debrief draws it; keeping it is parked (§5).
-
-**Running thread: the wheelbarrow.** The Tinker borrows it in mission 5 and returns it in mission 9 with a second wheel.
-It's better, and it isn't in the book, which is the first hint that the book can change.
+book says (mission 5 explains the invoices; mission 8's page gets read to him, twice), and Ithiel finds out what the world
+is like (the pond on his map, the troll's healing, griffons that bite). The owner's copy pass (8 November) cut most of
+the side jokes to keep the briefings short: the grass, the troll's knees, the wheelbarrow thread, the receipt. Mission
+1's "Boring wins" runs to the end: Dunmor says the book says it, Ithiel says it doesn't, and mission 9's last page, the
+first one the Marshal writes in ink, makes it true. Below that, the owner loves the idea of **generating the page from
+the player's own winning board**, drawn as a Drill Book diagram. Built as shown, not kept: the finale's debrief draws
+it; keeping it is parked (§5).
 
 **Roster.** Everything the campaign needs is built: the six Warden units and the six goblins (Grunts, Skirmishers,
 Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that hit air (decided), so Griffons
@@ -110,7 +108,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 | 2 | The Appeal | the goat, appealed | rounds, locked squads, reading their last army, HP | | Skirmishers | 70 / 110 |
 | 3 | Two Keeps | a rude drawing on a Keep | towers, collapse Daze, flanks, tower levels | | Wolf Riders | 100 / 200 |
 | 4 | The Troll | a troll | big units, regeneration, slow ground, depth | Ballista | Troll | 200 / 180 |
-| 5 | The Wheelbarrow | the wheelbarrow patent | upgrades, yours and theirs | | the Tinker's upgrades | 180 / 200 |
+| 5 | The Tinker | the Tinker arrives | upgrades, yours and theirs | | the Tinker's upgrades | 180 / 200 |
 | 6 | Under the Bridge | the bridge toll | healing, holding a crossing | Cleric | | 260 |
 | 7 | Look Up | who owns the sky | the air layer | Griffon Riders | Giant Bats | 240 |
 | 8 | Old Grumm | an old grudge | veterancy, promotions | Dwarven Pikemen | Ogre Brute (veteran) | 300 |
@@ -130,12 +128,14 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   placement; three or four Crossbowmen lose. Knights placed in front of the Crossbowmen bring every crossbowman home.
 - **Commendation.** *Knights in Front*: win with Crossbowmen on the Field and lose none of them.
 - **Teaches.** Knights in front, Crossbowmen behind. Then the horn sounds and you let go.
-- **Debrief.** Sergeant: "Boring wins. Book says so." The Archivist says it doesn't. The Boss files an appeal (mission 2).
+- **Debrief.** Sergeant: "As the book says: 'Boring wins.'" The Archivist says it doesn't. The Boss files an appeal
+  (mission 2).
 
 ### 2. The Appeal (built)
 - **Dispute.** The goblins appeal the goat. Under the Compact a loss can be appealed once, as a longer match: rounds
   and HP, explained in-world.
-- **Page 2, What Is Placed Stays Placed.** "You will see what the other side has fielded, but never what they will add."
+- **Page 2, What Is Placed Stays Placed.** "You can see what your opponent placed last round, but not what they're
+  placing this round."
 - **Kit.** 500 supply, then the standard income; Knights and Crossbowmen. **HP 70 for the player, 110 for the Boss**
   (per-side HP: the reactive path has room to lose a round). No Keeps, no upgrades, veterancy off. Map: Millbrook
   Ford, a pond in the middle (the Archivist's map says shallow crossing; the Sergeant knows better). Round 1 is blind,
@@ -151,15 +151,14 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   covers both flanks in round 2 wins every round (the commendation). Never adding after round 1, adding only
   Crossbowmen, and all Crossbowmen lose.
 - **Commendation.** *Guess Right*: win every round of the appeal.
-- **Debrief hints.** Never added after round 1 ("Supply in your pocket doesn't fight"); no Knights; otherwise the
-  thin-flank lesson.
+- **Debrief hints.** Never added after round 1 ("flood the Field with units"); no Knights; otherwise "fight force
+  with force" (answer their latest move).
 
 ### 3. Two Keeps (built)
 - **Dispute.** A goblin painted something rude on the West Keep. ("IT'S A GOOD LIKENESS.")
-- **Page 3, Two Keeps.** "If a Keep falls, the whole army is Dazed. A Keep can be built higher."
+- **Page 3, Two Keeps.** "If a Keep falls, the whole army is Dazed. A Keep can be reinforced."
 - **Kit.** 600 supply, Knights and Crossbowmen, **HP 100 for the player, 200 for the Boss**, **Keeps on**, veterancy off. Unit upgrades stay off, so
-  the sidebar's second tab is just **Keeps** (levels for sale). Map: Long Grass, tall grass on both flanks (the
-  Sergeant: "Goblins hide in it." The Archivist: the book doesn't mention grass at all).
+  the sidebar's second tab is just **Keeps** (levels for sale). Map: Long Grass, tall grass on both flanks.
 - **Enemy.** The Boss's Wolf Riders have *Tower Raiders* (shown as a ★ on his wolves: a first look at enemy
   upgrades). Round 1: three Grunt mobs and Skirmishers. Rounds 2 and 3: one Wolf Rider squad on the player's thin
   flank each time, while Grunts and Skirmishers join the center. Round 4: a last few goblins.
@@ -174,7 +173,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Commendation.** *Both Keeps Standing*: win without losing a Keep (Knights beside both Keeps from round 1 earn it).
 
 ### 4. The Troll (built)
-- **Dispute.** The goblins have got hold of a troll. Several, in fact.
+- **Dispute.** The goblins have recruited a troll. Several, in fact.
 - **Page 4, Ballistae.** "Ballistae deal double damage to large units. Ballistae need Knights in front of them." The
   pencil note wonders how far in front.
 - **Kit.** 700 supply; Knights, Crossbowmen and the **Ballista**. **HP 200 for the player, 180 for the Boss.** Keeps on,
@@ -185,18 +184,17 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Punch.** Knights marched to the front get shot by the Skirmishers on the way, and the trolls beat a Knight line
   ("the rage builds through the armor").
 - **The secret:** Knights at the very back. They reach the mud as the trolls do, while the Ballistae shoot the trolls
-  crossing it. The briefing only hints ("In front. How far in front?"); the hint after a loss says it outright.
+  crossing it. The page's pencil note only hints ("In front, but how far in front?"); the hint after a loss points at the mud.
 - **Checked by simulation:** Knights at the back with Ballistae win in four rounds, from round 1 or with the Ballistae
   a round later. Knights at the front of the zone, Knights and Crossbowmen without Ballistae, all Crossbowmen, a
   Ballista park with nothing in front, and never adding lose. **Design note:** placed squads stay, so a round-1 charge
   can't be undone in the same match; no recovery plan wins. The lesson lands on Try again.
 - **Commendation.** *In No Hurry*: win with every Knight squad in your back two rows.
-- **Debrief.** The trolls go home, the Archivist has drawn the correct knees, and the Boss sends for the Tinker.
+- **Debrief.** The Boss sends for the Tinker.
 
-### 5. The Wheelbarrow (built)
-- **Dispute.** The Tinker (first appearance, and the enemy commander) accuses the Wardens of stealing the wheelbarrow.
-  Archivist: "We've had wheelbarrows for four hundred and twelve years." Tinker: and it still has one wheel, so whoever
-  invented it can't be you.
+### 5. The Tinker (built)
+- **Dispute.** The Boss brings in the Tinker (first appearance, and the enemy commander), who looks at your army before
+  picking upgrades.
 - **Page 5, Upgrades.** "An upgrade improves every squad of that unit, even those already on the Field. Enemy upgrades
   show as a star beside the unit."
 - **Kit.** 800 supply; Knights, Crossbowmen and Ballistae. **No Clerics yet:** Knights and Clerics beat most goblin
@@ -213,7 +211,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   do Knights in front and bows behind spread wide with no upgrades, and the wrong upgrade (Knights' *Veterans*).
 - **Commendation.** *Right Upgrade*: once their armor shows, win every round after it (adding Knights for round 4's
   flank mobs earns it).
-- **Debrief.** Dunmor learns he's been buying upgrades for forty years. The Tinker borrows the wheelbarrow. The Boss:
+- **Debrief.** The Tinker needs more R&D. The Boss:
   "ENOUGH THINKING. WE'RE TAKING THE BRIDGE."
 
 ### 6. Under the Bridge (built)
@@ -232,11 +230,11 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   no Clerics (Crossbowmen, Ballistae, or last mission's *Repeaters* instead), all Crossbowmen and never adding lose.
   Round 6's five trolls finish any plan still going, so a good plan wins by round 4 or 5.
 - **Commendation.** *Nobody Crosses*: win every round.
-- **Debrief.** The toll is abolished (the Archivist kept a receipt). The Boss: "THE GROUND'S FULL ANYWAY. WE'LL USE
-  THE SKY."
+- **Debrief.** The Boss: "THE GROUND'S FULL ANYWAY. WE'LL USE THE SKY."
 
 ### 7. Look Up (built)
-- **Dispute.** "The Compact draws borders on the ground. The goblins have noticed."
+- **Dispute.** The Compact draws the Field's borders on the ground and says nothing about the air. ("The goblins do a
+  little out-of-the-box thinking.")
 - **Page 7, Fliers.** "Knights cannot hit what flies. Crossbowmen, Ballistae and Griffon Riders can."
 - **Kit.** 1000 supply; every unit so far and the **Griffon Riders**. HP 240 each. Upgrades on. Map: The Mire (it
   slows anything on foot, nothing with wings).
@@ -251,14 +249,13 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   bats' opening dive (25% less physical damage on the way in, claws that reach the Griffons) the Boss's bats carry no
   upgrade: with *Savage Claws* as well, even *Skyhunters* and the Griffons lost.
 - **Commendation.** *Air Cover*: win with Griffon Riders on the Field.
-- **Debrief.** The sky over the Field belongs to the Field, and griffons do bite (the Archivist checked). The Boss:
-  "FINE. I'M CALLING GRUMM." Sergeant: "...Grumm?"
+- **Debrief.** The Boss: "FINE. I'M CALLING GRUMM." Sergeant: "...Grumm?" Griffons do bite (the Marshal's pencil
+  note: the Archivist checked).
 
 ### 8. Old Grumm (built)
 - **Dispute.** Thirty years ago, at a Field match, Old Grumm ate the Sergeant's helmet.
 - **Page 8, The Pike Line.** "Dwarven Pikemen do extra damage to large units. Put them where large units walk." The
-  Sergeant says nothing can be done about an ogre that size, book says so. The Archivist: page 8 is entirely about large
-  things, and no one has turned to it in two hundred years. Sergeant: "...There's a page."
+  Archivist warns that Grumm is a veteran, and the Sergeant explains promotions (the gold ▲).
 - **Kit.** 1100 supply; every unit so far and the **Dwarven Pikemen**. HP 300 each. Upgrades on, **veterancy on**. Map:
   Broken Hills.
 - **Enemy.** Round 1: mobs, two trolls and wolves. Round 2 brings **Grumm, a level-3 Ogre Brute with *Warboss***
@@ -270,13 +267,12 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   squads instead lose. **Design note:** Grumm's cleave kills two or three dwarves a swing, which is why the Pikemen
   need ×4.5 against large units to make the pike page worth reading.
 - **Commendation.** *Page Eight*: win with a promoted squad of Dwarven Pikemen on the Field.
-- **Debrief.** The Sergeant gets the helmet back, chewed, and reads his first page so he can say what's wrong with it. The
-  Boss stakes the whole border.
+- **Debrief.** The Boss stakes the whole border.
 
 ### 9. The Marches (built)
 - **Dispute.** The season final. The Boss stakes the whole border ("AND THE GOAT").
-- **Page 9, The Full Compact.** "Every commander chooses, every commander places, and no one sees the other's army
-  before the horn."
+- **Page 9, The Full Compact.** "The final battle between Wardens and Goblins?" The Marshal states the rule in the
+  briefing: nobody sees the other army before the horn.
 - **Kit.** 1200 supply; every Warden unit and **the Giant** (the first independent). HP 400 each. Keeps, upgrades and
   veterancy on. Map: **Border Pass**. Blind from round 1.
 - **Enemy, in two phases**, scripted rather than the AI so the story beats land and the tests can fight it. The Boss
@@ -291,8 +287,7 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
   **Design notes:** a Tinker wave much bigger than the round's income flattens every plan, because each wave stays on
   the Field; *Pike Wall* answers the bats on its own, since they claw in melee.
 - **Commendation.** *Boring Wins*: win the final with only Knights and Crossbowmen.
-- **Ending.** The wheelbarrow comes back with two wheels. Sergeant: "Boring wins. Book says so." The Archivist starts to
-  object, then finds it on page 10. "...SAME TIME NEXT SEASON?" On a win the debrief draws **Page 10, in the Marshal's
+- **Ending.** The Boss: "...SAME TIME NEXT SEASON?" On a win the debrief draws **Page 10, in the Marshal's
   hand, in ink**: the handwritten line "Boring wins." above the player's own board (`lastPage`: ranks by depth, front
   rank first). It's shown, not kept (§5).
 
@@ -352,7 +347,7 @@ Every unit and upgrade it uses is built. What's left:
   "that was your own fire" cue for the fire arc.
 - **A "topple a Keep" win condition** in the mission framework (goblin mission 1).
 
-## 4. Campaign 3, Elementals: We Burn
+## 4. Campaign 3, Elementals: The Volatile Grimoire
 
 **Story.** The protagonist is a young fire elemental, *Ember*, who after the goblin finale is afraid of burning its
 neighbors. An elder: "We're not being rude. We're standing over here so you don't catch fire." Act 1 is the

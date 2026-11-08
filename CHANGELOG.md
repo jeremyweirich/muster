@@ -3,6 +3,13 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
+## 8 November 2026 (v100–v101)
+
+- **The owner's copy pass on the Wardens campaign.** Shorter briefings and debriefs, plainer hints, a new Story
+  intro ("...finally able to find Common Ground"), new taglines, and the elemental campaign is now *The Volatile
+  Grimoire*. Mission 5 is now *The Tinker* (the wheelbarrow thread is gone). `docs/COPY.md` now holds every word a
+  player reads (units, Codex, How to play too), for the next pass.
+
 ## 5 November 2026 (v96–v99)
 
 - **Polish before sharing the game with friends.** Restart, Restart mission and Leave mission/match ask once more

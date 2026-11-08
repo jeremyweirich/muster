@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { CAMPAIGNS, MISSIONS, type MissionEntry } from "../data/campaign";
 import { FACTIONS } from "../data/roles";
-import { CodexLink } from "./codexLinks";
 import { Briefing } from "./Mission";
 import { PlayView } from "./PlayView";
 import { missionOpen, type Progress } from "./progress";
@@ -152,13 +151,9 @@ export function StoryIntro({ onPlayFull }: { onPlayFull: () => void }) {
       </div>
       <h2>Story</h2>
       <p className="lede">
-        Generations ago, the three peoples fought a war that nearly wrecked the world: walls against swarms against storms. It ended in a
-        treaty, the Compact. Now every dispute over land, insults and old grudges is settled on the Field. Each commander chooses
-        units and places them, and once the horn sounds, no one may touch the fight. The rules are the same for everyone.
-      </p>
-      <p className="muted">
-        Start with the Wardens, and play the missions in order. More are on the way. The <CodexLink topic="compact">Codex</CodexLink> explains
-        every rule.
+        Generations ago, the Wardens, Goblins and Elementals fought a war that nearly wrecked the world. It ended when the three
+        factions were finally able to find Common Ground. Now every dispute over land, insults and old grudges is settled on the
+        Field. Each commander chooses and commits their units carefully - once battle starts, they cannot be moved again.
       </p>
     </>
   );
