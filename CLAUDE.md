@@ -126,7 +126,7 @@ npm run relay         # local PvP relay for `npm run dev` (docs/MULTIPLAYER.md);
 npm run playtest      # play a full match vs the AI from the command line (usage at the top of scripts/playtest.ts)
 npm run mission -- <id> ['<plan json>']  # play a story mission's reference plans, or one plan, round by round
 npm run mission -- all                   # every mission's reference plans, one line each: the balance dashboard
-npm run -s copy-doc > docs/COPY.md       # every word of the story missions in one page, for editing the copy
+npm run -s copy-doc > docs/COPY.md       # every word a player reads (missions, units, Codex…) in one page, for editing the copy
 npx tsx scripts/faction-holes.ts <csv>   # each faction's best answer to every unit, from `balance -- matrix --csv`
 ```
 
@@ -211,7 +211,9 @@ it is now.
   `src/data/campaign.ts` played on the ordinary Play board (`PlayView`'s `mission` prop); each lists reference plans
   that must win, lose and earn its commendation, and `tests/campaign.test.tsx` fights them. Make new ones with the
   recipe in CAMPAIGN.md §6 and `npm run mission` (both use `src/game/missionRun.ts`). Every word of the missions is in
-  `docs/COPY.md` (generated; the owner edits it, and the edits go back into `campaign.ts`). Speakers get a portrait and
+  `docs/COPY.md`, with the Story intro, How to play, units, role chips and Codex (generated; the owner edits it, and
+  Claude puts the edits back where each text lives: `campaign.ts`, `units.ts`, `showcases.ts`, `roles.ts`,
+  `CodexView.tsx`, `Intro.tsx`, `StoryView.tsx`; then regenerates and diffs to check nothing was missed). Speakers get a portrait and
   a parchment speech bubble (`src/ui/Portraits.tsx`; a new speaker needs a face). Story is the left-most tab and where
   the site opens; progress is stored and missions open in order. The debug panel can open every mission for testing.
   **Next:** the owner's structural changes to the Wardens campaign, then the goblin campaign. Page 9 (the finale's

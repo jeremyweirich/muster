@@ -36,23 +36,7 @@ export function StoryView({
   const started = progress.won.length > 0 || progress.commended.length > 0;
   return (
     <div className="page story">
-      {/* for players who'd rather skip the story: first thing on the page, no scrolling */}
-      <div className="skip-story">
-        <span>Know strategy games already? Skip the story.</span>
-        <button className="primary" onClick={onPlayFull}>
-          Play the full game now →
-        </button>
-      </div>
-      <h2>Story</h2>
-      <p className="lede">
-        Generations ago, the three peoples fought a war that nearly wrecked the world: walls against swarms against storms. It ended in a
-        treaty, the Compact. Now every dispute over land, insults and old grudges is settled on the Field. Each commander chooses
-        units and places them, and once the horn sounds, no one may touch the fight. The rules are the same for everyone.
-      </p>
-      <p className="muted">
-        Start with the Wardens, and play the missions in order. More are on the way. The <CodexLink topic="compact">Codex</CodexLink> explains
-        every rule.
-      </p>
+      <StoryIntro onPlayFull={onPlayFull} />
       <div className="campaigns">
         {CAMPAIGNS.map((c, i) => {
           const playable = c.missions.filter((m) => m.play);
@@ -151,6 +135,32 @@ export function StoryView({
         </div>
       )}
     </div>
+  );
+}
+
+// The top of the Story tab: the skip for players who know the genre, then the Compact in a paragraph. Exported for
+// docs/COPY.md (scripts/copy-doc.ts).
+export function StoryIntro({ onPlayFull }: { onPlayFull: () => void }) {
+  return (
+    <>
+      {/* for players who'd rather skip the story: first thing on the page, no scrolling */}
+      <div className="skip-story">
+        <span>Know strategy games already? Skip the story.</span>
+        <button className="primary" onClick={onPlayFull}>
+          Play the full game now →
+        </button>
+      </div>
+      <h2>Story</h2>
+      <p className="lede">
+        Generations ago, the three peoples fought a war that nearly wrecked the world: walls against swarms against storms. It ended in a
+        treaty, the Compact. Now every dispute over land, insults and old grudges is settled on the Field. Each commander chooses
+        units and places them, and once the horn sounds, no one may touch the fight. The rules are the same for everyone.
+      </p>
+      <p className="muted">
+        Start with the Wardens, and play the missions in order. More are on the way. The <CodexLink topic="compact">Codex</CodexLink> explains
+        every rule.
+      </p>
+    </>
   );
 }
 

@@ -455,8 +455,9 @@ then the Field, then the debrief with Try again and Next. The tab stays mounted 
 link mid-mission doesn't lose it.
 
 **The copy in one place:** `docs/COPY.md` lists every mission's text (briefing, Drill Book page, objective, between-round
-lines, debrief, hints, commendation) with what it teaches. It's generated: `npm run -s copy-doc > docs/COPY.md`.
-The owner edits it for consistency and tone; the edits go back into `src/data/campaign.ts`, then regenerate.
+lines, debrief, hints, commendation) with what it teaches, and the rest of the player-facing text (Story intro, How
+to play, units, Codex). It's generated: `npm run -s copy-doc > docs/COPY.md`. The owner edits it for consistency and
+tone; the edits go back into the source (`src/data/campaign.ts` for the missions), then regenerate.
 
 ### Making a mission
 

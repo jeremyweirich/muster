@@ -11,16 +11,16 @@ import { Swatch } from "./UnitInfo";
 // `graduate`: the version for players arriving from the Wardens campaign's finale, about what the campaign didn't
 // cover (the other factions, the round-1 offer and unlocks, elements).
 
-interface Step {
+export interface Step {
   title: string;
   art: ReactNode;
   body: ReactNode;
 }
 
-export function Intro({ onClose, graduate = false }: { onClose: () => void; graduate?: boolean }) {
+// The screens, exported for docs/COPY.md (scripts/copy-doc.ts).
+export function introSteps(graduate: boolean): Step[] {
   const units = DEFAULT_UNITS;
   const u = (id: string) => units.find((x) => x.id === id);
-  const [i, setI] = useState(0);
   const unlock = units.find((x) => x.tags.includes("faction:warden"))?.unlockCost;
   const hire = units.find((x) => x.tags.includes("faction:independent"))?.unlockCost;
 
@@ -62,7 +62,7 @@ export function Intro({ onClose, graduate = false }: { onClose: () => void; grad
   ];
 
   // Kept short on purpose: three screens, a line or two each, then play. The Codex has the rest.
-  const steps: Step[] = graduate ? graduateSteps : [
+  return graduate ? graduateSteps : [
     {
       title: "Build, then watch",
       art: <Icons defs={[u("knights"), u("crossbowmen"), u("grunts"), u("fire_elemental")]} />,
@@ -94,6 +94,11 @@ export function Intro({ onClose, graduate = false }: { onClose: () => void; grad
       ),
     },
   ];
+}
+
+export function Intro({ onClose, graduate = false }: { onClose: () => void; graduate?: boolean }) {
+  const [i, setI] = useState(0);
+  const steps = introSteps(graduate);
   const last = i === steps.length - 1;
   const step = steps[i];
 
