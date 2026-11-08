@@ -5,7 +5,7 @@ Claude is a great programmer.  It really is the case now that anyone with a good
 
 Broadly my philosophy in life is to go directly at the thing I want, fail miserably and pay attention to what hurts, and then go do a lot of motivated reading. I find doing the reading up front doesn't work because I don't care about the problem yet and because I don't know what I'm supposed to be learning more about.
 
-I have another core belief about the kind of things you should aim for.  You can set restrictions on yourself and then try to hit a certain target - how fast can you complete a particular task blindfolded, can you learn to play this song entirely by ear, etc.  I always feel like that's arbitrary - you're choosing the restrictions and the target, so it doesn't feel like success when you win.  I prefer to use every single tool available and just shoot for the moon.  That's why 
+I have another core belief about the kind of things you should aim for.  You can set restrictions on yourself and then try to hit a certain target - how fast can you complete a particular task blindfolded, can you learn to play this song entirely by ear, etc.  I always feel like that's arbitrary - you're choosing the restrictions and the target, so it doesn't feel like success when you win.  I prefer to use every single tool available and just shoot for the moon.
 ## The initial shape of it
  My starting prompt was therefore:
 ```
