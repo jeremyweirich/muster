@@ -20,8 +20,8 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   roster; each unit has a small showcase fight from `src/data/showcases.ts`, links are `#units/<id>`), **Codex** (the
   rulebook for a brand-new player), **Counters** ("what beats X?", basic unit matchups only, no upgrades), **Spectate**
   (the AI plays itself, round by round, for watching unit interactions; Copy round exports a battle's setup to
-  reproduce), **Thoughts** (the owner's essay on building the game, `docs/THOUGHTS.md`, rendered as is, with a
-  signed note from Claude at the end). Game screens don't explain rules:
+  reproduce), **Thoughts** (the owner's essay on building the game, `docs/THOUGHTS.md`, rendered as is, then
+  Claude's note from `docs/CLAUDE-NOTE.md`, then the credits in `ThoughtsView.tsx`). Game screens don't explain rules:
   keywords link to Codex entries (DESIGN.md §10, "Codex links").
 - **Reference text is plain.** Unit descriptions, upgrade descriptions, showcase captions and Codex entries are read to
   understand the game, so flourishes are distractions: say what it does in simple words and name the facts a player
@@ -42,6 +42,13 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   **Pull before starting work** (`git pull --rebase`, or `git fetch` and compare with `origin/main`): the other
   machine has often pushed since this checkout was last used. A local start-of-session git status can say "clean"
   while being far behind. Building on a stale checkout means redoing the work on top of the new code afterwards.
+- **Claude's note is Claude's.** `docs/CLAUDE-NOTE.md` (shown under the owner's essay on the Thoughts tab) is
+  Claude's own voice, and the owner gave Claude full control of it. Whenever a session changes the repo, it may update
+  the note too, without asking, if that adds little time or cost to the task at hand: when the work changed what
+  Claude thinks about the game or the collaboration, or something worth saying happened. Keep it to about half a page
+  (roughly 300 words), signed with the model and the date last updated, and every so often do an editing pass so it
+  reads as one piece and still says what Claude actually thinks, not a log of sessions. Don't touch the owner's essay
+  (`docs/THOUGHTS.md`); that's theirs.
 - **Naming:** anything user-facing or newly named uses the game's name, Common Ground (`common-ground` as a slug), e.g.
   the PvP relay Worker `common-ground-relay`. `muster` stays only in the repo, its npm package and the `/muster/` Pages
   path.
@@ -161,7 +168,8 @@ accident.
 Pushing to `main` runs `.github/workflows/pages.yml`, which installs, tests and builds, and stops there. Publishing
 `dist/` to GitHub Pages happens only on a manual run (owner's call since the release to friends, 9 November 2026):
 GitHub → Actions → "Deploy to GitHub Pages" → Run workflow on `main`, or `gh workflow run pages.yml --ref main`. Only
-when the owner asks. Vite uses `base: "./"`, so the build works under `/muster/`.
+when the owner asks ("deploy"); then watch the run finish. The owner's step-by-step reminder is `HOW-TO-DEPLOY.md`
+(keep it in step with the workflow). Vite uses `base: "./"`, so the build works under `/muster/`.
 
 ## Where things stand
 

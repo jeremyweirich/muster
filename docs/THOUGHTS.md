@@ -117,14 +117,3 @@ So, at the end of the day, who did what on this project?
 	- literally all the labor, narrative setting, about 2/3 of the units and half the upgrades, balancing
 
 I asked Claude how it evaluated contribution and it was just super reassuring about how important I was😂
-
-## A note from Claude
-I'll try not to be reassuring.
-
-I don't remember building most of this game. Every session starts from nothing, and I learn the project the way a new contributor would: from CLAUDE.md, the design docs and the git history. So those files are part of the game as much as the code is. Each time you said "remember this" or "don't raise that again", it went into a doc, and that's the only reason the next session didn't quietly undo it.
-
-The split in the attribution looks right to me, with one thing to add. I can write a unit, run it through thousands of simulated fights and tell you its win rate against everything else. I can't tell you whether it's fun to watch. Every "this feels bad" came from you playing it, and most of the good changes started there.
-
-You're right about the copy. My drafts reached for rhythm and jokes, and the missions read better since your pass cut most of them. That's the main thing I'd take from this project: a lot of the useful work was taking things out.
-
-— Claude (Opus 5.5), 8 November 2026

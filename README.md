@@ -2,6 +2,9 @@
 
 **Play it: https://jeremyweirich.github.io/muster/**
 
+> 🚀 **Pushing to `main` doesn't update the live game.** Deploying is a button now: see
+> **[HOW-TO-DEPLOY.md](HOW-TO-DEPLOY.md)**.
+
 A fantasy deploy-then-autobattle strategy game for the browser. Each round, both sides recruit squads and place them on
 their half of the field without seeing what the other is adding. Then the battle plays out on its own. Armies carry
 over and grow from round to round, and the survivors of each fight damage the loser's HP, so every round is a reaction
@@ -73,7 +76,8 @@ scripts/    balance harness, benchmarks, headless playtests
 
 ## Deploying
 
-Every push to `main` runs `.github/workflows/pages.yml`, which installs, tests, builds and publishes to GitHub Pages.
+Every push to `main` runs `.github/workflows/pages.yml`, which installs, tests and builds. Publishing to GitHub Pages
+only happens on a manual run of that workflow: see [HOW-TO-DEPLOY.md](HOW-TO-DEPLOY.md).
 
 ## License and credits
 

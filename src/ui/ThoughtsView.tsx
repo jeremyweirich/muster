@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
 import essay from "../../docs/THOUGHTS.md?raw";
+import note from "../../docs/CLAUDE-NOTE.md?raw";
 import { MECHABELLUM_URL } from "./LoveLetter";
 
-// The owner's essay on building the game (docs/THOUGHTS.md), read at build time. A small Markdown reader for what the
-// essay uses: ## headings, paragraphs, lists (nested by indent), ``` code blocks, **bold**, *italics* and `code`.
+// The owner's essay on building the game (docs/THOUGHTS.md), then Claude's note after it (docs/CLAUDE-NOTE.md, Claude's
+// to keep current), read at build time. A small Markdown reader for what they use: ## headings, paragraphs, lists
+// (nested by indent), ``` code blocks, **bold**, *italics* and `code`.
 
 type Block =
   | { kind: "h"; text: string }
@@ -73,7 +75,7 @@ function List({ items }: { items: { depth: number; text: string }[] }) {
   return <ul>{out}</ul>;
 }
 
-const BLOCKS = parse(essay);
+const BLOCKS = parse(essay + "\n\n" + note);
 
 // The credits, shown under the essay. Edit the names here.
 const CREDITS: { heading: string; names: ReactNode[] }[] = [
