@@ -491,12 +491,14 @@ const TWO_KEEPS: MissionDef = {
 };
 
 // Mission 4: the Ballista and big units, on the Furrows: a ploughed band across the middle where anything on foot
-// moves at half speed. The Boss opens with a wall of Skirmishers that shoots any Knights who march out to meet them,
-// then sends trolls, which beat a Knight line. The answer is Ballistae, with the Knights kept at the very back: they
-// reach the mud as the trolls do, while the Ballistae shoot the trolls crossing it. Tuned by simulation: Knights at the
-// back with Ballistae win, from round 1 or with the Ballistae a round later; Knights at the front, Knights and
-// Crossbowmen without Ballistae, all Crossbowmen, a Ballista park with nothing in front, and never adding lose. A
-// round-1 charge can't be undone in the same match (placed squads stay), so the lesson lands on Try again.
+// moves at half speed. The Boss opens with Grunts and Skirmishers, which the line the player already knows (Knights in
+// front, Crossbowmen behind) beats, then sends trolls, which beat that line. Adding Ballistae behind the Knights is the
+// whole answer (owner's call after playtesting, 9 November 2026: earlier tuning made Knights at the back mandatory).
+// Knights kept at the very back is the commendation, an optional second lesson and a surprisingly easy win: they reach
+// the mud as the trolls do, while the Ballistae shoot the trolls crossing it. Round 3's Grunts dive a line with no
+// Knights in front. Tuned by simulation: Knights in front with Ballistae win (from round 1, a few from round 2, or only
+// after losing a troll round), and so do Knights at the back; Knights and Crossbowmen without Ballistae (front or back),
+// all Crossbowmen, a Ballista park with nothing in front, and never adding lose.
 const THE_TROLL: MissionDef = {
   id: "wardens-4",
   supply: 700,
@@ -510,9 +512,9 @@ const THE_TROLL: MissionDef = {
     name: "The Boss",
     units: ["grunts", "skirmishers", "troll"],
     rounds: [
-      [["grunts", 4, 4], ["grunts", 40, 4], ["skirmishers", 10, 4], ["skirmishers", 16, 4], ["skirmishers", 22, 4], ["skirmishers", 28, 4], ["skirmishers", 34, 4]],
+      [["grunts", 4, 4], ["grunts", 40, 4], ["skirmishers", 13, 4], ["skirmishers", 22, 4], ["skirmishers", 31, 4]],
       [["troll", 14, 2], ["troll", 19, 2], ["troll", 26, 2], ["troll", 32, 2]],
-      [["troll", 16, 0], ["troll", 28, 0], ["skirmishers", 4, 1], ["skirmishers", 40, 1]],
+      [["troll", 16, 0], ["troll", 28, 0], ["grunts", 4, 1], ["grunts", 40, 1]],
       [["troll", 10, 0], ["troll", 36, 0], ["troll", 22, 0], ["troll", 32, 0], ["troll", 4, 0]],
       [["troll", 14, 1], ["troll", 30, 1], ["troll", 0, 4], ["troll", 46, 4], ["troll", 8, 2], ["troll", 40, 0]],
       [["troll", 0, 6], ["troll", 46, 6], ["troll", 6, 6], ["troll", 40, 6], ["troll", 20, 6]],
@@ -546,10 +548,6 @@ const THE_TROLL: MissionDef = {
     { when: (c) => c.army.every((sq) => sq.round === 1), line: { who: "sergeant", text: "We can't let them outnumber us like that!" } },
     { when: (c) => !fielded(c, "ballista"), line: { who: "sergeant", text: "We'll need more than Knights and Crossbowmen to beat these trolls!" } },
     { when: (c) => !fielded(c, "knights"), line: { who: "sergeant", text: "We need more meat on the Field!" } },
-    {
-      when: (c) => c.army.some((sq) => sq.defId === "knights" && sq.y < 24),
-      line: { who: "sergeant", text: "Our Knights got bogged down in that mud!" },
-    },
     { line: { who: "sergeant", text: "The trolls still got through. More Ballistae, behind the Knights." } },
   ],
   commendation: {
@@ -562,13 +560,29 @@ const THE_TROLL: MissionDef = {
   },
   reference: {
     wins: [
-      // Knights at the very back, Ballistae in front of them from round 1
+      // Knights in front, Crossbowmen and Ballistae behind them from round 1
       [
-        [["knights", 16, 25], ["knights", 28, 25], ["ballista", 20, 22], ["ballista", 24, 22], ["crossbowmen", 21, 24]],
-        [["ballista", 16, 22], ["ballista", 28, 22], ["knights", 22, 26]],
-        [["ballista", 32, 22], ["knights", 8, 25], ["knights", 36, 25]],
-        [["ballista", 13, 22], ["ballista", 30, 22], ["knights", 2, 25], ["knights", 40, 25]],
-        [["ballista", 4, 22], ["ballista", 40, 22], ["knights", 12, 26], ["knights", 32, 26], ["crossbowmen", 26, 24]],
+        [["knights", 16, 20], ["knights", 28, 20], ["crossbowmen", 22, 22], ["ballista", 17, 23], ["ballista", 27, 23]],
+        [["ballista", 14, 23], ["ballista", 30, 23], ["knights", 22, 20]],
+        [["ballista", 7, 23], ["ballista", 39, 23], ["knights", 9, 20], ["crossbowmen", 18, 22]],
+        [["ballista", 21, 25], ["ballista", 25, 25], ["knights", 35, 20], ["knights", 3, 20]],
+        [["ballista", 4, 23], ["ballista", 42, 23], ["knights", 41, 20], ["knights", 12, 21], ["crossbowmen", 26, 22]],
+      ],
+      // the line they know, with just a few Ballistae added from round 2
+      [
+        [["knights", 16, 20], ["knights", 28, 20], ["crossbowmen", 18, 22], ["crossbowmen", 22, 22], ["crossbowmen", 26, 22]],
+        [["ballista", 17, 23], ["ballista", 27, 23], ["knights", 22, 20]],
+        [["knights", 9, 20], ["knights", 35, 20], ["crossbowmen", 30, 22]],
+        [["ballista", 21, 23], ["ballista", 25, 23], ["knights", 3, 20], ["knights", 41, 20]],
+        [["ballista", 7, 23], ["ballista", 39, 23], ["knights", 12, 21], ["knights", 32, 21], ["crossbowmen", 14, 22]],
+      ],
+      // no Ballistae until the trolls have won a round
+      [
+        [["knights", 16, 20], ["knights", 28, 20], ["crossbowmen", 18, 22], ["crossbowmen", 22, 22], ["crossbowmen", 26, 22]],
+        [["knights", 22, 20], ["crossbowmen", 30, 22], ["crossbowmen", 14, 22]],
+        [["ballista", 17, 23], ["ballista", 27, 23], ["ballista", 21, 23], ["ballista", 25, 25], ["ballista", 14, 23]],
+        [["ballista", 30, 23], ["ballista", 7, 23], ["knights", 9, 20], ["knights", 35, 20]],
+        [["ballista", 39, 23], ["ballista", 4, 23], ["knights", 3, 20], ["knights", 41, 20], ["crossbowmen", 32, 22]],
       ],
       // Knights at the back, Ballistae from round 2
       [
@@ -580,15 +594,15 @@ const THE_TROLL: MissionDef = {
       ],
     ],
     loses: [
-      // Knights marched to the front of the zone
+      // the line they know, never adding Ballistae
       [
-        [["knights", 16, 20], ["knights", 28, 20], ["ballista", 20, 22], ["ballista", 24, 22], ["crossbowmen", 21, 24]],
-        [["ballista", 16, 22], ["ballista", 28, 22], ["knights", 22, 20]],
-        [["ballista", 32, 22], ["knights", 8, 20], ["knights", 36, 20]],
-        [["ballista", 13, 22], ["ballista", 30, 22], ["knights", 2, 20], ["knights", 40, 20]],
-        [["ballista", 4, 22], ["ballista", 40, 22], ["knights", 12, 21], ["knights", 32, 21], ["crossbowmen", 26, 24]],
+        [["knights", 16, 20], ["knights", 28, 20], ["crossbowmen", 18, 22], ["crossbowmen", 22, 22], ["crossbowmen", 26, 22]],
+        [["knights", 22, 20], ["knights", 10, 20]],
+        [["knights", 34, 20], ["crossbowmen", 14, 22], ["crossbowmen", 30, 22], ["crossbowmen", 10, 22]],
+        [["knights", 4, 20], ["knights", 40, 20], ["crossbowmen", 34, 22]],
+        [["knights", 8, 21], ["knights", 36, 21], ["crossbowmen", 6, 22], ["crossbowmen", 38, 22]],
       ],
-      // no Ballistae: Knights and Crossbowmen
+      // no Ballistae, with the Knights at the back
       [
         [["knights", 16, 25], ["knights", 28, 25], ["crossbowmen", 19, 22], ["crossbowmen", 23, 22], ["crossbowmen", 27, 22]],
         [["knights", 22, 26], ["knights", 10, 25]],
@@ -602,7 +616,7 @@ const THE_TROLL: MissionDef = {
         [["crossbowmen", 10, 26], ["crossbowmen", 14, 24], ["crossbowmen", 18, 24], ["crossbowmen", 26, 26]],
         [["crossbowmen", 30, 24], ["crossbowmen", 34, 26], ["crossbowmen", 38, 24], ["crossbowmen", 6, 22], ["crossbowmen", 38, 22]],
         [["crossbowmen", 6, 24], ["crossbowmen", 42, 24], ["crossbowmen", 2, 22], ["crossbowmen", 42, 22], ["crossbowmen", 2, 24], ["crossbowmen", 30, 26]],
-        [["crossbowmen", 6, 26], ["crossbowmen", 14, 26], ["crossbowmen", 18, 26], ["crossbowmen", 22, 26], ["crossbowmen", 38, 26], ["crossbowmen", 26, 26], ["crossbowmen", 2, 26]],
+        [["crossbowmen", 6, 26], ["crossbowmen", 14, 26], ["crossbowmen", 18, 26], ["crossbowmen", 22, 26], ["crossbowmen", 38, 26], ["crossbowmen", 2, 26]],
       ],
       // a Ballista park with nothing in front
       [

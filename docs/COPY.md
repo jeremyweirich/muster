@@ -215,7 +215,6 @@ Drill Book page, **Page 4: Ballistae**:
 - When `c.army.every(sq=>sq.round===1)`: **Sergeant Dunmor:** We can't let them outnumber us like that!
 - When `!fielded(c,"ballista")`: **Sergeant Dunmor:** We'll need more than Knights and Crossbowmen to beat these trolls!
 - When `!fielded(c,"knights")`: **Sergeant Dunmor:** We need more meat on the Field!
-- When `c.army.some(sq=>sq.defId==="knights"&&sq.y<24)`: **Sergeant Dunmor:** Our Knights got bogged down in that mud!
 - When otherwise: **Sergeant Dunmor:** The trolls still got through. More Ballistae, behind the Knights.
 
 ### Commendation

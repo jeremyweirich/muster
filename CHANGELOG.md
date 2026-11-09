@@ -3,7 +3,11 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
-## 9 November 2026 (v106)
+## 9 November 2026 (v106–v108)
+
+- **Mission 4 (The Troll) is easier**, from the first playtests: Knights in front with Ballistae behind them now wins
+  (it used to lose), so adding Ballistae is the whole lesson. Knights at the back stays the commendation and is now an
+  easy win. The opening wall is three Skirmisher squads, not five, and round 3 brings Grunts instead of more Skirmishers.
 
 - **Credits** at the end of the Thoughts tab: the developers and the playtesters.
 - **Deploys are manual now** that friends are playing: pushes to `main` only test and build, and the live site

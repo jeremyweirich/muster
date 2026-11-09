@@ -179,16 +179,18 @@ Wolf Riders, Troll, Ogre Brute, Giant Bats). Skirmishers are goblin archers that
 - **Kit.** 700 supply; Knights, Crossbowmen and the **Ballista**. **HP 200 for the player, 180 for the Boss.** Keeps on,
   Keeps tab only, veterancy off. Map: **The Furrows**, a ploughed band right across the middle: anything on foot crosses
   it at half speed.
-- **Enemy.** Round 1: a wall of five Skirmisher squads and two mobs. Round 2: four troll squads. Round 3: two trolls and
-  two Skirmisher squads. Rounds 4–6: five, six, then five trolls.
-- **Punch.** Knights marched to the front get shot by the Skirmishers on the way, and the trolls beat a Knight line
-  ("the rage builds through the armor").
-- **The secret:** Knights at the very back. They reach the mud as the trolls do, while the Ballistae shoot the trolls
-  crossing it. The page's pencil note only hints ("In front, but how far in front?"); the hint after a loss points at the mud.
-- **Checked by simulation:** Knights at the back with Ballistae win in four rounds, from round 1 or with the Ballistae
-  a round later. Knights at the front of the zone, Knights and Crossbowmen without Ballistae, all Crossbowmen, a
-  Ballista park with nothing in front, and never adding lose. **Design note:** placed squads stay, so a round-1 charge
-  can't be undone in the same match; no recovery plan wins. The lesson lands on Try again.
+- **Enemy.** Round 1: three Skirmisher squads and two mobs. Round 2: four troll squads. Round 3: two trolls and two
+  mobs (they dive a line with no Knights in front). Rounds 4–6: five, six, then five trolls.
+- **Punch.** The line the player already knows (Knights in front, Crossbowmen behind) beats round 1, then loses to the
+  trolls ("the rage builds through the armor").
+- **The lesson:** add Ballistae behind the Knights; that alone wins. Owner's call after the first playtests
+  (9 November 2026): the earlier tuning made Knights at the back mandatory, and players found it too hard.
+- **The secret (the commendation):** Knights at the very back, a surprisingly easy win. They reach the mud as the
+  trolls do, while the Ballistae shoot the trolls crossing it. The page's pencil note only hints ("In front, but how
+  far in front?").
+- **Checked by simulation:** Knights in front with Ballistae win (from round 1, a few from round 2, or only after
+  losing a troll round: 133–200 HP left), and Knights at the back win without losing a round. Knights and Crossbowmen
+  without Ballistae (front or back), all Crossbowmen, a Ballista park with nothing in front, and never adding lose.
 - **Commendation.** *In No Hurry*: win with every Knight squad in your back two rows.
 - **Debrief.** The Boss sends for the Tinker.
 
