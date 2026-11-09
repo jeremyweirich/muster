@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import essay from "../../docs/THOUGHTS.md?raw";
+import { MECHABELLUM_URL } from "./LoveLetter";
 
 // The owner's essay on building the game (docs/THOUGHTS.md), read at build time. A small Markdown reader for what the
 // essay uses: ## headings, paragraphs, lists (nested by indent), ``` code blocks, **bold**, *italics* and `code`.
@@ -74,6 +75,21 @@ function List({ items }: { items: { depth: number; text: string }[] }) {
 
 const BLOCKS = parse(essay);
 
+// The credits, shown under the essay. Edit the names here.
+const CREDITS: { heading: string; names: ReactNode[] }[] = [
+  {
+    heading: "Developers",
+    names: [
+      <a key="m" href={MECHABELLUM_URL} target="_blank" rel="noreferrer">
+        Mechabellum
+      </a>,
+      "Opus 5.5 High",
+      "Jeremy Weirich",
+    ],
+  },
+  { heading: "Playtesters", names: ["Pang", "Eric"] },
+];
+
 export function ThoughtsView() {
   return (
     <div className="page thoughts">
@@ -92,6 +108,21 @@ export function ThoughtsView() {
           ),
         )}
       </article>
+      <section className="credits" aria-labelledby="credits-title">
+        <h3 id="credits-title">Credits</h3>
+        <div className="credits-groups">
+          {CREDITS.map((group) => (
+            <div key={group.heading}>
+              <h4>{group.heading}</h4>
+              <ul>
+                {group.names.map((name, i) => (
+                  <li key={i}>{name}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

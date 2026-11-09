@@ -1,7 +1,8 @@
 # Common Ground: notes for Claude
 
 Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and package keep its working title, `muster`. It's a browser app (TypeScript, Vite, React and Canvas).
-- **Live site:** https://jeremyweirich.github.io/muster/. It deploys automatically on every push to `main`.
+- **Live site:** https://jeremyweirich.github.io/muster/. The game is released to the owner's friends, so it **deploys only when the
+  owner says so** (a manual run of the Pages workflow; see "Deploying"). Pushes to `main` don't change the live game.
 - **Design:** `docs/DESIGN.md` is the source of truth for the design. Read it before making design changes and keep it
   up to date.
 - **Vision:** `docs/VISION.md` is the owner's story and themes: the Compact, the faction triangle (a story device, not a balance target), care as the quiet
@@ -30,6 +31,7 @@ Common Ground is a fantasy deploy-then-autobattle strategy game. The repo and pa
   entry, take the chance to simplify its wording.
 - When a request is ambiguous, pick a reading, say which one, and make it easy to flip (usually a single data value).
 - **Commit and push** to `main` once a change is done and verified (tests pass, build is clean). No need to ask first.
+  Pushing doesn't deploy; **never deploy** (run the Pages workflow) unless the owner asks for it.
   When a commit carries something big (a new unit, a big rebalance, a new rule, tab or feature), add a line to
   `CHANGELOG.md` under today's date in the same commit, and keep the date's version range current (vN = commit count,
   as shown in the game's corner). Small fixes stay in the commit history. The debug panel links to it.
@@ -156,8 +158,10 @@ accident.
 
 ## Deploying
 
-Pushing to `main` runs `.github/workflows/pages.yml`, which installs, tests, builds and publishes `dist/` to GitHub
-Pages. Vite uses `base: "./"`, so the build works under `/muster/`.
+Pushing to `main` runs `.github/workflows/pages.yml`, which installs, tests and builds, and stops there. Publishing
+`dist/` to GitHub Pages happens only on a manual run (owner's call since the release to friends, 9 November 2026):
+GitHub → Actions → "Deploy to GitHub Pages" → Run workflow on `main`, or `gh workflow run pages.yml --ref main`. Only
+when the owner asks. Vite uses `base: "./"`, so the build works under `/muster/`.
 
 ## Where things stand
 

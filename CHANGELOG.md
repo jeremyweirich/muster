@@ -3,6 +3,12 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
+## 9 November 2026 (v106)
+
+- **Credits** at the end of the Thoughts tab: the developers and the playtesters.
+- **Deploys are manual now** that friends are playing: pushes to `main` only test and build, and the live site
+  changes when the owner runs the Pages workflow.
+
 ## 8 November 2026 (v100–v102)
 
 - **A Thoughts tab:** the owner's short essay on building the game, with a note from Claude at the end.
