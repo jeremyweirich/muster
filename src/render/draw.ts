@@ -15,7 +15,7 @@ const SURFACE_IDS = SurfaceGrid.ids();
 
 // size: the field in tiles (default RULES). sideways: the sides face each other left and right (the Units tab's arena).
 // terrain: the map's ground (maps are point-symmetric, so a turned-round view draws it unchanged).
-type BackgroundOpts = { zones?: boolean; grid?: Side[]; size?: { w: number; h: number }; sideways?: boolean; terrain?: TerrainPatch[] };
+export type BackgroundOpts = { zones?: boolean; grid?: Side[]; size?: { w: number; h: number }; sideways?: boolean; terrain?: TerrainPatch[] };
 const fieldSize = (opts: BackgroundOpts) => opts.size ?? { w: RULES.fieldW, h: RULES.fieldH };
 
 const GRASS_BASE = "#1c2a1e";

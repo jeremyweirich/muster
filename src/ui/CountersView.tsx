@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { DEFAULT_UNITS } from "../data/units";
+import { DEFAULT_UNITS, unitIdOrNull as valid } from "../data/units";
 import { COUNTER_BUDGET, COUNTER_SEEDS, strengths, weaknesses, type Reason } from "../game/counters";
 import { runMatchup, type MatchupResult } from "../game/lab";
 import type { LabMessage, LabRequest } from "../game/lab.worker";
@@ -14,7 +14,6 @@ const cache = new Map<string, Map<string, MatchupResult>>();
 
 const STRONG = 0.65;
 const WEAK = 0.35;
-const valid = (id?: string) => (id && DEFAULT_UNITS.some((u) => u.id === id) ? id : null);
 
 export function CountersView({ topic }: { topic?: string }) {
   const units = DEFAULT_UNITS;

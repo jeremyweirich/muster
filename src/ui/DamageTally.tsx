@@ -1,5 +1,8 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { RULES } from "../data/rules";
+import type { DefMap } from "../game/army";
+import { survivorDamage } from "../game/match";
+import type { Battle, BattleResult } from "../sim/battle";
 import type { Side } from "../sim/types";
 
 // After a battle, each squad still standing flies its round damage to the other side's HP bar, smallest first, so the
@@ -101,4 +104,36 @@ export function DamageTally({
       ))}
     </div>
   );
+}
+
+// Where each surviving squad stands when the battle ends and the damage it does to the other side, smallest first,
+// in the local view (a PvP guest's battle runs in the host's view).
+export function survivorStrikes(b: Battle, result: BattleResult, defs: DefMap, flip: boolean): Strike[] {
+  const sums = new Map<number, { x: number; y: number; n: number }>();
+  for (const m of b.models) {
+    if (!m.alive || m.summoned) continue;
+    const p = sums.get(m.squad) ?? { x: 0, y: 0, n: 0 };
+    p.x += m.x;
+    p.y += m.y;
+    p.n++;
+    sums.set(m.squad, p);
+  }
+  const index = new Map(b.squads.map((sq, i) => [sq.uid, i]));
+  const strikes: Strike[] = [];
+  for (const side of [0, 1] as Side[]) {
+    for (const sv of result.survivors[side]) {
+      const p = sums.get(index.get(sv.uid) ?? -1);
+      if (!p) continue;
+      const x = p.x / p.n;
+      const y = p.y / p.n;
+      strikes.push({
+        x: flip ? RULES.fieldW - x : x,
+        y: flip ? RULES.fieldH - y : y,
+        from: flip ? (side === 0 ? 1 : 0) : side,
+        amount: survivorDamage(sv, defs),
+        color: defs.get(sv.defId)?.look.color ?? "#ffffff",
+      });
+    }
+  }
+  return strikes.sort((a, b) => a.amount - b.amount);
 }

@@ -5,7 +5,7 @@ import { TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
 import type { AiPlan, Difficulty } from "../game/ai";
 import { defMap } from "../game/army";
-import { nextRound, packLabel, type MatchState } from "../game/match";
+import { matchSeed, nextRound, packLabel, type MatchState } from "../game/match";
 import { playSpectatedRound, spectateMatch, spectateRequest, type SpectatedRound } from "../game/spectate";
 import { drawBackground, drawTowers } from "../render/draw";
 import { Battle } from "../sim/battle";
@@ -13,8 +13,8 @@ import type { Side, UnitDef } from "../sim/types";
 import { drawBanner, useBattlePlayer } from "./battlePlayer";
 import { MvpBoard, SquadDetail, SquadList, type SideNames } from "./BattleReport";
 import { FieldCanvas, type FieldPointer } from "./FieldCanvas";
-import { planInWorkers } from "./planInWorkers";
-import { HpBar, UnlockStrip } from "./PlayView";
+import { CORES, planInWorkers } from "./planInWorkers";
+import { HpBar, UnlockStrip } from "./PlayPanels";
 import { Swatch, UnitInfo } from "./UnitInfo";
 
 // The AI playing itself (the Spectate tab): a full match, round by round, for watching unit interactions. Each
@@ -30,11 +30,9 @@ const NAMES: SideNames = ["Blue", "Red"];
 const HOLD = 1.5; // seconds the armies stand before each battle, to take in the deployment
 const LINGER = 3; // seconds a result shows before the next round starts, with auto-advance on: a 3, 2, 1 countdown
 const MAX_ROUNDS = 30; // a safety stop for a match that never ends
-const matchSeed = () => Math.floor(Math.random() * 2 ** 31);
 
 // Hard searches on several cores; the two sides share them.
-const cores = typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 2 : 2;
-const SEARCHES_PER_SIDE = Math.max(1, Math.floor((cores - 1) / 2));
+const SEARCHES_PER_SIDE = Math.max(1, Math.floor((CORES - 1) / 2));
 
 export function SpectateView() {
   const [seed, setSeed] = useState(matchSeed);

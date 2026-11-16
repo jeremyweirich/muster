@@ -911,3 +911,6 @@ export const DEFAULT_UNITS: UnitDef[] = [
     look: { shape: "circle", color: "#7d9a3c", icon: "toad", beam: "tongue" },
   },
 ];
+
+// A unit id from a URL hash, or null when it names no unit.
+export const unitIdOrNull = (id?: string) => (id && DEFAULT_UNITS.some((u) => u.id === id) ? id : null);

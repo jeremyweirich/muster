@@ -54,6 +54,9 @@ export function packLabel(pack: OpeningPack, units: UnitDef[]): string {
 
 // The AI (side 1) takes its opening straight away: always a pack, never the war chest, so its opening is easier to
 // read. The player chooses during round 1. In PvP (`aiOpening: false`) both sides choose.
+// Each match rolls its own seed for the opening offers; the sim itself stays seeded and deterministic.
+export const matchSeed = () => Math.floor(Math.random() * 2 ** 31);
+
 export function newMatch(units: UnitDef[], seed = 1, opts: { aiOpening?: boolean } = {}): MatchState {
   const rng = new Rng(seed);
   const pool = OPENING_PACKS.map((_, i) => i);

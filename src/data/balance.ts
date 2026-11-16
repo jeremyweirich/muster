@@ -427,4 +427,3 @@ export const RELATIONS: [string, string, string][] = [
 
 export const beatsOf = (id: string) => RELATIONS.filter(([a]) => a === id).map(([, b]) => b);
 export const losesToOf = (id: string) => RELATIONS.filter(([, b]) => b === id).map(([a]) => a);
-export const reasonFor = (a: string, b: string) => RELATIONS.find(([x, y]) => x === a && y === b)?.[2];

@@ -29,10 +29,6 @@ export function towerDaze(level: number, rules: Rules = RULES): number {
   return Math.max(rules.towerDazeMin, rules.towerDazeBase - level * rules.towerDazePerLevel);
 }
 
-export function towerMaxLevel(rules: Rules = RULES): number {
-  return rules.towerUpgradeCosts.length;
-}
-
 // A tower at a given upgrade level: more HP and a shorter Daze on collapse. `name` labels it (e.g. "West Keep").
 export function towerDef(id: string, level: number, rules: Rules = RULES, name?: string): UnitDef {
   const base = TOWER_MAP.get(id)!;

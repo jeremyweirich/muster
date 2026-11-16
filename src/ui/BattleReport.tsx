@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ELEMENT_COLORS, STATUSES, SURFACES } from "../data/elements";
+import { MEDAL_COLORS, topSquads } from "../render/report";
 import type { BattleResult, SquadStats } from "../sim/battle";
 import type { Side, UnitDef } from "../sim/types";
 import { Swatch } from "./UnitInfo";
@@ -83,16 +84,6 @@ export function SquadDetail({ stats, def, names = PLAYER_VIEW }: { stats: SquadS
       )}
     </div>
   );
-}
-
-export const MEDAL_COLORS = ["#f5c542", "#c9d1d9", "#cd7f32"] as const;
-
-// The top squads on one side by damage dealt (towers excluded), best first.
-export function topSquads(result: BattleResult, side: Side, n = 3): SquadStats[] {
-  return Object.values(result.stats)
-    .filter((s) => s.side === side && !s.structure && s.dealt >= 1)
-    .sort((a, b) => b.dealt - a.dealt)
-    .slice(0, n);
 }
 
 // At-a-glance impact: the three biggest damage dealers on each side.

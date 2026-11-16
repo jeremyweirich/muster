@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SHOWCASES } from "../data/showcases";
-import { DEFAULT_UNITS } from "../data/units";
+import { DEFAULT_UNITS, unitIdOrNull as valid } from "../data/units";
 import { ARENA, FEATURED, showcaseBattle } from "../game/showcase";
 import { SIDE_COLORS } from "../render/draw";
 import type { Battle } from "../sim/battle";
@@ -14,7 +14,6 @@ import { UnitInfo, UnitPicker } from "./UnitInfo";
 // Upgrades can be tried in the fight. #units/<id> opens a unit's page, so other screens can link here.
 const TILE = 28;
 const PAUSE = 2.5; // seconds the result stays up before the fight starts over
-const valid = (id?: string) => (id && DEFAULT_UNITS.some((u) => u.id === id) ? id : null);
 
 export function UnitsView({ topic }: { topic?: string }) {
   const units = DEFAULT_UNITS;
