@@ -53,6 +53,8 @@ export function newMissionMatch(m: MissionDef): MatchState {
       { packs: missionPacks(m), choice: null },
       { packs: [], choice: null },
     ],
+    seed: 1,
+    recruits: false, // a mission that teaches recruits could turn them on (docs/RECRUITS.md §7)
     phase: "deploy",
     history: [],
   };

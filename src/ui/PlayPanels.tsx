@@ -1,5 +1,7 @@
 import { Fragment } from "react";
 import { OPENING_PACKS } from "../data/openings";
+import { recruitSkipSupply, type RecruitChoice, type RecruitOffer as RecruitOfferState } from "../data/recruits";
+import { CodexLink } from "./codexLinks";
 import { RULES } from "../data/rules";
 import { towerDaze, towerDef, TOWER_MAP } from "../data/towers";
 import { towerUpgradePrice, upgradePrice, type DefMap } from "../game/army";
@@ -195,6 +197,64 @@ export function OpeningOffer({ packs, units, rival, onChoose }: { packs: number[
             <span className="up-price">+{RULES.openingFlat}</span>
           </span>
           <span className="up-desc">{RULES.openingFlat} supply and nothing unlocked: build exactly what you want.</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// A recruit round's offer (docs/RECRUITS.md): three units neither side has unlocked, each with squads placed for you,
+// at a price; or supply instead. `rival`: who is offered the same.
+export function RecruitOffer({
+  offer,
+  units,
+  supply,
+  unlocked,
+  rival,
+  onChoose,
+}: {
+  offer: RecruitOfferState;
+  units: UnitDef[];
+  supply: number;
+  unlocked: string[];
+  rival: string;
+  onChoose: (c: RecruitChoice) => void;
+}) {
+  return (
+    <div className="opening">
+      <div className="muted small">
+        <CodexLink topic="recruits">Recruits</CodexLink>: pick one ({rival} is offered the same). The unit comes unlocked, with its squads
+        placed for you.
+      </div>
+      <div className="opening-buttons">
+        {offer.options.map((o, i) => {
+          const d = units.find((x) => x.id === o.unitId)!;
+          const mine = unlocked.includes(o.unitId); // unlocked from the shop this round: undo that to take this
+          const ok = o.price <= supply && !mine;
+          return (
+            <button key={i} className={`up-btn ${ok ? "can-buy" : ""}`} disabled={!ok} onClick={() => onChoose(i)}>
+              <span className="up-btn-head">
+                <span className="up-name pack-units">
+                  <span className="pack-unit">
+                    <Swatch def={d} size={14} />
+                    <span>
+                      {o.count > 1 && <>{o.count}×&nbsp;</>}
+                      {d.name}
+                      {o.level > 1 && <> Lv&nbsp;{o.level}</>}
+                    </span>
+                  </span>
+                </span>
+                <span className="up-price">{o.price === 0 ? "free" : `· ${o.price}`}</span>
+              </span>
+              <span className="up-desc">{mine ? `You unlocked ${d.name} this round: undo it to take this.` : `unlocks ${d.name}`}</span>
+            </button>
+          );
+        })}
+        <button className="up-btn can-buy" onClick={() => onChoose("skip")}>
+          <span className="up-btn-head">
+            <span className="up-name">Skip</span>
+            <span className="up-price">+{recruitSkipSupply(offer.round)} supply</span>
+          </span>
         </button>
       </div>
     </div>

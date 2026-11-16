@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from "react";
 import { ELEMENT_COLORS, STATUSES, SURFACES, SURFACE_REACTIONS, UNIT_REACTIONS } from "../data/elements";
+import { recruitSkipSupply } from "../data/recruits";
 import { ROLES } from "../data/roles";
 import { RULES } from "../data/rules";
 import { SKIRMISH_MAPS, TERRAIN } from "../data/terrain";
@@ -142,6 +143,7 @@ const CONTENTS: { title: string; items: [string, string][] }[] = [
       ["upgrades", "Upgrades"],
       ["veterancy", "Veterans"],
       ["opening", "The opening offer"],
+      ["recruits", "Recruits"],
     ],
   },
   { title: "Roles", items: Object.entries(ROLES).map(([id, r]) => [`role-${id}`, r.name]) },
@@ -324,6 +326,16 @@ export function CodexView({ topic }: { topic?: string }) {
           (move them as you like, but they can&apos;t be sold), plus {RULES.openingPackSupply} supply to spend. The war chest is{" "}
           {RULES.openingFlat} supply and nothing unlocked: a little less once you pay for two unlocks, but you build exactly what
           you want. Both sides are offered the same packs, so you can guess what the enemy might start with.
+        </p>
+      </Entry>
+      <Entry id="recruits" title="Recruits" focus={topic}>
+        <p>
+          In rounds {[1, 2, 3].map((k) => 1 + k * RULES.recruitEvery).join(", ")} and every {RULES.recruitEvery} rounds after, you are
+          offered {RULES.recruitChoices} <b>recruits</b>. Each is a unit neither side has unlocked yet. It comes unlocked, with a few squads
+          already placed for you (sometimes veterans, up to level {RULES.recruitMaxLevel}), for a small price or free. Like an opening
+          pack&apos;s, these squads can be moved that round but can&apos;t be sold. All the options in a round are worth the same, and later
+          offers are worth more. You can skip the offer and take supply instead ({recruitSkipSupply(1 + RULES.recruitEvery)} in round{" "}
+          {1 + RULES.recruitEvery}). Both sides are offered the same recruits, so you can guess what the enemy might field next.
         </p>
       </Entry>
 

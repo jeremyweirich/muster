@@ -334,6 +334,30 @@ bought before that. The AI picks one of the three packs at random when the match
 squads and unlocks show from round 2, as everything else does), and from round 2 a note beside its unlocks says what it
 opened with.
 
+### Recruits — Decided (values open)
+
+The opening offer, repeated (`src/data/recruits.ts`; the brief was `docs/RECRUITS.md`). In rounds 4, 7, 10, 13… of
+Play and PvP (`RULES.recruitEvery` = 3) both sides are offered the **same three recruits**, or skip for supply. It keeps
+a match's roster moving: a counter you hadn't unlocked can arrive at a discount, and since both sides see the same
+options, each can guess what the other may field next.
+
+- **An option:** a unit **neither side has unlocked** when the round starts, unlocked for you, with X squads at level Y
+  (1–3, `RULES.recruitMaxLevel`) placed for you, for Z supply (0–200, `RULES.recruitMaxPrice`). The squads are free:
+  movable that round, never sellable.
+- **All three are worth the same** at the game's prices: unlock + X × (cost + (Y − 1) × promotion) − Z =
+  `RULES.recruitValue(round)`, half the round's income rounded down to 50 (300 at round 4, 450 at 7, 600 at 10). A unit
+  with no valid (X, Y, Z) isn't offered that round, which keeps Giants out until round 7 and Dragons until round 10.
+  Where a unit has several, the pick prefers a shape (several plain squads, veterans, one squad) the other options
+  don't have, so the three read differently.
+- **Skip:** `RULES.recruitSkip` (80%) of the value in supply, rounded to 50 (250 at round 4).
+- **Same for both:** the options are a pure function of the match seed, the round and both sides' unlocks (as one set),
+  with their own random stream, so both PvP browsers compute them and only the choice travels in the turn.
+- The player must answer before Fight (buying and placing work meanwhile); an option you can't afford, or whose unit you
+  unlocked yourself this round, is disabled. The AI takes a random option it can afford, never the skip, and plans the
+  rest of its round around those squads (`ai-duel`, 16 Nov: even with an AI that skips instead, 20 of 40). From the
+  round after, a note beside the enemy's unlocks says what it recruited.
+- Off in story missions (`newMissionMatch` sets `recruits: false`); a mission that teaches them can turn them on.
+
 ## 5b. Upgrades — Decided (values open)
 
 - Every unit has **four upgrades**. Each is a one-time purchase per match that changes **every squad** of that unit,
@@ -684,9 +708,8 @@ Rough priority order. Everything is open to reshuffling.
 3. **Campaigns** (docs/CAMPAIGN.md): the Wardens campaign is built; next, the owner's structural changes and
    playtest, then the goblin campaign. Keeping the finale's page 9 is parked (CAMPAIGN.md §5).
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
-5. **Recruits** (next; specified in `docs/RECRUITS.md`): every third round both players are offered the same three
-   unit unlocks with squads, or supply instead. Then **reinforcement cards / specialists:** a choice at the start of a
-   round, as data-driven modifiers.
+5. **Recruits** are built (section 5, 16 Nov). Next in that vein, **reinforcement cards / specialists:** a choice at
+   the start of a round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary. The owner's plan: cast
    between rounds on no-man's land. Terrain patches (section 3) are the first step: a spell could add one.
 7. **Pathfinding and formations:** move around obstacles, and keep squads together.

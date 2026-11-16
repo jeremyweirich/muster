@@ -5,10 +5,12 @@ import { deployZone, RULES } from "../data/rules";
 import { MAP_BY_ID, mapTerrain } from "../data/terrain";
 import { towerDef, towerPlacements, TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
-import { promoted, type AiPlan, type Difficulty } from "../game/ai";
+import { type AiPlan, type Difficulty } from "../game/ai";
+import { openRecruit, planTurn } from "../game/spectate";
+import { recruitLabel } from "../data/recruits";
 import type { AiRequest } from "../game/ai.worker";
 import { canPlace, defMap, newUid, squadRect, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "../game/army";
-import { applyRound, applyTurn, canPromote, chooseOpening, matchSeed, newMatch, nextRound, outcomeOf, packLabel, promotePrice, type MatchState, type Turn } from "../game/match";
+import { applyRound, applyTurn, canPromote, chooseOpening, chooseRecruit, matchSeed, newMatch, nextRound, outcomeOf, packLabel, promotePrice, type MatchState, type Turn } from "../game/match";
 import type { Line, MissionDef } from "../data/campaign";
 import { missionOutcome, missionPlan, newMissionMatch, scriptedTurn } from "../game/mission";
 import {
@@ -46,7 +48,7 @@ import type { PlayStatus } from "./PvpView";
 import { CodexLink } from "./codexLinks";
 import { Debrief, Say } from "./Mission";
 import { loadDifficulty, loadHardStreak, recordHardMatch, saveDifficulty } from "./progress";
-import { HpBar, OpeningOffer, PromotionPanel, PromotionsEarned, TowerPanel, UnlockStrip, UpgradePanel, Veterancy, type PromoteAll } from "./PlayPanels";
+import { HpBar, OpeningOffer, RecruitOffer, PromotionPanel, PromotionsEarned, TowerPanel, UnlockStrip, UpgradePanel, Veterancy, type PromoteAll } from "./PlayPanels";
 import { Swatch, UnitInfo } from "./UnitInfo";
 import { usePvpConnection, type PvpLink } from "./usePvp";
 
@@ -187,7 +189,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       round: match.round,
       difficulty,
       seed: match.round * 7919 + 13,
-      opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]), terrain },
+      opts: { openingPacks: match.openings[1].packs.map((i) => OPENING_PACKS[i]), terrain, recruit: openRecruit(match, 1) },
     };
     return planInWorkers(request, setAiPlan);
   }, [matchNo, match.round, match.phase === "deploy", difficulty]); // a new difficulty replans this round
@@ -286,6 +288,8 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const enemySeen = match.armies[1].filter((sq) => sq.round < match.round);
   const unlocked = useMemo(() => new Set(match.unlocked[0]), [match.unlocked]);
   const openingPending = (!mission || !!mission.def.opening) && match.round === 1 && match.openings[0].choice === null;
+  // a recruit round's offer is answered before Fight (docs/RECRUITS.md); buying and placing work meanwhile
+  const recruitPending = match.phase === "deploy" && !!match.recruit && match.recruit.choice[0] === null;
   const isNew = (sq: PlacedSquad) => !RULES.lockPlacedSquads || sq.round === match.round;
   const heldSquad = held ? myArmy.find((s) => s.uid === held) : undefined;
   const placingDef = heldSquad ? myDefs.get(heldSquad.defId) : selected ? myDefs.get(selected) : undefined;
@@ -523,7 +527,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   };
 
   const fight = () => {
-    if (openingPending || fightQueued || !deploying) return;
+    if (openingPending || recruitPending || fightQueued || !deploying) return;
     if (!actions.length && match.supply[0] > 0 && !fightArmed) {
       setFightArmed(true);
       return;
@@ -548,8 +552,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const sides = (): { mine: MatchState; turn: Turn; spent?: number } | null => {
     if (pvp) return locked ? { mine: applyTurn(roundStart.current, 0, locked[seat], defs), turn: turnAround(locked[other], defs) } : null;
     if (!aiPlan) return null;
-    const army = [...promoted(match.armies[1], aiPlan.promotions), ...aiPlan.squads];
-    return { mine: match, turn: { army, unlocks: aiPlan.unlocks, upgrades: aiPlan.upgrades, towerUpgrades: aiPlan.towerUpgrades }, spent: aiPlan.spent };
+    return { mine: match, turn: planTurn(match, 1, aiPlan, defs), spent: aiPlan.spent };
   };
 
   const launch = () => {
@@ -761,6 +764,12 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
   const enemyChoice = match.round > 1 ? match.openings[1].choice : null;
   const enemyOpening =
     enemyChoice === null ? null : enemyChoice === "flat" ? `opened with ${RULES.openingFlat} supply` : `opened with ${packLabel(OPENING_PACKS[enemyChoice], units)}`;
+  // what the enemy did with the latest recruit offer, from the round after it
+  const lastOffer = match.lastRecruit;
+  const enemyRecruit = lastOffer ? lastOffer.choice[1] : null;
+  const enemyRecruitNote =
+    lastOffer && enemyRecruit !== null ? (enemyRecruit === "skip" ? "skipped the recruits" : `recruited ${recruitLabel(lastOffer.options[enemyRecruit], units)}`) : null;
+  const enemyNote = [enemyOpening, enemyRecruitNote].filter(Boolean).join(" · ") || null;
   const selectedDef = selected ? myDefs.get(selected) : undefined;
   const card = hoverInfo ?? (selectedDef ? { def: selectedDef, side: 0 as Side, fromShop: true } : null);
   const lastAction = actions[actions.length - 1];
@@ -799,7 +808,9 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
 
   const fightLabel = openingPending
     ? "Pick your opening first"
-    : fightQueued
+    : recruitPending
+      ? "Pick your recruits first"
+      : fightQueued
       ? pvp
         ? "Waiting for your friend…"
         : "The enemy is still deciding…"
@@ -877,6 +888,19 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
       return (
         <Sheet kind="full">
           <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : mission ? undefined : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
+        </Sheet>
+      );
+    if (recruitPending && deploying)
+      return (
+        <Sheet kind="full">
+          <RecruitOffer
+            offer={match.recruit!}
+            units={units}
+            supply={match.supply[0]}
+            unlocked={match.unlocked[0]}
+            rival={pvp ? "your friend" : "the enemy"}
+            onChoose={(c) => setMatch((m) => chooseRecruit(m, 0, c, units))}
+          />
         </Sheet>
       );
     if (sheet === "unlock")
@@ -965,7 +989,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
           <HpBar label={rival} hp={shownHp[1]} max={mission?.def.hp?.[1]} side={1} hits={hitsOn[1]} />
         </>
       )}
-      <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyOpening} />
+      <UnlockStrip units={enemyUnlocks} owned={match.upgrades[1]} side={1} note={enemyNote} />
     </div>
   );
 
@@ -1067,7 +1091,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
               <button className="rail-undo" disabled={!lastAction} onClick={undo} aria-label="Undo">
                 ↶{lastAction ? <span className="small"> +{lastAction.cost}</span> : null}
               </button>
-              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || fightQueued} onClick={fight}>
+              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || recruitPending || fightQueued} onClick={fight}>
                 {fightLabel}
               </button>
             </div>
@@ -1172,12 +1196,22 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
                   ↶ Undo{lastAction ? ` +${lastAction.cost}` : ""}
                 </button>
               </div>
-              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || fightQueued} onClick={fight}>
+              <button className={`primary big ${fightArmed ? "warn-btn" : ""}`} disabled={openingPending || recruitPending || fightQueued} onClick={fight}>
                 {fightLabel}
               </button>
             </div>
             {openingPending && (
               <OpeningOffer packs={match.openings[0].packs} units={units} rival={pvp ? "your friend" : mission ? undefined : "the enemy"} onChoose={(c) => setMatch((m) => chooseOpening(m, 0, c, units))} />
+            )}
+            {recruitPending && deploying && (
+              <RecruitOffer
+                offer={match.recruit!}
+                units={units}
+                supply={match.supply[0]}
+                unlocked={match.unlocked[0]}
+                rival={pvp ? "your friend" : "the enemy"}
+                onChoose={(c) => setMatch((m) => chooseRecruit(m, 0, c, units))}
+              />
             )}
             {(placingDef || held) && (
               <div className="held">
@@ -1198,7 +1232,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
                       Sell (+{defs.get(heldSquad.defId)?.cost})
                     </button>
                   )}
-                  {heldSquad?.free && <span className="muted small">From your opening: free, so it can't be sold.</span>}
+                  {heldSquad?.free && <span className="muted small">Came free with an offer, so it can't be sold.</span>}
                 </div>
               </div>
             )}
@@ -1279,7 +1313,7 @@ export function PlayView({ pvp, mission, onStatus }: { pvp?: PvpProps; mission?:
             <div className="enemy-unlocks">
               <div className="muted small">
                 {pvp ? "Your friend has unlocked" : `${rival} has unlocked`}
-                {enemyOpening && ` · ${enemyOpening}`}
+                {enemyNote && ` · ${enemyNote}`}
               </div>
               <div className="swatches">
                 {enemyUnlocks.map((d) => (

@@ -31,6 +31,14 @@ export const RULES: Rules = {
   openingPackValue: 400, // supply's worth of squads in every pack (unlocks not counted)
   openingPackSupply: 200, // plus this to spend
   openingFlat: 700,
+  // Recruits (src/data/recruits.ts, docs/RECRUITS.md): rounds 4, 7, 10… offer both sides the same three units neither
+  // has unlocked, with squads placed, each worth recruitValue at the game's prices; or supply instead.
+  recruitEvery: 3,
+  recruitChoices: 3,
+  recruitValue: (round) => Math.floor(RULES.income(round) / 2 / 50) * 50, // 300 at round 4, 450 at 7, 600 at 10
+  recruitSkip: 0.8,
+  recruitMaxPrice: 200,
+  recruitMaxLevel: 3,
   towerUpgradeCosts: [100, 200, 400, 800],
   towerHpPerLevel: 2000, // the first level turns a one-hit Keep into one a raid has to work at
   towerDazeBase: 4,

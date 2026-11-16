@@ -8,6 +8,7 @@
 //   npm run playtest -- log <name> [n]             reprint the last n round reports (default: all)
 // Plan (every key optional):
 //   opening: 0 | 1 | 2 | "flat"                      round 1 only: an offered pack by position, or the war chest (default 0)
+//   recruit: 0 | 1 | 2 | "skip"                      recruit rounds (4, 7, 10…) only, and required there: an option, or the supply
 //   promote: ["all" | uid suffix]                    paid first
 //   up: [[unitId, upgradeId]], tower: [index]        then upgrades (unlocking the unit first if needed) and tower levels
 //   buy: [{u, x, y, rot?} | {u, auto: "center" | "spread" | "left" | "right"}]
@@ -23,9 +24,11 @@ import { towerPlacements } from "../src/data/towers";
 import { Battle, footprintOf } from "../src/sim/battle";
 import { upgradedDefs } from "../src/sim/upgrades";
 import { Rng } from "../src/sim/rng";
-import { planAiRound, promoted, type Difficulty } from "../src/game/ai";
+import { planAiRound, type Difficulty } from "../src/game/ai";
+import { openRecruit, planTurn } from "../src/game/spectate";
+import { recruitLabel, recruitSkipSupply, type RecruitChoice } from "../src/data/recruits";
 import {
-  applyRound, canPromote, chooseOpening, newMatch, nextRound, packLabel, promotePrice, type MatchState,
+  applyRound, applyTurn, canPromote, chooseOpening, chooseRecruit, newMatch, nextRound, packLabel, promotePrice, type MatchState,
 } from "../src/game/match";
 import {
   autoPlace, canPlace, defMap, priceOf, towerUpgradePrice, unlockPrice, upgradePrice, type PlacementStyle,
@@ -75,6 +78,10 @@ function show(s: Saved, field = true) {
   const label = (c: number | "flat" | null) => (c === null ? "-" : c === "flat" ? `war chest (${RULES.openingFlat})` : packLabel(OPENING_PACKS[c], units));
   lines.push(`opening offer: ${st.openings[0].packs.map((i, k) => `${k}: ${label(i)}`).join(" | ")} | flat: ${label("flat")}`);
   lines.push(`opening taken: me ${label(st.openings[0].choice)}, ai ${st.round > 1 ? label(st.openings[1].choice) : "?"}`);
+  const took = (c: RecruitChoice | null, o = st.lastRecruit) => (c === null || !o ? "-" : c === "skip" ? `skipped (+${recruitSkipSupply(o.round)})` : recruitLabel(o.options[c], units));
+  if (st.recruit)
+    lines.push(`RECRUIT OFFER (pass recruit: 0|1|2|"skip"): ${st.recruit.options.map((o, k) => `${k}: ${recruitLabel(o, units)} · ${o.price || "free"}`).join(" | ")} | skip: +${recruitSkipSupply(st.round)}`);
+  if (st.lastRecruit) lines.push(`last recruits (round ${st.lastRecruit.round}): me ${took(st.lastRecruit.choice[0])}, ai ${took(st.lastRecruit.choice[1])}`);
   for (const side of [0, 1] as const) {
     const who = side === 0 ? "ME" : "AI";
     const ups = Object.entries(st.upgrades[side]).map(([u, l]) => `${u}:${l.join("+")}`).join(" ");
@@ -103,6 +110,7 @@ interface Plan {
   tower?: number[];
   promote?: string[];
   opening?: number | "flat";
+  recruit?: RecruitChoice;
   fill?: string[];
   style?: PlacementStyle;
 }
@@ -118,8 +126,14 @@ function cmdPlay(name: string, plan: Plan) {
     units, defs,
     { army: st.armies[1], unlocked: st.unlocked[1], upgrades: st.upgrades[1], towerLevels: st.towerLevels[1], supply: st.supply[1] },
     { army: st.armies[0], upgrades: st.upgrades[0], towerLevels: st.towerLevels[0] },
-    st.round, s.difficulty, st.round * 7919 + 13 + s.seed * 31, { terrain: mapTerrain(st.map) },
+    st.round, s.difficulty, st.round * 7919 + 13 + s.seed * 31, { terrain: mapTerrain(st.map), recruit: openRecruit(st, 1) },
   );
+  const startOfRound = st;
+  if (openRecruit(st, 0)) {
+    if (plan.recruit === undefined) throw new Error('a recruit round: pass recruit: 0, 1, 2 or "skip" (show prints the offer)');
+    st = chooseRecruit(st, 0, plan.recruit, units);
+    if (st.recruit?.choice[0] === null) throw new Error(`can't take recruit ${plan.recruit}: not offered, or unaffordable`);
+  }
 
   // My purchases, in order: promotions, upgrades, towers, squads.
   let supply = st.supply[0];
@@ -132,6 +146,9 @@ function cmdPlay(name: string, plan: Plan) {
   const upgrades = { ...st.upgrades[0] };
   const towers = [...st.towerLevels[0]];
   const spentLog: string[] = [];
+  const myRecruit = st.recruit?.choice[0];
+  if (startOfRound.recruit && myRecruit !== undefined && myRecruit !== null)
+    spentLog.push(myRecruit === "skip" ? `skip recruits (+${recruitSkipSupply(st.round)})` : `recruit ${recruitLabel(st.recruit!.options[myRecruit], units)} (${st.recruit!.options[myRecruit].price})`);
   for (const p of plan.promote ?? []) {
     const targets = p === "all" ? army.filter(canPromote) : army.filter((q) => q.uid.endsWith(p));
     for (const sq of targets) {
@@ -201,22 +218,19 @@ function cmdPlay(name: string, plan: Plan) {
     spentLog.push(`buy ${d.name} (${d.cost}) @${sq.x},${sq.y}${sq.rot ? "r" : ""}`);
   }
 
-  // Commit both sides and fight, exactly like PlayView.fight().
-  const aiUpgrades = { ...st.upgrades[1] };
-  for (const u of aiPlan.upgrades) aiUpgrades[u.unitId] = [...(aiUpgrades[u.unitId] ?? []), u.upgradeId];
-  const aiLevels = [...st.towerLevels[1]];
-  for (const i of aiPlan.towerUpgrades) aiLevels[i]++;
-  const armies: [PlacedSquad[], PlacedSquad[]] = [army, [...promoted(st.armies[1], aiPlan.promotions), ...aiPlan.squads]];
-  const towerLevels: [number[], number[]] = [towers, aiLevels];
-  const sideDefs = [upgradedDefs(defs, upgrades), upgradedDefs(defs, aiUpgrades)] as const;
+  // Commit both sides and fight, exactly like PlayView.fight(): the AI's plan goes through applyTurn.
   st = {
     ...st,
-    armies,
-    supply: [supply, st.supply[1] - aiPlan.spent],
-    unlocked: [[...unlocked], [...new Set([...st.unlocked[1], ...aiPlan.unlocks])]],
-    upgrades: [upgrades, aiUpgrades],
-    towerLevels,
+    armies: [army, st.armies[1]],
+    supply: [supply, st.supply[1]],
+    unlocked: [[...unlocked], st.unlocked[1]],
+    upgrades: [upgrades, st.upgrades[1]],
+    towerLevels: [towers, st.towerLevels[1]],
   };
+  st = applyTurn(st, 1, planTurn(startOfRound, 1, aiPlan, defs), defs, aiPlan.spent);
+  const armies = st.armies;
+  const towerLevels = st.towerLevels;
+  const sideDefs = [upgradedDefs(defs, upgrades), upgradedDefs(defs, st.upgrades[1])] as const;
   const battle = new Battle([sideDefs[0], sideDefs[1]], armies, { seed: st.round * 104729 + 7 + s.seed, towerLevels, terrain: mapTerrain(st.map) });
   const r = battle.run();
   const round = st.round;
@@ -229,8 +243,11 @@ function cmdPlay(name: string, plan: Plan) {
     ...aiPlan.upgrades.map((u) => `upgrade ${nm(u.unitId)}: ${u.upgradeId}`),
     ...aiPlan.towerUpgrades.map((i) => `tower ${i}`),
     ...aiPlan.unlocks.map((u) => `unlock ${nm(u)}`),
-    ...aiPlan.squads.map((q) => `buy ${nm(q.defId)}`),
+    ...aiPlan.squads.filter((q) => !q.free).map((q) => `buy ${nm(q.defId)}`),
   ];
+  const offer = startOfRound.recruit;
+  if (aiPlan.recruit !== undefined && offer)
+    aiBits.unshift(aiPlan.recruit === "skip" ? `skip recruits (+${recruitSkipSupply(round)})` : `recruit ${recruitLabel(offer.options[aiPlan.recruit], units)} (${offer.options[aiPlan.recruit].price})`);
   out.push(`AI spent ${aiPlan.spent}: ${aiBits.join("; ")}`);
   const winner = r.winner === 0 ? "ME" : r.winner === 1 ? "AI" : "DRAW";
   const rep = st.history[st.history.length - 1];

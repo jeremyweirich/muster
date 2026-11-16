@@ -3,6 +3,12 @@
 The big changes, newest first. Version numbers match the one in the game's corner (vN is the Nth commit), so you can
 tell which build you played. Every small fix is in the [commit history](https://github.com/jeremyweirich/muster/commits/main).
 
+## 16 November 2026 (v111)
+
+- **Recruits:** in rounds 4, 7, 10… of Play and PvP, both sides are offered the same three units neither has unlocked,
+  each with a few squads placed for you (sometimes veterans) at a small price, all worth the same. Or skip for supply.
+  A note beside the enemy's unlocks says what it took. Not in story missions.
+
 ## 9 November 2026 (v106–v108)
 
 - **Mission 4 (The Troll) is easier**, from the first playtests: Knights in front with Ballistae behind them now wins

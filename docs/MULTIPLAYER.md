@@ -41,6 +41,8 @@ duplicate is ignored.
 - `start { game, seed }`: a new match (the host's first, or a rematch from either player).
 - `turn { game, round, turn }`: the sender's whole army in their own view of the field, plus their opening choice,
   unlocks, upgrades and tower levels bought this round. The receiver turns the army round 180° into its own view.
+  On a recruit round (DESIGN.md §5) the turn also carries `recruit` (an option's index or `"skip"`); both browsers
+  compute the offer itself from the seed and the unlocks, and the option's free squads are in the army.
 - `cancel { game, round }`: takes the sender's turn back. A seat's turn counts until it cancels; a turn after that
   counts again. Once the relay's log holds both seats' turns the round is **locked**, and later cancels change nothing
   (`roundTurns` in `src/game/pvp.ts`). Only messages the relay has confirmed can lock a round, so if a cancel and the

@@ -1,7 +1,9 @@
 # Recruits: mid-match unit unlock offers (spec)
 
-Status: **specified, not built.** Owner's decision, 16 November 2026. This page is the brief for the implementing
-session. The feature's working name is *Recruits*; it's used for the state field, the rules keys and the player-facing
+Status: **built** (16 November 2026). Owner's decision, 16 November 2026. This page was the brief for the
+implementing session; DESIGN.md §5 "Recruits" describes the feature as it is. Two changes from the brief: `MatchState`
+also keeps `lastRecruit` (the latest finished offer, for the enemy note, since `recruit` is null outside recruit
+rounds), and an option whose unit the player unlocked from the shop that round is disabled (its value counts the unlock). The feature's working name is *Recruits*; it's used for the state field, the rules keys and the player-facing
 heading, and is easy to rename in one pass.
 
 ## 1. What it is and why

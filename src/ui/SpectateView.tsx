@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { OPENING_PACKS } from "../data/openings";
+import { recruitLabel, recruitSkipSupply } from "../data/recruits";
 import { RULES } from "../data/rules";
 import { TOWER_MAP } from "../data/towers";
 import { DEFAULT_UNITS } from "../data/units";
@@ -304,7 +305,7 @@ function TurnLog({ side, round }: { side: Side; round: SpectatedRound }) {
   const start = round.start;
   const counts = useMemo(() => {
     const m = new Map<string, number>();
-    for (const sq of plan.squads) m.set(sq.defId, (m.get(sq.defId) ?? 0) + 1);
+    for (const sq of plan.squads) if (!sq.free) m.set(sq.defId, (m.get(sq.defId) ?? 0) + 1);
     return [...m];
   }, [plan]);
   const name = (id: string) => defs.get(id)?.name ?? id;
@@ -312,6 +313,8 @@ function TurnLog({ side, round }: { side: Side; round: SpectatedRound }) {
   const promoted = start.armies[side].filter((sq) => plan.promotions.includes(sq.uid));
   const lines: [string, string][] = [];
   if (choice !== null) lines.push(["Opening", choice === "flat" ? "war chest" : packLabel(OPENING_PACKS[choice], units)]);
+  if (plan.recruit !== undefined && start.recruit)
+    lines.push(["Recruits", plan.recruit === "skip" ? `skipped (+${recruitSkipSupply(start.round)})` : recruitLabel(start.recruit.options[plan.recruit], units)]);
   if (counts.length) lines.push(["New squads", counts.map(([id, n]) => `${n > 1 ? `${n}× ` : ""}${name(id)}`).join(", ")]);
   if (plan.unlocks.length) lines.push(["Unlocked", plan.unlocks.map(name).join(", ")]);
   for (const u of plan.upgrades) {

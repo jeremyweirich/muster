@@ -1,4 +1,5 @@
 import type { OpeningPack } from "../data/openings";
+import { recruitSkipSupply, recruitSquads, type RecruitChoice, type RecruitOption } from "../data/recruits";
 import { RULES } from "../data/rules";
 import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
@@ -39,7 +40,8 @@ export interface AiPlan {
   upgrades: { unitId: string; upgradeId: string }[];
   towerUpgrades: number[]; // tower indexes, one entry per level bought
   promotions: string[]; // uids of its own squads it pays to level up
-  spent: number;
+  recruit?: RecruitChoice; // its answer to a recruit offer; the option's squads lead `squads`, free
+  spent: number; // not counting the recruit option's price (applyTurn takes that with the choice)
   candidatesTried: number;
   bestScore: number | null;
 }
@@ -56,6 +58,7 @@ export interface PlanOptions {
   budgetMs?: number; // overrides the difficulty's thinking time (scripts and tests)
   searchSeed?: number; // parallel searches use different search seeds against the same scenarios
   terrain?: TerrainPatch[]; // the map: its plans are simulated on the real ground (it doesn't reason about it)
+  recruit?: RecruitOption[]; // this round's recruit offer, if it hasn't answered it
 }
 
 // Everything a plan buys except the squads: tower levels, promotions and an upgrade.
@@ -202,6 +205,25 @@ export function planAiRound(
   const playerDefs = upgradedDefs(defs, player.upgrades);
   const scenarios = opponentScenarios(units, defs, me, player, round, difficulty, opts, new Rng(seed));
   let tried = 0;
+  // A recruit offer: it takes one option it can afford, at random (never the skip, as with the opening: easier to
+  // read), before searching, so the search plans around those squads with what's left. Its own stream, so Hard's
+  // parallel searches all take the same one.
+  let recruit: RecruitChoice | undefined;
+  let recruited: PlacedSquad[] = [];
+  if (opts.recruit?.length) {
+    const rr = new Rng(seed * 13 + 5);
+    const affordable = opts.recruit.map((o, i) => ({ o, i })).filter(({ o }) => o.price <= me.supply && !me.unlocked.includes(o.unitId));
+    if (affordable.length) {
+      const { o, i } = rr.pick(affordable);
+      recruit = i;
+      recruited = autoPlace(recruitSquads(o, units), me.army, 1, defs, round, rr, "center").map((q) => ({ ...q, free: true, level: o.level > 1 ? o.level : undefined }));
+      me = { ...me, army: [...me.army, ...recruited], unlocked: [...me.unlocked, o.unitId], supply: me.supply - o.price };
+    } else {
+      recruit = "skip";
+      me = { ...me, supply: me.supply + recruitSkipSupply(round) };
+    }
+  }
+  const withRecruit = recruit === undefined ? {} : { recruit };
 
   const place = (list: UnitDef[]) => autoPlace(list, me.army, 1, defs, round, rng, rng.pick(STYLES));
   // Plays a plan against every scenario, once per battle seed; returns the summed score and how many battles that was.
@@ -289,17 +311,18 @@ export function planAiRound(
 
   pool.sort((a, b) => b.score - a.score);
   const best = pool[0];
-  if (!best) return { squads: [], unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], spent: 0, candidatesTried: tried, bestScore: null };
+  if (!best) return { squads: recruited, unlocks: [], upgrades: [], towerUpgrades: [], promotions: [], ...withRecruit, spent: 0, candidatesTried: tried, bestScore: null };
   // a squad that didn't fit on the field isn't paid for, and neither is the unlock of a unit that didn't fit
   const placed = best.squads.map((q) => q.defId);
   const unlocks = [...new Set(placed)].filter((id) => !me.unlocked.includes(id));
   const spent = armyValue(best.squads, defs) + unlocks.reduce((t, id) => t + unlockPrice(defs.get(id)!), 0) + best.extras.cost;
   return {
-    squads: best.squads,
+    squads: [...recruited, ...best.squads],
     unlocks,
     upgrades: best.extras.upgrades,
     towerUpgrades: best.extras.towerUpgrades,
     promotions: best.extras.promotions,
+    ...withRecruit,
     spent,
     candidatesTried: tried,
     bestScore: best.score,

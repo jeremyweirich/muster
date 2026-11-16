@@ -217,6 +217,9 @@ changed when is in `CHANGELOG.md` and the git history; the docs describe the gam
   end in 15–25 s, short of the 40–60 s goal; and the report doesn't say why a hard-countered squad dealt 0.
 - **Layout:** the game is landscape-only by design (16:9 field, 1 : 3 sidebar/field). Keep it working on a phone held
   sideways (about 844 × 390).
+- **Recruits** are built (16 Nov; DESIGN.md §5, `src/data/recruits.ts`): rounds 4, 7, 10… offer both sides the same
+  three units neither has unlocked, with squads placed, all worth the same, or supply. The knobs are the `recruit*` keys
+  in `RULES`; `recruitValue` is the one to turn if offers feel too weak or strong. Off in story missions.
 - **Faction bonuses** are designed but not built (DESIGN.md §8).
 - **Campaigns:** planned in `docs/CAMPAIGN.md` (Wardens, then Goblins, then Elementals; owner decisions in §8,
   independents and maps in §9). **The Wardens campaign is built** (missions 1–9). Campaign missions charge no unlock prices (every unit met so far is

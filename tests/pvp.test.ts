@@ -4,7 +4,7 @@ import { RULES } from "../src/data/rules";
 import { towerPlacements } from "../src/data/towers";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { autoPlace, defMap, towerUpgradePrice, unlockPrice, upgradePrice } from "../src/game/army";
-import { applyTurn, canPromote, chooseOpening, nextRound, outcomeOf, promotePrice, type MatchState } from "../src/game/match";
+import { applyTurn, canPromote, chooseOpening, chooseRecruit, nextRound, outcomeOf, promotePrice, type MatchState } from "../src/game/match";
 import {
   checkTurn,
   outcomeSig,
@@ -26,13 +26,19 @@ import { seatFor } from "../relay/src/core";
 const units = DEFAULT_UNITS;
 const defs = defMap(units);
 
-// A stand-in player: deploys on side 0 of its own view, spending the way the deploy screen does.
-function deploy(state: MatchState, rng: Rng): MatchState {
+// A stand-in player: deploys on side 0 of its own view, spending the way the deploy screen does. On a recruit round
+// it takes the first option it can afford, or skips (`recruit`).
+function deploy(state: MatchState, rng: Rng, recruit: "take" | "skip" = "take"): MatchState {
   let m = state;
   const spend = (cost: number) => (m = { ...m, supply: [m.supply[0] - cost, m.supply[1]] });
   if (m.round === 1) {
     const offered = m.openings[0].packs;
     m = chooseOpening(m, 0, rng.next() < 0.25 ? "flat" : rng.pick(offered), units, 99);
+  }
+  if (m.recruit && m.recruit.choice[0] === null) {
+    const i = m.recruit.options.findIndex((o) => o.price <= m.supply[0]);
+    m = chooseRecruit(m, 0, recruit === "take" && i >= 0 ? i : "skip", units);
+    expect(m.recruit!.choice[0]).not.toBeNull();
   }
   for (const sq of m.armies[0]) {
     if (canPromote(sq) && promotePrice(defs.get(sq.defId)!) <= m.supply[0]) {
@@ -97,7 +103,7 @@ describe("pvp", () => {
   it("a deployment becomes a turn that rebuilds it exactly, at the same price", () => {
     const rng = new Rng(3);
     let start = restoreFresh(11);
-    for (let r = 0; r < 3; r++) {
+    for (let r = 0; r < 4; r++) {
       const now = deploy(start, rng);
       const turn = turnFrom(start, now);
       const rebuilt = applyTurn(start, 0, turn, defs);
@@ -107,6 +113,7 @@ describe("pvp", () => {
       expect(rebuilt.upgrades[0]).toEqual(now.upgrades[0]);
       expect(rebuilt.towerLevels[0]).toEqual(now.towerLevels[0]);
       expect(rebuilt.openings[0]).toEqual(now.openings[0]);
+      expect(rebuilt.recruit).toEqual(now.recruit);
       expect(checkTurn(start, 0, turn, defs)).toEqual([]);
       start = nextRound({ ...now, phase: "result" });
     }
@@ -155,6 +162,57 @@ describe("pvp", () => {
       const guestOutcome = swapOutcome(outcomeOf(guest.fought!.result!, defs));
       expect(outcomeSig(guestOutcome)).toBe(outcomeSig(hostOutcome));
       post(log, 0, { type: "outcome", id: `o${round}`, game: 1, round, sig: outcomeSig(hostOutcome), outcome: hostOutcome });
+    }
+  });
+
+  it("a recruit round: both seats see the same offer, one takes an option, the other skips", { timeout: 60_000 }, () => {
+    const log: Entry[] = [];
+    post(log, 0, { type: "start", id: "s", game: 1, seed: 4321 });
+    const rngs = [new Rng(3), new Rng(4)];
+    const recruitRound = 1 + RULES.recruitEvery;
+    for (let round = 1; round <= recruitRound; round++) {
+      const starts = ([0, 1] as Side[]).map((seat) => {
+        const r = restore(units, log, seat)!;
+        return r.match.phase === "deploy" ? r.match : nextRound(r.match);
+      });
+      if (round === recruitRound) {
+        expect(starts[0].recruit?.options.length).toBeGreaterThan(0);
+        expect(starts[1].recruit?.options).toEqual(starts[0].recruit?.options);
+      } else expect(starts[0].recruit ?? null).toBeNull();
+      for (const seat of [0, 1] as Side[]) {
+        const now = deploy(starts[seat], rngs[seat], seat === 0 ? "take" : "skip");
+        const turn = turnFrom(starts[seat], now);
+        if (round === recruitRound) {
+          if (seat === 1) expect(turn.recruit).toBe("skip");
+          else {
+            expect(typeof turn.recruit).toBe("number");
+            const option = starts[0].recruit!.options[turn.recruit as number];
+            expect(turn.unlocks).not.toContain(option.unitId); // comes with the offer, not bought
+            expect(turn.army.filter((sq) => sq.free && sq.round === round)).toHaveLength(option.count);
+            expect(checkTurn(starts[0], 0, turn, defs)).toEqual([]);
+            // a free squad the offer didn't give is flagged, and so is one in a round without an offer
+            const extra = { ...turn.army.find((sq) => sq.free && sq.round === round)!, uid: "extra", x: 0 };
+            expect(checkTurn(starts[0], 0, { ...turn, army: [...turn.army, extra] }, defs).join()).toMatch(/free/);
+          }
+        } else if (round > 1) {
+          const fake = { ...autoPlace([defs.get("knights")!], now.armies[0], 0, defs, round, new Rng(1))[0], free: true };
+          expect(checkTurn(starts[seat], 0, { ...turn, army: [...turn.army, fake] }, defs).join()).toMatch(/free/);
+        }
+        post(log, seat, { type: "turn", id: `t${round}${seat}`, game: 1, round, turn });
+      }
+      const host = restore(units, log, 0)!;
+      const guest = restore(units, log, 1)!;
+      if (host.match.phase === "over") return;
+      expect(guest.match.supply).toEqual([host.match.supply[1], host.match.supply[0]]);
+      expect(new Set(guest.match.unlocked[1])).toEqual(new Set(host.match.unlocked[0]));
+      if (round === recruitRound) {
+        const c = host.match.recruit!.choice;
+        expect(typeof c[0]).toBe("number");
+        expect(c[1]).toBe("skip");
+        expect(guest.match.recruit!.choice).toEqual([c[1], c[0]]);
+      }
+      const o = outcomeOf(host.fought!.result!, defs);
+      post(log, 0, { type: "outcome", id: `o${round}`, game: 1, round, sig: outcomeSig(o), outcome: o });
     }
   });
 

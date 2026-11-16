@@ -7,7 +7,8 @@ import { mapTerrain } from "../src/data/terrain";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { planAiRound, promoted, type AiPlan, type Difficulty } from "../src/game/ai";
 import { defMap } from "../src/game/army";
-import { applyRound, chooseOpening, newMatch, nextRound, type MatchState } from "../src/game/match";
+import { applyRound, applyTurn, chooseOpening, chooseRecruit, newMatch, nextRound, type MatchState } from "../src/game/match";
+import { openRecruit } from "../src/game/spectate";
 import { Battle, footprintOf } from "../src/sim/battle";
 import type { PlacedSquad } from "../src/sim/types";
 import { upgradedDefs } from "../src/sim/upgrades";
@@ -24,7 +25,7 @@ function plan(who: Who, st: MatchState, side: 0 | 1, seed: number): AiPlan {
   const flip = side === 0 ? mirror : (x: PlacedSquad[]) => x;
   const me = { army: flip(st.armies[side]), unlocked: st.unlocked[side], upgrades: st.upgrades[side], towerLevels: st.towerLevels[side], supply: st.supply[side] };
   const player = { army: flip(st.armies[other]), upgrades: st.upgrades[other], towerLevels: st.towerLevels[other], unlocked: st.round > 1 ? st.unlocked[other] : [] };
-  const opts = { openingPacks: st.openings[side].packs.map((i) => OPENING_PACKS[i]), budgetMs: budget, terrain: mapTerrain(st.map) };
+  const opts = { openingPacks: st.openings[side].packs.map((i) => OPENING_PACKS[i]), budgetMs: budget, terrain: mapTerrain(st.map), recruit: openRecruit(st, side) };
   const p = (who === "current" ? planAiRound : planBaseline)(units, defs, me, player, st.round, difficulty, seed, opts);
   return side === 0 ? { ...p, squads: mirror(p.squads) } : p;
 }
@@ -36,6 +37,9 @@ const sides: [Who, Who] = m % 2 === 0 ? ["current", "baseline"] : ["baseline", "
 let st = newMatch(units, 100 + g);
 st = chooseOpening(st, 0, st.openings[0].packs[g % 3], units, 100 + g);
 while (st.phase !== "over" && st.round <= 20) {
+  // recruit rounds: the baseline planner predates recruits, so it skips the offer (and plans with the supply); the
+  // current one takes an option in its plan. Comparing the two judges the AI's pick rule against skipping.
+  for (const side of [0, 1] as const) if (sides[side] === "baseline" && openRecruit(st, side)) st = chooseRecruit(st, side, "skip", units);
   const plans = [plan(sides[0], st, 0, st.round * 31 + g), plan(sides[1], st, 1, st.round * 37 + g)];
   const ups = [0, 1].map((s) => {
     const u = { ...st.upgrades[s] };
@@ -51,14 +55,11 @@ while (st.phase !== "over" && st.round <= 20) {
     [...promoted(st.armies[0], plans[0].promotions), ...plans[0].squads],
     [...promoted(st.armies[1], plans[1].promotions), ...plans[1].squads],
   ];
-  st = {
-    ...st,
-    armies,
-    supply: [st.supply[0] - plans[0].spent, st.supply[1] - plans[1].spent],
-    unlocked: [[...new Set([...st.unlocked[0], ...plans[0].unlocks])], [...new Set([...st.unlocked[1], ...plans[1].unlocks])]],
-    upgrades: [ups[0], ups[1]],
-    towerLevels: [levels[0], levels[1]],
-  };
+  // applyTurn records each recruit choice (unlock, price); the plans' own counts are the rest
+  for (const side of [0, 1] as const) {
+    const p = plans[side];
+    st = applyTurn(st, side, { ...(p.recruit !== undefined ? { recruit: p.recruit } : {}), army: armies[side], unlocks: p.unlocks, upgrades: p.upgrades, towerUpgrades: p.towerUpgrades }, defs, p.spent);
+  }
   const r = new Battle([upgradedDefs(defs, ups[0]), upgradedDefs(defs, ups[1])], armies, { seed: st.round * 104729 + g, towerLevels: [levels[0], levels[1]], terrain: mapTerrain(st.map) }).run();
   st = applyRound(st, r, defs);
   if (st.phase !== "over") st = nextRound(st);

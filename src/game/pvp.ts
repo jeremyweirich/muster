@@ -52,6 +52,8 @@ export function turnAround(turn: Turn, defs: DefMap): Turn {
 export function turnFrom(start: MatchState, now: MatchState): Turn {
   const opening = start.openings[0].choice === null && now.openings[0].choice !== null ? now.openings[0].choice : undefined;
   const fromPack = new Set(opening !== undefined && opening !== "flat" ? packUnits(opening) : []);
+  const recruit = start.recruit?.choice[0] === null && now.recruit && now.recruit.choice[0] !== null ? now.recruit.choice[0] : undefined;
+  if (recruit !== undefined && recruit !== "skip") fromPack.add(now.recruit!.options[recruit].unitId); // comes with the offer
   const had = new Set(start.unlocked[0]);
   const upgrades: Turn["upgrades"] = [];
   for (const [unitId, ids] of Object.entries(now.upgrades[0])) {
@@ -63,6 +65,7 @@ export function turnFrom(start: MatchState, now: MatchState): Turn {
   });
   return {
     ...(opening !== undefined ? { opening } : {}),
+    ...(recruit !== undefined ? { recruit } : {}),
     army: now.armies[0],
     unlocks: now.unlocked[0].filter((id) => !had.has(id) && !fromPack.has(id)),
     upgrades,
@@ -74,12 +77,29 @@ function packUnits(pack: number): string[] {
   return OPENING_PACKS[pack]?.units.map((u) => u.id) ?? [];
 }
 
-// What's wrong with the other side's turn, if anything: more spent than they had, or squads outside their zone.
-// Between friends this is a warning, not a block.
+// What's wrong with the other side's turn, if anything: more spent than they had, squads outside their zone, or free
+// squads that didn't come with their opening pack or recruits. Between friends this is a warning, not a block.
 export function checkTurn(state: MatchState, side: Side, turn: Turn, defs: DefMap): string[] {
   const problems: string[] = [];
   const after = applyTurn(state, side, turn, defs);
   if (after.supply[side] < 0) problems.push(`spent ${-after.supply[side]} more supply than they had`);
+  const had = new Set(state.armies[side].map((sq) => sq.uid));
+  const key = (defId: string, level: number) => `${defId}@${level}`;
+  const freeAdded = turn.army.filter((sq) => sq.free && !had.has(sq.uid)).map((sq) => key(sq.defId, sq.level ?? 1));
+  const freeOwed: string[] = [];
+  if (turn.opening !== undefined && turn.opening !== "flat" && state.openings[side].choice === null)
+    for (const u of OPENING_PACKS[turn.opening]?.units ?? []) for (let i = 0; i < u.count; i++) freeOwed.push(key(u.id, 1));
+  const option = turn.recruit !== undefined && turn.recruit !== "skip" && state.recruit?.choice[side] === null ? state.recruit.options[turn.recruit] : undefined;
+  if (option) for (let i = 0; i < option.count; i++) freeOwed.push(key(option.unitId, option.level));
+  // a squad the Field had no room for may be missing; one too many, or the wrong one, is a problem
+  for (const k of freeAdded) {
+    const i = freeOwed.indexOf(k);
+    if (i < 0) {
+      problems.push(`fielded a free ${defs.get(k.split("@")[0])?.name ?? k} that no offer gave them`);
+      break;
+    }
+    freeOwed.splice(i, 1);
+  }
   const { y0, y1 } = deployZone(side);
   for (const sq of turn.army) {
     const def = defs.get(sq.defId);

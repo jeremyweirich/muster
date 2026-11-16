@@ -1,4 +1,5 @@
 import { OPENING_PACKS } from "../data/openings";
+import type { RecruitOption } from "../data/recruits";
 import { mapTerrain } from "../data/terrain";
 import { Battle } from "../sim/battle";
 import { Rng } from "../sim/rng";
@@ -36,14 +37,19 @@ export function spectateRequest(state: MatchState, side: Side, units: UnitDef[],
     round: state.round,
     difficulty,
     seed: seed + state.round * 7919 + side * 104729,
-    opts: { openingPacks: state.openings[side].packs.map((i) => OPENING_PACKS[i]), terrain: mapTerrain(state.map) },
+    opts: { openingPacks: state.openings[side].packs.map((i) => OPENING_PACKS[i]), terrain: mapTerrain(state.map), recruit: openRecruit(state, side) },
   };
+}
+
+// This round's recruit options, while the side hasn't answered the offer.
+export function openRecruit(state: MatchState, side: Side): RecruitOption[] | undefined {
+  return state.recruit && state.recruit.choice[side] === null ? state.recruit.options : undefined;
 }
 
 // A plan as a turn on its own side of the field.
 export function planTurn(state: MatchState, side: Side, plan: AiPlan, defs: DefMap): Turn {
   const squads = side === 0 ? turnArmy(plan.squads, defs) : plan.squads;
-  return { army: [...promoted(state.armies[side], plan.promotions), ...squads], unlocks: plan.unlocks, upgrades: plan.upgrades, towerUpgrades: plan.towerUpgrades };
+  return { ...(plan.recruit !== undefined ? { recruit: plan.recruit } : {}), army: [...promoted(state.armies[side], plan.promotions), ...squads], unlocks: plan.unlocks, upgrades: plan.upgrades, towerUpgrades: plan.towerUpgrades };
 }
 
 export interface SpectatedRound {

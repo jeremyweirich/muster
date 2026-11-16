@@ -5,6 +5,7 @@ import { capXp, earnedLevel } from "../sim/levels";
 import { Rng } from "../sim/rng";
 import type { PlacedSquad, Side, UnitDef } from "../sim/types";
 import { OPENING_PACKS, type OpeningPack } from "../data/openings";
+import { recruitOptions, recruitRound, recruitSkipSupply, recruitSquads, type RecruitChoice, type RecruitOffer } from "../data/recruits";
 import { SKIRMISH_MAPS } from "../data/terrain";
 import { autoPlace, defMap, towerUpgradePrice, unlockPrice, upgradePrice, type DefMap } from "./army";
 
@@ -39,6 +40,10 @@ export interface MatchState {
   map?: string; // the map's id (src/data/terrain.ts); absent: the open field
   veterancy?: boolean; // false: squads earn no XP (story missions before veterans are taught); absent: they do
   openings: [Opening, Opening];
+  seed: number; // the match seed: the map, the opening and the recruit offers come from it
+  recruit?: RecruitOffer | null; // this round's recruit offer (src/data/recruits.ts); null outside recruit rounds
+  lastRecruit?: RecruitOffer | null; // the latest offer that's over, for saying what the enemy took
+  recruits?: boolean; // false: never offered (story missions); absent: offered
   phase: Phase;
   history: RoundReport[];
 }
@@ -74,6 +79,7 @@ export function newMatch(units: UnitDef[], seed = 1, opts: { aiOpening?: boolean
     phase: "deploy",
     history: [],
     map: pickMap(seed),
+    seed,
   };
   const aiPack = rng.pick(packs);
   if (opts.aiOpening !== false) state = chooseOpening(state, 1, aiPack, units, seed);
@@ -103,6 +109,37 @@ export function chooseOpening(state: MatchState, side: Side, choice: OpeningChoi
     armies[side] = [...armies[side], ...placed.map((q) => ({ ...q, free: true }))];
   }
   return { ...state, openings, supply, unlocked, armies };
+}
+
+// Records a side's answer to this round's recruit offer: the choice, the unlock, and the supply (the option's price
+// paid, or the skip's supply). Not the squads: the player's come from chooseRecruit, a turn's are in its army.
+// Null when there's no open offer for that side or the choice isn't one of its options.
+export function recordRecruit(state: MatchState, side: Side, choice: RecruitChoice): MatchState | null {
+  const offer = state.recruit;
+  if (!offer || offer.choice[side] !== null) return null;
+  const option = choice === "skip" ? null : offer.options[choice];
+  if (choice !== "skip" && !option) return null;
+  const pick = <T,>(pair: [T, T], value: T): [T, T] => (side === 0 ? [value, pair[1]] : [pair[0], value]);
+  return {
+    ...state,
+    recruit: { ...offer, choice: pick(offer.choice, choice) },
+    supply: pick(state.supply, state.supply[side] + (option ? -option.price : recruitSkipSupply(offer.round))),
+    unlocked: option ? pick(state.unlocked, [...new Set([...state.unlocked[side], option.unitId])]) : state.unlocked,
+  };
+}
+
+// Take a recruit option, or skip it: the player's path (the twin of chooseOpening). The squads are placed for you,
+// free (so not sellable), at the option's level. Refused when already chosen, not offered, unaffordable, or when the
+// side has unlocked that unit itself this round (the option's value counts the unlock).
+export function chooseRecruit(state: MatchState, side: Side, choice: RecruitChoice, units: UnitDef[]): MatchState {
+  const option = choice === "skip" ? null : state.recruit?.options[choice];
+  if (option && (option.price > state.supply[side] || state.unlocked[side].includes(option.unitId))) return state;
+  const s = recordRecruit(state, side, choice);
+  if (!s || !option) return s ?? state;
+  const placed = autoPlace(recruitSquads(option, units), s.armies[side], side, defMap(units), s.round, new Rng(s.seed * 31 + side + s.round * 7), "center");
+  const armies: [PlacedSquad[], PlacedSquad[]] = [...s.armies];
+  armies[side] = [...armies[side], ...placed.map((q) => ({ ...q, free: true, level: option.level > 1 ? option.level : undefined }))];
+  return { ...s, armies };
 }
 
 // Each round's battle seed. Both PvP browsers derive it the same way.
@@ -183,11 +220,17 @@ export function applyOutcome(state: MatchState, outcome: RoundOutcome): MatchSta
 export function nextRound(state: MatchState): MatchState {
   const round = state.round + 1;
   const income = RULES.income(round);
+  // the offer comes from what both sides had unlocked once last round's turns were in, so both PvP browsers (and a
+  // restore from the log) get the same one
+  const recruit: RecruitOffer | null =
+    state.recruits !== false && recruitRound(round) ? { round, options: recruitOptions(state.seed, round, state.unlocked), choice: [null, null] } : null;
   return {
     ...state,
     round,
     supply: [state.supply[0] + income, state.supply[1] + income],
     phase: "deploy",
+    recruit: recruit && recruit.options.length ? recruit : null,
+    lastRecruit: state.recruit ?? state.lastRecruit ?? null,
   };
 }
 
@@ -195,13 +238,14 @@ export function nextRound(state: MatchState): MatchState {
 // was bought. The AI's plan and a PvP friend's message both become one of these.
 export interface Turn {
   opening?: OpeningChoice; // round 1 only
+  recruit?: RecruitChoice; // a recruit round only; the option's squads are in the army, flagged free
   army: PlacedSquad[];
   unlocks: string[]; // bought this round (a pack's units come with the opening, not here)
   upgrades: { unitId: string; upgradeId: string }[]; // in the order bought
   towerUpgrades: number[]; // tower indexes, one entry per level bought
 }
 
-// The supply a turn spends, priced as the deploy screen prices it: new squads (not the opening's free ones), unlocks,
+// The supply a turn spends, priced as the deploy screen prices it: new squads (not an offer's free ones), unlocks,
 // upgrades and tower levels in the order bought, and promotions.
 export function turnCost(state: MatchState, side: Side, turn: Turn, defs: DefMap): number {
   const before = new Map(state.armies[side].map((sq) => [sq.uid, sq]));
@@ -210,7 +254,8 @@ export function turnCost(state: MatchState, side: Side, turn: Turn, defs: DefMap
     const def = defs.get(sq.defId);
     if (!def) continue;
     const prev = before.get(sq.uid);
-    if (!prev && !sq.free) cost += def.cost;
+    if (!prev && sq.free) continue; // came with an offer, at its level
+    if (!prev) cost += def.cost;
     cost += Math.max(0, (sq.level ?? 1) - (prev?.level ?? 1)) * promotePrice(def);
   }
   for (const id of turn.unlocks) {
@@ -232,7 +277,7 @@ export function turnCost(state: MatchState, side: Side, turn: Turn, defs: DefMap
   return cost;
 }
 
-// Apply a side's turn: its opening (supply and unlocks; the pack's squads are in the army), purchases and army.
+// Apply a side's turn: its opening and recruits (supply and unlocks; their squads are in the army), purchases and army.
 // `spent` defaults to the turn's price; the AI passes its own count.
 export function applyTurn(state: MatchState, side: Side, turn: Turn, defs: DefMap, spent?: number): MatchState {
   let s = state;
@@ -248,6 +293,7 @@ export function applyTurn(state: MatchState, side: Side, turn: Turn, defs: DefMa
     }
     s = { ...s, openings, supply, unlocked };
   }
+  if (turn.recruit !== undefined) s = recordRecruit(s, side, turn.recruit) ?? s;
   const cost = spent ?? turnCost(s, side, turn, defs);
   const pick = <T,>(pair: [T, T], value: T): [T, T] => (side === 0 ? [value, pair[1]] : [pair[0], value]);
   const upgrades = { ...s.upgrades[side] };

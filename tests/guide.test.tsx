@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { recruitOptions } from "../src/data/recruits";
 import { ROLES } from "../src/data/roles";
+import { RecruitOffer } from "../src/ui/PlayPanels";
 import { SHOWCASES } from "../src/data/showcases";
 import { DEFAULT_UNITS } from "../src/data/units";
 import { strengths, weaknesses } from "../src/game/counters";
@@ -25,6 +27,16 @@ describe("codex links", () => {
   it("every link on a unit card and in the codex itself has a target", () => {
     const html = codex + DEFAULT_UNITS.map((u) => renderToStaticMarkup(<UnitInfo def={u} />)).join("");
     for (const topic of new Set(linkedTopics(html))) expect(hasEntry(topic), topic).toBe(true);
+  });
+
+  it("the recruit offer links to its entry", () => {
+    const offer = { round: 4, options: recruitOptions(1, 4, [[], []]), choice: [null, null] as [null, null] };
+    const html = renderToStaticMarkup(<RecruitOffer offer={offer} units={DEFAULT_UNITS} supply={0} unlocked={[]} rival="the enemy" onChoose={() => {}} />);
+    expect(linkedTopics(html)).toContain("recruits");
+    for (const topic of linkedTopics(html)) expect(hasEntry(topic), topic).toBe(true);
+    // with no supply, priced options are disabled; free ones and the skip aren't
+    const disabled = [...html.matchAll(/<button[^>]*>/g)].map((m) => m[0].includes("disabled"));
+    expect(disabled).toEqual([...offer.options.map((o) => o.price > 0), false]);
   });
 
   it("every counter reason links to an entry", () => {

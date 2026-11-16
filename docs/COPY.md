@@ -924,6 +924,10 @@ Squads earn XP for the damage they deal and the healing they do. At 2,000 / 9,00
 
 Nothing is unlocked when a match starts. In round 1 you pick one of 3 **packs**, or the war chest. A pack is two units, both unlocked, with 400 supply's worth of their squads already placed for you (move them as you like, but they can't be sold), plus 200 supply to spend. The war chest is 700 supply and nothing unlocked: a little less once you pay for two unlocks, but you build exactly what you want. Both sides are offered the same packs, so you can guess what the enemy might start with.
 
+#### Recruits
+
+In rounds 4, 7, 10 and every 3 rounds after, you are offered 3 **recruits**. Each is a unit neither side has unlocked yet. It comes unlocked, with a few squads already placed for you (sometimes veterans, up to level 3), for a small price or free. Like an opening pack's, these squads can be moved that round but can't be sold. All the options in a round are worth the same, and later offers are worth more. You can skip the offer and take supply instead (250 in round 4). Both sides are offered the same recruits, so you can guess what the enemy might field next.
+
 ### Roles
 
 Roles say what a unit is for. Each unit has two to four.

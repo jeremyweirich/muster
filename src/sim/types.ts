@@ -240,7 +240,7 @@ export interface PlacedSquad {
   round: number; // round it was placed in
   xp?: number; // damage dealt + healing done, summed over every battle it fought
   level?: number; // promotions paid for; absent = level 1
-  free?: boolean; // came with the opening pack: it can be moved in round 1, but not sold
+  free?: boolean; // came with an offer (an opening pack or recruits): not paid for, can be moved the round it came, never sold
 }
 
 export interface Rules {
@@ -269,6 +269,12 @@ export interface Rules {
   openingPackValue: number; // squads in a pack add up to this much supply
   openingPackSupply: number; // supply a pack also gives
   openingFlat: number; // supply instead of a pack: nothing unlocked
+  recruitEvery: number; // recruit offers come every this many rounds, from round recruitEvery + 1 (src/data/recruits.ts)
+  recruitChoices: number; // options per offer (both sides see the same ones)
+  recruitValue: (round: number) => number; // what every option is worth: unlock + squads − price
+  recruitSkip: number; // skipping the offer pays this share of the value, in supply
+  recruitMaxPrice: number; // the most an option costs
+  recruitMaxLevel: number; // the highest level an option's squads come at
   towerUpgradeCosts: number[]; // price of each tower level
   towerHpPerLevel: number;
   towerDazeBase: number; // seconds of Daze when a level-0 tower falls
