@@ -684,7 +684,9 @@ Rough priority order. Everything is open to reshuffling.
 3. **Campaigns** (docs/CAMPAIGN.md): the Wardens campaign is built; next, the owner's structural changes and
    playtest, then the goblin campaign. Keeping the finale's page 9 is parked (CAMPAIGN.md §5).
 4. **Combo pairs in the harness**: compare upgrade pairs inside mixed armies (`npm run balance -- fight` takes `--upsA`).
-5. **Reinforcement cards / specialists:** a choice at the start of a round, as data-driven modifiers.
+5. **Recruits** (next; specified in `docs/RECRUITS.md`): every third round both players are offered the same three
+   unit unlocks with squads, or supply instead. Then **reinforcement cards / specialists:** a choice at the start of a
+   round, as data-driven modifiers.
 6. **Spells:** one-shot effects placed during deployment, using the same effect vocabulary. The owner's plan: cast
    between rounds on no-man's land. Terrain patches (section 3) are the first step: a spell could add one.
 7. **Pathfinding and formations:** move around obstacles, and keep squads together.
